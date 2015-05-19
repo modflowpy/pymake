@@ -10,7 +10,7 @@ pymake can be run from the command line or it can be called from within python.
 
 To see help for running from command line, use the following statement.
 
->python pymake.py -h
+    python pymake.py -h
 
 usage: pymake.py [-h] [-fc {ifort,gfortran}] [-cc {gcc}] [-mc] [-e] [-dr]
                  srcdir target
@@ -40,8 +40,8 @@ files as all source files in the source directory will be built and linked.
 
 ## From Python
 
->> import pymake
->> srcdir = '../mfnwt/src'
->> target = 'mfnwt'
->> pymake.main(srcdir, target, 'gfortran', True, False, False)
+    import pymake
+    srcdir = '../mfnwt/src'
+    target = 'mfnwt'
+    pymake.main(srcdir, target, 'gfortran', True, False, False)
 
