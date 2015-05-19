@@ -154,7 +154,7 @@ def create_openspec(srcdir_temp):
     fname = os.path.join(srcdir_temp, 'openspec.inc')
     f = open(fname, 'w')
     f.write(
-'''c -- created by makebin.py
+'''c -- created by pymake.py
       CHARACTER*20 ACCESS,FORM,ACTION(2)
       DATA ACCESS/'STREAM'/
       DATA FORM/'UNFORMATTED'/

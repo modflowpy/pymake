@@ -5,6 +5,15 @@ This is a relatively simple python package for compiling MODFLOW-based programs.
 
 pymake can be run from the command line or it can be called from within python.  
 
+Note that if gfortran is used, the openspec.f file will be changed to:
+
+    c -- created by pymake.py
+      CHARACTER*20 ACCESS,FORM,ACTION(2)
+      DATA ACCESS/'STREAM'/
+      DATA FORM/'UNFORMATTED'/
+      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
+    c -- end of include file
+
 
 ## Command Line Usage
 
