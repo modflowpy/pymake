@@ -5,6 +5,10 @@ This is a relatively simple python package for compiling MODFLOW-based programs.
 
 pymake can be run from the command line or it can be called from within python.  
 
+pymake includes example scripts for building MODFLOW-2005, SEAWAT, and MODFLOW-NWT using gfortran on Mac or Linux.  The scripts download the distribution file from the USGS and compiles the source into a binary executable.  The MODFLOW-NWT script does not work yet with the present version of MODFLOW-NWT due to some non-standard Fortran.  This should be fixed in future MODFLOW-NWT releases.
+
+pymake includes code for compiling with ifort on Windows, but this has not been tested recently.
+
 Note that if gfortran is used, the openspec.f file will be changed to:
 
     c -- created by pymake.py
@@ -38,6 +42,8 @@ To see help for running from command line, use the following statement.
       -fc {ifort,gfortran}  Fortran compiler to use (default is gfortran)
       -cc {gcc}             C compiler to use (default is gcc)
       -mc, --makeclean      Clean files when done
+      -dbl, --double        Force double precision
+      -dbg, --debug         Create debug version
       -e, --expedite        Only compile out of date source files. Clean must not
                             have been used on previous build. Does not work yet
                             for ifort.
@@ -52,5 +58,6 @@ To see help for running from command line, use the following statement.
     import pymake
     srcdir = '../mfnwt/src'
     target = 'mfnwt'
-    pymake.main(srcdir, target, 'gfortran', True, False, False)
+    pymake.main(srcdir, target, 'gfortran', makeclean=True, expedite=False, dryrun=False,
+                double=False, debug=False)
 
