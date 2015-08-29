@@ -48,6 +48,8 @@ class DirectedAcyclicGraph(object):
             if len(n.dependencies) == 0:
                 s.add(n)
         if len(s) == 0:
+            for n in self.nodelist:
+                print n.name, [nn.name for nn in n.dependencies]
             raise Exception('All nodes have dependencies')
 
         #build up the list
@@ -68,7 +70,7 @@ class DirectedAcyclicGraph(object):
         return l
 
 
-def order_source_files(srcfiles):
+def get_f_nodelist(srcfiles):
 
     #create a dictionary that has module name and source file name
     #create a dictionary that has a list of modules used within each source
@@ -105,16 +107,29 @@ def order_source_files(srcfiles):
         for m in modulelist:
             if module_dict.has_key(m):
                 mlocation = module_dict[m]
-                if mlocation is not srcfile:
+                if mlocation != srcfile:
                     #print 'adding dependency: ', srcfile, mlocation
                     node.add_dependency(nodedict[mlocation])
 
-    #build the ordered dependency list using the topological sort method
-    orderednodes = DirectedAcyclicGraph(nodelist).toposort()
+    return nodelist
+
+def get_dag(nodelist):
+    """
+    Create a dag from the nodelist
+    """
+    dag = DirectedAcyclicGraph(nodelist)
+    return dag
+
+def order_source_files(srcfiles):
+    """
+    Use a dag and a nodelist to order the fortran source files
+    """
+    nodelist = get_f_nodelist(srcfiles)
+    dag = get_dag(nodelist)
+    orderednodes = dag.toposort()
     osrcfiles = []
     for node in orderednodes:
         osrcfiles.append(node.name)
-
     return osrcfiles
 
 def order_c_source_files(srcfiles):
@@ -128,14 +143,14 @@ def order_c_source_files(srcfiles):
     nodelist = []
     nodedict = {}
     for srcfile in srcfiles: # contains only .c or .cpp
-        node = Node(srcfile)
+        node = Node(srcfile.lower())
         nodelist.append(node)
-        nodedict[srcfile] = node
+        nodedict[srcfile.lower()] = node
 
         # search .c or .cpp file
         f = open(srcfile, 'r')
         modulelist = []  #list of modules used by this source file
-        module_dict[os.path.basename(srcfile)] = srcfile # file.c(pp)
+        module_dict[os.path.basename(srcfile).lower()] = srcfile.lower()
 
         for line in f:
             linelist = line.strip().split()
@@ -144,13 +159,13 @@ def order_c_source_files(srcfiles):
             if linelist[0] == '#include':
                 m = re.match('"([^\.]*).h(pp|)"', linelist[1])
                 if m:
-                    modulename = m.group(1)+'.'+'c'+m.group(2)
+                    modulename = m.group(1)+'.'+'c' + m.group(2)
                     if modulename not in modulelist:
                         modulelist.append(modulename)
         f.close()
 
         # search corresponding .h or .hpp file
-        m = re.match('(.*).c(pp|)', srcfile)
+        m = re.match('(.*).c(pp|)', srcfile.lower())
         if m and os.path.isfile(m.group(1)+'.'+'h'+m.group(2)):
             f = open(m.group(1)+'.'+'h'+m.group(2), 'r')
             # modulelist = []  #list of modules used by this source file
@@ -171,21 +186,24 @@ def order_c_source_files(srcfiles):
             print "no corresponding header file found for ", srcfile
 
 
-        sourcefile_module_dict[srcfile] = modulelist
+        sourcefile_module_dict[srcfile.lower()] = modulelist
 
 
     #go through and add the dependencies to each node
     for node in nodelist:
-        srcfile = node.name
+        srcfile = node.name.lower()
         modulelist = sourcefile_module_dict[srcfile]
         for m in modulelist:
             mlocation = module_dict[m]
-            if mlocation is not srcfile:
-                #print 'adding dependency: ', srcfile, mlocation
+            if mlocation != srcfile:
+                # print 'adding dependency: ', srcfile, mlocation
                 node.add_dependency(nodedict[mlocation])
 
     #build the ordered dependency list using the topological sort method
-    orderednodes = DirectedAcyclicGraph(nodelist).toposort() if len(nodelist) > 0 else []
+    if len(nodelist) > 0:
+        orderednodes = DirectedAcyclicGraph(nodelist).toposort()
+    else:
+        orderednodes = []
     osrcfiles = []
     for node in orderednodes:
         osrcfiles.append(node.name)

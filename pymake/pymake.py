@@ -41,6 +41,8 @@ def parser():
                         default='gcc', choices=['gcc'])
     parser.add_argument('-mc', '--makeclean', help='Clean files when done',
                         action='store_true')
+    parser.add_argument('-dbl', '--double', help='Force double precision',
+                        action='store_true')
     parser.add_argument('-e', '--expedite',
                         help='''Only compile out of date source files.
                         Clean must not have been used on previous build.
@@ -174,13 +176,21 @@ def out_of_date(srcfile, objfile):
     return ood
 
 def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
-                     expedite, dryrun):
+                     expedite, dryrun, double, debug):
     '''
     Compile the program using the gnu compilers (gfortran and gcc)
     '''
     fc = 'gfortran'
-    compileflags = ['-O2']
+    if debug:
+        # Debug flags
+        compileflags = ['-g', '-fcheck=all', '-fbacktrace']
+    else:
+        # Production version
+        compileflags = ['-O2']
     objext = '.o'
+    if double:
+        compileflags.append('-fdefault-real-8')
+        compileflags.append('-fdefault-double-8')
 
     #c stuff -- thanks to mja
     cc = 'gcc'
@@ -253,20 +263,30 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
         subprocess.check_call(cmdlist)
     return
 
-def compile_with_ifort(srcfiles, target):
+def compile_with_ifort(srcfiles, target, double, debug):
     """
     Make target on Windows OS
     """
 
     fc = 'ifort.exe'
     cc = 'cl.exe'
-    #production version compile flags
-    compileflags = [
-                   '-O2',
-                   '-heap-arrays:0',
-                   '-fpe:0',
-                   '-traceback',
-                   ]
+    if debug:
+        compileflags = [
+                       '-debug',
+                       '-heap-arrays:0',
+                       '-fpe:0',
+                       '-traceback',
+                        ]
+    else:
+        #production version compile flags
+        compileflags = [
+                       '-O2',
+                       '-heap-arrays:0',
+                       '-fpe:0',
+                       '-traceback',
+                       ]
+    if double:
+        compileflags.append('-r8')
     objext = '.obj'
     batchfile32 = 'compile_ia32.bat'
     batchfile64 = 'compile_x64.bat'
@@ -323,7 +343,8 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform):
     f.close()
     return
 
-def main(srcdir, target, fc, makeclean, expedite, dryrun):
+def main(srcdir, target, fc, makeclean=True, expedite=False, dryrun=False,
+         double=False, debug=False):
     '''
     Main part of program
 
@@ -339,10 +360,10 @@ def main(srcdir, target, fc, makeclean, expedite, dryrun):
         objext = '.o'
         create_openspec(srcdir_temp)
         compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
-                         expedite, dryrun)
+                         expedite, dryrun, double, debug)
     elif fc == 'ifort':
         objext = '.obj'
-        compile_with_ifort(srcfiles, target)
+        compile_with_ifort(srcfiles, target, double, debug)
     else:
         raise Exception('Unsupported compiler')
 
@@ -359,4 +380,4 @@ if __name__ == "__main__":
     #call main -- note that this form allows main to be called
     #from python as a function.
     main(args.srcdir, args.target, args.fc, args.makeclean, args.expedite,
-         args.dryrun)
+         args.dryrun, args.double)
