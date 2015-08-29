@@ -54,10 +54,18 @@ To see help for running from command line, use the following statement.
     files as all source files in the source directory will be built and linked.
 
 ## From Python
-
+    
+    # For this script to compile mfnwt, the non-standard Fortran needS to be corrected first
     import pymake
     srcdir = '../mfnwt/src'
     target = 'mfnwt'
     pymake.main(srcdir, target, 'gfortran', makeclean=True, expedite=False, dryrun=False,
                 double=False, debug=False)
 
+## Automatic Download and Build
+
+The following scripts can be run directly from the command line to build MODFLOW and SEAWAT binaries on Mac and Linux.  The scripts will download the distribution file from the USGS (requires internet connection), unzip the file, and compile the source.
+
+    python make_mf2005.py
+    python make_mfnwt.py (not working yet)
+    python make_swtv4.py
