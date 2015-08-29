@@ -43,6 +43,8 @@ def parser():
                         action='store_true')
     parser.add_argument('-dbl', '--double', help='Force double precision',
                         action='store_true')
+    parser.add_argument('-dbg', '--debug', help='Create debug version',
+                        action='store_true')
     parser.add_argument('-e', '--expedite',
                         help='''Only compile out of date source files.
                         Clean must not have been used on previous build.
@@ -380,4 +382,4 @@ if __name__ == "__main__":
     #call main -- note that this form allows main to be called
     #from python as a function.
     main(args.srcdir, args.target, args.fc, args.makeclean, args.expedite,
-         args.dryrun, args.double)
+         args.dryrun, args.double, args.debug)
