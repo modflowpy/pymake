@@ -121,7 +121,7 @@ def get_ordered_srcfiles(srcdir_temp):
     cfiles = []  # mja
     srcfiles = []
     for f in templist:
-        if f.endswith('.f') or f.endswith('.f90'):
+        if f.endswith('.f') or f.endswith('.f90') or f.endswith('.for'):
             srcfiles.append(f)
         elif f.endswith('.c') or f.endswith('.cpp'): #mja
             cfiles.append(f)    #mja
