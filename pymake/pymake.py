@@ -16,6 +16,7 @@ the source files in the proper order.
 '''
 
 import os
+import sys
 import shutil
 import subprocess
 import argparse
@@ -93,7 +94,7 @@ def clean(srcdir_temp, objdir_temp, moddir_temp, objext):
     Remove mod and object files, and remove the temp source directory.
     '''
     #clean things up
-    print 'making clean...'
+    print('\nCleaning up temporary source, object, and module files...')
     filelist = os.listdir('.')
     delext = ['.mod', objext]
     for f in filelist:
@@ -185,10 +186,18 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
     fc = 'gfortran'
     if debug:
         # Debug flags
-        compileflags = ['-g', '-fcheck=all', '-fbacktrace']
+        compileflags = ['-g', 
+                        '-fcheck=all', 
+                        '-fbacktrace',
+                        '-fbounds-check',
+                        ]
     else:
         # Production version
-        compileflags = ['-O2']
+        compileflags = [
+                        '-O2',
+                        '-fbacktrace',
+                        '-ffpe-summary=overflow'
+                        ]
     objext = '.o'
     if double:
         compileflags.append('-fdefault-real-8')
@@ -200,6 +209,7 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
     syslibs = ['-lc']
 
     #build object files
+    print('\nCompiling object files...')
     objfiles = []
     for srcfile in srcfiles:
         cmdlist = []
@@ -239,7 +249,7 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
             s = ''
             for c in cmdlist:
                 s += c + ' '
-            print s
+            print(s)
             if not dryrun:
                 subprocess.check_call(cmdlist)
 
@@ -248,6 +258,7 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
         objfiles.append(objfile)
 
     #Build the link command and then link
+    print('\nLinking object files to make {}...'.format(os.path.basename(target)))
     cmd = fc + ' '
     cmdlist = []
     cmdlist.append(fc)
@@ -263,6 +274,105 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
     print 'check call: ', cmdlist
     if not dryrun:
         subprocess.check_call(cmdlist)
+    return
+
+def compile_with_mac_ifort(srcfiles, target,
+                           objdir_temp, moddir_temp,
+                           expedite, dryrun, double, debug):
+    """
+    Make target on Mac OSX
+    """
+
+    fc = 'ifort'
+    cc = 'clang'
+    if debug:
+        compileflags = [
+                       '-O0',
+                       '-debug',
+                       'all',
+                       '-no-heap-arrays', 
+                       '-fpe0',
+                       '-traceback'
+                        ]
+    else:
+        #production version compile flags
+        compileflags = [
+                       '-O2', 
+                       '-no-heap-arrays', 
+                       '-fpe0',
+                       '-traceback'
+                       ]
+    if double:
+        compileflags.append('-r8', '-double_size', '64')
+
+    #build object files
+    print('\nCompiling object files...')
+    objfiles = []
+    for srcfile in srcfiles:
+        cmdlist = []
+        if srcfile.endswith('.c') or srcfile.endswith('.cpp'):        #mja
+            cmdlist.append(cc)      #mja
+            for switch in cflags:       #mja
+                cmdlist.append(switch)      #mja
+        else:           #mja
+            cmdlist.append(fc)
+
+            #put module files in moddir_temp
+            cmdlist.append('-module')
+            cmdlist.append('./' + moddir_temp + '/')
+
+            for switch in compileflags:
+                cmdlist.append(switch)
+
+
+        cmdlist.append('-c')
+        cmdlist.append(srcfile)
+
+        #object file name and location
+        srcname, srcext = os.path.splitext(srcfile)
+        srcname = srcname.split(os.path.sep)[-1]
+        objfile = os.path.join('.', objdir_temp, srcname + '.o')
+        cmdlist.append('-o')
+        cmdlist.append(objfile)
+
+        #If expedited, then check if object file is out of date (if exists).
+        #No need to compile if object file is newer.
+        compilefile = True
+        if expedite:
+            if not out_of_date(srcfile, objfile):
+                compilefile = False
+
+        #Compile
+        if compilefile:
+            s = ''
+            for c in cmdlist:
+                s += c + ' '
+            print(s)
+            
+            if not dryrun:
+                subprocess.check_call(cmdlist)
+
+        #Save the name of the object file so that they can all be linked
+        #at the end
+        objfiles.append(objfile)
+
+    #Build the link command and then link
+    print('\nLinking object files to make {}...'.format(os.path.basename(target)))
+    cmd = fc + ' '
+    cmdlist = []
+    cmdlist.append(fc)
+    for switch in compileflags:
+        cmd += switch + ' '
+        cmdlist.append(switch)
+    cmdlist.append('-o')
+    cmdlist.append(os.path.join('.', target))
+    for objfile in objfiles:
+        cmdlist.append(objfile)
+
+    print('check call: {}'.format(cmdlist))
+    if not dryrun:
+        subprocess.check_call(cmdlist)
+
     return
 
 def compile_with_ifort(srcfiles, target, double, debug):
@@ -317,6 +427,7 @@ def compile_with_ifort(srcfiles, target, double, debug):
 
     return
 
+
 def makebatch(batchfile, fc, compileflags, srcfiles, target, platform):
     '''
     Make an ifort batch file
@@ -364,8 +475,15 @@ def main(srcdir, target, fc, makeclean=True, expedite=False, dryrun=False,
         compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
                          expedite, dryrun, double, debug)
     elif fc == 'ifort':
-        objext = '.obj'
-        compile_with_ifort(srcfiles, target, double, debug)
+        platform = sys.platform
+        if platform.lower() == 'darwin':
+            objext = '.o'
+            compile_with_mac_ifort(srcfiles, target, 
+                                   objdir_temp, moddir_temp,
+                                   expedite, dryrun, double, debug)
+        else:
+            objext = '.obj'
+            compile_with_ifort(srcfiles, target, double, debug)
     else:
         raise Exception('Unsupported compiler')
 
