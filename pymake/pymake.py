@@ -303,7 +303,9 @@ def compile_with_mac_ifort(srcfiles, target,
                        '-traceback'
                        ]
     if double:
-        compileflags.append('-r8', '-double_size', '64')
+        compileflags.append('-r8')
+        compileflags.append('-double_size')
+        compileflags.append('64')
 
     #build object files
     print('\nCompiling object files...')
