@@ -7,7 +7,7 @@ try:
     from urllib.request import urlretrieve
 except ImportError:
     # Fall back to Python 2's urllib
-    from urllib import urlretrieve
+    import urllib.urlretrieve as urlretrieve
 
 def download_and_unzip(url, pth='./'):
     print('Attempting to download the file: ', url)

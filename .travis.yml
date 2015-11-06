@@ -1,9 +1,12 @@
 language: python
 
+compiler:
+  - gcc
+
 # 2.6 and "nightly" do not work at the moment, so they are commented out.
 python:
   # - "2.6"
-  #- "2.7"
+  - "2.7"
   #- "3.2"
   #- "3.3"
   #- "3.4"
@@ -14,12 +17,12 @@ python:
 before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update -qq
-  - sudo apt-get upgrade
-  - sudo apt-get install build-essential
   - sudo apt-get install gfortran-5
   - sudo apt-get install graphviz
   - sudo ln -fs /usr/bin/gfortran-5 /usr/bin/gfortran && gfortran --version
   - export PATH=".:$PATH"
+  - gcc -v
+  - gfortran -v
 
 # command to install dependencies
 install: "pip install -r requirements.travis.txt"
