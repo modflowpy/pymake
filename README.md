@@ -1,6 +1,8 @@
 # pymake
 Python package for compiling MODFLOW
 
+[![Build Status](https://travis-ci.org/modflowpy/pymake.svg?branch=master)](https://travis-ci.org/modflowpy/pymake)
+
 This is a relatively simple python package for compiling MODFLOW-based programs.  The package determines the build order using a directed acyclic graph and then compiles the source files using gfortran or ifort.
 
 pymake can be run from the command line or it can be called from within python.  
