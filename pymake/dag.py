@@ -104,7 +104,7 @@ def get_f_nodelist(srcfiles):
             sourcefile_module_dict[srcfile] = modulelist
             f.close()
         except:
-            print('Error: {} does not exist'.format(srcfile))
+            print('get_f_nodelist: {} does not exist'.format(srcfile))
 
     # go through and add the dependencies to each node
     for node in nodelist:

@@ -21,10 +21,11 @@ def download_and_unzip(url, pth='./'):
     # Unzip the file, and delete zip file if successful.
     z = ZipFile(file_name)
     try:
+        print('Extracting the zipfile...')
         z.extractall(pth)
     except:
-        print('Could not unzip the file.  Stopping.')
-        raise Exception()
+        p = 'Could not unzip the file.  Stopping.'
+        raise Exception(p)
     z.close()
     print('Deleting the zipfile...')
     os.remove(file_name)
