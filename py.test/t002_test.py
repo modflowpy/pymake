@@ -6,8 +6,14 @@ import pymake
 
 def test_vmodflow2005():
 
+    # get current directory
     pth = os.getcwd()
-    os.chdir('data')
+    # working directory
+    dstpth = os.path.join('temp')
+    if not os.path.exists(dstpth):
+        os.makedirs(dstpth)
+    # change to temp subdirectory
+    os.chdir(dstpth)
 
     dirname = os.path.join('MF2005.1_11u')
     srcpth = os.path.join(dirname, 'src')

@@ -6,8 +6,14 @@ import pymake
 
 def test_modflow2005():
 
+    # get current directory
     pth = os.getcwd()
-    os.chdir('data')
+    # working directory
+    dstpth = os.path.join('temp')
+    if not os.path.exists(dstpth):
+        os.makedirs(dstpth)
+    # change to temp subdirectory
+    os.chdir(dstpth)
 
     # Download the MODFLOW-2005 distribution
     url = 'http://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip'

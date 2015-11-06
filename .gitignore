@@ -60,4 +60,4 @@ target/
 # PyCharm
 .idea/
 
-py.test/data/
+py.test/temp/
