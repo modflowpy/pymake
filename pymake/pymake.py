@@ -2,6 +2,8 @@
 """
 Make a binary executable for a FORTRAN program, such as MODFLOW.
 """
+from __future__ import print_function
+
 __author__ = "Christian D. Langevin"
 __date__ = "October 26, 2014"
 __version__ = "1.1.0"
@@ -20,7 +22,7 @@ import sys
 import shutil
 import subprocess
 import argparse
-from dag import order_source_files, order_c_source_files
+from .dag import order_source_files, order_c_source_files
 
 
 def parser():
@@ -56,20 +58,25 @@ def parser():
                         deleted, if --makeclean is used.
                         Does not work yet for ifort.''',
                         action='store_true')
+    parser.add_argument('-sd', '--subdirs',
+                        help='''Include source files in srcdir
+                        subdirectories.''',
+                        action='store_true')
     args = parser.parse_args()
     return args
+
 
 def initialize(srcdir, target):
     '''
     Remove temp source directory and target, and then copy source into
     source temp directory.  Return temp directory path.
     '''
-    #remove the target if it already exists
+    # remove the target if it already exists
     srcdir_temp = 'src_temp'
     objdir_temp = 'obj_temp'
     moddir_temp = 'mod_temp'
 
-    #remove srcdir_temp and copy in srcdir
+    # remove srcdir_temp and copy in srcdir
     try:
         os.remove(target)
     except:
@@ -81,7 +88,7 @@ def initialize(srcdir, target):
     shutil.copytree(srcdir, srcdir_temp)
     srcdir_temp = os.path.join('.', srcdir_temp)
 
-    #if they don't exist, create directories for objects and mods
+    # if they don't exist, create directories for objects and mods
     if not os.path.exists(objdir_temp):
         os.makedirs(objdir_temp)
     if not os.path.exists(moddir_temp):
@@ -89,11 +96,12 @@ def initialize(srcdir, target):
 
     return srcdir_temp, objdir_temp, moddir_temp
 
+
 def clean(srcdir_temp, objdir_temp, moddir_temp, objext):
     '''
     Remove mod and object files, and remove the temp source directory.
     '''
-    #clean things up
+    # clean things up
     print('\nCleaning up temporary source, object, and module files...')
     filelist = os.listdir('.')
     delext = ['.mod', objext]
@@ -106,45 +114,48 @@ def clean(srcdir_temp, objdir_temp, moddir_temp, objext):
     shutil.rmtree(moddir_temp)
     return
 
-def get_ordered_srcfiles(srcdir_temp):
+
+def get_ordered_srcfiles(srcdir_temp, include_subdir=False):
     '''
     Create a list of ordered source files (both fortran and c).  Ordering
     is build using a directed acyclic graph to determine module dependencies.
     '''
-    #create a list of all c(pp), f and f90 source files
+    # create a list of all c(pp), f and f90 source files
 
     templist = []
     for path, subdirs, files in os.walk(srcdir_temp):
         for name in files:
-            f = os.path.join(path, name)
+            if not include_subdir:
+                if path != srcdir_temp:
+                    continue
+            f = os.path.join(os.path.join(path, name))
             templist.append(f)
-
     cfiles = []  # mja
     srcfiles = []
     for f in templist:
         if f.endswith('.f') or f.endswith('.f90') or f.endswith('.for'):
             srcfiles.append(f)
-        elif f.endswith('.c') or f.endswith('.cpp'): #mja
-            cfiles.append(f)    #mja
+        elif f.endswith('.c') or f.endswith('.cpp'):  # mja
+            cfiles.append(f)  # mja
 
-    #orderedsourcefiles = order_source_files(srcfiles) + \
+    # orderedsourcefiles = order_source_files(srcfiles) + \
     #                     order_c_source_files(cfiles)
 
 
     srcfileswithpath = []
     for srcfile in srcfiles:
-         s = os.path.join(srcdir_temp, srcfile)
-         s = srcfile
-         srcfileswithpath.append(s)
+        s = os.path.join(srcdir_temp, srcfile)
+        s = srcfile
+        srcfileswithpath.append(s)
 
-    #from mja
+    # from mja
     cfileswithpath = []
     for srcfile in cfiles:
         s = os.path.join(srcdir_temp, srcfile)
         s = srcfile
         cfileswithpath.append(s)
 
-    #order the source files using the directed acyclic graph in dag.py
+    # order the source files using the directed acyclic graph in dag.py
     orderedsourcefiles = order_source_files(srcfileswithpath) + \
                          order_c_source_files(cfileswithpath)
 
@@ -158,16 +169,16 @@ def create_openspec(srcdir_temp):
     '''
     fname = os.path.join(srcdir_temp, 'openspec.inc')
     f = open(fname, 'w')
-    f.write(
-'''c -- created by pymake.py
-      CHARACTER*20 ACCESS,FORM,ACTION(2)
-      DATA ACCESS/'STREAM'/
-      DATA FORM/'UNFORMATTED'/
-      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
-c -- end of include file
-''')
+    line = "c -- created by pymake.py\n" + \
+           "      CHARACTER*20 ACCESS,FORM,ACTION(2)\n" + \
+           "      DATA ACCESS/'STREAM'/\n" + \
+           "      DATA FORM/'UNFORMATTED'/\n" + \
+           "      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/\n" + \
+           "c -- end of include file\n"
+    f.write(line)
     f.close()
     return
+
 
 def out_of_date(srcfile, objfile):
     ood = True
@@ -178,6 +189,7 @@ def out_of_date(srcfile, objfile):
             ood = False
     return ood
 
+
 def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
                      expedite, dryrun, double, debug):
     '''
@@ -186,65 +198,65 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
     fc = 'gfortran'
     if debug:
         # Debug flags
-        compileflags = ['-g', 
-                        '-fcheck=all', 
+        compileflags = ['-g',
+                        '-fcheck=all',
                         '-fbacktrace',
                         '-fbounds-check',
                         ]
     else:
         # Production version
         compileflags = [
-                        '-O2',
-                        '-fbacktrace',
-                        '-ffpe-summary=overflow'
-                        ]
+            '-O2',
+            '-fbacktrace',
+            '-ffpe-summary=overflow'
+        ]
     objext = '.o'
     if double:
         compileflags.append('-fdefault-real-8')
         compileflags.append('-fdefault-double-8')
 
-    #c stuff -- thanks to mja
+    # c stuff -- thanks to mja
     cc = 'gcc'
     cflags = ['-D_UF', '-O3']
     syslibs = ['-lc']
 
-    #build object files
+    # build object files
     print('\nCompiling object files...')
     objfiles = []
     for srcfile in srcfiles:
         cmdlist = []
-        if srcfile.endswith('.c') or srcfile.endswith('.cpp'):        #mja
-            cmdlist.append(cc)      #mja
-            for switch in cflags:       #mja
-                cmdlist.append(switch)      #mja
-        else:           #mja
+        if srcfile.endswith('.c') or srcfile.endswith('.cpp'):  # mja
+            cmdlist.append(cc)  # mja
+            for switch in cflags:  # mja
+                cmdlist.append(switch)  # mja
+        else:  # mja
             cmdlist.append(fc)
             for switch in compileflags:
                 cmdlist.append(switch)
         cmdlist.append('-c')
         cmdlist.append(srcfile)
 
-        #object file name and location
+        # object file name and location
         srcname, srcext = os.path.splitext(srcfile)
         srcname = srcname.split(os.path.sep)[-1]
         objfile = os.path.join('.', objdir_temp, srcname + '.o')
         cmdlist.append('-o')
         cmdlist.append(objfile)
 
-        #put object files in objdir_temp
+        # put object files in objdir_temp
         cmdlist.append('-I' + objdir_temp)
 
-        #put object files in objdir_temp
+        # put object files in objdir_temp
         cmdlist.append('-J' + moddir_temp)
 
-        #If expedited, then check if object file is out of date (if exists).
-        #No need to compile if object file is newer.
+        # If expedited, then check if object file is out of date (if exists).
+        # No need to compile if object file is newer.
         compilefile = True
         if expedite:
             if not out_of_date(srcfile, objfile):
                 compilefile = False
 
-        #Compile
+        # Compile
         if compilefile:
             s = ''
             for c in cmdlist:
@@ -253,12 +265,12 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
             if not dryrun:
                 subprocess.check_call(cmdlist)
 
-        #Save the name of the object file so that they can all be linked
-        #at the end
+        # Save the name of the object file so that they can all be linked
+        # at the end
         objfiles.append(objfile)
 
-    #Build the link command and then link
-    print('\nLinking object files to make {}...'.format(os.path.basename(target)))
+    # Build the link command and then link
+    print(('\nLinking object files to make {}...'.format(os.path.basename(target))))
     cmd = fc + ' '
     cmdlist = []
     cmdlist.append(fc)
@@ -271,10 +283,11 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
         cmdlist.append(objfile)
     for switch in syslibs:
         cmdlist.append(switch)
-    print 'check call: ', cmdlist
+    print('check call: ', cmdlist)
     if not dryrun:
         subprocess.check_call(cmdlist)
     return
+
 
 def compile_with_mac_ifort(srcfiles, target,
                            objdir_temp, moddir_temp,
@@ -287,79 +300,81 @@ def compile_with_mac_ifort(srcfiles, target,
     cc = 'clang'
     if debug:
         compileflags = [
-                       '-O0',
-                       '-debug',
-                       'all',
-                       '-no-heap-arrays', 
-                       '-fpe0',
-                       '-traceback'
-                        ]
+            '-O0',
+            '-debug',
+            'all',
+            '-no-heap-arrays',
+            '-fpe0',
+            '-traceback'
+        ]
+        cflags = ['-O0',
+                  '-g']
     else:
-        #production version compile flags
+        # production version compile flags
         compileflags = [
-                       '-O2', 
-                       '-no-heap-arrays', 
-                       '-fpe0',
-                       '-traceback'
-                       ]
+            '-O2',
+            '-no-heap-arrays',
+            '-fpe0',
+            '-traceback'
+        ]
+        cflags = ['-O3']
     if double:
         compileflags.append('-r8')
         compileflags.append('-double_size')
         compileflags.append('64')
 
-    #build object files
+    # build object files
     print('\nCompiling object files...')
     objfiles = []
     for srcfile in srcfiles:
         cmdlist = []
-        if srcfile.endswith('.c') or srcfile.endswith('.cpp'):        #mja
-            cmdlist.append(cc)      #mja
-            for switch in cflags:       #mja
-                cmdlist.append(switch)      #mja
-        else:           #mja
+        if srcfile.endswith('.c') or srcfile.endswith('.cpp'):  # mja
+            cmdlist.append(cc)  # mja
+            for switch in cflags:  # mja
+                cmdlist.append(switch)  # mja
+        else:  # mja
             cmdlist.append(fc)
 
-            #put module files in moddir_temp
+            # put module files in moddir_temp
             cmdlist.append('-module')
             cmdlist.append('./' + moddir_temp + '/')
 
             for switch in compileflags:
                 cmdlist.append(switch)
 
-
         cmdlist.append('-c')
         cmdlist.append(srcfile)
 
-        #object file name and location
+        # object file name and location
         srcname, srcext = os.path.splitext(srcfile)
         srcname = srcname.split(os.path.sep)[-1]
         objfile = os.path.join('.', objdir_temp, srcname + '.o')
         cmdlist.append('-o')
         cmdlist.append(objfile)
 
-        #If expedited, then check if object file is out of date (if exists).
-        #No need to compile if object file is newer.
+        # If expedited, then check if object file is out of date (if exists).
+        # No need to compile if object file is newer.
         compilefile = True
         if expedite:
             if not out_of_date(srcfile, objfile):
                 compilefile = False
 
-        #Compile
+        # Compile
         if compilefile:
             s = ''
             for c in cmdlist:
                 s += c + ' '
             print(s)
-            
+
             if not dryrun:
                 subprocess.check_call(cmdlist)
 
-        #Save the name of the object file so that they can all be linked
-        #at the end
+        # Save the name of the object file so that they can all be linked
+        # at the end
         objfiles.append(objfile)
 
-    #Build the link command and then link
-    print('\nLinking object files to make {}...'.format(os.path.basename(target)))
+    # Build the link command and then link
+    print(('\nLinking object files to make {}...'.format(os.path.basename(target))))
     cmd = fc + ' '
     cmdlist = []
     cmdlist.append(fc)
@@ -371,11 +386,12 @@ def compile_with_mac_ifort(srcfiles, target,
     for objfile in objfiles:
         cmdlist.append(objfile)
 
-    print('check call: {}'.format(cmdlist))
+    print(('check call: {}'.format(cmdlist)))
     if not dryrun:
         subprocess.check_call(cmdlist)
 
     return
+
 
 def compile_with_ifort(srcfiles, target, double, debug):
     """
@@ -386,19 +402,19 @@ def compile_with_ifort(srcfiles, target, double, debug):
     cc = 'cl.exe'
     if debug:
         compileflags = [
-                       '-debug',
-                       '-heap-arrays:0',
-                       '-fpe:0',
-                       '-traceback',
-                        ]
+            '-debug',
+            '-heap-arrays:0',
+            '-fpe:0',
+            '-traceback',
+        ]
     else:
-        #production version compile flags
+        # production version compile flags
         compileflags = [
-                       '-O2',
-                       '-heap-arrays:0',
-                       '-fpe:0',
-                       '-traceback',
-                       ]
+            '-O2',
+            '-heap-arrays:0',
+            '-fpe:0',
+            '-traceback',
+        ]
     if double:
         compileflags.append('-r8')
     objext = '.obj'
@@ -413,19 +429,19 @@ def compile_with_ifort(srcfiles, target, double, debug):
     except:
         pass
 
-    #Create ia32
+    # Create ia32
     try:
         makebatch(batchfile32, fc, compileflags, srcfiles, target, 'ia32')
-        subprocess.check_call([batchfile32, ],)
+        subprocess.check_call([batchfile32, ], )
     except:
-        print 'Could not make ia32 target: ', target
+        print('Could not make ia32 target: ', target)
 
-    #Create x64
+    # Create x64
     try:
         makebatch(batchfile64, fc, compileflags, srcfiles, target, 'intel64')
-        subprocess.check_call([batchfile64, ],)
+        subprocess.check_call([batchfile64, ], )
     except:
-        print 'Could not make x64 target: ', target
+        print('Could not make x64 target: ', target)
 
     return
 
@@ -439,7 +455,7 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform):
     line = 'call ' + '"' + os.path.normpath(cpvars) + '" ' + platform + '\n'
     f.write(line)
 
-    #write commands to build object files
+    # write commands to build object files
     for srcfile in srcfiles:
         cmd = fc + ' '
         for switch in compileflags:
@@ -449,7 +465,7 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform):
         cmd += '\n'
         f.write(cmd)
 
-    #write commands to link
+    # write commands to link
     cmd = fc + ' '
     for switch in compileflags:
         cmd += switch + ' '
@@ -458,19 +474,20 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform):
     f.close()
     return
 
+
 def main(srcdir, target, fc, makeclean=True, expedite=False, dryrun=False,
-         double=False, debug=False):
+         double=False, debug=False, include_subdirs=False):
     '''
     Main part of program
 
     '''
-    #initialize
+    # initialize
     srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target)
 
-    #get ordered list of files to compile
-    srcfiles = get_ordered_srcfiles(srcdir_temp)
+    # get ordered list of files to compile
+    srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
 
-    #compile with gfortran or ifort
+    # compile with gfortran or ifort
     if fc == 'gfortran':
         objext = '.o'
         create_openspec(srcdir_temp)
@@ -480,7 +497,7 @@ def main(srcdir, target, fc, makeclean=True, expedite=False, dryrun=False,
         platform = sys.platform
         if platform.lower() == 'darwin':
             objext = '.o'
-            compile_with_mac_ifort(srcfiles, target, 
+            compile_with_mac_ifort(srcfiles, target,
                                    objdir_temp, moddir_temp,
                                    expedite, dryrun, double, debug)
         else:
@@ -489,17 +506,16 @@ def main(srcdir, target, fc, makeclean=True, expedite=False, dryrun=False,
     else:
         raise Exception('Unsupported compiler')
 
-    #clean it up
+    # clean it up
     if makeclean:
         clean(srcdir_temp, objdir_temp, moddir_temp, objext)
 
 
 if __name__ == "__main__":
-
-    #get the arguments
+    # get the arguments
     args = parser()
 
-    #call main -- note that this form allows main to be called
-    #from python as a function.
+    # call main -- note that this form allows main to be called
+    # from python as a function.
     main(args.srcdir, args.target, args.fc, args.makeclean, args.expedite,
-         args.dryrun, args.double, args.debug)
+         args.dryrun, args.double, args.debug, args.subdirs)

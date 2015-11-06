@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import shutil
 import pymake
@@ -13,7 +14,7 @@ dlist = ['automake.fig', 'mt3dms5b.exe']
 for d in dlist:
     dname = os.path.join(srcdir, d)
     if os.path.isfile(dname):
-        print 'Removing ', dname
+        print('Removing ', dname)
         os.remove(dname)
 
 # Replace the getcl command with getarg
@@ -48,7 +49,7 @@ dlist = ['bin', 'doc', 'examples', 'src', 'utility']
 for d in dlist:
     dname = d
     if os.path.isdir(dname):
-        print 'Removing ', dname
+        print('Removing ', dname)
         shutil.rmtree(dname)
 
 # Clean up unneeded files

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import shutil
 import pymake
@@ -17,7 +18,7 @@ dlist = ['parallel', 'serial']
 for d in dlist:
     dname = os.path.join(srcdir, d)
     if os.path.isdir(dname):
-        print 'Removing ', dname
+        print('Removing ', dname)
         shutil.rmtree(os.path.join(srcdir, d))
 
 # Replace filespec with standard fortran

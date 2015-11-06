@@ -1,7 +1,9 @@
-import pydot
+from __future__ import print_function
 import os
-import pymake
-import dag
+from .pymake import get_ordered_srcfiles
+from .dag import get_f_nodelist
+import pydotplus.graphviz as pydot
+
 
 def to_pydot(dag, filename='mygraph.png'):
 
@@ -51,9 +53,8 @@ def make_plots(srcdir, outdir):
     Create plots of module dependencies
 
     """
-
-    srcfiles = pymake.get_ordered_srcfiles(srcdir)
-    nodelist = dag.get_f_nodelist(srcfiles)
+    srcfiles = get_ordered_srcfiles(srcdir)
+    nodelist = get_f_nodelist(srcfiles)
     for n in nodelist:
         print(os.path.basename(n.name))
         for m in n.dependencies:

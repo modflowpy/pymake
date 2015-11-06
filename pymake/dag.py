@@ -7,6 +7,8 @@ http://en.wikipedia.org/wiki/Topological_sorting
 
 """
 
+from __future__ import print_function
+
 __author__ = "Christian D. Langevin"
 __date__ = "March 20, 2014"
 __version__ = "1.0.0"
@@ -16,6 +18,7 @@ __status__ = "Production"
 
 import re
 import os
+
 
 class Node(object):
     def __init__(self, name):
@@ -31,6 +34,7 @@ class Node(object):
             self.dependencies.append(d)
         return
 
+
 class DirectedAcyclicGraph(object):
     def __init__(self, nodelist):
         self.nodelist = nodelist
@@ -40,19 +44,19 @@ class DirectedAcyclicGraph(object):
         """
         Perform topological sort
         """
-        l = []  #empty list that will contain sorted elements
+        l = []  # empty list that will contain sorted elements
 
-        #build a list of nodes with no dependencies
+        # build a list of nodes with no dependencies
         s = set([])
         for n in self.nodelist:
             if len(n.dependencies) == 0:
                 s.add(n)
         if len(s) == 0:
             for n in self.nodelist:
-                print n.name, [nn.name for nn in n.dependencies]
+                print(n.name, [nn.name for nn in n.dependencies])
             raise Exception('All nodes have dependencies')
 
-        #build up the list
+        # build up the list
         while len(s) > 0:
             n = s.pop()
             l.append(n)
@@ -62,20 +66,19 @@ class DirectedAcyclicGraph(object):
                     if len(m.dependencies) == 0:
                         s.add(m)
 
-        #check to make sure no remaining dependencies
+        # check to make sure no remaining dependencies
         for n in l:
             if len(n.dependencies) > 0:
-                raise Exception ('Graph has at least one cycle')
+                raise Exception('Graph has at least one cycle')
 
         return l
 
 
 def get_f_nodelist(srcfiles):
-
-    #create a dictionary that has module name and source file name
-    #create a dictionary that has a list of modules used within each source
-    #create a list of Nodes for later ordering
-    #create a dictionary of nodes
+    # create a dictionary that has module name and source file name
+    # create a dictionary that has a list of modules used within each source
+    # create a list of Nodes for later ordering
+    # create a dictionary of nodes
     module_dict = {}
     sourcefile_module_dict = {}
     nodelist = []
@@ -84,8 +87,8 @@ def get_f_nodelist(srcfiles):
         node = Node(srcfile)
         nodelist.append(node)
         nodedict[srcfile] = node
-        f = open(srcfile, 'r')
-        modulelist = []  #list of modules used by this source file
+        f = open(srcfile, 'r', errors='ignore')
+        modulelist = []  # list of modules used by this source file
         for line in f:
             linelist = line.strip().split()
             if len(linelist) == 0:
@@ -100,18 +103,19 @@ def get_f_nodelist(srcfiles):
         sourcefile_module_dict[srcfile] = modulelist
         f.close()
 
-    #go through and add the dependencies to each node
+    # go through and add the dependencies to each node
     for node in nodelist:
         srcfile = node.name
         modulelist = sourcefile_module_dict[srcfile]
         for m in modulelist:
-            if module_dict.has_key(m):
+            if m in module_dict:
                 mlocation = module_dict[m]
                 if mlocation != srcfile:
-                    #print 'adding dependency: ', srcfile, mlocation
+                    # print 'adding dependency: ', srcfile, mlocation
                     node.add_dependency(nodedict[mlocation])
 
     return nodelist
+
 
 def get_dag(nodelist):
     """
@@ -119,6 +123,7 @@ def get_dag(nodelist):
     """
     dag = DirectedAcyclicGraph(nodelist)
     return dag
+
 
 def order_source_files(srcfiles):
     """
@@ -132,24 +137,24 @@ def order_source_files(srcfiles):
         osrcfiles.append(node.name)
     return osrcfiles
 
-def order_c_source_files(srcfiles):
 
-    #create a dictionary that has module name and source file name
-    #create a dictionary that has a list of modules used within each source
-    #create a list of Nodes for later ordering
-    #create a dictionary of nodes
+def order_c_source_files(srcfiles):
+    # create a dictionary that has module name and source file name
+    # create a dictionary that has a list of modules used within each source
+    # create a list of Nodes for later ordering
+    # create a dictionary of nodes
     module_dict = {}
     sourcefile_module_dict = {}
     nodelist = []
     nodedict = {}
-    for srcfile in srcfiles: # contains only .c or .cpp
+    for srcfile in srcfiles:  # contains only .c or .cpp
         node = Node(srcfile.lower())
         nodelist.append(node)
         nodedict[srcfile.lower()] = node
 
         # search .c or .cpp file
         f = open(srcfile, 'r')
-        modulelist = []  #list of modules used by this source file
+        modulelist = []  # list of modules used by this source file
         module_dict[os.path.basename(srcfile).lower()] = srcfile.lower()
 
         for line in f:
@@ -159,15 +164,15 @@ def order_c_source_files(srcfiles):
             if linelist[0] == '#include':
                 m = re.match('"([^\.]*).h(pp|)"', linelist[1])
                 if m:
-                    modulename = m.group(1)+'.'+'c' + m.group(2)
+                    modulename = m.group(1) + '.' + 'c' + m.group(2)
                     if modulename not in modulelist:
                         modulelist.append(modulename)
         f.close()
 
         # search corresponding .h or .hpp file
         m = re.match('(.*).c(pp|)', srcfile.lower())
-        if m and os.path.isfile(m.group(1)+'.'+'h'+m.group(2)):
-            f = open(m.group(1)+'.'+'h'+m.group(2), 'r')
+        if m and os.path.isfile(m.group(1) + '.' + 'h' + m.group(2)):
+            f = open(m.group(1) + '.' + 'h' + m.group(2), 'r')
             # modulelist = []  #list of modules used by this source file
             # module_dict[srcfile] = srcfile
             for line in f:
@@ -177,19 +182,17 @@ def order_c_source_files(srcfiles):
                 if linelist[0] == '#include':
                     m = re.match('"([^\.]*).h(pp|)"', linelist[1])
                     if m:
-                        modulename = m.group(1)+'.'+'c'+m.group(2)
+                        modulename = m.group(1) + '.' + 'c' + m.group(2)
                         if modulename not in modulelist:
                             modulelist.append(modulename)
             # sourcefile_module_dict[srcfile] = modulelist
             f.close()
         else:
-            print "no corresponding header file found for ", srcfile
-
+            print("no corresponding header file found for ", srcfile)
 
         sourcefile_module_dict[srcfile.lower()] = modulelist
 
-
-    #go through and add the dependencies to each node
+    # go through and add the dependencies to each node
     for node in nodelist:
         srcfile = node.name.lower()
         modulelist = sourcefile_module_dict[srcfile]
@@ -199,7 +202,7 @@ def order_c_source_files(srcfiles):
                 # print 'adding dependency: ', srcfile, mlocation
                 node.add_dependency(nodedict[mlocation])
 
-    #build the ordered dependency list using the topological sort method
+    # build the ordered dependency list using the topological sort method
     if len(nodelist) > 0:
         orderednodes = DirectedAcyclicGraph(nodelist).toposort()
     else:
@@ -209,7 +212,6 @@ def order_c_source_files(srcfiles):
         osrcfiles.append(node.name)
 
     return osrcfiles
-
 
 
 if __name__ == '__main__':
@@ -227,7 +229,7 @@ if __name__ == '__main__':
 
     dag = DirectedAcyclicGraph(nodelist)
     ordered = dag.toposort()
-    print 'length of output: ', len(ordered)
+    print('length of output: ', len(ordered))
 
     for n in ordered:
-        print n.name
+        print(n.name)
