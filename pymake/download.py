@@ -13,7 +13,7 @@ def download_and_unzip(url, pth='./'):
     print('Attempting to download the file: ', url)
     file_name = os.path.join(pth, url.split('/')[-1])
     try:
-        urlretrieve(url, file_name)
+        f, header = urlretrieve(url, file_name)
     except:
         print('Error.  Cannot download the file.')
         raise Exception()
