@@ -88,7 +88,7 @@ def get_f_nodelist(srcfiles):
         nodelist.append(node)
         nodedict[srcfile] = node
         try:
-            f = open(srcfile, 'r') #, errors='ignore')
+            f = open(srcfile, 'r')
             modulelist = []  # list of modules used by this source file
             for line in f:
                 linelist = line.strip().split()
