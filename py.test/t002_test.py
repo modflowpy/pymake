@@ -17,8 +17,9 @@ def test_vmodflow2005():
 
     dirname = os.path.join('MF2005.1_11u')
     srcpth = os.path.join(dirname, 'src')
-    dstpth = os.path.join(dirname, 'dep')
 
+    # create the directory for the output if it doesn't exist
+    dstpth = os.path.join(dirname, 'dep')
     if not os.path.exists(dstpth):
         os.makedirs(dstpth)
 

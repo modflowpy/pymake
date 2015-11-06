@@ -87,21 +87,24 @@ def get_f_nodelist(srcfiles):
         node = Node(srcfile)
         nodelist.append(node)
         nodedict[srcfile] = node
-        f = open(srcfile, 'r', errors='ignore')
-        modulelist = []  # list of modules used by this source file
-        for line in f:
-            linelist = line.strip().split()
-            if len(linelist) == 0:
-                continue
-            if linelist[0].upper() == 'MODULE':
-                modulename = linelist[1].upper()
-                module_dict[modulename] = srcfile
-            if linelist[0].upper() == 'USE':
-                modulename = linelist[1].split(',')[0].upper()
-                if modulename not in modulelist:
-                    modulelist.append(modulename)
-        sourcefile_module_dict[srcfile] = modulelist
-        f.close()
+        try:
+            f = open(srcfile, 'r', errors='ignore')
+            modulelist = []  # list of modules used by this source file
+            for line in f:
+                linelist = line.strip().split()
+                if len(linelist) == 0:
+                    continue
+                if linelist[0].upper() == 'MODULE':
+                    modulename = linelist[1].upper()
+                    module_dict[modulename] = srcfile
+                if linelist[0].upper() == 'USE':
+                    modulename = linelist[1].split(',')[0].upper()
+                    if modulename not in modulelist:
+                        modulelist.append(modulename)
+            sourcefile_module_dict[srcfile] = modulelist
+            f.close()
+        except:
+            print('Error: {} does not exist'.format(srcfile))
 
     # go through and add the dependencies to each node
     for node in nodelist:
