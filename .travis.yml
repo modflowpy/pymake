@@ -14,9 +14,9 @@ python:
 before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update -qq
-  - sudo apt-get install gfortran-5.1
+  - sudo apt-get install gfortran-5
   - sudo apt-get install graphviz
-  - sudo ln -fs /usr/bin/gfortran-5.1 /usr/bin/gfortran && gfortran --version
+  - sudo ln -fs /usr/bin/gfortran-5 /usr/bin/gfortran && gfortran --version
   - export PATH=".:$PATH"
 
 # command to run tests
