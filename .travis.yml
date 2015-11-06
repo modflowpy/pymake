@@ -19,6 +19,10 @@ before_install:
   - sudo ln -fs /usr/bin/gfortran-5 /usr/bin/gfortran && gfortran --version
   - export PATH=".:$PATH"
 
+# command to install dependencies
+install: "pip install -r requirements.travis.txt"
+
+
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
