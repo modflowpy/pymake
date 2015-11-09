@@ -18,7 +18,6 @@ __status__ = "Production"
 
 import re
 import os
-import codecs
 
 
 class Node(object):
@@ -88,25 +87,32 @@ def get_f_nodelist(srcfiles):
         node = Node(srcfile)
         nodelist.append(node)
         nodedict[srcfile] = node
-        # in python 3 this could just be f = open(srcfile, 'r', encoding='ascii', errors='replace')
-        f = codecs.open(srcfile, 'r', encoding='ascii', errors='replace')
         try:
-            modulelist = []  # list of modules used by this source file
-            for idx, line in enumerate(f):
-                linelist = line.strip().split()
-                if len(linelist) == 0:
-                    continue
-                if linelist[0].upper() == 'MODULE':
-                    modulename = linelist[1].upper()
-                    module_dict[modulename] = srcfile
-                if linelist[0].upper() == 'USE':
-                    modulename = linelist[1].split(',')[0].upper()
-                    if modulename not in modulelist:
-                        modulelist.append(modulename)
-            sourcefile_module_dict[srcfile] = modulelist
-            f.close()
+            f = open(srcfile, 'rb')
         except:
-            print('get_f_nodelist: {} - could not decode data on line {}'.format(os.path.basename(srcfile), idx+1))
+            print('get_f_nodelist: could not open {}'.format(os.path.basename(srcfile)))
+            sourcefile_module_dict[srcfile] = []
+            continue
+        lines = f.read()
+        lines = lines.decode('ascii', 'replace').splitlines()
+        # develop a list of modules in the file
+        modulelist = []  # list of modules used by this source file
+        for idx, line in enumerate(lines):
+            linelist = line.strip().split()
+            if len(linelist) == 0:
+                continue
+            if linelist[0].upper() == 'MODULE':
+                modulename = linelist[1].upper()
+                module_dict[modulename] = srcfile
+            if linelist[0].upper() == 'USE':
+                modulename = linelist[1].split(',')[0].upper()
+                if modulename not in modulelist:
+                    modulelist.append(modulename)
+        # update the dictionary if any entries have been found
+        sourcefile_module_dict[srcfile] = modulelist
+        # close the src file
+        f.close()
+
 
     # go through and add the dependencies to each node
     for node in nodelist:
