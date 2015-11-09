@@ -34,5 +34,5 @@ f.write(l)
 f.close()
 
 target = 'swtv4'
-pymake.main(srcdir, target, 'gfortran', makeclean=True, expedite=False,
-            dryrun=False, double=True, debug=False)
+pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+            expedite=False, dryrun=False, double=True, debug=False)

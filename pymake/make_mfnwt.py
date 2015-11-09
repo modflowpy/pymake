@@ -14,5 +14,5 @@ download_and_unzip(url)
 # Remove the parallel and serial folders from the source directory
 srcdir = os.path.join('MODFLOW-NWT_1.0.9', 'src')
 target = 'mfnwt'
-pymake.main(srcdir, target, 'gfortran', makeclean=True, expedite=False,
-            dryrun=False, double=False, debug=False)
+pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+            expedite=False, dryrun=False, double=False, debug=False)

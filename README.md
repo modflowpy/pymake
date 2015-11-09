@@ -27,8 +27,8 @@ To see help for running from command line, use the following statement.
 
     python pymake.py -h
 
-    usage: pymake.py [-h] [-fc {ifort,gfortran}] [-cc {gcc}] [-mc] [-e] [-dr]
-                     srcdir target
+    usage: pymake.py [-h] [-fc {ifort,gfortran}] [-cc {gcc,clang}] [-mc] [-e]
+                     [-dr] [-sd] srcdir target
     
     This is the pymake program for compiling fortran source files, such as the
     source files that come with MODFLOW. The program works by building a directed
@@ -42,7 +42,7 @@ To see help for running from command line, use the following statement.
     optional arguments:
       -h, --help            show this help message and exit
       -fc {ifort,gfortran}  Fortran compiler to use (default is gfortran)
-      -cc {gcc}             C compiler to use (default is gcc)
+      -cc {gcc, clang}      C compiler to use (default is gcc)
       -mc, --makeclean      Clean files when done
       -dbl, --double        Force double precision
       -dbg, --debug         Create debug version
@@ -51,6 +51,7 @@ To see help for running from command line, use the following statement.
                             for ifort.
       -dr, --dryrun         Do not actually compile. Files will be deleted, if
                             --makeclean is used. Does not work yet for ifort.
+      -sd, --subdirs        Include source files in srcdir subdirectories.
     
     Note that the source directory should not contain any bad or duplicate source
     files as all source files in the source directory will be built and linked.
@@ -61,8 +62,8 @@ To see help for running from command line, use the following statement.
     import pymake
     srcdir = '../mfnwt/src'
     target = 'mfnwt'
-    pymake.main(srcdir, target, 'gfortran', makeclean=True, expedite=False, dryrun=False,
-                double=False, debug=False)
+    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True, expedite=False,
+                dryrun=False, double=False, debug=False, include_subdirs=False)
 
 ## Automatic Download and Build
 

@@ -41,8 +41,8 @@ f.write(l)
 f.close()
 
 target = 'mt3dms'
-pymake.main(srcdir, target, 'gfortran', makeclean=True, expedite=False,
-            dryrun=False, double=False, debug=False)
+pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+            expedite=False, dryrun=False, double=False, debug=False)
 
 # Clean up unneeded folders
 dlist = ['bin', 'doc', 'examples', 'src', 'utility']

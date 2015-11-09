@@ -41,7 +41,7 @@ def parser():
     parser.add_argument('-fc', help='Fortran compiler to use (default is gfortran)',
                         default='gfortran', choices=['ifort', 'gfortran'])
     parser.add_argument('-cc', help='C compiler to use (default is gcc)',
-                        default='gcc', choices=['gcc'])
+                        default='gcc', choices=['gcc', 'clang'])
     parser.add_argument('-mc', '--makeclean', help='Clean files when done',
                         action='store_true')
     parser.add_argument('-dbl', '--double', help='Force double precision',
@@ -190,7 +190,7 @@ def out_of_date(srcfile, objfile):
     return ood
 
 
-def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
+def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                      expedite, dryrun, double, debug):
     '''
     Compile the program using the gnu compilers (gfortran and gcc)
@@ -216,16 +216,31 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
         compileflags.append('-fdefault-double-8')
 
     # c stuff -- thanks to mja
-    cc = 'gcc'
-    cflags = ['-D_UF', '-O3']
-    syslibs = ['-lc']
+    syslibs = []
+    if cc == 'gcc':
+        if debug:
+            cflags = ['-D_UF', '-O0', '-g']
+            #cflags = ['-O0', '-g']
+        else:
+            cflags = ['-D_UF', '-O3']
+            #cflags = ['-O3']
+        syslibs = ['-lc']
+    elif cc == 'clang':
+        if debug:
+            cflags = ['-O0', '-g']
+        else:
+            cflags = ['-O3']
+        syslibs = ['-lc']
+
 
     # build object files
     print('\nCompiling object files...')
     objfiles = []
     for srcfile in srcfiles:
         cmdlist = []
+        iscfile = False
         if srcfile.endswith('.c') or srcfile.endswith('.cpp'):  # mja
+            iscfile = True
             cmdlist.append(cc)  # mja
             for switch in cflags:  # mja
                 cmdlist.append(switch)  # mja
@@ -243,11 +258,11 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
         cmdlist.append('-o')
         cmdlist.append(objfile)
 
-        # put object files in objdir_temp
-        cmdlist.append('-I' + objdir_temp)
-
-        # put object files in objdir_temp
-        cmdlist.append('-J' + moddir_temp)
+        if not iscfile:
+            # put object files in objdir_temp
+            cmdlist.append('-I' + objdir_temp)
+            # put module files in moddir_temp
+            cmdlist.append('-J' + moddir_temp)
 
         # If expedited, then check if object file is out of date (if exists).
         # No need to compile if object file is newer.
@@ -289,7 +304,7 @@ def compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
     return
 
 
-def compile_with_mac_ifort(srcfiles, target,
+def compile_with_mac_ifort(srcfiles, target, cc,
                            objdir_temp, moddir_temp,
                            expedite, dryrun, double, debug):
     """
@@ -297,7 +312,6 @@ def compile_with_mac_ifort(srcfiles, target,
     """
 
     fc = 'ifort'
-    cc = 'clang'
     if debug:
         compileflags = [
             '-O0',
@@ -307,8 +321,6 @@ def compile_with_mac_ifort(srcfiles, target,
             '-fpe0',
             '-traceback'
         ]
-        cflags = ['-O0',
-                  '-g']
     else:
         # production version compile flags
         compileflags = [
@@ -317,11 +329,22 @@ def compile_with_mac_ifort(srcfiles, target,
             '-fpe0',
             '-traceback'
         ]
-        cflags = ['-O3']
     if double:
         compileflags.append('-r8')
         compileflags.append('-double_size')
         compileflags.append('64')
+
+    if cc == 'gcc':
+        if debug:
+            cflags = ['-O0', '-g']
+        else:
+            cflags = ['-O3']
+    elif cc == 'clang':
+        if debug:
+            cflags = ['-O0', '-g']
+        else:
+            cflags = ['-O3']
+    syslibs = ['-lc']
 
     # build object files
     print('\nCompiling object files...')
@@ -385,7 +408,8 @@ def compile_with_mac_ifort(srcfiles, target,
     cmdlist.append(os.path.join('.', target))
     for objfile in objfiles:
         cmdlist.append(objfile)
-
+    #for switch in syslibs:
+    #    cmdlist.append(switch)
     print(('check call: {}'.format(cmdlist)))
     if not dryrun:
         subprocess.check_call(cmdlist)
@@ -475,8 +499,9 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform):
     return
 
 
-def main(srcdir, target, fc, makeclean=True, expedite=False, dryrun=False,
-         double=False, debug=False, include_subdirs=False):
+def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
+         dryrun=False, double=False, debug=False,
+         include_subdirs=False):
     '''
     Main part of program
 
@@ -491,13 +516,13 @@ def main(srcdir, target, fc, makeclean=True, expedite=False, dryrun=False,
     if fc == 'gfortran':
         objext = '.o'
         create_openspec(srcdir_temp)
-        compile_with_gnu(srcfiles, target, objdir_temp, moddir_temp,
+        compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                          expedite, dryrun, double, debug)
     elif fc == 'ifort':
         platform = sys.platform
         if platform.lower() == 'darwin':
             objext = '.o'
-            compile_with_mac_ifort(srcfiles, target,
+            compile_with_mac_ifort(srcfiles, target, cc,
                                    objdir_temp, moddir_temp,
                                    expedite, dryrun, double, debug)
         else:
@@ -517,5 +542,6 @@ if __name__ == "__main__":
 
     # call main -- note that this form allows main to be called
     # from python as a function.
-    main(args.srcdir, args.target, args.fc, args.makeclean, args.expedite,
-         args.dryrun, args.double, args.debug, args.subdirs)
+    main(args.srcdir, args.target, args.fc, args.cc, args.makeclean,
+         args.expedite, args.dryrun, args.double, args.debug,
+         args.subdirs)

@@ -30,8 +30,9 @@ def test_modflow2005():
     target = 'mf2005dbl'
 
     # compile modflow
-    pymake.main(srcdir, target, 'gfortran', makeclean=True, expedite=False,
-                dryrun=False, double=True, debug=False, include_subdirs=False)
+    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+                expedite=False, dryrun=False, double=True, debug=False,
+                include_subdirs=False)
 
     assert os.path.isfile(target) is True
 

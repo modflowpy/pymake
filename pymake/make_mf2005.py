@@ -25,5 +25,5 @@ for d in dlist:
         shutil.rmtree(os.path.join(srcdir, d))
 
 target = 'mf2005dbl'
-pymake.main(srcdir, target, 'gfortran', makeclean=True, expedite=False,
-            dryrun=False, double=True, debug=False)
+pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+            expedite=False, dryrun=False, double=True, debug=False)
