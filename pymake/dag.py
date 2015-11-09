@@ -18,6 +18,7 @@ __status__ = "Production"
 
 import re
 import os
+import codecs
 
 
 class Node(object):
@@ -87,10 +88,11 @@ def get_f_nodelist(srcfiles):
         node = Node(srcfile)
         nodelist.append(node)
         nodedict[srcfile] = node
+        # in python 3 this could just be f = open(srcfile, 'r', encoding='ascii', errors='replace')
+        f = codecs.open(srcfile, 'r', encoding='ascii', errors='replace')
         try:
-            f = open(srcfile, 'r')
             modulelist = []  # list of modules used by this source file
-            for line in f:
+            for idx, line in enumerate(f):
                 linelist = line.strip().split()
                 if len(linelist) == 0:
                     continue
@@ -104,7 +106,7 @@ def get_f_nodelist(srcfiles):
             sourcefile_module_dict[srcfile] = modulelist
             f.close()
         except:
-            print('get_f_nodelist: {} does not exist'.format(srcfile))
+            print('get_f_nodelist: {} - could not decode data on line {}'.format(os.path.basename(srcfile), idx+1))
 
     # go through and add the dependencies to each node
     for node in nodelist:
