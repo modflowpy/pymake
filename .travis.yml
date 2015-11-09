@@ -3,9 +3,9 @@ language: python
 compiler:
   - gcc
 
-# 2.6 and "nightly" do not work at the moment, so they are commented out.
+# 2.6 does not work at the moment, so it is commented out.
 python:
-  - "2.6"
+  #- "2.6"
   - "2.7"
   - "3.2"
   - "3.3"

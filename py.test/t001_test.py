@@ -33,6 +33,8 @@ def test_modflow2005():
     pymake.main(srcdir, target, 'gfortran', makeclean=True, expedite=False,
                 dryrun=False, double=True, debug=False, include_subdirs=False)
 
+    assert os.path.isfile(target) is True
+
     os.chdir(pth)
 
 

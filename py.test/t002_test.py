@@ -34,9 +34,14 @@ def test_vmodflow2005():
     if not os.path.exists(dstpth):
         os.makedirs(dstpth)
 
-    #--
+    # make dependency figures
     pymake.visualize.make_plots(srcpth, dstpth)
-    
+
+    # test that the dependency figure for the MODFLOW-2005 main exists
+    testpth = os.path.join(dstpth, 'mf2005.f.png')
+    assert os.path.isfile(testpth) is True
+
+    # change back to the starting directory
     os.chdir(pth)
 
 
