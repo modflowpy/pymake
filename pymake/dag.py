@@ -161,70 +161,59 @@ def order_c_source_files(srcfiles):
     sourcefile_module_dict = {}
     nodelist = []
     nodedict = {}
-    for srcfile in srcfiles:  # contains only .c or .cpp
-        node = Node(srcfile.lower())
+    for srcfile in srcfiles:
+        node = Node(srcfile)
         nodelist.append(node)
-        nodedict[srcfile.lower()] = node
-
-        # search .c or .cpp file
-        f = open(srcfile, 'r')
+        nodedict[srcfile] = node
+        try:
+            f = open(srcfile, 'rb')
+        except:
+            print('order_c_source_files: could not open {}'.format(os.path.basename(srcfile)))
+            sourcefile_module_dict[srcfile] = []
+            continue
+        lines = f.read()
+        lines = lines.decode('ascii', 'replace').splitlines()
+        # develop a list of modules in the file
         modulelist = []  # list of modules used by this source file
-        module_dict[os.path.basename(srcfile).lower()] = srcfile.lower()
-
-        for line in f:
+        for idx, line in enumerate(lines):
             linelist = line.strip().split()
             if len(linelist) == 0:
                 continue
-            if linelist[0] == '#include':
-                m = re.match('"([^\.]*).h(pp|)"', linelist[1])
-                if m:
-                    modulename = m.group(1) + '.' + 'c' + m.group(2)
-                    if modulename not in modulelist:
-                        modulelist.append(modulename)
+            if linelist[0].upper() == '#INCLUDE':
+                modulename = linelist[1].replace('"', '').replace("'", "").replace('<', '').replace('>', '').upper()
+                # add source file for this c(pp) file if it is the same
+                # as the include file without the extension
+                bn = os.path.basename(srcfile)
+                if os.path.splitext(modulename)[0] == os.path.splitext(bn)[0].upper():
+                    module_dict[modulename] = srcfile
+                # add include file name
+                if modulename not in modulelist:
+                    modulelist.append(modulename)
+        # update the dictionary if any entries have been found
+        sourcefile_module_dict[srcfile] = modulelist
+        # close the src file
         f.close()
 
-        # search corresponding .h or .hpp file
-        m = re.match('(.*).c(pp|)', srcfile.lower())
-        if m and os.path.isfile(m.group(1) + '.' + 'h' + m.group(2)):
-            f = open(m.group(1) + '.' + 'h' + m.group(2), 'r')
-            # modulelist = []  #list of modules used by this source file
-            # module_dict[srcfile] = srcfile
-            for line in f:
-                linelist = line.strip().split()
-                if len(linelist) == 0:
-                    continue
-                if linelist[0] == '#include':
-                    m = re.match('"([^\.]*).h(pp|)"', linelist[1])
-                    if m:
-                        modulename = m.group(1) + '.' + 'c' + m.group(2)
-                        if modulename not in modulelist:
-                            modulelist.append(modulename)
-            # sourcefile_module_dict[srcfile] = modulelist
-            f.close()
-        else:
-            print("no corresponding header file found for ", srcfile)
-
-        sourcefile_module_dict[srcfile.lower()] = modulelist
 
     # go through and add the dependencies to each node
     for node in nodelist:
-        srcfile = node.name.lower()
-        modulelist = sourcefile_module_dict[srcfile]
-        for m in modulelist:
-            mlocation = module_dict[m]
-            if mlocation != srcfile:
-                # print 'adding dependency: ', srcfile, mlocation
-                node.add_dependency(nodedict[mlocation])
+        srcfile = node.name
+        try:
+            modulelist = sourcefile_module_dict[srcfile]
+            for m in modulelist:
+                if m in module_dict:
+                    mlocation = module_dict[m]
+                    if mlocation != srcfile:
+                        # print 'adding dependency: ', srcfile, mlocation
+                        node.add_dependency(nodedict[mlocation])
+        except:
+            print('order_c_source_files: {} key does not exist'.format(srcfile))
 
-    # build the ordered dependency list using the topological sort method
-    if len(nodelist) > 0:
-        orderednodes = DirectedAcyclicGraph(nodelist).toposort()
-    else:
-        orderednodes = []
+    dag = get_dag(nodelist)
+    orderednodes = dag.toposort()
     osrcfiles = []
     for node in orderednodes:
         osrcfiles.append(node.name)
-
     return osrcfiles
 
 
