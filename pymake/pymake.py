@@ -190,18 +190,43 @@ def out_of_date(srcfile, objfile):
     return ood
 
 
+# determine if iso_c_binding is used so that correct
+# gcc and clang compiler flags can be set
+def get_iso_c(srcfiles):
+    use_iso_c = False
+    for srcfile in srcfiles:
+        try:
+            f = open(srcfile, 'rb')
+        except:
+            print('get_f_nodelist: could not open {}'.format(os.path.basename(srcfile)))
+            continue
+        lines = f.read()
+        lines = lines.decode('ascii', 'replace').splitlines()
+        # develop a list of modules in the file
+        for idx, line in enumerate(lines):
+            linelist = line.strip().split()
+            if len(linelist) == 0:
+                continue
+            if linelist[0].upper() == 'USE':
+                modulename = linelist[1].split(',')[0].upper()
+                if 'ISO_C_BINDING' == modulename:
+                    return True
+    return False
+
+
 def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                      expedite, dryrun, double, debug):
     '''
     Compile the program using the gnu compilers (gfortran and gcc)
     '''
+    # fortran compiler switches
     fc = 'gfortran'
     if debug:
         # Debug flags
         compileflags = ['-g',
                         '-fcheck=all',
                         '-fbacktrace',
-                        '-fbounds-check',
+                        '-fbounds-check'
                         ]
     else:
         # Production version
@@ -215,23 +240,18 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         compileflags.append('-fdefault-real-8')
         compileflags.append('-fdefault-double-8')
 
-    # c stuff -- thanks to mja
-    syslibs = []
-    if cc == 'gcc':
-        if debug:
-            cflags = ['-D_UF', '-O0', '-g']
-            #cflags = ['-O0', '-g']
-        else:
-            cflags = ['-D_UF', '-O3']
-            #cflags = ['-O3']
-        syslibs = ['-lc']
-    elif cc == 'clang':
-        if debug:
-            cflags = ['-O0', '-g']
-        else:
-            cflags = ['-O3']
-        syslibs = ['-lc']
-
+    # C/C++ compiler switches -- thanks to mja
+    if debug:
+        cflags = ['-O0', '-g']
+    else:
+        cflags = ['-O3']
+    syslibs = ['-lc']
+    # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
+    # code that is linked to C/C++ code
+    # -D_UF defines UNIX naming conventions for mixed language compilation.
+    use_iso_c = get_iso_c(srcfiles)
+    if not use_iso_c:
+        cflags.append('-D_UF')
 
     # build object files
     print('\nCompiling object files...')
@@ -298,7 +318,10 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         cmdlist.append(objfile)
     for switch in syslibs:
         cmdlist.append(switch)
-    print('check call: ', cmdlist)
+    s = ''
+    for c in cmdlist:
+        s += c + ' '
+    print(s)
     if not dryrun:
         subprocess.check_call(cmdlist)
     return
@@ -310,7 +333,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
     """
     Make target on Mac OSX
     """
-
+    # fortran compiler switches
     fc = 'ifort'
     if debug:
         compileflags = [
@@ -334,17 +357,18 @@ def compile_with_mac_ifort(srcfiles, target, cc,
         compileflags.append('-double_size')
         compileflags.append('64')
 
-    if cc == 'gcc':
-        if debug:
-            cflags = ['-O0', '-g']
-        else:
-            cflags = ['-O3']
-    elif cc == 'clang':
-        if debug:
-            cflags = ['-O0', '-g']
-        else:
-            cflags = ['-O3']
+    # C/C++ compiler switches
+    if debug:
+        cflags = ['-O0', '-g']
+    else:
+        cflags = ['-O3']
     syslibs = ['-lc']
+    # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
+    # code that is linked to C/C++ code
+    # -D_UF defines UNIX naming conventions for mixed language compilation.
+    use_iso_c = get_iso_c(srcfiles)
+    if not use_iso_c:
+        cflags.append('-D_UF')
 
     # build object files
     print('\nCompiling object files...')
@@ -408,9 +432,12 @@ def compile_with_mac_ifort(srcfiles, target, cc,
     cmdlist.append(os.path.join('.', target))
     for objfile in objfiles:
         cmdlist.append(objfile)
-    #for switch in syslibs:
-    #    cmdlist.append(switch)
-    print(('check call: {}'.format(cmdlist)))
+    for switch in syslibs:
+        cmdlist.append(switch)
+    s = ''
+    for c in cmdlist:
+        s += c + ' '
+    print(s)
     if not dryrun:
         subprocess.check_call(cmdlist)
 
@@ -497,6 +524,55 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform):
     f.write(cmd)
     f.close()
     return
+
+
+def run_model(exe_name, namefile, model_ws='./', silent=False, pause=False, report=False):
+    """
+    This method will run the model using subprocess.Popen.
+
+    Parameters
+    ----------
+    silent : boolean
+        Echo run information to screen (default is True).
+    pause : boolean, optional
+        Pause upon completion (the default is False).
+    report : boolean, optional
+        Save stdout lines to a list (buff) which is returned
+        by the method . (the default is False).
+
+    Returns
+    -------
+    (success, buff)
+    success : boolean
+    buff : list of lines of stdout
+
+    """
+    success = False
+    buff = []
+
+    # Check to make sure that the namefile exists
+    if not os.path.isfile(os.path.join(model_ws, namefile)):
+        s = 'The namefile for this model does not exists: {}'.format(namefile)
+        raise Exception(s)
+
+    proc = subprocess.Popen([exe_name, namefile],
+                            stdout=subprocess.PIPE, cwd=model_ws)
+    while True:
+        line = proc.stdout.readline()
+        c = line.decode('utf-8')
+        if c != '':
+            if 'normal termination of simulation' in c.lower():
+                success = True
+            c = c.rstrip('\r\n')
+            if not silent:
+                print('{}'.format(c))
+            if report == True:
+                buff.append(c)
+        else:
+            break
+    if pause == True:
+        input('Press Enter to continue...')
+    return [success, buff]
 
 
 def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
