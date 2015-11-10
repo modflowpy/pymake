@@ -46,6 +46,14 @@ def test_seawat():
     f.write(l)
     f.close()
 
+    # rename all source files to lower case so compilation doesn't
+    # bomb on case-sensitive systems
+    srcfiles = os.listdir(srcdir)
+    for filename in srcfiles:
+        src = os.path.join(srcdir, filename)
+        dst = os.path.join(srcdir, filename.lower())
+        os.rename(src, dst)
+
     # compile seawat
     pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
                 expedite=False, dryrun=False, double=True, debug=False,
