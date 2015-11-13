@@ -19,7 +19,7 @@ def test_mfusg():
         shutil.rmtree(dirname)
 
     url = 'http://water.usgs.gov/ogw/mfusg/mfusg.1_2_00.zip'
-    download_and_unzip(url)
+    pymake.download_and_unzip(url)
 
     # Set src and target
     srcdir = os.path.join('mfusg.1_2', 'src')
