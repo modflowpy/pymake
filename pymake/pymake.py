@@ -24,7 +24,6 @@ import subprocess
 import argparse
 from .dag import order_source_files, order_c_source_files
 
-
 def parser():
     '''
     Construct the parser and return argument values
