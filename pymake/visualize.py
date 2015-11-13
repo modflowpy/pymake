@@ -2,7 +2,11 @@ from __future__ import print_function
 import os
 from .pymake import get_ordered_srcfiles
 from .dag import get_f_nodelist
-import pydotplus.graphviz as pydot
+
+try:
+    import pydotplus.graphviz as pydot
+except:
+    print('pymake graphing capabilities not available.')
 
 
 def to_pydot(dag, filename='mygraph.png'):

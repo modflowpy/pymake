@@ -156,8 +156,12 @@ def get_ordered_srcfiles(srcdir_temp, include_subdir=False):
         cfileswithpath.append(s)
 
     # order the source files using the directed acyclic graph in dag.py
-    orderedsourcefiles = order_source_files(srcfileswithpath) + \
-                         order_c_source_files(cfileswithpath)
+    orderedsourcefiles = []
+    if len(srcfileswithpath) > 0:
+        orderedsourcefiles += order_source_files(srcfileswithpath)
+        
+    if len(cfileswithpath) > 0:
+        orderedsourcefiles += order_c_source_files(cfileswithpath)
 
     return orderedsourcefiles
 
@@ -444,9 +448,12 @@ def compile_with_mac_ifort(srcfiles, target, cc,
     return
 
 
-def compile_with_ifort(srcfiles, target, double, debug):
+def compile_with_ifort(srcfiles, target, cc,
+                           objdir_temp, moddir_temp,
+                           expedite, dryrun, double, debug):
     """
     Make target on Windows OS
+    
     """
 
     fc = 'ifort.exe'
@@ -482,14 +489,16 @@ def compile_with_ifort(srcfiles, target, double, debug):
 
     # Create ia32
     try:
-        makebatch(batchfile32, fc, compileflags, srcfiles, target, 'ia32')
+        makebatch(batchfile32, fc, compileflags, srcfiles, target, 'ia32', objdir_temp,
+                  moddir_temp)
         subprocess.check_call([batchfile32, ], )
     except:
         print('Could not make ia32 target: ', target)
 
     # Create x64
     try:
-        makebatch(batchfile64, fc, compileflags, srcfiles, target, 'intel64')
+        makebatch(batchfile64, fc, compileflags, srcfiles, target + '_x64', 'intel64', objdir_temp,
+                  moddir_temp)
         subprocess.check_call([batchfile64, ], )
     except:
         print('Could not make x64 target: ', target)
@@ -497,9 +506,11 @@ def compile_with_ifort(srcfiles, target, double, debug):
     return
 
 
-def makebatch(batchfile, fc, compileflags, srcfiles, target, platform):
+def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_temp,
+              moddir_temp):
     '''
     Make an ifort batch file
+    
     '''
     cpvars = os.environ.get('IFORT_COMPILER13') + 'bin/compilervars.bat'
     f = open(batchfile, 'w')
@@ -512,6 +523,8 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform):
         for switch in compileflags:
             cmd += switch + ' '
         cmd += '-c' + ' '
+        cmd += '/module:{}\ '.format(moddir_temp)
+        cmd += '/object:{}\ '.format(objdir_temp)
         cmd += srcfile
         cmd += '\n'
         f.write(cmd)
@@ -520,7 +533,7 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform):
     cmd = fc + ' '
     for switch in compileflags:
         cmd += switch + ' '
-    cmd += '-o' + ' ' + target + ' ' + '*.obj' + '\n'
+    cmd += '-o' + ' ' + target + ' ' + objdir_temp + '\*.obj' + '\n'
     f.write(cmd)
     f.close()
     return
@@ -603,13 +616,18 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
                                    expedite, dryrun, double, debug)
         else:
             objext = '.obj'
-            compile_with_ifort(srcfiles, target, double, debug)
+            cc = 'cl.exe'
+            compile_with_ifort(srcfiles, target, cc,
+                                   objdir_temp, moddir_temp,
+                                   expedite, dryrun, double, debug)
     else:
         raise Exception('Unsupported compiler')
 
     # clean it up
     if makeclean:
         clean(srcdir_temp, objdir_temp, moddir_temp, objext)
+        
+    return
 
 
 if __name__ == "__main__":

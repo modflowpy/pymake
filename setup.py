@@ -2,6 +2,7 @@ import os
 import sys
 from setuptools import setup
 
+from pymake.pymake import __version__
 
 # trap someone trying to install pymake with something other
 #  than python 2 or 3
@@ -20,6 +21,6 @@ setup(name=__name__,
       url='https://github.com/modflowpy/pymake.git',
       license='New BSD',
       platforms='Windows, Mac OS-X',
-      install_requires=['pydotplus>=2.0'],
+      install_requires=[], # ['pydotplus>=2.0'],
       packages=['pymake'],
       version=__version__ )
