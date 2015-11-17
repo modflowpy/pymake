@@ -14,7 +14,6 @@ exe_name = 'mf2005r'
 srcdir = os.path.join(mfpth, 'src')
 target = os.path.join(dstpth, exe_name)
 
-
 def compile_code():
     # Download the MODFLOW-2005 distribution
     url = 'http://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip'
@@ -22,6 +21,7 @@ def compile_code():
 
     # Remove the existing MF2005.1_11u directory if it exists
     if os.path.isdir(mfpth):
+        print('Removing folder ' + mfpth)
         shutil.rmtree(mfpth)
     # Rename Unix to a more reasonable name
     os.rename(os.path.join(dstpth, 'Unix'), mfpth)
@@ -42,8 +42,6 @@ def get_namefiles():
                 namefiles.append(file)
     return namefiles
 
-
-
 def run_modflow2005(namefile):
 
     root = os.path.splitext(namefile)[0]
@@ -63,13 +61,24 @@ def run_modflow2005(namefile):
     assert success is True
 
 def test_modflow2005():
-    #compile_code()
+    compile_code()
     namefiles = get_namefiles()
     for namefile in namefiles:
         yield run_modflow2005, namefile
+    # clean up
+    print('Removing folder ' + mfpth)
+    shutil.rmtree(mfpth)
+    print('Removing ' + target)
+    os.remove(target)
 
 if __name__ == '__main__':
-    #compile_code()
+    compile_code()
     namefiles = get_namefiles()
     for namefile in namefiles:
         run_modflow2005(namefile)
+    # clean up
+    print('Removing folder ' + mfpth)
+    shutil.rmtree(mfpth)
+    print('Removing ' + target)
+    os.remove(target)
+
