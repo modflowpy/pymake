@@ -95,8 +95,8 @@ def run_mfusg(namepth, dst):
     epth = os.path.join('..', exe_name)
     success, buff = pymake.run_model(epth, os.path.basename(namepth),
                                      model_ws=testpth, silent=True)
-    #if success:
-    #    pymake.teardown(testpth)
+    if success:
+        pymake.teardown(testpth)
     assert success is True
 
     return
@@ -122,4 +122,4 @@ if __name__ == "__main__":
     for namepth, dst in namefiles:
         run_mfusg(namepth, dst)
     # clean up
-    #clean_up()
+    clean_up()

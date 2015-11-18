@@ -21,12 +21,15 @@ def setup(namefile, dst, lower=False):
     nf = os.path.basename(namefile)
     if lower:
         nf = nf.lower()
-    files2copy = [nf] + get_input_files(fname, lower=lower)
+    files2copy = [nf] + get_input_files(fname)
 
     # Copy the files
     for f in files2copy:
         srcf = os.path.join(src, f)
-        dstf = os.path.join(dst, f.lower())
+        if lower:
+            dstf = os.path.join(dst, f.lower())
+        else:
+            dstf = os.path.join(dst, f)
 
         # Check to see if dstf is going into a subfolder, and create that
         # subfolder if it doesn't exist
@@ -53,7 +56,7 @@ def teardown(src):
     return
 
 
-def get_input_files(namefile, lower=False):
+def get_input_files(namefile):
     """
     Return a list of all the input files in this model
 
@@ -76,10 +79,7 @@ def get_input_files(namefile, lower=False):
             if len(ll) > 3:
                 if 'replace' in ll[3].lower():
                     continue
-            copyf = ll[2]
-            if lower:
-                copyf = copyf.lower()
-            filelist.append(copyf)
+            filelist.append(ll[2])
 
     # Now go through every file and look for other files to copy,
     # such as 'OPEN/CLOSE'.  If found, then add that file to the
@@ -104,8 +104,6 @@ def get_input_files(namefile, lower=False):
                             stmp = ll[i + 1]
                             stmp = stmp.replace('"', '')
                             stmp = stmp.replace("'", '')
-                            if lower:
-                                stmp = stmp.lower()
                             otherfiles.append(stmp)
                             break
         except:
