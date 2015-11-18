@@ -1,10 +1,13 @@
 import os
 import shutil
 
-ignore_ext = ['.hds', '.bud', '.cbb', '.cbc',
+ignore_ext = ['.hds', 'hed', '.bud', '.cbb', '.cbc',
                '.ddn', '.lst', '.list']
 
-def setup(namefile, src, dst):
+def setup(namefile, dst):
+
+    # Construct src pth from namefile
+    src = os.path.dirname(namefile)
 
     # Create the destination folder
     if os.path.exists(dst):
@@ -13,9 +16,8 @@ def setup(namefile, src, dst):
     os.mkdir(dst)
 
     # Make list of files to copy
-    fname = os.path.join(src, namefile)
-    fname = os.path.abspath(fname)
-    files2copy = [namefile] + get_input_files(fname)
+    fname = os.path.abspath(namefile)
+    files2copy = [os.path.basename(namefile)] + get_input_files(fname)
 
     # Copy the files
     for f in files2copy:
@@ -67,6 +69,9 @@ def get_input_files(namefile):
             continue
         ext = os.path.splitext(ll[2])[1]
         if ext.lower() not in ignore_ext:
+            if len(ll) > 3:
+                if 'replace' in ll[3].lower():
+                    continue
             filelist.append(ll[2])
 
     # Now go through every file and look for other files to copy,

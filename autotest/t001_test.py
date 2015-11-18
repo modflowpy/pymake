@@ -9,9 +9,10 @@ if not os.path.exists(dstpth):
     os.makedirs(dstpth)
 mfpth = os.path.join(dstpth, 'MF2005.1_11u')
 expth = os.path.join(mfpth, 'test-run')
+deppth = os.path.join(mfpth, 'dependencies')
 
 exe_name = 'mf2005r'
-srcdir = os.path.join(mfpth, 'src')
+srcpth = os.path.join(mfpth, 'src')
 target = os.path.join(dstpth, exe_name)
 
 def compile_code():
@@ -27,7 +28,7 @@ def compile_code():
     os.rename(os.path.join(dstpth, 'Unix'), mfpth)
 
     # compile modflow
-    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+    pymake.main(srcpth, target, 'gfortran', 'gcc', makeclean=True,
                 expedite=False, dryrun=False, double=False, debug=False,
                 include_subdirs=False)
 
@@ -48,7 +49,7 @@ def run_modflow2005(namefile):
 
     # setup
     testpth = os.path.join(dstpth, root)
-    pymake.setup(namefile, expth, testpth)
+    pymake.setup(os.path.join(expth, namefile), testpth)
 
     # run test models
     print('running model...{}'.format(namefile))
@@ -60,25 +61,47 @@ def run_modflow2005(namefile):
 
     assert success is True
 
-def test_modflow2005():
-    compile_code()
-    namefiles = get_namefiles()
-    for namefile in namefiles:
-        yield run_modflow2005, namefile
+def clean_up():
     # clean up
     print('Removing folder ' + mfpth)
     shutil.rmtree(mfpth)
     print('Removing ' + target)
     os.remove(target)
 
+def build_modflow2005_dependency_graphs():
+
+    # build dependencies output directory
+    if not os.path.exists(deppth):
+        os.makedirs(deppth)
+    # build dependency graphs
+    print('building dependency graphs')
+    pymake.visualize.make_plots(srcpth, deppth)
+    # test that the dependency figure for the MODFLOW-2005 main exists
+    findf = os.path.join(deppth, 'mf2005.f.png')
+    assert os.path.isfile(findf) is True
+
+def test_modflow2005():
+    compile_code()
+    namefiles = get_namefiles()
+    # run models
+    for namefile in namefiles:
+        yield run_modflow2005, namefile
+
+def test_dependency_graphs():
+    # build dependency graphs
+    yield build_modflow2005_dependency_graphs
+
+def test_clean_up():
+    yield clean_up
+
 if __name__ == '__main__':
     compile_code()
     namefiles = get_namefiles()
+    # run models
     for namefile in namefiles:
         run_modflow2005(namefile)
+    # build dependency graphs
+    build_mf2005_dependency_graphs()
     # clean up
-    print('Removing folder ' + mfpth)
-    shutil.rmtree(mfpth)
-    print('Removing ' + target)
-    os.remove(target)
+    clean_up()
 

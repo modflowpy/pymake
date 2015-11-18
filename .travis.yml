@@ -3,7 +3,7 @@ language: python
 compiler:
   - gcc
 
-sudo: true
+sudo: false #true
 
 # 2.6 does not work at the moment, so it is commented out.
 python:
@@ -28,12 +28,8 @@ addons:
       - graphviz
 
 before_install:
-  #- sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  #- sudo apt-get update -qq
-  #- sudo apt-get install gfortran-5
-  #- sudo apt-get install graphviz
-  - sudo ln -fs /usr/bin/gfortran-5 /usr/bin/gfortran && gfortran --version
-  - export PATH=".:$PATH"
+  #- sudo ln -fs /usr/bin/gfortran-5 /usr/bin/gfortran && gfortran --version
+  #- export PATH=".:$PATH"
   - gcc -v
   - gfortran -v
 
@@ -44,4 +40,4 @@ install: "pip install -r requirements.travis.txt"
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
-    - nosetests -v -w ./py.test
+    - nosetests -v -w ./autotest
