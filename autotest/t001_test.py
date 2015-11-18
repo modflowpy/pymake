@@ -32,12 +32,12 @@ def compile_code():
                 expedite=False, dryrun=False, double=False, debug=False,
                 include_subdirs=False)
 
-    assert os.path.isfile(target) is True
+    assert os.path.isfile(target) is True, 'Target does not exist.'
 
 def get_namefiles():
     namefiles = []
     exclude = ('MNW2-Fig28.nam')
-    for file in os.listdir(os.path.join(mfpth, 'test-run')):
+    for file in os.listdir(expth):
         if file.endswith('.nam'):
             if file not in exclude:
                 namefiles.append(file)
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     for namefile in namefiles:
         run_modflow2005(namefile)
     # build dependency graphs
-    build_mf2005_dependency_graphs()
+    build_modflow2005_dependency_graphs()
     # clean up
     clean_up()
 

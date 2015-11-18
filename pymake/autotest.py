@@ -1,8 +1,9 @@
 import os
 import shutil
 
-ignore_ext = ['.hds', 'hed', '.bud', '.cbb', '.cbc',
-               '.ddn', '.lst', '.list']
+ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
+              '.ddn', '.ucn', '.glo', '.lst', '.list',
+              '.gwv', '.mv']
 
 def setup(namefile, dst):
 

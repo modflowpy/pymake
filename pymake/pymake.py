@@ -538,7 +538,8 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_te
     return
 
 
-def run_model(exe_name, namefile, model_ws='./', silent=False, pause=False, report=False):
+def run_model(exe_name, namefile, model_ws='./', silent=False, pause=False, report=False,
+              normal_msg='normal termination'):
     """
     This method will run the model using subprocess.Popen.
 
@@ -573,7 +574,7 @@ def run_model(exe_name, namefile, model_ws='./', silent=False, pause=False, repo
         line = proc.stdout.readline()
         c = line.decode('utf-8')
         if c != '':
-            if 'normal termination of simulation' in c.lower():
+            if normal_msg in c.lower():
                 success = True
             c = c.rstrip('\r\n')
             if not silent:

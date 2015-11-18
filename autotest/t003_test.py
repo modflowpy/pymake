@@ -3,48 +3,107 @@ import os
 import shutil
 import pymake
 
+# set up paths
+dstpth = os.path.join('temp')
+if not os.path.exists(dstpth):
+    os.makedirs(dstpth)
+mfusgpth = os.path.join(dstpth, 'mfusg.1_2')
+expth = os.path.join(mfusgpth, 'test')
 
-def test_mfusg():
+exe_name = 'mfusgr'
+srcpth = os.path.join(mfusgpth, 'src')
+target = os.path.join(dstpth, exe_name)
 
-    # get current directory
-    pth = os.getcwd()
-    dstpth = os.path.join('temp')
-    if not os.path.exists(dstpth):
-        os.makedirs(dstpth)
-    os.chdir(dstpth)
+def get_namefiles():
+    namefiles = []
+    last = os.path.split(expth)[1]
+    exclude_tests = ('7_swtv4_ex',)
+    for dir, subdirs, files in os.walk(expth):
+        for file in files:
+            if file.endswith('.nam'):
+                pth = os.path.join(dir, file)
+                t = pth.split(os.sep)
+                i = t.index(last)
+                dst = ''
+                if i < len(t):
+                    for d in t[i+1:-1]:
+                        dst += '{}_'.format(d)
+                dst += t[-1].replace('.nam', '')
+                for e in exclude_tests:
+                    if e.lower() in dst.lower():
+                        continue
+                namefiles.append((pth, dst))
+    return namefiles
 
-    # Remove the existing mfusg.1_2 directory if it exists
-    dirname = 'mfusg.1_2'
-    if os.path.isdir(dirname):
-        shutil.rmtree(dirname)
+def compile_code():
+    # Remove the existing mfusg directory if it exists
+    if os.path.isdir(mfusgpth):
+        shutil.rmtree(mfusgpth)
 
+    # Download the MODFLOW-USG distribution
     url = 'http://water.usgs.gov/ogw/mfusg/mfusg.1_2_00.zip'
-    pymake.download_and_unzip(url)
-
-    # Set src and target
-    srcdir = os.path.join('mfusg.1_2', 'src')
-    target = 'mfusg'
+    pymake.download_and_unzip(url, pth=dstpth)
 
     # Remove extraneous source directories
     dlist = ['zonebudusg', 'serial']
     for d in dlist:
-        dname = os.path.join(srcdir, d)
+        dname = os.path.join(srcpth, d)
         if os.path.isdir(dname):
             print('Removing ', dname)
-            shutil.rmtree(os.path.join(srcdir, d))
+            shutil.rmtree(os.path.join(srcpth, d))
 
-    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+    # compile MODFLOW-USG
+    pymake.main(srcpth, target, 'gfortran', 'gcc', makeclean=True,
                 expedite=False, dryrun=False, double=False, debug=False)
-
     assert os.path.isfile(target), 'Target does not exist.'
 
-    # Remove the existing mfusg.1_2 directory if it exists
-    dirname = 'mfusg.1_2'
-    if os.path.isdir(dirname):
-        shutil.rmtree(dirname)
+def clean_up():
+    # clean up
+    print('Removing folder ' + mfusgpth)
+    shutil.rmtree(mfusgpth)
+    print('Removing ' + target)
+    os.remove(target)
+    return
 
-    # change back to the starting directory
-    os.chdir(pth)
+def run_mfusg(namepth, dst):
+    print('running...{}'.format(dst))
+    # setup
+    testpth = os.path.join(dstpth, dst)
+    pymake.setup(namepth, testpth)
 
+    # edit name file
+    pth = os.path.join(testpth, os.path.basename(namepth))
+
+    # run test models
+    print('running model...{}'.format(os.path.basename(namepth)))
+    epth = os.path.join('..', exe_name)
+    success, buff = pymake.run_model(epth, os.path.basename(namepth),
+                                     model_ws=testpth, silent=True)
+    if success:
+        pymake.teardown(testpth)
+    assert success is True
+
+    return
+
+def test_mfusg():
+    # compile MODFLOW-USG
+    compile_code()
+    # get name files and simulation name
+    namefiles = get_namefiles()
+    # run models
+    for namepth, dst in namefiles:
+        yield run_mfusg, namepth, dst
+
+def test_clean_up():
+    yield clean_up
+    
 if __name__ == "__main__":
-    test_mfusg()
+    # compile MODFLOW-USG
+    compile_code()
+    # get name files and simulation name
+    namefiles = get_namefiles()
+    # run models
+    for namepth, dst in namefiles:
+        run_mfusg(namepth, dst)
+    # clean up
+    clean_up()
