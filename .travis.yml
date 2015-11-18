@@ -27,15 +27,18 @@ addons:
       - cmake
       - graphviz
 
-before_install:
-  #- sudo ln -fs /usr/bin/gfortran-5 /usr/bin/gfortran && gfortran --version
-  #- export PATH=".:$PATH"
-  - gcc -v
-  - gfortran -v
+#before_install:
+#  #- sudo ln -fs /usr/bin/gfortran-5 /usr/bin/gfortran && gfortran --version
+#  #- export PATH=".:$PATH"
+#  - gcc -v
+#  - gfortran -v
 
 # command to install dependencies
 install: "pip install -r requirements.travis.txt"
 
+before_script:
+    - ln -s /usr/bin/gfortran-5 /opt/gfortran
+    - gfortran --version
 
 # command to run tests
 script: 
