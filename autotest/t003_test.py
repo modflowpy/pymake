@@ -14,6 +14,27 @@ exe_name = 'mfusgr'
 srcpth = os.path.join(mfusgpth, 'src')
 target = os.path.join(dstpth, exe_name)
 
+def edit_namefiles():
+    for dir, subdirs, files in os.walk(expth):
+        for file in files:
+            if file.endswith('.nam'):
+                pth = os.path.join(dir, file)
+                # read existing namefile
+                f = open(pth, 'r')
+                lines = f.read().splitlines()
+                f.close()
+                # convert file extensions to lower case
+                f = open(pth, 'w')
+                for line in lines:
+                    t = line.split()
+                    fn, ext = os.path.splitext(t[2])
+                    f.write('{:15s} {:3s} {} '.format(t[0], t[1],
+                                                      '{}{}'.format(fn, ext.lower())))
+                    if len(t) > 3:
+                        f.write('{}'.format(t[3]))
+                    f.write('\n')
+                f.close()
+
 def get_namefiles():
     namefiles = []
     last = os.path.split(expth)[1]
@@ -26,7 +47,7 @@ def get_namefiles():
                 i = t.index(last)
                 dst = ''
                 if i < len(t):
-                    for d in t[i+1:-1]:
+                    for d in t[i + 1:-1]:
                         dst += '{}_'.format(d)
                 dst += t[-1].replace('.nam', '')
                 for e in exclude_tests:
@@ -34,23 +55,6 @@ def get_namefiles():
                         continue
                 namefiles.append((pth, dst))
     return namefiles
-
-def edit_namefile(namefile):
-    # read existing namefile
-    f = open(namefile, 'r')
-    lines = f.read().splitlines()
-    f.close()
-    # convert file extensions to lower case
-    f = open(namefile, 'w')
-    for line in lines:
-        t = line.split()
-        fn, ext = os.path.splitext(t[2])
-        f.write('{:15s} {:3s} {} '.format(t[0], t[1],
-                                         '{}{}'.format(fn, ext.lower())))
-        if len(t) > 3:
-            f.write('{}'.format(t[3]))
-        f.write('\n')
-    f.close()
 
 def compile_code():
     # Remove the existing mfusg directory if it exists
@@ -74,6 +78,7 @@ def compile_code():
                 expedite=False, dryrun=False, double=False, debug=False)
     assert os.path.isfile(target), 'Target does not exist.'
 
+
 def clean_up():
     # clean up
     print('Removing folder ' + mfusgpth)
@@ -82,15 +87,12 @@ def clean_up():
     os.remove(target)
     return
 
+
 def run_mfusg(namepth, dst):
     print('running...{}'.format(dst))
     # setup
     testpth = os.path.join(dstpth, dst)
     pymake.setup(namepth, testpth)
-
-    # edit name file
-    pth = os.path.join(testpth, os.path.basename(namepth))
-    edit_namefile(pth)
 
     # run test models
     print('running model...{}'.format(os.path.basename(namepth)))
@@ -103,21 +105,28 @@ def run_mfusg(namepth, dst):
 
     return
 
+
 def test_mfusg():
     # compile MODFLOW-USG
     compile_code()
+    # edit namefiles
+    edit_namefiles()
     # get name files and simulation name
     namefiles = get_namefiles()
     # run models
     for namepth, dst in namefiles:
         yield run_mfusg, namepth, dst
 
+
 def test_clean_up():
     yield clean_up
-    
+
+
 if __name__ == "__main__":
     # compile MODFLOW-USG
     compile_code()
+    # edit namefiles
+    edit_namefiles()
     # get name files and simulation name
     namefiles = get_namefiles()
     # run models
