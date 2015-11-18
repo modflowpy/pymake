@@ -5,7 +5,7 @@ ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
               '.ddn', '.ucn', '.glo', '.lst', '.list',
               '.gwv', '.mv']
 
-def setup(namefile, dst, lower=False):
+def setup(namefile, dst):
 
     # Construct src pth from namefile
     src = os.path.dirname(namefile)
@@ -19,17 +19,12 @@ def setup(namefile, dst, lower=False):
     # Make list of files to copy
     fname = os.path.abspath(namefile)
     nf = os.path.basename(namefile)
-    if lower:
-        nf = nf.lower()
     files2copy = [nf] + get_input_files(fname)
 
     # Copy the files
     for f in files2copy:
         srcf = os.path.join(src, f)
-        if lower:
-            dstf = os.path.join(dst, f.lower())
-        else:
-            dstf = os.path.join(dst, f)
+        dstf = os.path.join(dst, f)
 
         # Check to see if dstf is going into a subfolder, and create that
         # subfolder if it doesn't exist

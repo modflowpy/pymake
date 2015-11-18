@@ -44,7 +44,9 @@ def edit_namefile(namefile):
     f = open(namefile, 'w')
     for line in lines:
         t = line.split()
-        f.write('{:5s} {:3s} {} '.format(t[0], t[1], t[2].lower()))
+        fn, ext = os.path.splitext(t[2])
+        f.write('{:15s} {:3s} {} '.format(t[0], t[1],
+                                         '{}{}'.format(fn, ext.lower())))
         if len(t) > 3:
             f.write('{}'.format(t[3]))
         f.write('\n')
@@ -84,7 +86,7 @@ def run_mfusg(namepth, dst):
     print('running...{}'.format(dst))
     # setup
     testpth = os.path.join(dstpth, dst)
-    pymake.setup(namepth, testpth, lower=True)
+    pymake.setup(namepth, testpth)
 
     # edit name file
     pth = os.path.join(testpth, os.path.basename(namepth).lower())
@@ -95,8 +97,8 @@ def run_mfusg(namepth, dst):
     epth = os.path.join('..', exe_name)
     success, buff = pymake.run_model(epth, os.path.basename(namepth).lower(),
                                      model_ws=testpth, silent=True)
-    if success:
-        pymake.teardown(testpth)
+    #if success:
+    #    pymake.teardown(testpth)
     assert success is True
 
     return
@@ -122,4 +124,4 @@ if __name__ == "__main__":
     for namepth, dst in namefiles:
         run_mfusg(namepth, dst)
     # clean up
-    clean_up()
+    #clean_up()
