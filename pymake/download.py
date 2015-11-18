@@ -15,8 +15,8 @@ def download_and_unzip(url, pth='./'):
     try:
         f, header = urlretrieve(url, file_name)
     except:
-        print('Error.  Cannot download the file.')
-        raise Exception()
+        msg = 'Cannot download file: {}'.format(url)
+        raise Exception(msg)
 
     # Unzip the file, and delete zip file if successful.
     z = ZipFile(file_name)
