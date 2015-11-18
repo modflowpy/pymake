@@ -40,7 +40,7 @@ def edit_namefile(namefile):
     f = open(namefile, 'r')
     lines = f.read().splitlines()
     f.close()
-    # remove convert file names to lower case
+    # convert file extensions to lower case
     f = open(namefile, 'w')
     for line in lines:
         t = line.split()
@@ -89,16 +89,16 @@ def run_mfusg(namepth, dst):
     pymake.setup(namepth, testpth)
 
     # edit name file
-    pth = os.path.join(testpth, os.path.basename(namepth).lower())
+    pth = os.path.join(testpth, os.path.basename(namepth))
     edit_namefile(pth)
 
     # run test models
     print('running model...{}'.format(os.path.basename(namepth)))
     epth = os.path.join('..', exe_name)
-    success, buff = pymake.run_model(epth, os.path.basename(namepth).lower(),
+    success, buff = pymake.run_model(epth, os.path.basename(namepth),
                                      model_ws=testpth, silent=True)
-    #if success:
-    #    pymake.teardown(testpth)
+    if success:
+        pymake.teardown(testpth)
     assert success is True
 
     return
@@ -124,4 +124,4 @@ if __name__ == "__main__":
     for namepth, dst in namefiles:
         run_mfusg(namepth, dst)
     # clean up
-    #clean_up()
+    clean_up()
