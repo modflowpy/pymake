@@ -56,4 +56,4 @@ install:
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
-    - nosetests -v -w ./autotest
+    - nosetests -v -w ./autotest/t003_test.py

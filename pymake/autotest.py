@@ -5,7 +5,7 @@ ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
               '.ddn', '.ucn', '.glo', '.lst', '.list',
               '.gwv', '.mv']
 
-def setup(namefile, dst):
+def setup(namefile, dst, lower=False):
 
     # Construct src pth from namefile
     src = os.path.dirname(namefile)
@@ -18,12 +18,15 @@ def setup(namefile, dst):
 
     # Make list of files to copy
     fname = os.path.abspath(namefile)
-    files2copy = [os.path.basename(namefile)] + get_input_files(fname)
+    nf = os.path.basename(namefile)
+    if lower:
+        nf = nf.lower()
+    files2copy = [nf] + get_input_files(fname, lower=lower)
 
     # Copy the files
     for f in files2copy:
         srcf = os.path.join(src, f)
-        dstf = os.path.join(dst, f)
+        dstf = os.path.join(dst, f.lower())
 
         # Check to see if dstf is going into a subfolder, and create that
         # subfolder if it doesn't exist
@@ -50,7 +53,7 @@ def teardown(src):
     return
 
 
-def get_input_files(namefile):
+def get_input_files(namefile, lower=False):
     """
     Return a list of all the input files in this model
 
@@ -73,7 +76,10 @@ def get_input_files(namefile):
             if len(ll) > 3:
                 if 'replace' in ll[3].lower():
                     continue
-            filelist.append(ll[2])
+            copyf = ll[2]
+            if lower:
+                copyf = copyf.lower()
+            filelist.append(copyf)
 
     # Now go through every file and look for other files to copy,
     # such as 'OPEN/CLOSE'.  If found, then add that file to the
@@ -98,6 +104,8 @@ def get_input_files(namefile):
                             stmp = ll[i + 1]
                             stmp = stmp.replace('"', '')
                             stmp = stmp.replace("'", '')
+                            if lower:
+                                stmp = stmp.lower()
                             otherfiles.append(stmp)
                             break
         except:

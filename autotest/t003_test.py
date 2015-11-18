@@ -35,6 +35,21 @@ def get_namefiles():
                 namefiles.append((pth, dst))
     return namefiles
 
+def edit_namefile(namefile):
+    # read existing namefile
+    f = open(namefile, 'r')
+    lines = f.read().splitlines()
+    f.close()
+    # remove convert file names to lower case
+    f = open(namefile, 'w')
+    for line in lines:
+        t = line.split()
+        f.write('{:5s} {:3s} {} '.format(t[0], t[1], t[2].lower()))
+        if len(t) > 3:
+            f.write('{}'.format(t[3]))
+        f.write('\n')
+    f.close()
+
 def compile_code():
     # Remove the existing mfusg directory if it exists
     if os.path.isdir(mfusgpth):
@@ -69,18 +84,19 @@ def run_mfusg(namepth, dst):
     print('running...{}'.format(dst))
     # setup
     testpth = os.path.join(dstpth, dst)
-    pymake.setup(namepth, testpth)
+    pymake.setup(namepth, testpth, lower=True)
 
     # edit name file
     pth = os.path.join(testpth, os.path.basename(namepth))
+    edit_namefile(pth)
 
     # run test models
     print('running model...{}'.format(os.path.basename(namepth)))
     epth = os.path.join('..', exe_name)
     success, buff = pymake.run_model(epth, os.path.basename(namepth),
                                      model_ws=testpth, silent=True)
-    if success:
-        pymake.teardown(testpth)
+    #if success:
+    #    pymake.teardown(testpth)
     assert success is True
 
     return
@@ -106,4 +122,4 @@ if __name__ == "__main__":
     for namepth, dst in namefiles:
         run_mfusg(namepth, dst)
     # clean up
-    clean_up()
+    #clean_up()
