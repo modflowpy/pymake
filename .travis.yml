@@ -16,6 +16,13 @@ python:
   - "3.5-dev" # 3.5 development branch
   - "nightly" # currently points to 3.6-dev
 
+cache:
+  apt: true
+  pip: true
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/.local
+
 addons:
   apt:
     sources:
@@ -26,16 +33,25 @@ addons:
       - binutils
       - cmake
       - graphviz
+      - python-pip
 
-before_install:
-  #- sudo ln -fs /usr/bin/gfortran-5 /usr/bin/gfortran && gfortran --version
-  #- export PATH=".:$PATH"
-  - gcc -v
-  - gfortran -v
+#before_install:
+#  #- sudo ln -fs /usr/bin/gfortran-5 /usr/bin/gfortran && gfortran --version
+#  #- export PATH=".:$PATH"
+#  - gcc -v
+#  - gfortran -v
 
 # command to install dependencies
-install: "pip install -r requirements.travis.txt"
-
+install:
+    - |
+      if [[ ! -d "$HOME/.local/bin" ]]; then
+        mkdir "$HOME/.local/bin"
+      fi
+    - export PATH="$HOME/.local/bin:$PATH"
+    - export FC=/usr/bin/gfortran-5
+    - ln -fs /usr/bin/gfortran-5 "$HOME/.local/bin/gfortran" && gfortran --version
+    - ls -l /usr/bin/gfortran-5
+    - pip install -r requirements.travis.txt
 
 # command to run tests
 script: 
