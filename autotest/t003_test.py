@@ -87,13 +87,13 @@ def run_mfusg(namepth, dst):
     pymake.setup(namepth, testpth, lower=True)
 
     # edit name file
-    pth = os.path.join(testpth, os.path.basename(namepth))
+    pth = os.path.join(testpth, os.path.basename(namepth).lower())
     edit_namefile(pth)
 
     # run test models
     print('running model...{}'.format(os.path.basename(namepth)))
     epth = os.path.join('..', exe_name)
-    success, buff = pymake.run_model(epth, os.path.basename(namepth),
+    success, buff = pymake.run_model(epth, os.path.basename(namepth).lower(),
                                      model_ws=testpth, silent=True)
     if success:
         pymake.teardown(testpth)
