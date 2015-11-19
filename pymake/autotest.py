@@ -189,7 +189,7 @@ def get_namefiles(pth, exclude=None):
     return namefiles
 
 
-def get_filename_from_namefile(namefile, ftype):
+def get_filename_from_namefile(namefile, ftype=None, unit=None):
     filename = None
     f = open(namefile, 'r')
     for line in f:
@@ -200,8 +200,12 @@ def get_filename_from_namefile(namefile, ftype):
         ll = line.strip().split()
         if len(ll) < 3:
             continue
-        if ftype.upper() == ll[0].upper():
-            filename = os.path.join(os.path.split(namefile)[0], ll[2])
+        if ftype is not None:
+            if ftype.upper() == ll[0].upper():
+                filename = os.path.join(os.path.split(namefile)[0], ll[2])
+        if unit is not None:
+            if int(unit) == int(ll[1]):
+                filename = os.path.join(os.path.split(namefile)[0], ll[2])
     return filename
 
 def get_sim_name(namefiles, rootpth=None):
@@ -336,6 +340,69 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     if outfile is not None:
         f.close()
 
+
+    # test for failure
+    success = True
+    if icnt > 0:
+        success = False
+    return success
+
+
+
+def compare_heads(namefile1, namefile2, precision='single',
+                  htol=0.001, outfile=None):
+    """
+    Compare the results from these two simulations.
+
+    """
+    import numpy as np
+    import flopy
+
+    # Open output file
+    if outfile is not None:
+        f = open(outfile, 'w')
+        f.write('Created by pymake.autotest.compare\n')
+
+    # Get numpy budget tables for list1
+    headobj1 = flopy.utils.HeadFile(namefile1, precision=precision)
+    times1 = headobj1.get_times()
+
+    headobj2 = flopy.utils.HeadFile(namefile2, precision=precision)
+    times2 = headobj2.get_times()
+
+    assert times1 == times2, 'times in two head files are not equal'
+
+    kstpkper = headobj1.get_kstpkper()
+
+    icnt = 0
+    # Process cumulative and incremental
+    for idx, time in enumerate(times1):
+        h1 = headobj1.get_data(totim=time)
+        h2 = headobj2.get_data(totim=time)
+
+        # For a usg simulation, the row and column are switched in the binary
+        # head file.
+        nl1, nr1, nc1 = h1.shape
+        nl2, nr2, nc2 = h2.shape
+        if nl1 == nl2 and nr1 == nc2 and nc1 == nr2:
+            h1 = h1.flatten()
+            h2 = h2.flatten()
+
+        diff = abs(h1 - h2)
+        diffmax = diff.max()
+        indices = np.where(diff == diffmax)
+        f.write('{:10d} {:10d} {}\n'.format(kstpkper[idx][1], kstpkper[idx][0],diffmax))
+
+        if abs(diffmax) >= htol:
+            icnt += 1
+            e = 'Head difference ({}) exceeds {}.\n'.format(diffmax, htol)
+            for ee in textwrap.wrap(e, 68):
+                f.write('    {}\n'.format(ee))
+            f.write('\n')
+
+    # Close output file
+    if outfile is not None:
+        f.close()
 
     # test for failure
     success = True
