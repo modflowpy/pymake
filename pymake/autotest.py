@@ -262,15 +262,15 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
-                        s = '{:<20} {:>15} {:>15} {:>15}\n'.format('Budget Entry',
+                        s = '{:<20} {:>20} {:>20} {:>20}\n'.format('Budget Entry',
                                                               'Model 1',
                                                               'Model 2',
                                                               'Difference')
                         f.write(s)
-                        s = 68 * '-' + '\n'
+                        s = 83 * '-' + '\n'
                         f.write(s)
                     diff = t0[colname] - t1[colname]
-                    s = '{:<20} {:>15} {:>15} {:>15}\n'.format(colname,
+                    s = '{:<20} {:>20} {:>20} {:>20}\n'.format(colname,
                                                                t0[colname],
                                                                t1[colname],
                                                                diff)
