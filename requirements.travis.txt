@@ -1,1 +1,4 @@
 pydotplus>=2.0
+numpy>=1.9
+matplotlib>=1.4
+pyshp
