@@ -226,6 +226,8 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     v0 = np.zeros(2, dtype=np.float)
     v1 = np.zeros(2, dtype=np.float)
     err = np.zeros(2, dtype=np.float)
+
+    # Process cumulative and incremental
     for idx in range(2):
         if idx > 0:
             max_pd = max_cumpd
@@ -234,13 +236,46 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
         kper = lst1[idx]['stress_period']
         kstp = lst1[idx]['time_step']
 
-        if outfile is not None:
-            f.write('STRESS PERIOD: {} TIME STEP: {}'.format(kper, kstp))
-
+        # Process each time step
         for jdx in range(kper.shape[0]):
+
             err[:] = 0.
             t0 = lst1[idx][jdx]
             t1 = lst2[idx][jdx]
+
+            if outfile is not None:
+
+                maxcolname = 0
+                for colname in t0.dtype.names:
+                    maxcolname = max(maxcolname, len(colname))
+
+                s = 2 * '\n'
+                s += 'STRESS PERIOD: {} TIME STEP: {}\n'.format(kper[jdx] + 1,
+                                                                kstp[jdx] + 1)
+                if idx == 0:
+                    f.write(s)
+
+                if idx == 0:
+                    f.write('\nCUMULATIVE BUDGET\n')
+                else:
+                    f.write('\nINCREMENTAL BUDGET\n')
+
+                for i, colname in enumerate(t0.dtype.names):
+                    if i == 0:
+                        s = '{:<20} {:>15} {:>15} {:>15}\n'.format('Budget Entry',
+                                                              'Model 1',
+                                                              'Model 2',
+                                                              'Difference')
+                        f.write(s)
+                        s = 68 * '-' + '\n'
+                        f.write(s)
+                    diff = t0[colname] - t1[colname]
+                    s = '{:<20} {:>15} {:>15} {:>15}\n'.format(colname,
+                                                               t0[colname],
+                                                               t1[colname],
+                                                               diff)
+                    f.write(s)
+
             v0[0] = t0['TOTAL_IN']
             v1[0] = t1['TOTAL_IN']
             if v0[0] > 0.:
@@ -256,8 +291,8 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                         ' for stress period {} and time step {} > {}.'.format(kper[jdx]+1, kstp[jdx]+1, max_pd) + \
                         ' Reference value = {}. Simulated value = {}.'.format(v0[kdx], v1[kdx])
                     for ee in textwrap.wrap(e, 68):
-                        logf.write('    {}\n'.format(ee))
-                    logf.write('\n')
+                        f.write('    {}\n'.format(ee))
+                    f.write('\n')
 
     # Close output file
     if outfile is not None:
