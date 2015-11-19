@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import shutil
 import pymake
+import flopy
 
 # set up paths
 dstpth = os.path.join('temp')
@@ -15,30 +16,6 @@ exe_name = 'swtv4r'
 srcpth = os.path.join(swtpth, 'source')
 target = os.path.join(dstpth, exe_name)
 
-def get_namefiles():
-    namefiles = []
-    last = os.path.split(expth)[1]
-    exclude_tests = ('7_swtv4_ex',)
-    for dir, subdirs, files in os.walk(expth):
-        for file in files:
-            if file.endswith('.nam'):
-                pth = os.path.join(dir, file)
-                t = pth.split(os.sep)
-                i = t.index(last)
-                dst = ''
-                if i < len(t):
-                    for d in t[i+1:-1]:
-                        dst += '{}_'.format(d)
-                dst += t[-1].replace('.nam', '')
-                iuse = True
-                for e in exclude_tests:
-                    if e.lower() in dst.lower():
-                        iuse = False
-                        break
-                if iuse:
-                    namefiles.append((pth, dst))
-    return namefiles
-
 def edit_namefile(namefile):
     # read existing namefile
     f = open(namefile, 'r')
@@ -51,6 +28,12 @@ def edit_namefile(namefile):
             continue
         f.write('{}\n'.format(line))
     f.close()
+
+def get_namefiles():
+    exclude_tests = ('7_swtv4_ex', '6_rotation')
+    namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
+    simname = pymake.get_sim_name(namefiles, rootpth=expth)
+    return zip(namefiles, simname)
 
 def compile_code():
     # Remove the existing swt_v4_00_05 directory if it exists
@@ -116,9 +99,9 @@ def run_seawat(namepth, dst):
 
     # run test models
     print('running model...{}'.format(os.path.basename(namepth)))
-    epth = os.path.join('..', exe_name)
-    success, buff = pymake.run_model(epth, os.path.basename(namepth),
-                                     model_ws=testpth, silent=True)
+    epth = os.path.abspath(target)
+    success, buff = flopy.run_model(epth, os.path.basename(namepth),
+                                    model_ws=testpth, silent=True)
     if success:
         pymake.teardown(testpth)
     assert success is True
@@ -137,9 +120,11 @@ def build_seawat_dependency_graphs():
     assert os.path.isfile(findf) is True
     return
 
-def test_seawat():
+def test_compile():
     # compile seawat
-    compile_code()
+    yield compile_code
+
+def test_seawat():
     # get name files and simulation name
     namefiles = get_namefiles()
     # run models

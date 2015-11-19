@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import shutil
 import pymake
+import flopy
 
 # set up paths
 dstpth = os.path.join('temp')
@@ -15,46 +16,29 @@ srcpth = os.path.join(mfusgpth, 'src')
 target = os.path.join(dstpth, exe_name)
 
 def edit_namefiles():
-    for dir, subdirs, files in os.walk(expth):
-        for file in files:
-            if file.endswith('.nam'):
-                pth = os.path.join(dir, file)
-                # read existing namefile
-                f = open(pth, 'r')
-                lines = f.read().splitlines()
-                f.close()
-                # convert file extensions to lower case
-                f = open(pth, 'w')
-                for line in lines:
-                    t = line.split()
-                    fn, ext = os.path.splitext(t[2])
-                    f.write('{:15s} {:3s} {} '.format(t[0], t[1],
-                                                      '{}{}'.format(fn, ext.lower())))
-                    if len(t) > 3:
-                        f.write('{}'.format(t[3]))
-                    f.write('\n')
-                f.close()
+    namefiles = pymake.get_namefiles(expth)
+    for namefile in namefiles:
+        # read existing namefile
+        f = open(namefile, 'r')
+        lines = f.read().splitlines()
+        f.close()
+        # convert file extensions to lower case
+        f = open(namefile, 'w')
+        for line in lines:
+            t = line.split()
+            fn, ext = os.path.splitext(t[2])
+            f.write('{:15s} {:3s} {} '.format(t[0], t[1],
+                                              '{}{}'.format(fn, ext.lower())))
+            if len(t) > 3:
+                f.write('{}'.format(t[3]))
+            f.write('\n')
+        f.close()
 
 def get_namefiles():
-    namefiles = []
-    last = os.path.split(expth)[1]
     exclude_tests = ('7_swtv4_ex',)
-    for dir, subdirs, files in os.walk(expth):
-        for file in files:
-            if file.endswith('.nam'):
-                pth = os.path.join(dir, file)
-                t = pth.split(os.sep)
-                i = t.index(last)
-                dst = ''
-                if i < len(t):
-                    for d in t[i + 1:-1]:
-                        dst += '{}_'.format(d)
-                dst += t[-1].replace('.nam', '')
-                for e in exclude_tests:
-                    if e.lower() in dst.lower():
-                        continue
-                namefiles.append((pth, dst))
-    return namefiles
+    namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
+    simname = pymake.get_sim_name(namefiles, rootpth=expth)
+    return zip(namefiles, simname)
 
 def compile_code():
     # Remove the existing mfusg directory if it exists
@@ -96,9 +80,9 @@ def run_mfusg(namepth, dst):
 
     # run test models
     print('running model...{}'.format(os.path.basename(namepth)))
-    epth = os.path.join('..', exe_name)
-    success, buff = pymake.run_model(epth, os.path.basename(namepth),
-                                     model_ws=testpth, silent=True)
+    epth = os.path.abspath(target)
+    success, buff = flopy.run_model(epth, os.path.basename(namepth),
+                                    model_ws=testpth, silent=True)
     if success:
         pymake.teardown(testpth)
     assert success is True
@@ -106,15 +90,18 @@ def run_mfusg(namepth, dst):
     return
 
 
-def test_mfusg():
+def test_compile():
     # compile MODFLOW-USG
     compile_code()
+
+
+def test_mfusg():
     # edit namefiles
     edit_namefiles()
     # get name files and simulation name
-    namefiles = get_namefiles()
+    sim_list = get_namefiles()
     # run models
-    for namepth, dst in namefiles:
+    for namepth, dst in sim_list:
         yield run_mfusg, namepth, dst
 
 
@@ -128,9 +115,9 @@ if __name__ == "__main__":
     # edit namefiles
     edit_namefiles()
     # get name files and simulation name
-    namefiles = get_namefiles()
+    sim_list = get_namefiles()
     # run models
-    for namepth, dst in namefiles:
+    for namepth, dst in sim_list:
         run_mfusg(namepth, dst)
     # clean up
     clean_up()

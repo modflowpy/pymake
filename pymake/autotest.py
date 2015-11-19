@@ -163,7 +163,7 @@ def get_input_files(namefile):
     return filelist
 
 
-def get_namefiles(pth):
+def get_namefiles(pth, exclude=None):
     """
     Search through the path (pth) for all .nam files.  Return
     them all in a list.  Namefiles will have paths.
@@ -173,6 +173,18 @@ def get_namefiles(pth):
     for root, dirs, files in os.walk(pth):
         namefiles += [os.path.join(root, file)
                       for file in files if file.endswith('.nam')]
+    if exclude is not None:
+        if isinstance(exclude, str):
+            exclude = [exclude]
+        exclude = [e.lower() for e in exclude]
+        pop_list = []
+        for namefile in namefiles:
+            for e in exclude:
+                if e in namefile.lower():
+                    pop_list.append(namefile)
+        for e in pop_list:
+            namefiles.remove(e)
+
     return namefiles
 
 
@@ -190,6 +202,25 @@ def get_filename_from_namefile(namefile, ftype):
         if ftype.upper() == ll[0].upper():
             filename = os.path.join(os.path.split(namefile)[0], ll[2])
     return filename
+
+def get_sim_name(namefiles, rootpth=None):
+    sim_name = []
+    for namefile in namefiles:
+        t = namefile.split(os.sep)
+        if rootpth is None:
+            idx = -1
+        else:
+            idx = t.index(os.path.split(rootpth)[1])
+        dst = ''
+        # build dst with everything after the rootpth and before
+        # the namefile file name.
+        if idx < len(t):
+            for d in t[idx + 1:-1]:
+                dst += '{}_'.format(d)
+        # add namefile basename without extension
+        dst += t[-1].replace('.nam', '')
+        sim_name.append(dst)
+    return sim_name
 
 
 def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
