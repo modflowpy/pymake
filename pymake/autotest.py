@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import textwrap
 
 
 ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
@@ -204,6 +205,8 @@ def get_filename_from_namefile(namefile, ftype):
     return filename
 
 def get_sim_name(namefiles, rootpth=None):
+    if isinstance(namefiles, str):
+        namefiles = [namefiles]
     sim_name = []
     for namefile in namefiles:
         t = namefile.split(os.sep)
@@ -231,6 +234,10 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     """
     import numpy as np
     import flopy
+
+    # headers
+    headers = ('INCREMENTAL', 'CUMULATIVE')
+    dir = ('IN', 'OUT')
 
     # Get name of list files
     list1 = get_filename_from_namefile(namefile1, 'list')
