@@ -1,9 +1,12 @@
 import os
 import shutil
+import subprocess
+
 
 ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
               '.ddn', '.ucn', '.glo', '.lst', '.list',
               '.gwv', '.mv']
+
 
 def setup(namefile, dst):
 
@@ -44,11 +47,62 @@ def setup(namefile, dst):
 
     return
 
+
 def teardown(src):
     if os.path.exists(src):
         print('Removing folder ' + src)
         shutil.rmtree(src)
     return
+
+
+def run_model(exe_name, namefile, model_ws='./', silent=False, pause=False,
+              report=False, normal_msg='normal termination'):
+    """
+    This method will run the model using subprocess.Popen.
+
+    Parameters
+    ----------
+    silent : boolean
+        Echo run information to screen (default is True).
+    pause : boolean, optional
+        Pause upon completion (the default is False).
+    report : boolean, optional
+        Save stdout lines to a list (buff) which is returned
+        by the method . (the default is False).
+
+    Returns
+    -------
+    (success, buff)
+    success : boolean
+    buff : list of lines of stdout
+
+    """
+    success = False
+    buff = []
+
+    # Check to make sure that the namefile exists
+    if not os.path.isfile(os.path.join(model_ws, namefile)):
+        s = 'The namefile for this model does not exists: {}'.format(namefile)
+        raise Exception(s)
+
+    proc = subprocess.Popen([exe_name, namefile],
+                            stdout=subprocess.PIPE, cwd=model_ws)
+    while True:
+        line = proc.stdout.readline()
+        c = line.decode('utf-8')
+        if c != '':
+            if normal_msg in c.lower():
+                success = True
+            c = c.rstrip('\r\n')
+            if not silent:
+                print('{}'.format(c))
+            if report == True:
+                buff.append(c)
+        else:
+            break
+    if pause == True:
+        input('Press Enter to continue...')
+    return [success, buff]
 
 
 def get_input_files(namefile):
@@ -107,3 +161,112 @@ def get_input_files(namefile):
     filelist = filelist + otherfiles
 
     return filelist
+
+
+def get_namefiles(pth):
+    """
+    Search through the path (pth) for all .nam files.  Return
+    them all in a list.  Namefiles will have paths.
+
+    """
+    namefiles = []
+    for root, dirs, files in os.walk(pth):
+        namefiles += [os.path.join(root, file)
+                      for file in files if file.endswith('.nam')]
+    return namefiles
+
+
+def get_filename_from_namefile(namefile, ftype):
+    filename = None
+    f = open(namefile, 'r')
+    for line in f:
+        if line.strip() == '':
+            continue
+        if line[0] == '#':
+            continue
+        ll = line.strip().split()
+        if len(ll) < 3:
+            continue
+        if ftype.upper() == ll[0].upper():
+            filename = os.path.join(os.path.split(namefile)[0], ll[2])
+    return filename
+
+
+def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
+                   outfile=None):
+    """
+    Compare the results from these two simulations.
+
+    """
+    import numpy as np
+    import flopy
+
+    # Get name of list files
+    list1 = get_filename_from_namefile(namefile1, 'list')
+    list2 = get_filename_from_namefile(namefile2, 'list')
+
+    # Open output file
+    if outfile is not None:
+        f = open(outfile, 'w')
+        f.write('Created by pymake.autotest.compare\n')
+
+    # Get numpy budget tables for list1
+    lstobj = flopy.utils.MfusgListBudget(list1)
+    lst1 = []
+    lst1.append(lstobj.get_incremental())
+    lst1.append(lstobj.get_cumulative())
+
+    # Get numpy budget tables for list2
+    lstobj = flopy.utils.MfusgListBudget(list2)
+    lst2 = []
+    lst2.append(lstobj.get_incremental())
+    lst2.append(lstobj.get_cumulative())
+
+    icnt = 0
+    v0 = np.zeros(2, dtype=np.float)
+    v1 = np.zeros(2, dtype=np.float)
+    err = np.zeros(2, dtype=np.float)
+    for idx in range(2):
+        if idx > 0:
+            max_pd = max_cumpd
+        else:
+            max_pd = max_incpd
+        kper = lst1[idx]['stress_period']
+        kstp = lst1[idx]['time_step']
+
+        if outfile is not None:
+            f.write('STRESS PERIOD: {} TIME STEP: {}'.format(kper, kstp))
+
+        for jdx in range(kper.shape[0]):
+            err[:] = 0.
+            t0 = lst1[idx][jdx]
+            t1 = lst2[idx][jdx]
+            v0[0] = t0['TOTAL_IN']
+            v1[0] = t1['TOTAL_IN']
+            if v0[0] > 0.:
+                err[0] = 100. * (v1[0] - v0[0]) / v0[0]
+            v0[1] = t0['TOTAL_OUT']
+            v1[1] = t1['TOTAL_OUT']
+            if v0[1] > 0.:
+                err[1] = 100. * (v1[1] - v0[1]) / v0[1]
+            for kdx, t in enumerate(err):
+                if abs(t) > max_pd:
+                    icnt += 1
+                    e = '"{} {}" percent difference ({})'.format(headers[idx], dir[kdx], t) + \
+                        ' for stress period {} and time step {} > {}.'.format(kper[jdx]+1, kstp[jdx]+1, max_pd) + \
+                        ' Reference value = {}. Simulated value = {}.'.format(v0[kdx], v1[kdx])
+                    for ee in textwrap.wrap(e, 68):
+                        logf.write('    {}\n'.format(ee))
+                    logf.write('\n')
+
+    # Close output file
+    if outfile is not None:
+        f.close()
+
+
+    # test for failure
+    success = True
+    if icnt > 0:
+        success = False
+    return success
+

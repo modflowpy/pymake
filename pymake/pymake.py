@@ -538,56 +538,6 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_te
     return
 
 
-def run_model(exe_name, namefile, model_ws='./', silent=False, pause=False, report=False,
-              normal_msg='normal termination'):
-    """
-    This method will run the model using subprocess.Popen.
-
-    Parameters
-    ----------
-    silent : boolean
-        Echo run information to screen (default is True).
-    pause : boolean, optional
-        Pause upon completion (the default is False).
-    report : boolean, optional
-        Save stdout lines to a list (buff) which is returned
-        by the method . (the default is False).
-
-    Returns
-    -------
-    (success, buff)
-    success : boolean
-    buff : list of lines of stdout
-
-    """
-    success = False
-    buff = []
-
-    # Check to make sure that the namefile exists
-    if not os.path.isfile(os.path.join(model_ws, namefile)):
-        s = 'The namefile for this model does not exists: {}'.format(namefile)
-        raise Exception(s)
-
-    proc = subprocess.Popen([exe_name, namefile],
-                            stdout=subprocess.PIPE, cwd=model_ws)
-    while True:
-        line = proc.stdout.readline()
-        c = line.decode('utf-8')
-        if c != '':
-            if normal_msg in c.lower():
-                success = True
-            c = c.rstrip('\r\n')
-            if not silent:
-                print('{}'.format(c))
-            if report == True:
-                buff.append(c)
-        else:
-            break
-    if pause == True:
-        input('Press Enter to continue...')
-    return [success, buff]
-
-
 def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
          dryrun=False, double=False, debug=False,
          include_subdirs=False):

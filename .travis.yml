@@ -52,6 +52,7 @@ install:
     - ln -fs /usr/bin/gfortran-5 "$HOME/.local/bin/gfortran" && gfortran --version
     - ls -l /usr/bin/gfortran-5
     - pip install -r requirements.travis.txt
+    - pip install https://github.com/modflowpy/flopy/zipball/develop
 
 # command to run tests
 script: 
