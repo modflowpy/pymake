@@ -380,18 +380,19 @@ def compare_heads(namefile1, namefile2, precision='single',
         h1 = headobj1.get_data(totim=time)
         h2 = headobj2.get_data(totim=time)
 
-        # For a usg simulation, the row and column are switched in the binary
-        # head file.
-        nl1, nr1, nc1 = h1.shape
-        nl2, nr2, nc2 = h2.shape
-        if nl1 == nl2 and nr1 == nc2 and nc1 == nr2:
-            h1 = h1.flatten()
-            h2 = h2.flatten()
-
-        diff = abs(h1 - h2)
-        diffmax = diff.max()
-        indices = np.where(diff == diffmax)
-        f.write('{:10d} {:10d} {}\n'.format(kstpkper[idx][1], kstpkper[idx][0],diffmax))
+        # # For a usg simulation, the row and column are switched in the binary
+        # # head file.
+        # nl1, nr1, nc1 = h1.shape
+        # nl2, nr2, nc2 = h2.shape
+        # if nl1 == nl2 and nr1 == nc2 and nc1 == nr2:
+        #     h1 = h1.flatten()
+        #     h2 = h2.flatten()
+        #
+        # diff = abs(h1 - h2)
+        # diffmax = diff.max()
+        # indices = np.where(diff == diffmax)
+        diffmax, indices = calculate_difference(h1, h2)
+        f.write('{:10d} {:10d} {}\n'.format(kstpkper[idx][1], kstpkper[idx][0], diffmax))
 
         if abs(diffmax) >= htol:
             icnt += 1
@@ -409,4 +410,20 @@ def compare_heads(namefile1, namefile2, precision='single',
     if icnt > 0:
         success = False
     return success
+
+
+def calculate_difference(v1, v2):
+    # For a usg simulation, the row and column are switched in the binary
+    # head file.
+    nl1, nr1, nc1 = v1.shape
+    nl2, nr2, nc2 = v2.shape
+    if nl1 == nl2 and nr1 == nc2 and nc1 == nr2:
+        v1 = v1.flatten()
+        v2 = v2.flatten()
+
+    diff = abs(v1 - v2)
+    diffmax = diff.max()
+    indices = np.where(diff == diffmax)
+    return diffmax, indices
+
 
