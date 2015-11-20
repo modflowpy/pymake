@@ -292,15 +292,14 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                     maxcolname = max(maxcolname, len(colname))
 
                 s = 2 * '\n'
-                s += 'STRESS PERIOD: {} TIME STEP: {}\n'.format(kper[jdx] + 1,
+                s += 'STRESS PERIOD: {} TIME STEP: {}'.format(kper[jdx] + 1,
                                                                 kstp[jdx] + 1)
-                if idx == 0:
-                    f.write(s)
+                f.write(s)
 
                 if idx == 0:
-                    f.write('\nCUMULATIVE BUDGET\n')
-                else:
                     f.write('\nINCREMENTAL BUDGET\n')
+                else:
+                    f.write('\nCUMULATIVE BUDGET\n')
 
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
