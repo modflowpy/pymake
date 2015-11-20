@@ -189,8 +189,8 @@ def get_namefiles(pth, exclude=None):
     return namefiles
 
 
-def get_filename_from_namefile(namefile, ftype=None, unit=None):
-    filename = None
+def get_entries_from_namefile(namefile, ftype=None, unit=None):
+    entries = []
     f = open(namefile, 'r')
     for line in f:
         if line.strip() == '':
@@ -200,13 +200,22 @@ def get_filename_from_namefile(namefile, ftype=None, unit=None):
         ll = line.strip().split()
         if len(ll) < 3:
             continue
+        status = 'UNKNOWN'
+        if len(ll) > 3:
+            status = ll[3].upper()
         if ftype is not None:
             if ftype.upper() == ll[0].upper():
                 filename = os.path.join(os.path.split(namefile)[0], ll[2])
-        if unit is not None:
+                entries.append((filename, ll[0], ll[1], status))
+        elif unit is not None:
             if int(unit) == int(ll[1]):
                 filename = os.path.join(os.path.split(namefile)[0], ll[2])
-    return filename
+                entries.append((filename, ll[0], ll[1], status))
+    f.close()
+    if len(entries) < 1:
+        entries.append((None, None, None, None))
+    return entries
+
 
 def get_sim_name(namefiles, rootpth=None):
     if isinstance(namefiles, str):
@@ -244,8 +253,10 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     dir = ('IN', 'OUT')
 
     # Get name of list files
-    list1 = get_filename_from_namefile(namefile1, 'list')
-    list2 = get_filename_from_namefile(namefile2, 'list')
+    list = get_entries_from_namefile(namefile1, 'list')
+    list1 = list[0][0]
+    list2 = get_entries_from_namefile(namefile2, 'list')
+    list2 = list[0][0]
 
     # Open output file
     if outfile is not None:
@@ -303,15 +314,15 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
-                        s = '{:<20} {:>20} {:>20} {:>20}\n'.format('Budget Entry',
+                        s = '{:<21} {:>21} {:>21} {:>21}\n'.format('Budget Entry',
                                                               'Model 1',
                                                               'Model 2',
                                                               'Difference')
                         f.write(s)
-                        s = 83 * '-' + '\n'
+                        s = 87 * '-' + '\n'
                         f.write(s)
                     diff = t0[colname] - t1[colname]
-                    s = '{:<20} {:>20} {:>20} {:>20}\n'.format(colname,
+                    s = '{:<21} {:>21} {:>21} {:>21}\n'.format(colname,
                                                                t0[colname],
                                                                t1[colname],
                                                                diff)
@@ -354,19 +365,44 @@ def compare_heads(namefile1, namefile2, precision='single',
     Compare the results from these two simulations.
 
     """
-    import numpy as np
     import flopy
+
+    dbs = 'DATA(BINARY)'
+    ocf1 = get_entries_from_namefile(namefile1, 'OC')
+    hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(ocf1[0][0])
+    if hu1 != 0:
+        entries = get_entries_from_namefile(namefile1, unit=abs(hu1))
+        hfpth1, status1 = entries[0][0], entries[0][1]
+    ocf2 = get_entries_from_namefile(namefile2, 'OC')
+    hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(ocf2[0][0])
+    if hu2 != 0:
+        entries = get_entries_from_namefile(namefile2, unit=abs(hu2))
+        hfpth2, status2 = entries[0][0], entries[0][1]
+
+    if hfpth1 is None or hfpth2 is None:
+        return True
+
+    if not os.path.isfile(hfpth1) or not os.path.isfile(hfpth2):
+        return True
 
     # Open output file
     if outfile is not None:
         f = open(outfile, 'w')
         f.write('Created by pymake.autotest.compare\n')
 
-    # Get numpy budget tables for list1
-    headobj1 = flopy.utils.HeadFile(namefile1, precision=precision)
-    times1 = headobj1.get_times()
+    # Get head objects
+    if status1 == dbs:
+        headobj1 = flopy.utils.HeadFile(hfpth1, precision=precision)
+    else:
+        headobj1 = flopy.utils.FormattedHeadFile(hfpth1, verbose=True)
 
-    headobj2 = flopy.utils.HeadFile(namefile2, precision=precision)
+    if status2 == dbs:
+        headobj2 = flopy.utils.HeadFile(hfpth2, precision=precision)
+    else:
+        headobj2 = flopy.utils.FormattedHeadFile(hfpth2, verbose=True)
+
+    # get times
+    times1 = headobj1.get_times()
     times2 = headobj2.get_times()
 
     assert times1 == times2, 'times in two head files are not equal'
@@ -379,25 +415,23 @@ def compare_heads(namefile1, namefile2, precision='single',
         h1 = headobj1.get_data(totim=time)
         h2 = headobj2.get_data(totim=time)
 
-        # # For a usg simulation, the row and column are switched in the binary
-        # # head file.
-        # nl1, nr1, nc1 = h1.shape
-        # nl2, nr2, nc2 = h2.shape
-        # if nl1 == nl2 and nr1 == nc2 and nc1 == nr2:
-        #     h1 = h1.flatten()
-        #     h2 = h2.flatten()
-        #
-        # diff = abs(h1 - h2)
-        # diffmax = diff.max()
-        # indices = np.where(diff == diffmax)
         diffmax, indices = calculate_difference(h1, h2)
-        f.write('{:10d} {:10d} {}\n'.format(kstpkper[idx][1], kstpkper[idx][0], diffmax))
 
-        if abs(diffmax) >= htol:
+        if idx < 1:
+            f.write('{:>15s} {:>15s} {:>15s} \n'.format(' ', ' ', 'MAXIMUM'))
+            f.write('{:>15s} {:>15s} {:>15s} \n'.format('STRESS PERIOD', 'TIME STEP', 'HEAD DIFFERENCE'))
+            f.write('{0:>15s} {0:>15s} {0:>15s} \n'.format(15*'-'))
+        f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1]+1, kstpkper[idx][0]+1, diffmax))
+
+        if diffmax >= htol:
             icnt += 1
-            e = 'Head difference ({}) exceeds {}.\n'.format(diffmax, htol)
-            for ee in textwrap.wrap(e, 68):
-                f.write('    {}\n'.format(ee))
+            f.write('  Maximum head difference ({}) exceeds {} at node locations:\n'.format(diffmax, htol))
+            e = ''
+            for itupe in indices:
+                for ind in itupe:
+                    e += '{} '.format(ind)
+            e = textwrap.fill(e, 68)
+            f.write('    {}\n'.format(e))
             f.write('\n')
 
     # Close output file
@@ -412,6 +446,7 @@ def compare_heads(namefile1, namefile2, precision='single',
 
 
 def calculate_difference(v1, v2):
+    import numpy as np
     # For a usg simulation, the row and column are switched in the binary
     # head file.
     nl1, nr1, nc1 = v1.shape
