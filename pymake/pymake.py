@@ -527,7 +527,17 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_te
     Make an ifort batch file
     
     '''
-    cpvars = os.environ.get('IFORT_COMPILER13') + 'bin/compilervars.bat'
+    iflist = ['IFORT_COMPILER16', 'IFORT_COMPILER15', 'IFORT_COMPILER14', 'IFORT_COMPILER13']
+    found = False
+    for ift in iflist:
+        try:
+            cpvars = os.environ.get('IFORT_COMPILER13')
+            found = True
+        except:
+            pass
+    if not found:
+        raise Exception('Pymake could not find IFORT compiler.')
+    cpvars += 'bin/compilervars.bat'
     f = open(batchfile, 'w')
     line = 'call ' + '"' + os.path.normpath(cpvars) + '" ' + platform + '\n'
     f.write(line)
@@ -585,7 +595,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
             cc = 'cl.exe'
             compile_with_ifort(srcfiles, target, cc,
                                    objdir_temp, moddir_temp,
-                                   expedite, dryrun, double, debug)
+                                   expedite, dryrun, double, debug, fflags)
     else:
         raise Exception('Unsupported compiler')
 
