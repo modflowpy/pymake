@@ -530,7 +530,7 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_te
     iflist = ['IFORT_COMPILER16', 'IFORT_COMPILER15', 'IFORT_COMPILER14', 'IFORT_COMPILER13']
     found = False
     for ift in iflist:
-        cpvars = os.environ.get('IFORT_COMPILER13')
+        cpvars = os.environ.get(ift)
         if cpvars is not None:
             found = True
             exit
