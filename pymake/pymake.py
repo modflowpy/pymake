@@ -533,7 +533,7 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_te
         cpvars = os.environ.get(ift)
         if cpvars is not None:
             found = True
-            exit
+            break
     if not found:
         raise Exception('Pymake could not find IFORT compiler.')
     cpvars += 'bin/compilervars.bat'
