@@ -394,12 +394,12 @@ def compare_heads(namefile1, namefile2, precision='single',
     if status1 == dbs:
         headobj1 = flopy.utils.HeadFile(hfpth1, precision=precision)
     else:
-        headobj1 = flopy.utils.FormattedHeadFile(hfpth1, verbose=True)
+        headobj1 = flopy.utils.FormattedHeadFile(hfpth1)
 
     if status2 == dbs:
         headobj2 = flopy.utils.HeadFile(hfpth2, precision=precision)
     else:
-        headobj2 = flopy.utils.FormattedHeadFile(hfpth2, verbose=True)
+        headobj2 = flopy.utils.FormattedHeadFile(hfpth2)
 
     # get times
     times1 = headobj1.get_times()
@@ -460,4 +460,23 @@ def calculate_difference(v1, v2):
     indices = np.where(diff == diffmax)
     return diffmax, indices
 
+
+def compare(namefile1, namefile2, precision='single',
+            max_cumpd=0.01, max_incpd=0.01, htol=0.001,
+            outfile1=None, outfile2=None):
+
+    """
+    Compare the results from two simulations
+    """
+
+    # Compare budgets from the list files in namefile1 and namefile2
+    success1 = compare_budget(namefile1, namefile2,
+                              max_cumpd=max_cumpd, max_incpd=max_incpd,
+                              outfile=outfile1)
+    success2 = compare_heads(namefile1, namefile2, precision=precision,
+                             htol=htol, outfile=outfile2)
+    success = False
+    if success1 and success2:
+        success = True
+    return success
 

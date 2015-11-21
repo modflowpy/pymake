@@ -6,4 +6,5 @@ from .download import download_and_unzip
 from .visualize import make_plots
 from .autotest import setup, teardown, run_model, \
     get_namefiles, get_entries_from_namefile, \
-    get_sim_name, get_input_files, compare_budget, compare_heads
+    get_sim_name, get_input_files, \
+    compare_budget, compare_heads, compare

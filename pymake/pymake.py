@@ -61,6 +61,9 @@ def parser():
                         help='''Include source files in srcdir
                         subdirectories.''',
                         action='store_true')
+    parser.add_argument('-ff', '--fflags',
+                        help='''Additional fortran compiler flags.''',
+                        action='store_true')
     args = parser.parse_args()
     return args
 
@@ -132,9 +135,10 @@ def get_ordered_srcfiles(srcdir_temp, include_subdir=False):
     cfiles = []  # mja
     srcfiles = []
     for f in templist:
-        if f.endswith('.f') or f.endswith('.f90') or f.endswith('.for'):
+        if f.lower().endswith('.f') or f.lower().endswith('.f90') \
+                or f.lower().endswith('.for') or f.lower().endswith('.fpp'):
             srcfiles.append(f)
-        elif f.endswith('.c') or f.endswith('.cpp'):  # mja
+        elif f.lower().endswith('.c') or f.lower().endswith('.cpp'):  # mja
             cfiles.append(f)  # mja
 
     # orderedsourcefiles = order_source_files(srcfiles) + \
@@ -218,7 +222,7 @@ def get_iso_c(srcfiles):
 
 
 def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
-                     expedite, dryrun, double, debug):
+                     expedite, dryrun, double, debug, fflags):
     '''
     Compile the program using the gnu compilers (gfortran and gcc)
     '''
@@ -242,6 +246,10 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     if double:
         compileflags.append('-fdefault-real-8')
         compileflags.append('-fdefault-double-8')
+    if fflags is not None:
+        t = fflags.split()
+        for fflag in t:
+            compileflags.append(fflag)
 
     # C/C++ compiler switches -- thanks to mja
     if debug:
@@ -332,7 +340,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
 
 def compile_with_mac_ifort(srcfiles, target, cc,
                            objdir_temp, moddir_temp,
-                           expedite, dryrun, double, debug):
+                           expedite, dryrun, double, debug, fflags):
     """
     Make target on Mac OSX
     """
@@ -359,6 +367,10 @@ def compile_with_mac_ifort(srcfiles, target, cc,
         compileflags.append('-r8')
         compileflags.append('-double_size')
         compileflags.append('64')
+    if fflags is not None:
+        t = fflags.split()
+        for fflag in t:
+            compileflags.append(fflag)
 
     # C/C++ compiler switches
     if debug:
@@ -449,7 +461,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
 
 def compile_with_ifort(srcfiles, target, cc,
                            objdir_temp, moddir_temp,
-                           expedite, dryrun, double, debug):
+                           expedite, dryrun, double, debug, fflags):
     """
     Make target on Windows OS
     
@@ -474,6 +486,10 @@ def compile_with_ifort(srcfiles, target, cc,
         ]
     if double:
         compileflags.append('-r8')
+    if fflags is not None:
+        t = fflags.split()
+        for fflag in t:
+            compileflags.append(fflag)
     objext = '.obj'
     batchfile32 = 'compile_ia32.bat'
     batchfile64 = 'compile_x64.bat'
@@ -540,7 +556,7 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_te
 
 def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
          dryrun=False, double=False, debug=False,
-         include_subdirs=False):
+         include_subdirs=False, fflags=None):
     '''
     Main part of program
 
@@ -556,14 +572,14 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
         objext = '.o'
         create_openspec(srcdir_temp)
         compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
-                         expedite, dryrun, double, debug)
+                         expedite, dryrun, double, debug, fflags)
     elif fc == 'ifort':
         platform = sys.platform
         if platform.lower() == 'darwin':
             objext = '.o'
             compile_with_mac_ifort(srcfiles, target, cc,
                                    objdir_temp, moddir_temp,
-                                   expedite, dryrun, double, debug)
+                                   expedite, dryrun, double, debug, fflags)
         else:
             objext = '.obj'
             cc = 'cl.exe'

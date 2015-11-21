@@ -2,105 +2,150 @@ from __future__ import print_function
 import os
 import shutil
 import pymake
+from pymake.autotest import get_namefiles, compare_budget, compare_heads
 import flopy
+import config001 as config
 
-# set up paths
-dstpth = os.path.join('temp')
-if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
-mfpth = os.path.join(dstpth, 'MF2005.1_11u')
-expth = os.path.join(mfpth, 'test-run')
-deppth = os.path.join(mfpth, 'dependencies')
 
-exe_name = 'mf2005r'
-srcpth = os.path.join(mfpth, 'src')
-target = os.path.join(dstpth, exe_name)
+def run_mf2005(namefile, regression=True):
+    """
+    Run the simulation.
 
-def get_namefiles():
-    exclude_tests = ('MNW2-Fig28')
-    namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
-    simname = pymake.get_sim_name(namefiles, rootpth=expth)
-    return zip(namefiles, simname)
+    """
 
-def compile_code():
-    # Download the MODFLOW-2005 distribution
-    url = 'http://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip'
-    pymake.download_and_unzip(url, pth=dstpth)
+    # Set root as the directory name where namefile is located
+    testname = pymake.get_sim_name(namefile, rootpth=config.testpaths[0])[0]
 
-    # Remove the existing MF2005.1_11u directory if it exists
-    if os.path.isdir(mfpth):
-        print('Removing folder ' + mfpth)
-        shutil.rmtree(mfpth)
-    # Rename Unix to a more reasonable name
-    os.rename(os.path.join(dstpth, 'Unix'), mfpth)
+    # Set nam as namefile name without path
+    nam = os.path.basename(namefile)
 
-    # compile modflow
-    pymake.main(srcpth, target, 'gfortran', 'gcc', makeclean=True,
-                expedite=False, dryrun=False, double=False, debug=False,
-                include_subdirs=False)
-    assert os.path.isfile(target) is True, 'Target does not exist.'
-
-def run_modflow2005(namepth, dst):
-    # setup
-    testpth = os.path.join(dstpth, dst)
-    pymake.setup(namepth, testpth)
+    # Setup
+    testpth = os.path.join(config.testdir, testname)
+    pymake.setup(namefile, testpth)
 
     # run test models
-    print('running model...{}'.format(namepth))
-    epth = os.path.abspath(target)
-    success, buff = flopy.run_model(epth, os.path.basename(namepth),
-                                    model_ws=testpth, silent=True)
-    if success:
+    print('running model...{}'.format(testname))
+    exe_name = os.path.abspath(config.target_release)
+    success, buff = flopy.run_model(exe_name, nam, model_ws=testpth,
+                                    silent=True)
+
+    # If it is a regression run, then setup and run the model with the
+    # release target and the reference target
+    success_reg = True
+    if regression:
+        testname_reg = os.path.basename(config.target_previous)
+        testpth_reg = os.path.join(testpth, testname_reg)
+        pymake.setup(namefile, testpth_reg)
+        print('running regression model...{}'.format(testname_reg))
+        exe_name = os.path.abspath(config.target_previous)
+        success_reg, buff = flopy.run_model(exe_name, nam,
+                                            model_ws=testpth_reg,
+                                            silent=True)
+        if success_reg:
+            outfile1 = os.path.join(os.path.split(os.path.join(testpth, nam))[0], 'bud.cmp')
+            outfile2 = os.path.join(os.path.split(os.path.join(testpth, nam))[0], 'hds.cmp')
+            success_reg = pymake.compare(os.path.join(testpth, nam),
+                                         os.path.join(testpth_reg, nam),
+                                         precision='single',
+                                         max_cumpd=0.01, max_incpd=0.01, htol=0.001,
+                                         outfile1=outfile1, outfile2=outfile2)
+
+    # Clean things up
+    if success and success_reg and not config.retain:
         pymake.teardown(testpth)
+    assert success and success_reg
 
-    assert success is True
+    return
 
-def clean_up():
-    # clean up
-    print('Removing folder ' + mfpth)
-    shutil.rmtree(mfpth)
-    print('Removing ' + target)
-    os.remove(target)
 
-def build_modflow2005_dependency_graphs():
+def test_compile_prev():
+    # Compile reference version of the program from the source.
 
-    # build dependencies output directory
-    if not os.path.exists(deppth):
-        os.makedirs(deppth)
-    # build dependency graphs
-    print('building dependency graphs')
-    pymake.make_plots(srcpth, deppth)
-    # test that the dependency figure for the MODFLOW-2005 main exists
-    findf = os.path.join(deppth, 'mf2005.f.png')
-    assert os.path.isfile(findf) is True
+    # Remove the existing distribution directory if it exists
+    dir_previous = config.dir_previous
+    if os.path.isdir(dir_previous):
+        print('Removing folder ' + dir_previous)
+        shutil.rmtree(dir_previous)
 
-def test_compile():
-    # compile MODFLOW-2005
-    yield compile_code
+    # Setup variables
+    url = config.url_previous
+    srcdir = config.srcdir_previous
+    target = config.target_previous
 
-def test_modflow2005():
-    namefiles = get_namefiles()
-    # run models
-    for namepth, dst in namefiles:
-        yield run_modflow2005, namepth, dst
+    # Download the MODFLOW-USG distribution
+    pymake.download_and_unzip(url, pth=config.testdir)
+    os.rename(config.dir_release, config.dir_previous)
 
-def test_dependency_graphs():
-    # build dependency graphs
-    yield build_modflow2005_dependency_graphs
+    # compile
+    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+                expedite=False, dryrun=False, double=False, debug=False,
+                include_subdirs=False)
 
-def test_clean_up():
-    yield clean_up
+    assert os.path.isfile(target), 'Target {} does not exist.'.format(target)
+
+    return
+
+
+def test_compile_ref():
+    # Compile reference version of the program from the source.
+
+    # Remove the existing distribution directory if it exists
+    dir_release = config.dir_release
+    if os.path.isdir(dir_release):
+        print('Removing folder ' + dir_release)
+        shutil.rmtree(dir_release)
+
+    # Setup variables
+    url = config.url_release
+    srcdir = config.srcdir_release
+    target = config.target_release
+
+    # Download the MODFLOW-USG distribution
+    pymake.download_and_unzip(url, pth=config.testdir)
+
+    # compile
+    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+                expedite=False, dryrun=False, double=False, debug=False,
+                include_subdirs=False)
+
+    assert os.path.isfile(target), 'Target {} does not exist.'.format(target)
+
+    return
+
+
+def test_mf2005():
+    namefiles = get_namefiles(config.testpaths[0], exclude=config.exclude)
+    for namefile in namefiles:
+        yield run_mf2005, namefile
+    return
+
+
+def test_teardown():
+    if os.path.isdir(config.dir_previous):
+        print('Removing folder ' + config.dir_previous)
+        shutil.rmtree(config.dir_previous)
+
+    if os.path.isdir(config.dir_release):
+        print('Removing folder ' + config.dir_release)
+        shutil.rmtree(config.dir_release)
+
+    if os.path.isfile(config.target_previous):
+        print('Removing ' + config.target_previous)
+        os.remove(config.target_previous)
+
+    if os.path.isfile(config.target_release):
+        print('Removing ' + config.target_release)
+        os.remove(config.target_release)
+
+    return
+
 
 if __name__ == '__main__':
-    # compile MODFLOW-2005
-    compile_code()
-    # get namefiles
-    namefiles = get_namefiles()
-    # run models
-    for namepth, dst in namefiles:
-        run_modflow2005(namepth, dst)
-    # build dependency graphs
-    build_modflow2005_dependency_graphs()
-    # clean up
-    clean_up()
+    test_compile_prev()
+    test_compile_ref()
 
+    namefiles = get_namefiles(config.testpaths[0], exclude=config.exclude)
+    for namefile in namefiles:
+        run_mf2005(namefile)
+
+    test_teardown()
