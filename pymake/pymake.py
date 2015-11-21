@@ -536,7 +536,7 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_te
             break
     if not found:
         raise Exception('Pymake could not find IFORT compiler.')
-    cpvars += 'bin/compilervars.bat'
+    cpvars += os.path.join('bin', 'compilevars.bat')
     f = open(batchfile, 'w')
     line = 'call ' + '"' + os.path.normpath(cpvars) + '" ' + platform + '\n'
     f.write(line)
