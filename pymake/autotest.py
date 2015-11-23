@@ -368,12 +368,20 @@ def compare_heads(namefile1, namefile2, precision='single',
     import flopy
 
     dbs = 'DATA(BINARY)'
+
+    # Get oc info, and return if OC not included in models
     ocf1 = get_entries_from_namefile(namefile1, 'OC')
+    ocf2 = get_entries_from_namefile(namefile2, 'OC')
+    if ocf1[0][0] is None or ocf2[0][0] is None:
+        return True
+
+    # Get head info for namefile1
     hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(ocf1[0][0])
     if hu1 != 0:
         entries = get_entries_from_namefile(namefile1, unit=abs(hu1))
         hfpth1, status1 = entries[0][0], entries[0][1]
-    ocf2 = get_entries_from_namefile(namefile2, 'OC')
+
+    # Get head info for namefile2
     hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(ocf2[0][0])
     if hu2 != 0:
         entries = get_entries_from_namefile(namefile2, unit=abs(hu2))
@@ -391,11 +399,13 @@ def compare_heads(namefile1, namefile2, precision='single',
         f.write('Created by pymake.autotest.compare\n')
 
     # Get head objects
+    status1 = status1.upper()
     if status1 == dbs:
         headobj1 = flopy.utils.HeadFile(hfpth1, precision=precision)
     else:
         headobj1 = flopy.utils.FormattedHeadFile(hfpth1)
 
+    status2 = status2.upper()
     if status2 == dbs:
         headobj2 = flopy.utils.HeadFile(hfpth2, precision=precision)
     else:
