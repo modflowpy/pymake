@@ -41,6 +41,8 @@ def parser():
                         default='gfortran', choices=['ifort', 'gfortran'])
     parser.add_argument('-cc', help='C compiler to use (default is gcc)',
                         default='gcc', choices=['gcc', 'clang'])
+    parser.add_argument('-ar', help='Architecture to use for ifort (default is intel64)',
+                        default='intel64', choices=['ia32', 'ia32_intel64', 'intel64'])
     parser.add_argument('-mc', '--makeclean', help='Clean files when done',
                         action='store_true')
     parser.add_argument('-dbl', '--double', help='Force double precision',
@@ -459,9 +461,8 @@ def compile_with_mac_ifort(srcfiles, target, cc,
     return
 
 
-def compile_with_ifort(srcfiles, target, cc,
-                           objdir_temp, moddir_temp,
-                           expedite, dryrun, double, debug, fflags):
+def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
+                       expedite, dryrun, double, debug, fflags, arch):
     """
     Make target on Windows OS
     
@@ -491,44 +492,25 @@ def compile_with_ifort(srcfiles, target, cc,
         for fflag in t:
             compileflags.append(fflag)
     objext = '.obj'
-    batchfile32 = 'compile_ia32.bat'
-    batchfile64 = 'compile_x64.bat'
-    try:
-        os.remove(batchfile32)
-    except:
-        pass
-    try:
-        os.remove(batchfile64)
-    except:
-        pass
+    batchfile = 'compile.bat'
+    if os.path.isfile(batchfile):
+        try:
+            os.remove(batchfile)
+        except:
+            pass
 
-    # Remove .exe from target name if it is there
-    target = target.replace('.exe', '')
-
-    # Create ia32
-    tgt = target
-    if not tgt.endswith('.exe'):
-        tgt += '.exe'
+    # Create target
     try:
-        makebatch(batchfile32, fc, compileflags, srcfiles, tgt, 'ia32', objdir_temp,
-                  moddir_temp)
-        subprocess.check_call([batchfile32, ], )
+        makebatch(batchfile, fc, compileflags, srcfiles, target, arch,
+                  objdir_temp, moddir_temp)
+        subprocess.check_call([batchfile, ], )
     except:
-        print('Could not make ia32 target: ', tgt)
-
-    # Create x64
-    tgt = target + '_x64.exe'
-    try:
-        makebatch(batchfile64, fc, compileflags, srcfiles, tgt, 'intel64', objdir_temp,
-                  moddir_temp)
-        subprocess.check_call([batchfile64, ], )
-    except:
-        print('Could not make x64 target: ', tgt)
+        print('Could not make x64 target: ', target)
 
     return
 
 
-def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_temp,
+def makebatch(batchfile, fc, compileflags, srcfiles, target, arch, objdir_temp,
               moddir_temp):
     '''
     Make an ifort batch file
@@ -548,7 +530,7 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_te
     if not os.path.isfile(cpvars):
         raise Exception('Could not find cpvars: {}'.format(cpvars))
     f = open(batchfile, 'w')
-    line = 'call ' + '"' + os.path.normpath(cpvars) + '" ' + platform + '\n'
+    line = 'call ' + '"' + os.path.normpath(cpvars) + '" ' + arch + '\n'
     f.write(line)
 
     # write commands to build object files
@@ -575,7 +557,7 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_te
 
 def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
          dryrun=False, double=False, debug=False,
-         include_subdirs=False, fflags=None):
+         include_subdirs=False, fflags=None, arch='intel64'):
     '''
     Main part of program
 
@@ -602,13 +584,12 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
         else:
             objext = '.obj'
             cc = 'cl.exe'
-            compile_with_ifort(srcfiles, target, cc,
-                                   objdir_temp, moddir_temp,
-                                   expedite, dryrun, double, debug, fflags)
+            compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
+                               expedite, dryrun, double, debug, fflags, arch)
     else:
         raise Exception('Unsupported compiler')
 
-    # clean it up
+    # Clean it up
     if makeclean:
         clean(srcdir_temp, objdir_temp, moddir_temp, objext)
         
@@ -623,4 +604,4 @@ if __name__ == "__main__":
     # from python as a function.
     main(args.srcdir, args.target, args.fc, args.cc, args.makeclean,
          args.expedite, args.dryrun, args.double, args.debug,
-         args.subdirs)
+         args.subdirs, args.arch)
