@@ -502,21 +502,28 @@ def compile_with_ifort(srcfiles, target, cc,
     except:
         pass
 
+    # Remove .exe from target name if it is there
+    target = target.replace('.exe', '')
+
     # Create ia32
+    tgt = target
+    if not tgt.endswith('.exe'):
+        tgt += '.exe'
     try:
-        makebatch(batchfile32, fc, compileflags, srcfiles, target, 'ia32', objdir_temp,
+        makebatch(batchfile32, fc, compileflags, srcfiles, tgt, 'ia32', objdir_temp,
                   moddir_temp)
         subprocess.check_call([batchfile32, ], )
     except:
-        print('Could not make ia32 target: ', target)
+        print('Could not make ia32 target: ', tgt)
 
     # Create x64
+    tgt = target + '_x64.exe'
     try:
-        makebatch(batchfile64, fc, compileflags, srcfiles, target + '_x64', 'intel64', objdir_temp,
+        makebatch(batchfile64, fc, compileflags, srcfiles, tgt, 'intel64', objdir_temp,
                   moddir_temp)
         subprocess.check_call([batchfile64, ], )
     except:
-        print('Could not make x64 target: ', target)
+        print('Could not make x64 target: ', tgt)
 
     return
 
@@ -527,7 +534,8 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_te
     Make an ifort batch file
     
     '''
-    iflist = ['IFORT_COMPILER16', 'IFORT_COMPILER15', 'IFORT_COMPILER14', 'IFORT_COMPILER13']
+    iflist = ['IFORT_COMPILER16', 'IFORT_COMPILER15', 'IFORT_COMPILER14',
+              'IFORT_COMPILER13']
     found = False
     for ift in iflist:
         cpvars = os.environ.get(ift)
@@ -536,7 +544,9 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, platform, objdir_te
             break
     if not found:
         raise Exception('Pymake could not find IFORT compiler.')
-    cpvars += os.path.join('bin', 'compilevars.bat')
+    cpvars += os.path.join('bin', 'compilervars.bat')
+    if not os.path.isfile(cpvars):
+        raise Exception('Could not find cpvars: {}'.format(cpvars))
     f = open(batchfile, 'w')
     line = 'call ' + '"' + os.path.normpath(cpvars) + '" ' + platform + '\n'
     f.write(line)
