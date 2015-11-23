@@ -48,6 +48,53 @@ def setup(namefile, dst):
 
     return
 
+def setup_comparison(namefile, dst):
+    # Construct src pth from namefile
+    src = os.path.dirname(namefile)
+    action = None
+    for root, dirs, files in os.walk(src):
+        dl = [d.lower() for d in dirs]
+        if '.cmp' in dl:
+            idx = dl.index('.cmp')
+            if 'mf2005.cmp' in dl:
+                action = 'mf2005'
+            elif 'mfnwt.cmp' in dl:
+                action = 'mfnwt'
+            elif 'mfusg.cmp' in dl:
+                action = 'mfusg'
+            else:
+                action = dirs[idx]
+            pth = root
+            break
+    if action is not None:
+        dst = os.path.join(dst, '{}'.format(action))
+        if not os.path.isdir(dst):
+            try:
+                os.mkdir(dst)
+            except:
+                print('Could not make ' + dst)
+        files2copy = []
+        if action.lower() == '.cmp':
+            cmppth = os.path.join(src, action)
+            files = os.listdir(cmppth)
+            for file in files:
+                if '.cmp' in os.path.splitext(file)[1]:
+                    files2copy.append(os.path.join(cmppth, file))
+            for srcf in files2copy:
+                f = os.path.basename(srcf)
+                dstf = os.path.join(dst, f)
+                # Now copy the file
+                if os.path.exists(srcf):
+                    print('Copy file from/to ' + srcf + ' ' + dstf)
+                    shutil.copy(srcf, dstf)
+                else:
+                    print(srcf + ' does not exist')
+        else:
+            i = 12
+
+    return action
+
+
 
 def teardown(src):
     if os.path.exists(src):
@@ -342,8 +389,8 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                     e = '"{} {}" percent difference ({})'.format(headers[idx], dir[kdx], t) + \
                         ' for stress period {} and time step {} > {}.'.format(kper[jdx]+1, kstp[jdx]+1, max_pd) + \
                         ' Reference value = {}. Simulated value = {}.'.format(v0[kdx], v1[kdx])
-                    for ee in textwrap.wrap(e, 68):
-                        f.write('    {}\n'.format(ee))
+                    e = textwrap.fill(e, width=70, initial_indent='    ', subsequent_indent='    ')
+                    f.write('{}\n'.format(e))
                     f.write('\n')
 
     # Close output file
@@ -409,6 +456,10 @@ def compare_heads(namefile1, namefile2, precision='single',
 
     kstpkper = headobj1.get_kstpkper()
 
+    header = '{:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', 'MAXIMUM') + \
+             '{:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD', 'TIME STEP', 'HEAD DIFFERENCE') + \
+             '{0:>15s} {0:>15s} {0:>15s}\n'.format(15*'-')
+
     icnt = 0
     # Process cumulative and incremental
     for idx, time in enumerate(times1):
@@ -418,21 +469,21 @@ def compare_heads(namefile1, namefile2, precision='single',
         diffmax, indices = calculate_difference(h1, h2)
 
         if idx < 1:
-            f.write('{:>15s} {:>15s} {:>15s} \n'.format(' ', ' ', 'MAXIMUM'))
-            f.write('{:>15s} {:>15s} {:>15s} \n'.format('STRESS PERIOD', 'TIME STEP', 'HEAD DIFFERENCE'))
-            f.write('{0:>15s} {0:>15s} {0:>15s} \n'.format(15*'-'))
+            f.write(header)
         f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1]+1, kstpkper[idx][0]+1, diffmax))
 
         if diffmax >= htol:
             icnt += 1
-            f.write('  Maximum head difference ({}) exceeds {} at node locations:\n'.format(diffmax, htol))
+            e = 'Maximum head difference ({}) exceeds {} at node location(s):\n'.format(diffmax, htol)
+            e = textwrap.fill(e, width=70, initial_indent='  ', subsequent_indent='  ')
+            f.write('{}\n'.format(e))
             e = ''
             for itupe in indices:
                 for ind in itupe:
                     e += '{} '.format(ind)
-            e = textwrap.fill(e, 68)
-            f.write('    {}\n'.format(e))
-            f.write('\n')
+            e = textwrap.fill(e, width=70, initial_indent='    ', subsequent_indent='    ')
+            f.write('{}\n'.format(e))
+            f.write('\n{}'.format(header))
 
     # Close output file
     if outfile is not None:
