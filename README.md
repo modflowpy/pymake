@@ -24,25 +24,28 @@ Note that if gfortran is used, the openspec.f file will be changed to:
 ## Command Line Usage
 
 To see help for running from command line, use the following statement.
+    python -m pymake.pymake -h
 
-    python pymake.py -h
+    usage: pymake.py [-h] [-fc {ifort,gfortran}] [-cc {gcc,clang}]
+                     [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e]
+                     [-dr] [-sd] [-ff]
+                     srcdir target
 
-    usage: pymake.py [-h] [-fc {ifort,gfortran}] [-cc {gcc,clang}] [-mc] [-e]
-                     [-dr] [-sd] srcdir target
-    
     This is the pymake program for compiling fortran source files, such as the
     source files that come with MODFLOW. The program works by building a directed
     acyclic graph of the module dependencies and then compiling the source files
     in the proper order.
-    
+
     positional arguments:
       srcdir                Location of source directory
       target                Name of target to create
-    
+
     optional arguments:
       -h, --help            show this help message and exit
       -fc {ifort,gfortran}  Fortran compiler to use (default is gfortran)
-      -cc {gcc, clang}      C compiler to use (default is gcc)
+      -cc {gcc,clang}       C compiler to use (default is gcc)
+      -ar {ia32,ia32_intel64,intel64}
+                            Architecture to use for ifort (default is intel64)
       -mc, --makeclean      Clean files when done
       -dbl, --double        Force double precision
       -dbg, --debug         Create debug version
@@ -52,9 +55,11 @@ To see help for running from command line, use the following statement.
       -dr, --dryrun         Do not actually compile. Files will be deleted, if
                             --makeclean is used. Does not work yet for ifort.
       -sd, --subdirs        Include source files in srcdir subdirectories.
-    
+      -ff, --fflags         Additional fortran compiler flags.
+
     Note that the source directory should not contain any bad or duplicate source
     files as all source files in the source directory will be built and linked.
+
 
 ## From Python
     
