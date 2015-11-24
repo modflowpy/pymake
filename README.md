@@ -74,3 +74,13 @@ The following scripts can be run directly from the command line to build MODFLOW
     python make_swtv4.py
     python make_mt3d.py
     python make_mfusg.py
+
+## Installation
+
+To install pymake directly from the git repository type:
+
+    pip install https://github.com/modflowpy/pymake/zipball/master
+
+To update your version of pymake with the latest from the git repository type:
+
+    pip install https://github.com/modflowpy/pymake/zipball/master --upgrade
