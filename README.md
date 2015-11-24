@@ -24,6 +24,7 @@ Note that if gfortran is used, the openspec.f file will be changed to:
 ## Command Line Usage
 
 To see help for running from command line, use the following statement.
+
     python -m pymake.pymake -h
 
     usage: pymake.py [-h] [-fc {ifort,gfortran}] [-cc {gcc,clang}]
