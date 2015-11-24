@@ -54,18 +54,23 @@ def setup_comparison(namefile, dst):
     action = None
     for root, dirs, files in os.walk(src):
         dl = [d.lower() for d in dirs]
-        if '.cmp' in dl:
-            idx = dl.index('.cmp')
-            if 'mf2005.cmp' in dl:
-                action = 'mf2005'
-            elif 'mfnwt.cmp' in dl:
-                action = 'mfnwt'
-            elif 'mfusg.cmp' in dl:
-                action = 'mfusg'
-            else:
-                action = dirs[idx]
-            pth = root
-            break
+        if any('.cmp' in s for s in dl):
+            idx = None
+            for jdx, d in enumerate(dl):
+                if '.cmp' in d:
+                    idx = jdx
+                    break
+            if idx is not None:
+                if 'mf2005.cmp' in dl[idx]:
+                    action = dirs[idx]
+                elif 'mfnwt.cmp' in dl[idx]:
+                    action = dirs[idx]
+                elif 'mfusg.cmp' in dl[idx]:
+                    action = dirs[idx]
+                else:
+                    action = dirs[idx]
+                pth = root
+                break
     if action is not None:
         dst = os.path.join(dst, '{}'.format(action))
         if not os.path.isdir(dst):
@@ -73,12 +78,12 @@ def setup_comparison(namefile, dst):
                 os.mkdir(dst)
             except:
                 print('Could not make ' + dst)
+        cmppth = os.path.join(src, action)
+        files = os.listdir(cmppth)
         files2copy = []
         if action.lower() == '.cmp':
-            cmppth = os.path.join(src, action)
-            files = os.listdir(cmppth)
             for file in files:
-                if '.cmp' in os.path.splitext(file)[1]:
+                if '.cmp' in os.path.splitext(file)[1].lower():
                     files2copy.append(os.path.join(cmppth, file))
             for srcf in files2copy:
                 f = os.path.basename(srcf)
@@ -90,7 +95,12 @@ def setup_comparison(namefile, dst):
                 else:
                     print(srcf + ' does not exist')
         else:
-            i = 12
+            for file in files:
+                if '.nam' in os.path.splitext(file)[1].lower():
+                    files2copy.append(os.path.join(cmppth, os.path.basename(file)))
+                    nf = os.path.join(src, action, os.path.basename(file))
+                    setup(nf, dst)
+                    break
 
     return action
 
