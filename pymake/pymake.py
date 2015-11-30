@@ -41,7 +41,8 @@ def parser():
                         default='gfortran', choices=['ifort', 'gfortran'])
     parser.add_argument('-cc', help='C compiler to use (default is gcc)',
                         default='gcc', choices=['gcc', 'clang'])
-    parser.add_argument('-ar', help='Architecture to use for ifort (default is intel64)',
+    parser.add_argument('-ar', '--arch',
+                        help='Architecture to use for ifort (default is intel64)',
                         default='intel64', choices=['ia32', 'ia32_intel64', 'intel64'])
     parser.add_argument('-mc', '--makeclean', help='Clean files when done',
                         action='store_true')
@@ -65,7 +66,7 @@ def parser():
                         action='store_true')
     parser.add_argument('-ff', '--fflags',
                         help='''Additional fortran compiler flags.''',
-                        action='store_true')
+                        default=None)
     args = parser.parse_args()
     return args
 
@@ -604,4 +605,4 @@ if __name__ == "__main__":
     # from python as a function.
     main(args.srcdir, args.target, args.fc, args.cc, args.makeclean,
          args.expedite, args.dryrun, args.double, args.debug,
-         args.subdirs, args.arch)
+         args.subdirs, args.fflags, args.arch)
