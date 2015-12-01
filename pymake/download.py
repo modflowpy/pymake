@@ -23,7 +23,7 @@ def download_and_unzip(url, pth='./'):
         raise Exception(msg)
 
     # Unzip the file, and delete zip file if successful.
-    if 'zip' in os.path.basename(file_name):
+    if 'zip' in os.path.basename(file_name) or 'exe' in os.path.basename(file_name):
         z = ZipFile(file_name)
         try:
             print('Extracting the zipfile...')

@@ -3,14 +3,12 @@ import shutil
 import subprocess
 import textwrap
 
-
 ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
               '.ddn', '.ucn', '.glo', '.lst', '.list',
               '.gwv', '.mv']
 
 
 def setup(namefile, dst):
-
     # Construct src pth from namefile
     src = os.path.dirname(namefile)
 
@@ -47,6 +45,7 @@ def setup(namefile, dst):
             print(srcf + ' does not exist')
 
     return
+
 
 def setup_comparison(namefile, dst):
     # Construct src pth from namefile
@@ -105,62 +104,11 @@ def setup_comparison(namefile, dst):
     return action
 
 
-
 def teardown(src):
     if os.path.exists(src):
         print('Removing folder ' + src)
         shutil.rmtree(src)
     return
-
-
-def run_model(exe_name, namefile, model_ws='./', silent=False, pause=False,
-              report=False, normal_msg='normal termination'):
-    """
-    This method will run the model using subprocess.Popen.
-
-    Parameters
-    ----------
-    silent : boolean
-        Echo run information to screen (default is True).
-    pause : boolean, optional
-        Pause upon completion (the default is False).
-    report : boolean, optional
-        Save stdout lines to a list (buff) which is returned
-        by the method . (the default is False).
-
-    Returns
-    -------
-    (success, buff)
-    success : boolean
-    buff : list of lines of stdout
-
-    """
-    success = False
-    buff = []
-
-    # Check to make sure that the namefile exists
-    if not os.path.isfile(os.path.join(model_ws, namefile)):
-        s = 'The namefile for this model does not exists: {}'.format(namefile)
-        raise Exception(s)
-
-    proc = subprocess.Popen([exe_name, namefile],
-                            stdout=subprocess.PIPE, cwd=model_ws)
-    while True:
-        line = proc.stdout.readline()
-        c = line.decode('utf-8')
-        if c != '':
-            if normal_msg in c.lower():
-                success = True
-            c = c.rstrip('\r\n')
-            if not silent:
-                print('{}'.format(c))
-            if report == True:
-                buff.append(c)
-        else:
-            break
-    if pause == True:
-        input('Press Enter to continue...')
-    return [success, buff]
 
 
 def get_input_files(namefile):
@@ -297,7 +245,7 @@ def get_sim_name(namefiles, rootpth=None):
 
 
 def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
-                   outfile=None):
+                   outfile=None, files1=None, files2=None):
     """
     Compare the results from these two simulations.
 
@@ -310,10 +258,27 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     dir = ('IN', 'OUT')
 
     # Get name of list files
-    list = get_entries_from_namefile(namefile1, 'list')
-    list1 = list[0][0]
-    list2 = get_entries_from_namefile(namefile2, 'list')
-    list2 = list[0][0]
+    list1 = None
+    if files1 is None:
+        list = get_entries_from_namefile(namefile1, 'list')
+        list1 = list[0][0]
+    else:
+        for file in files1:
+            if 'list' in os.path.basename(file).lower() or 'lst' in os.path.basename(file).lower():
+                list1 = file
+                break
+    list2 = None
+    if files2 is None:
+        list = get_entries_from_namefile(namefile2, 'list')
+        list2 = list[0][0]
+    else:
+        for file in files2:
+            if 'list' in os.path.basename(file).lower() or 'lst' in os.path.basename(file).lower():
+                list2 = file
+                break
+    # Determine if there are two files to compare
+    if list1 is None or list2 is None:
+        return True
 
     # Open output file
     if outfile is not None:
@@ -361,7 +326,7 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
                 s = 2 * '\n'
                 s += 'STRESS PERIOD: {} TIME STEP: {}'.format(kper[jdx] + 1,
-                                                                kstp[jdx] + 1)
+                                                              kstp[jdx] + 1)
                 f.write(s)
 
                 if idx == 0:
@@ -372,9 +337,9 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
                         s = '{:<21} {:>21} {:>21} {:>21}\n'.format('Budget Entry',
-                                                              'Model 1',
-                                                              'Model 2',
-                                                              'Difference')
+                                                                   'Model 1',
+                                                                   'Model 2',
+                                                                   'Difference')
                         f.write(s)
                         s = 87 * '-' + '\n'
                         f.write(s)
@@ -397,7 +362,7 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                 if abs(t) > max_pd:
                     icnt += 1
                     e = '"{} {}" percent difference ({})'.format(headers[idx], dir[kdx], t) + \
-                        ' for stress period {} and time step {} > {}.'.format(kper[jdx]+1, kstp[jdx]+1, max_pd) + \
+                        ' for stress period {} and time step {} > {}.'.format(kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
                         ' Reference value = {}. Simulated value = {}.'.format(v0[kdx], v1[kdx])
                     e = textwrap.fill(e, width=70, initial_indent='    ', subsequent_indent='    ')
                     f.write('{}\n'.format(e))
@@ -407,7 +372,6 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     if outfile is not None:
         f.close()
 
-
     # test for failure
     success = True
     if icnt > 0:
@@ -415,9 +379,8 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     return success
 
 
-
 def compare_heads(namefile1, namefile2, precision='single',
-                  htol=0.001, outfile=None):
+                  htol=0.001, outfile=None, files1=None, files2=None):
     """
     Compare the results from these two simulations.
 
@@ -426,24 +389,45 @@ def compare_heads(namefile1, namefile2, precision='single',
 
     dbs = 'DATA(BINARY)'
 
-    # Get oc info, and return if OC not included in models
-    ocf1 = get_entries_from_namefile(namefile1, 'OC')
-    ocf2 = get_entries_from_namefile(namefile2, 'OC')
-    if ocf1[0][0] is None or ocf2[0][0] is None:
-        return True
-
     # Get head info for namefile1
-    hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(ocf1[0][0])
-    if hu1 != 0:
-        entries = get_entries_from_namefile(namefile1, unit=abs(hu1))
-        hfpth1, status1 = entries[0][0], entries[0][1]
+    hfpth1 = None
+    status1 = dbs
+    if files1 is None:
+        # Get oc info, and return if OC not included in models
+        ocf1 = get_entries_from_namefile(namefile1, 'OC')
+        if ocf1[0][0] is None:
+            return True
+
+        hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(ocf1[0][0])
+        if hu1 != 0:
+            entries = get_entries_from_namefile(namefile1, unit=abs(hu1))
+            hfpth1, status1 = entries[0][0], entries[0][1]
+    else:
+        for file in files1:
+            if 'hds' in os.path.basename(file).lower() or 'hed' in os.path.basename(file).lower():
+                hfpth1 = file
+                break
 
     # Get head info for namefile2
-    hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(ocf2[0][0])
-    if hu2 != 0:
-        entries = get_entries_from_namefile(namefile2, unit=abs(hu2))
-        hfpth2, status2 = entries[0][0], entries[0][1]
+    hfpth2 = None
+    status2 = dbs
+    if files2 is None:
+        # Get oc info, and return if OC not included in models
+        ocf2 = get_entries_from_namefile(namefile2, 'OC')
+        if ocf2[0][0] is None:
+            return True
 
+        hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(ocf2[0][0])
+        if hu2 != 0:
+            entries = get_entries_from_namefile(namefile2, unit=abs(hu2))
+            hfpth2, status2 = entries[0][0], entries[0][1]
+    else:
+        for file in files2:
+            if 'hds' in os.path.basename(file).lower() or 'hed' in os.path.basename(file).lower():
+                hfpth2 = file
+                break
+
+    # confirm that there are two files to compare
     if hfpth1 is None or hfpth2 is None:
         return True
 
@@ -478,7 +462,7 @@ def compare_heads(namefile1, namefile2, precision='single',
 
     header = '{:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', 'MAXIMUM') + \
              '{:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD', 'TIME STEP', 'HEAD DIFFERENCE') + \
-             '{0:>15s} {0:>15s} {0:>15s}\n'.format(15*'-')
+             '{0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
 
     icnt = 0
     # Process cumulative and incremental
@@ -490,7 +474,7 @@ def compare_heads(namefile1, namefile2, precision='single',
 
         if idx < 1:
             f.write(header)
-        f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1]+1, kstpkper[idx][0]+1, diffmax))
+        f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1, kstpkper[idx][0] + 1, diffmax))
 
         if diffmax >= htol:
             icnt += 1
@@ -534,8 +518,8 @@ def calculate_difference(v1, v2):
 
 def compare(namefile1, namefile2, precision='single',
             max_cumpd=0.01, max_incpd=0.01, htol=0.001,
-            outfile1=None, outfile2=None):
-
+            outfile1=None, outfile2=None,
+            files1=None, files2=None):
     """
     Compare the results from two simulations
     """
@@ -543,11 +527,12 @@ def compare(namefile1, namefile2, precision='single',
     # Compare budgets from the list files in namefile1 and namefile2
     success1 = compare_budget(namefile1, namefile2,
                               max_cumpd=max_cumpd, max_incpd=max_incpd,
-                              outfile=outfile1)
+                              outfile=outfile1,
+                              files1=files1, files2=files2)
     success2 = compare_heads(namefile1, namefile2, precision=precision,
-                             htol=htol, outfile=outfile2)
+                             htol=htol, outfile=outfile2,
+                             files1=files1, files2=files2)
     success = False
     if success1 and success2:
         success = True
     return success
-
