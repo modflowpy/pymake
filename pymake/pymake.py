@@ -463,7 +463,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
 
 
 def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
-                       expedite, dryrun, double, debug, fflags, arch):
+                       expedite, dryrun, double, debug, fflagsu, arch):
     """
     Make target on Windows OS
     
@@ -475,35 +475,23 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
         cflags = ['-O3']
     syslibs = ['-lc']
 
-
     fc = 'ifort.exe'
     cc = 'cl.exe'
     cflags = ['-nologo', '-c']
+    fflags = ['-heap-arrays:0', '-fpe:0', '-traceback', '-nologo']
     if debug:
-        compileflags = [
-            '-debug',
-            '-heap-arrays:0',
-            '-fpe:0',
-            '-traceback',
-            '-nologo',
-        ]
+        fflags += ['-debug']
         cflags += ['-Zi']
     else:
         # production version compile flags
-        compileflags = [
-            '-O2',
-            '-heap-arrays:0',
-            '-fpe:0',
-            '-traceback',
-            '-nologo',
-        ]
+        fflags += ['-O2']
         cflags += ['-O2']
     if double:
-        compileflags.append('-r8')
-    if fflags is not None:
-        t = fflags.split()
+        fflags.append('-r8')
+    if fflagsu is not None:
+        t = fflagsu.split()
         for fflag in t:
-            compileflags.append(fflag)
+            fflags.append(fflag)
     objext = '.obj'
     batchfile = 'compile.bat'
     if os.path.isfile(batchfile):
@@ -514,7 +502,7 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
 
     # Create target
     try:
-        makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target,
+        makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target,
                   arch, objdir_temp, moddir_temp)
         subprocess.check_call([batchfile, ], )
     except:
