@@ -77,9 +77,9 @@ def initialize(srcdir, target):
     source temp directory.  Return temp directory path.
     '''
     # remove the target if it already exists
-    srcdir_temp = 'src_temp'
-    objdir_temp = 'obj_temp'
-    moddir_temp = 'mod_temp'
+    srcdir_temp = os.path.join('.', 'src_temp')
+    objdir_temp = os.path.join('.', 'obj_temp')
+    moddir_temp = os.path.join('.', 'mod_temp')
 
     # remove srcdir_temp and copy in srcdir
     try:
@@ -91,7 +91,7 @@ def initialize(srcdir, target):
     except:
         pass
     shutil.copytree(srcdir, srcdir_temp)
-    srcdir_temp = os.path.join('.', srcdir_temp)
+    srcdir_temp = os.path.join(srcdir_temp)
 
     # if they don't exist, create directories for objects and mods
     if not os.path.exists(objdir_temp):
@@ -468,16 +468,26 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
     Make target on Windows OS
     
     """
+    # C/C++ compiler switches
+    if debug:
+        cflags = ['-O0', '-g']
+    else:
+        cflags = ['-O3']
+    syslibs = ['-lc']
+
 
     fc = 'ifort.exe'
     cc = 'cl.exe'
+    cflags = ['-nologo', '-c']
     if debug:
         compileflags = [
             '-debug',
             '-heap-arrays:0',
             '-fpe:0',
             '-traceback',
+            '-nologo',
         ]
+        cflags += ['-Zi']
     else:
         # production version compile flags
         compileflags = [
@@ -485,7 +495,9 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
             '-heap-arrays:0',
             '-fpe:0',
             '-traceback',
+            '-nologo',
         ]
+        cflags += ['-O2']
     if double:
         compileflags.append('-r8')
     if fflags is not None:
@@ -502,8 +514,8 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
 
     # Create target
     try:
-        makebatch(batchfile, fc, compileflags, srcfiles, target, arch,
-                  objdir_temp, moddir_temp)
+        makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target,
+                  arch, objdir_temp, moddir_temp)
         subprocess.check_call([batchfile, ], )
     except:
         print('Could not make x64 target: ', target)
@@ -511,8 +523,8 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
     return
 
 
-def makebatch(batchfile, fc, compileflags, srcfiles, target, arch, objdir_temp,
-              moddir_temp):
+def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
+              objdir_temp, moddir_temp):
     '''
     Make an ifort batch file
     
@@ -536,15 +548,25 @@ def makebatch(batchfile, fc, compileflags, srcfiles, target, arch, objdir_temp,
 
     # write commands to build object files
     for srcfile in srcfiles:
-        cmd = fc + ' '
-        for switch in compileflags:
-            cmd += switch + ' '
-        cmd += '-c' + ' '
-        cmd += '/module:{}\ '.format(moddir_temp)
-        cmd += '/object:{}\ '.format(objdir_temp)
-        cmd += srcfile
-        cmd += '\n'
-        f.write(cmd)
+        if srcfile.endswith('.c') or srcfile.endswith('.cpp'):
+            cmd = cc + ' '
+            for switch in cflags:
+                cmd += switch + ' '
+            obj = os.path.join(objdir_temp,
+                               os.path.splitext(os.path.basename(srcfile))[0]
+                               + '.obj' )
+            cmd += '-Fo' + obj + ' '
+            cmd += srcfile
+        else:
+            cmd = fc + ' '
+            for switch in compileflags:
+                cmd += switch + ' '
+            cmd += '-c' + ' '
+            cmd += '/module:{}\ '.format(moddir_temp)
+            cmd += '/object:{}\ '.format(objdir_temp)
+            cmd += srcfile
+            f.write('echo ' + os.path.basename(srcfile) + '\n')
+        f.write(cmd + '\n')
 
     # write commands to link
     cmd = fc + ' '
