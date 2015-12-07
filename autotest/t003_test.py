@@ -46,7 +46,7 @@ def compile_code():
         shutil.rmtree(mfusgpth)
 
     # Download the MODFLOW-USG distribution
-    url = 'http://water.usgs.gov/ogw/mfusg/mfusg.1_3_00.zip'
+    url = 'http://water.usgs.gov/ogw/mfusg/mfusg.1_3.zip'
     pymake.download_and_unzip(url, pth=dstpth)
 
     # Remove extraneous source directories
