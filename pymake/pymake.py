@@ -487,7 +487,7 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
         fflags += ['-O2']
         cflags += ['-O2']
     if double:
-        fflags.append('-r8')
+        fflags.append('/real_size:64')
     if fflagsu is not None:
         t = fflagsu.split()
         for fflag in t:
