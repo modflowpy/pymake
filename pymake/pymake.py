@@ -226,9 +226,16 @@ def get_iso_c(srcfiles):
 
 def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                      expedite, dryrun, double, debug, fflags):
-    '''
+    """
     Compile the program using the gnu compilers (gfortran and gcc)
-    '''
+
+    """
+
+    # For horrible windows issue
+    shellflg = False
+    if sys.platform == 'win32':
+        shellflg = True
+
     # fortran compiler switches
     fc = 'gfortran'
     if debug:
@@ -240,11 +247,9 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                         ]
     else:
         # Production version
-        compileflags = [
-            '-O2',
-            '-fbacktrace',
-            '-ffpe-summary=overflow'
-        ]
+        compileflags = ['-O2', '-fbacktrace',]
+        if not sys.platform == 'win32':
+            compileflags.append('-ffpe-summary=overflow')
     objext = '.o'
     if double:
         compileflags.append('-fdefault-real-8')
@@ -259,7 +264,12 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         cflags = ['-O0', '-g']
     else:
         cflags = ['-O3']
-    syslibs = ['-lc']
+
+    # syslibs
+    syslibs = []
+    if sys.platform != 'win32':
+        syslibs.append('-lc')
+
     # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
     # code that is linked to C/C++ code
     # -D_UF defines UNIX naming conventions for mixed language compilation.
@@ -288,7 +298,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         # object file name and location
         srcname, srcext = os.path.splitext(srcfile)
         srcname = srcname.split(os.path.sep)[-1]
-        objfile = os.path.join('.', objdir_temp, srcname + '.o')
+        objfile = os.path.join(objdir_temp, srcname + '.o')
         cmdlist.append('-o')
         cmdlist.append(objfile)
 
@@ -312,7 +322,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                 s += c + ' '
             print(s)
             if not dryrun:
-                subprocess.check_call(cmdlist)
+                subprocess.check_call(cmdlist, shell=shellflg)
 
         # Save the name of the object file so that they can all be linked
         # at the end
@@ -337,7 +347,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         s += c + ' '
     print(s)
     if not dryrun:
-        subprocess.check_call(cmdlist)
+        subprocess.check_call(cmdlist, shell=shellflg)
     return
 
 
@@ -457,7 +467,8 @@ def compile_with_mac_ifort(srcfiles, target, cc,
         s += c + ' '
     print(s)
     if not dryrun:
-        subprocess.check_call(cmdlist)
+        print(cmdlist.split())
+        subprocess.check_call(cmdlist.split())
 
     return
 
