@@ -484,10 +484,12 @@ def compare_heads(namefile1, namefile2, precision='single',
             e = ''
             for itupe in indices:
                 for ind in itupe:
-                    e += '{} '.format(ind)
+                    e += '{} '.format(ind + 1)  # convert to one-based
             e = textwrap.fill(e, width=70, initial_indent='    ', subsequent_indent='    ')
             f.write('{}\n'.format(e))
-            f.write('\n{}'.format(header))
+            # Write header again, unless it is the last record
+            if idx + 1 < len(times1):
+                f.write('\n{}'.format(header))
 
     # Close output file
     if outfile is not None:
