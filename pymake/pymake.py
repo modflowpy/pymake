@@ -462,13 +462,12 @@ def compile_with_mac_ifort(srcfiles, target, cc,
         cmdlist.append(objfile)
     for switch in syslibs:
         cmdlist.append(switch)
-    s = ''
-    for c in cmdlist:
-        s += c + ' '
-    print(s)
     if not dryrun:
-        print(cmdlist.split())
-        subprocess.check_call(cmdlist.split())
+        s = ''
+        for c in cmdlist:
+            s += c + ' '
+        print(s)
+        subprocess.check_call(cmdlist)
 
     return
 
