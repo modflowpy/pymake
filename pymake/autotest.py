@@ -96,7 +96,8 @@ def setup_comparison(namefile, dst):
         else:
             for file in files:
                 if '.nam' in os.path.splitext(file)[1].lower():
-                    files2copy.append(os.path.join(cmppth, os.path.basename(file)))
+                    files2copy.append(
+                        os.path.join(cmppth, os.path.basename(file)))
                     nf = os.path.join(src, action, os.path.basename(file))
                     setup(nf, dst)
                     break
@@ -264,7 +265,8 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
         list1 = list[0][0]
     else:
         for file in files1:
-            if 'list' in os.path.basename(file).lower() or 'lst' in os.path.basename(file).lower():
+            if 'list' in os.path.basename(
+                    file).lower() or 'lst' in os.path.basename(file).lower():
                 list1 = file
                 break
     list2 = None
@@ -273,7 +275,8 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
         list2 = list[0][0]
     else:
         for file in files2:
-            if 'list' in os.path.basename(file).lower() or 'lst' in os.path.basename(file).lower():
+            if 'list' in os.path.basename(
+                    file).lower() or 'lst' in os.path.basename(file).lower():
                 list2 = file
                 break
     # Determine if there are two files to compare
@@ -285,17 +288,23 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
         f = open(outfile, 'w')
         f.write('Created by pymake.autotest.compare\n')
 
+    # Initialize SWR budget objects
+    lst1obj = flopy.utils.MfusgListBudget(list1)
+    lst2obj = flopy.utils.MfusgListBudget(list2)
+
+    # Determine if there any SWR entries in the budget file
+    if not lst1obj.isvalid() or not lst2obj.isvalid():
+        return True
+
     # Get numpy budget tables for list1
-    lstobj = flopy.utils.MfusgListBudget(list1)
     lst1 = []
-    lst1.append(lstobj.get_incremental())
-    lst1.append(lstobj.get_cumulative())
+    lst1.append(lst1obj.get_incremental())
+    lst1.append(lst1obj.get_cumulative())
 
     # Get numpy budget tables for list2
-    lstobj = flopy.utils.MfusgListBudget(list2)
     lst2 = []
-    lst2.append(lstobj.get_incremental())
-    lst2.append(lstobj.get_cumulative())
+    lst2.append(lst2obj.get_incremental())
+    lst2.append(lst2obj.get_cumulative())
 
     icnt = 0
     v0 = np.zeros(2, dtype=np.float)
@@ -336,10 +345,11 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
-                        s = '{:<21} {:>21} {:>21} {:>21}\n'.format('Budget Entry',
-                                                                   'Model 1',
-                                                                   'Model 2',
-                                                                   'Difference')
+                        s = '{:<21} {:>21} {:>21} {:>21}\n'.format(
+                            'Budget Entry',
+                            'Model 1',
+                            'Model 2',
+                            'Difference')
                         f.write(s)
                         s = 87 * '-' + '\n'
                         f.write(s)
@@ -361,10 +371,163 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
             for kdx, t in enumerate(err):
                 if abs(t) > max_pd:
                     icnt += 1
-                    e = '"{} {}" percent difference ({})'.format(headers[idx], dir[kdx], t) + \
-                        ' for stress period {} and time step {} > {}.'.format(kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
-                        ' Reference value = {}. Simulated value = {}.'.format(v0[kdx], v1[kdx])
-                    e = textwrap.fill(e, width=70, initial_indent='    ', subsequent_indent='    ')
+                    e = '"{} {}" percent difference ({})'.format(headers[idx],
+                                                                 dir[kdx], t) + \
+                        ' for stress period {} and time step {} > {}.'.format(
+                            kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
+                        ' Reference value = {}. Simulated value = {}.'.format(
+                                v0[kdx], v1[kdx])
+                    e = textwrap.fill(e, width=70, initial_indent='    ',
+                                      subsequent_indent='    ')
+                    f.write('{}\n'.format(e))
+                    f.write('\n')
+
+    # Close output file
+    if outfile is not None:
+        f.close()
+
+    # test for failure
+    success = True
+    if icnt > 0:
+        success = False
+    return success
+
+
+def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
+                      outfile=None, files1=None, files2=None):
+    """
+    Compare the results from these two simulations.
+
+    """
+    import numpy as np
+    import flopy
+
+    # headers
+    headers = ('INCREMENTAL', 'CUMULATIVE')
+    dir = ('IN', 'OUT')
+
+    # Get name of list files
+    list1 = None
+    if files1 is None:
+        list = get_entries_from_namefile(namefile1, 'list')
+        list1 = list[0][0]
+    else:
+        for file in files1:
+            if 'list' in os.path.basename(
+                    file).lower() or 'lst' in os.path.basename(file).lower():
+                list1 = file
+                break
+    list2 = None
+    if files2 is None:
+        list = get_entries_from_namefile(namefile2, 'list')
+        list2 = list[0][0]
+    else:
+        for file in files2:
+            if 'list' in os.path.basename(
+                    file).lower() or 'lst' in os.path.basename(file).lower():
+                list2 = file
+                break
+    # Determine if there are two files to compare
+    if list1 is None or list2 is None:
+        return True
+
+    # Initialize SWR budget objects
+    lst1obj = flopy.utils.SwrListBudget(list1)
+    lst2obj = flopy.utils.SwrListBudget(list2)
+
+    # Determine if there any SWR entries in the budget file
+    if not lst1obj.isvalid() or not lst2obj.isvalid():
+        return True
+
+    # Get numpy budget tables for list1
+    lst1 = []
+    lst1.append(lst1obj.get_incremental())
+    lst1.append(lst1obj.get_cumulative())
+
+    # Get numpy budget tables for list2
+    lst2 = []
+    lst2.append(lst2obj.get_incremental())
+    lst2.append(lst2obj.get_cumulative())
+
+    icnt = 0
+    v0 = np.zeros(2, dtype=np.float)
+    v1 = np.zeros(2, dtype=np.float)
+    err = np.zeros(2, dtype=np.float)
+
+
+    # Open output file
+    if outfile is not None:
+        f = open(outfile, 'w')
+        f.write('Created by pymake.autotest.compare\n')
+
+    # Process cumulative and incremental
+    for idx in range(2):
+        if idx > 0:
+            max_pd = max_cumpd
+        else:
+            max_pd = max_incpd
+        kper = lst1[idx]['stress_period']
+        kstp = lst1[idx]['time_step']
+
+        # Process each time step
+        for jdx in range(kper.shape[0]):
+
+            err[:] = 0.
+            t0 = lst1[idx][jdx]
+            t1 = lst2[idx][jdx]
+
+            if outfile is not None:
+
+                maxcolname = 0
+                for colname in t0.dtype.names:
+                    maxcolname = max(maxcolname, len(colname))
+
+                s = 2 * '\n'
+                s += 'STRESS PERIOD: {} TIME STEP: {}'.format(kper[jdx] + 1,
+                                                              kstp[jdx] + 1)
+                f.write(s)
+
+                if idx == 0:
+                    f.write('\nINCREMENTAL BUDGET\n')
+                else:
+                    f.write('\nCUMULATIVE BUDGET\n')
+
+                for i, colname in enumerate(t0.dtype.names):
+                    if i == 0:
+                        s = '{:<21} {:>21} {:>21} {:>21}\n'.format(
+                            'Budget Entry',
+                            'Model 1',
+                            'Model 2',
+                            'Difference')
+                        f.write(s)
+                        s = 87 * '-' + '\n'
+                        f.write(s)
+                    diff = t0[colname] - t1[colname]
+                    s = '{:<21} {:>21} {:>21} {:>21}\n'.format(colname,
+                                                               t0[colname],
+                                                               t1[colname],
+                                                               diff)
+                    f.write(s)
+
+            v0[0] = t0['TOTAL_IN']
+            v1[0] = t1['TOTAL_IN']
+            if v0[0] > 0.:
+                err[0] = 100. * (v1[0] - v0[0]) / v0[0]
+            v0[1] = t0['TOTAL_OUT']
+            v1[1] = t1['TOTAL_OUT']
+            if v0[1] > 0.:
+                err[1] = 100. * (v1[1] - v0[1]) / v0[1]
+            for kdx, t in enumerate(err):
+                if abs(t) > max_pd:
+                    icnt += 1
+                    e = '"{} {}" percent difference ({})'.format(headers[idx],
+                                                                 dir[kdx], t) + \
+                        ' for stress period {} and time step {} > {}.'.format(
+                            kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
+                        ' Reference value = {}. Simulated value = {}.'.format(
+                                v0[kdx], v1[kdx])
+                    e = textwrap.fill(e, width=70, initial_indent='    ',
+                                      subsequent_indent='    ')
                     f.write('{}\n'.format(e))
                     f.write('\n')
 
@@ -398,13 +561,15 @@ def compare_heads(namefile1, namefile2, precision='single',
         if ocf1[0][0] is None:
             return True
 
-        hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(ocf1[0][0])
+        hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(
+                ocf1[0][0])
         if hu1 != 0:
             entries = get_entries_from_namefile(namefile1, unit=abs(hu1))
             hfpth1, status1 = entries[0][0], entries[0][1]
     else:
         for file in files1:
-            if 'hds' in os.path.basename(file).lower() or 'hed' in os.path.basename(file).lower():
+            if 'hds' in os.path.basename(
+                    file).lower() or 'hed' in os.path.basename(file).lower():
                 hfpth1 = file
                 break
 
@@ -417,13 +582,15 @@ def compare_heads(namefile1, namefile2, precision='single',
         if ocf2[0][0] is None:
             return True
 
-        hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(ocf2[0][0])
+        hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(
+                ocf2[0][0])
         if hu2 != 0:
             entries = get_entries_from_namefile(namefile2, unit=abs(hu2))
             hfpth2, status2 = entries[0][0], entries[0][1]
     else:
         for file in files2:
-            if 'hds' in os.path.basename(file).lower() or 'hed' in os.path.basename(file).lower():
+            if 'hds' in os.path.basename(
+                    file).lower() or 'hed' in os.path.basename(file).lower():
                 hfpth2 = file
                 break
 
@@ -461,7 +628,8 @@ def compare_heads(namefile1, namefile2, precision='single',
     kstpkper = headobj1.get_kstpkper()
 
     header = '{:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', 'MAXIMUM') + \
-             '{:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD', 'TIME STEP', 'HEAD DIFFERENCE') + \
+             '{:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD', 'TIME STEP',
+                                                'HEAD DIFFERENCE') + \
              '{0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
 
     icnt = 0
@@ -474,18 +642,23 @@ def compare_heads(namefile1, namefile2, precision='single',
 
         if idx < 1:
             f.write(header)
-        f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1, kstpkper[idx][0] + 1, diffmax))
+        f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1,
+                                                  kstpkper[idx][0] + 1,
+                                                  diffmax))
 
         if diffmax >= htol:
             icnt += 1
-            e = 'Maximum head difference ({}) exceeds {} at node location(s):\n'.format(diffmax, htol)
-            e = textwrap.fill(e, width=70, initial_indent='  ', subsequent_indent='  ')
+            e = 'Maximum head difference ({}) exceeds {} at node location(s):\n'.format(
+                diffmax, htol)
+            e = textwrap.fill(e, width=70, initial_indent='  ',
+                              subsequent_indent='  ')
             f.write('{}\n'.format(e))
             e = ''
             for itupe in indices:
                 for ind in itupe:
                     e += '{} '.format(ind + 1)  # convert to one-based
-            e = textwrap.fill(e, width=70, initial_indent='    ', subsequent_indent='    ')
+            e = textwrap.fill(e, width=70, initial_indent='    ',
+                              subsequent_indent='    ')
             f.write('{}\n'.format(e))
             # Write header again, unless it is the last record
             if idx + 1 < len(times1):
@@ -520,7 +693,7 @@ def calculate_difference(v1, v2):
 
 def compare(namefile1, namefile2, precision='single',
             max_cumpd=0.01, max_incpd=0.01, htol=0.001,
-            outfile1=None, outfile2=None,
+            outfile1=None, outfile2=None, outfile3=None,
             files1=None, files2=None):
     """
     Compare the results from two simulations
@@ -534,7 +707,11 @@ def compare(namefile1, namefile2, precision='single',
     success2 = compare_heads(namefile1, namefile2, precision=precision,
                              htol=htol, outfile=outfile2,
                              files1=files1, files2=files2)
+    success3 = compare_swrbudget(namefile1, namefile2,
+                                 max_cumpd=max_cumpd, max_incpd=max_incpd,
+                                 outfile=outfile3,
+                                 files1=files1, files2=files2)
     success = False
-    if success1 and success2:
+    if success1 and success2 and success3:
         success = True
     return success
