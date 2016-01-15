@@ -7,4 +7,4 @@ from .visualize import make_plots
 from .autotest import setup, setup_comparison, teardown, \
     get_namefiles, get_entries_from_namefile, \
     get_sim_name, get_input_files, \
-    compare_budget, compare_swrbudget, compare_heads, compare
+    compare_budget, compare_swrbudget, compare_heads, compare_stages, compare

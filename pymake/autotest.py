@@ -675,6 +675,137 @@ def compare_heads(namefile1, namefile2, precision='single',
     return success
 
 
+def compare_stages(files1=None, files2=None, precision='double',
+                   htol=0.001, outfile=None):
+    """
+    Compare the results from these two simulations.
+
+    """
+    import flopy
+
+    # # Get head info for namefile1
+    # hfpth1 = None
+    # status1 = dbs
+    # if files1 is None:
+    #     # Get oc info, and return if OC not included in models
+    #     ocf1 = get_entries_from_namefile(namefile1, 'OC')
+    #     if ocf1[0][0] is None:
+    #         return True
+    #
+    #     hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(
+    #             ocf1[0][0])
+    #     if hu1 != 0:
+    #         entries = get_entries_from_namefile(namefile1, unit=abs(hu1))
+    #         hfpth1, status1 = entries[0][0], entries[0][1]
+    # else:
+    #     for file in files1:
+    #         if 'hds' in os.path.basename(
+    #                 file).lower() or 'hed' in os.path.basename(file).lower():
+    #             hfpth1 = file
+    #             break
+    #
+    # # Get head info for namefile2
+    # hfpth2 = None
+    # status2 = dbs
+    # if files2 is None:
+    #     # Get oc info, and return if OC not included in models
+    #     ocf2 = get_entries_from_namefile(namefile2, 'OC')
+    #     if ocf2[0][0] is None:
+    #         return True
+    #
+    #     hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(
+    #             ocf2[0][0])
+    #     if hu2 != 0:
+    #         entries = get_entries_from_namefile(namefile2, unit=abs(hu2))
+    #         hfpth2, status2 = entries[0][0], entries[0][1]
+    # else:
+    #     for file in files2:
+    #         if 'hds' in os.path.basename(
+    #                 file).lower() or 'hed' in os.path.basename(file).lower():
+    #             hfpth2 = file
+    #             break
+    #
+    # # confirm that there are two files to compare
+    # if hfpth1 is None or hfpth2 is None:
+    #     return True
+    #
+    # if not os.path.isfile(hfpth1) or not os.path.isfile(hfpth2):
+    #     return True
+    #
+    # # Open output file
+    # if outfile is not None:
+    #     f = open(outfile, 'w')
+    #     f.write('Created by pymake.autotest.compare_stages\n')
+    #
+    # # Get head objects
+    # status1 = status1.upper()
+    # if status1 == dbs:
+    #     headobj1 = flopy.utils.HeadFile(hfpth1, precision=precision)
+    # else:
+    #     headobj1 = flopy.utils.FormattedHeadFile(hfpth1)
+    #
+    # status2 = status2.upper()
+    # if status2 == dbs:
+    #     headobj2 = flopy.utils.HeadFile(hfpth2, precision=precision)
+    # else:
+    #     headobj2 = flopy.utils.FormattedHeadFile(hfpth2)
+    #
+    # # get times
+    # times1 = headobj1.get_times()
+    # times2 = headobj2.get_times()
+    #
+    # assert times1 == times2, 'times in two head files are not equal'
+    #
+    # kstpkper = headobj1.get_kstpkper()
+    #
+    # header = '{:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', 'MAXIMUM') + \
+    #          '{:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD', 'TIME STEP',
+    #                                             'HEAD DIFFERENCE') + \
+    #          '{0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
+    #
+    # icnt = 0
+    # # Process cumulative and incremental
+    # for idx, time in enumerate(times1):
+    #     h1 = headobj1.get_data(totim=time)
+    #     h2 = headobj2.get_data(totim=time)
+    #
+    #     diffmax, indices = calculate_difference(h1, h2)
+    #
+    #     if idx < 1:
+    #         f.write(header)
+    #     f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1,
+    #                                               kstpkper[idx][0] + 1,
+    #                                               diffmax))
+    #
+    #     if diffmax >= htol:
+    #         icnt += 1
+    #         e = 'Maximum head difference ({}) exceeds {} at node location(s):\n'.format(
+    #             diffmax, htol)
+    #         e = textwrap.fill(e, width=70, initial_indent='  ',
+    #                           subsequent_indent='  ')
+    #         f.write('{}\n'.format(e))
+    #         e = ''
+    #         for itupe in indices:
+    #             for ind in itupe:
+    #                 e += '{} '.format(ind + 1)  # convert to one-based
+    #         e = textwrap.fill(e, width=70, initial_indent='    ',
+    #                           subsequent_indent='    ')
+    #         f.write('{}\n'.format(e))
+    #         # Write header again, unless it is the last record
+    #         if idx + 1 < len(times1):
+    #             f.write('\n{}'.format(header))
+    #
+    # # Close output file
+    # if outfile is not None:
+    #     f.close()
+    #
+    # # test for failure
+    # success = True
+    # if icnt > 0:
+    #     success = False
+    # return success
+    return False
+
 def calculate_difference(v1, v2):
     import numpy as np
     # For a usg simulation, the row and column are switched in the binary
@@ -693,10 +824,10 @@ def calculate_difference(v1, v2):
 
 def compare(namefile1, namefile2, precision='single',
             max_cumpd=0.01, max_incpd=0.01, htol=0.001,
-            outfile1=None, outfile2=None, outfile3=None,
+            outfile1=None, outfile2=None,
             files1=None, files2=None):
     """
-    Compare the results from two simulations
+    Compare the results from two standard simulations
     """
 
     # Compare budgets from the list files in namefile1 and namefile2
@@ -707,11 +838,7 @@ def compare(namefile1, namefile2, precision='single',
     success2 = compare_heads(namefile1, namefile2, precision=precision,
                              htol=htol, outfile=outfile2,
                              files1=files1, files2=files2)
-    success3 = compare_swrbudget(namefile1, namefile2,
-                                 max_cumpd=max_cumpd, max_incpd=max_incpd,
-                                 outfile=outfile3,
-                                 files1=files1, files2=files2)
     success = False
-    if success1 and success2 and success3:
+    if success1 and success2:
         success = True
     return success
