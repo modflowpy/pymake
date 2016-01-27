@@ -97,7 +97,7 @@ def setup_comparison(namefile, dst):
             for file in files:
                 if '.nam' in os.path.splitext(file)[1].lower():
                     files2copy.append(
-                        os.path.join(cmppth, os.path.basename(file)))
+                            os.path.join(cmppth, os.path.basename(file)))
                     nf = os.path.join(src, action, os.path.basename(file))
                     setup(nf, dst)
                     break
@@ -195,7 +195,7 @@ def get_namefiles(pth, exclude=None):
     return namefiles
 
 
-def get_entries_from_namefile(namefile, ftype=None, unit=None):
+def get_entries_from_namefile(namefile, ftype=None, unit=None, extension=None):
     entries = []
     f = open(namefile, 'r')
     for line in f:
@@ -217,6 +217,14 @@ def get_entries_from_namefile(namefile, ftype=None, unit=None):
             if int(unit) == int(ll[1]):
                 filename = os.path.join(os.path.split(namefile)[0], ll[2])
                 entries.append((filename, ll[0], ll[1], status))
+        elif extension is not None:
+            filename = os.path.join(os.path.split(namefile)[0], ll[2])
+            ext = os.path.splitext(filename)[1]
+            if len(ext) > 0:
+                if ext[0] == '.':
+                    ext = ext[1:]
+                if extension.lower() == ext.lower():
+                    entries.append((filename, ll[0], ll[1], status))
     f.close()
     if len(entries) < 1:
         entries.append((None, None, None, None))
@@ -346,10 +354,10 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
                         s = '{:<21} {:>21} {:>21} {:>21}\n'.format(
-                            'Budget Entry',
-                            'Model 1',
-                            'Model 2',
-                            'Difference')
+                                'Budget Entry',
+                                'Model 1',
+                                'Model 2',
+                                'Difference')
                         f.write(s)
                         s = 87 * '-' + '\n'
                         f.write(s)
@@ -374,7 +382,7 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                     e = '"{} {}" percent difference ({})'.format(headers[idx],
                                                                  dir[kdx], t) + \
                         ' for stress period {} and time step {} > {}.'.format(
-                            kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
+                                kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
                         ' Reference value = {}. Simulated value = {}.'.format(
                                 v0[kdx], v1[kdx])
                     e = textwrap.fill(e, width=70, initial_indent='    ',
@@ -409,8 +417,8 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     # Get name of list files
     list1 = None
     if files1 is None:
-        list = get_entries_from_namefile(namefile1, 'list')
-        list1 = list[0][0]
+        lst = get_entries_from_namefile(namefile1, 'list')
+        list1 = lst[0][0]
     else:
         for file in files1:
             if 'list' in os.path.basename(
@@ -419,8 +427,8 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                 break
     list2 = None
     if files2 is None:
-        list = get_entries_from_namefile(namefile2, 'list')
-        list2 = list[0][0]
+        lst = get_entries_from_namefile(namefile2, 'list')
+        list2 = lst[0][0]
     else:
         for file in files2:
             if 'list' in os.path.basename(
@@ -453,7 +461,6 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     v0 = np.zeros(2, dtype=np.float)
     v1 = np.zeros(2, dtype=np.float)
     err = np.zeros(2, dtype=np.float)
-
 
     # Open output file
     if outfile is not None:
@@ -495,10 +502,10 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
                         s = '{:<21} {:>21} {:>21} {:>21}\n'.format(
-                            'Budget Entry',
-                            'Model 1',
-                            'Model 2',
-                            'Difference')
+                                'Budget Entry',
+                                'Model 1',
+                                'Model 2',
+                                'Difference')
                         f.write(s)
                         s = 87 * '-' + '\n'
                         f.write(s)
@@ -523,7 +530,7 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                     e = '"{} {}" percent difference ({})'.format(headers[idx],
                                                                  dir[kdx], t) + \
                         ' for stress period {} and time step {} > {}.'.format(
-                            kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
+                                kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
                         ' Reference value = {}. Simulated value = {}.'.format(
                                 v0[kdx], v1[kdx])
                     e = textwrap.fill(e, width=70, initial_indent='    ',
@@ -649,7 +656,7 @@ def compare_heads(namefile1, namefile2, precision='single',
         if diffmax >= htol:
             icnt += 1
             e = 'Maximum head difference ({}) exceeds {} at node location(s):\n'.format(
-                diffmax, htol)
+                    diffmax, htol)
             e = textwrap.fill(e, width=70, initial_indent='  ',
                               subsequent_indent='  ')
             f.write('{}\n'.format(e))
@@ -675,146 +682,144 @@ def compare_heads(namefile1, namefile2, precision='single',
     return success
 
 
-def compare_stages(files1=None, files2=None, precision='double',
+def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
                    htol=0.001, outfile=None):
     """
-    Compare the results from these two simulations.
+    Compare the swr stage results from these two simulations.
 
     """
+    import numpy as np
     import flopy
 
-    # # Get head info for namefile1
-    # hfpth1 = None
-    # status1 = dbs
-    # if files1 is None:
-    #     # Get oc info, and return if OC not included in models
-    #     ocf1 = get_entries_from_namefile(namefile1, 'OC')
-    #     if ocf1[0][0] is None:
-    #         return True
-    #
-    #     hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(
-    #             ocf1[0][0])
-    #     if hu1 != 0:
-    #         entries = get_entries_from_namefile(namefile1, unit=abs(hu1))
-    #         hfpth1, status1 = entries[0][0], entries[0][1]
-    # else:
-    #     for file in files1:
-    #         if 'hds' in os.path.basename(
-    #                 file).lower() or 'hed' in os.path.basename(file).lower():
-    #             hfpth1 = file
-    #             break
-    #
-    # # Get head info for namefile2
-    # hfpth2 = None
-    # status2 = dbs
-    # if files2 is None:
-    #     # Get oc info, and return if OC not included in models
-    #     ocf2 = get_entries_from_namefile(namefile2, 'OC')
-    #     if ocf2[0][0] is None:
-    #         return True
-    #
-    #     hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(
-    #             ocf2[0][0])
-    #     if hu2 != 0:
-    #         entries = get_entries_from_namefile(namefile2, unit=abs(hu2))
-    #         hfpth2, status2 = entries[0][0], entries[0][1]
-    # else:
-    #     for file in files2:
-    #         if 'hds' in os.path.basename(
-    #                 file).lower() or 'hed' in os.path.basename(file).lower():
-    #             hfpth2 = file
-    #             break
-    #
-    # # confirm that there are two files to compare
-    # if hfpth1 is None or hfpth2 is None:
-    #     return True
-    #
-    # if not os.path.isfile(hfpth1) or not os.path.isfile(hfpth2):
-    #     return True
-    #
-    # # Open output file
-    # if outfile is not None:
-    #     f = open(outfile, 'w')
-    #     f.write('Created by pymake.autotest.compare_stages\n')
-    #
-    # # Get head objects
-    # status1 = status1.upper()
-    # if status1 == dbs:
-    #     headobj1 = flopy.utils.HeadFile(hfpth1, precision=precision)
-    # else:
-    #     headobj1 = flopy.utils.FormattedHeadFile(hfpth1)
-    #
-    # status2 = status2.upper()
-    # if status2 == dbs:
-    #     headobj2 = flopy.utils.HeadFile(hfpth2, precision=precision)
-    # else:
-    #     headobj2 = flopy.utils.FormattedHeadFile(hfpth2)
-    #
-    # # get times
-    # times1 = headobj1.get_times()
-    # times2 = headobj2.get_times()
-    #
-    # assert times1 == times2, 'times in two head files are not equal'
-    #
-    # kstpkper = headobj1.get_kstpkper()
-    #
-    # header = '{:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', 'MAXIMUM') + \
-    #          '{:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD', 'TIME STEP',
-    #                                             'HEAD DIFFERENCE') + \
-    #          '{0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
-    #
-    # icnt = 0
-    # # Process cumulative and incremental
-    # for idx, time in enumerate(times1):
-    #     h1 = headobj1.get_data(totim=time)
-    #     h2 = headobj2.get_data(totim=time)
-    #
-    #     diffmax, indices = calculate_difference(h1, h2)
-    #
-    #     if idx < 1:
-    #         f.write(header)
-    #     f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1,
-    #                                               kstpkper[idx][0] + 1,
-    #                                               diffmax))
-    #
-    #     if diffmax >= htol:
-    #         icnt += 1
-    #         e = 'Maximum head difference ({}) exceeds {} at node location(s):\n'.format(
-    #             diffmax, htol)
-    #         e = textwrap.fill(e, width=70, initial_indent='  ',
-    #                           subsequent_indent='  ')
-    #         f.write('{}\n'.format(e))
-    #         e = ''
-    #         for itupe in indices:
-    #             for ind in itupe:
-    #                 e += '{} '.format(ind + 1)  # convert to one-based
-    #         e = textwrap.fill(e, width=70, initial_indent='    ',
-    #                           subsequent_indent='    ')
-    #         f.write('{}\n'.format(e))
-    #         # Write header again, unless it is the last record
-    #         if idx + 1 < len(times1):
-    #             f.write('\n{}'.format(header))
-    #
-    # # Close output file
-    # if outfile is not None:
-    #     f.close()
-    #
-    # # test for failure
-    # success = True
-    # if icnt > 0:
-    #     success = False
-    # return success
-    return False
+    # list of valid extensions
+    valid_ext = ['stg']
+
+    # Get info for first stage file
+    sfpth1 = None
+    if namefile1 is not None:
+        for ext in valid_ext:
+            stg = get_entries_from_namefile(namefile1, extension=ext)
+            sfpth = stg[0][0]
+            if sfpth is not None:
+                sfpth1 = sfpth
+                break
+    elif files1 is not None:
+        for file in files1:
+            for ext in valid_ext:
+                if ext in os.path.basename(file).lower():
+                    sfpth1 = file
+                    break
+
+    # Get info for second stage file
+    sfpth2 = None
+    if namefile2 is not None:
+        for ext in valid_ext:
+            stg = get_entries_from_namefile(namefile2, extension=ext)
+            sfpth = stg[0][0]
+            if sfpth is not None:
+                sfpth2 = sfpth
+                break
+    elif files2 is not None:
+        for file in files2:
+            for ext in valid_ext:
+                if ext in os.path.basename(file).lower():
+                    sfpth2 = file
+                    break
+
+    # confirm that there are two files to compare
+    if sfpth1 is None or sfpth2 is None:
+        return True
+
+    if not os.path.isfile(sfpth1) or not os.path.isfile(sfpth2):
+        return True
+
+    # Open output file
+    if outfile is not None:
+        f = open(outfile, 'w')
+        f.write('Created by pymake.autotest.compare_stages\n')
+
+    # Get stage objects
+    sobj1 = flopy.utils.SwrFile(sfpth1)
+    sobj2 = flopy.utils.SwrFile(sfpth2)
+
+    # get totim
+    times1 =sobj1.get_times()
+
+    # get kswr, kstp, and kper
+    kk = sobj1.get_kswrkstpkper()
+
+    header = '{:>15s} {:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', ' ',
+                                                        'MAXIMUM') + \
+             '{:>15s} {:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD',
+                                                        'TIME STEP',
+                                                        'SWR TIME STEP',
+                                                        'STAGE DIFFERENCE') + \
+             '{0:>15s} {0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
+
+    icnt = 0
+    # Process stage data
+    for idx, (kon, time) in enumerate(zip(kk, times1)):
+        s1 = sobj1.get_data(totim=time)
+        s2 = sobj2.get_data(totim=time)
+
+        if s1 is None or s2 is None:
+            continue
+
+        s1 = s1['stage']
+        s2 = s2['stage']
+
+        diffmax, indices = calculate_difference(s1, s2)
+
+        if idx < 1:
+            f.write(header)
+        f.write('{:15d} {:15d} {:15d} {:15.6g}\n'.format(kon[2] + 1,
+                                                         kon[1] + 1,
+                                                         kon[0] + 1,
+                                                         diffmax))
+
+        if diffmax >= htol:
+            icnt += 1
+            e = 'Maximum stage difference ' + \
+                '({}) exceeds {} at node location(s):\n'.format(diffmax, htol)
+            e = textwrap.fill(e, width=70, initial_indent='  ',
+                              subsequent_indent='  ')
+            f.write('{}\n'.format(e))
+            e = ''
+            for itupe in indices:
+                for ind in itupe:
+                    e += '{} '.format(ind + 1)  # convert to one-based
+            e = textwrap.fill(e, width=70, initial_indent='    ',
+                              subsequent_indent='    ')
+            f.write('{}\n'.format(e))
+            # Write header again, unless it is the last record
+            if idx + 1 < len(times1):
+                f.write('\n{}'.format(header))
+
+    # Close output file
+    if outfile is not None:
+        f.close()
+
+    # test for failure
+    success = True
+    if icnt > 0:
+        success = False
+    return success
+
 
 def calculate_difference(v1, v2):
     import numpy as np
     # For a usg simulation, the row and column are switched in the binary
     # head file.
-    nl1, nr1, nc1 = v1.shape
-    nl2, nr2, nc2 = v2.shape
-    if nl1 == nl2 and nr1 == nc2 and nc1 == nr2:
+    #    nl1, nr1, nc1 = v1.shape
+    #    nl2, nr2, nc2 = v2.shape
+    #    if nl1 == nl2 and nr1 == nc2 and nc1 == nr2:
+    if v1.ndim > 1 or v2.ndim > 1:
         v1 = v1.flatten()
         v2 = v2.flatten()
+    if v1.size != v2.size:
+        err = 'Error: calculate_difference v1 size ({}) '.format(
+                v1.size) + 'is not equal to v2 size ({})'.format(v2.size)
+        raise Exception(err)
 
     diff = abs(v1 - v2)
     diffmax = diff.max()
