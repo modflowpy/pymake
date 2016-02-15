@@ -739,8 +739,8 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
         f.write('Created by pymake.autotest.compare_stages\n')
 
     # Get stage objects
-    sobj1 = flopy.utils.SwrFile(sfpth1)
-    sobj2 = flopy.utils.SwrFile(sfpth2)
+    sobj1 = flopy.utils.SwrStage(sfpth1)
+    sobj2 = flopy.utils.SwrStage(sfpth2)
 
     # get totim
     times1 =sobj1.get_times()
