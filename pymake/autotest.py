@@ -156,7 +156,7 @@ def get_input_files(namefile):
 
                 if 'OPEN/CLOSE' in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'OPEN/CLOSE':
+                        if 'OPEN/CLOSE' in s.upper():
                             stmp = ll[i + 1]
                             stmp = stmp.replace('"', '')
                             stmp = stmp.replace("'", '')
