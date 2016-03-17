@@ -5,7 +5,7 @@ Python package for compiling MODFLOW
 
 This is a relatively simple python package for compiling MODFLOW-based programs.  The package determines the build order using a directed acyclic graph and then compiles the source files using gfortran or ifort.
 
-pymake can be run from the command line or it can be called from within python.  
+pymake can be run from the command line or it can be called from within python.
 
 pymake includes example scripts for building MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MT3D, and SEAWAT using gfortran on Mac or Linux.  The scripts download the distribution file from the USGS and compile the source into a binary executable.  The MODFLOW-NWT script does not work yet with the present version of MODFLOW-NWT due to some non-standard Fortran.  This should be fixed in future MODFLOW-NWT releases.
 
