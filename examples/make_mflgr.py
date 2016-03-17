@@ -13,16 +13,20 @@ def make_mflgr():
         os.makedirs(dstpth)
     os.chdir(dstpth)
 
-    # Download the MODFLOW-2005 distribution
+    # Download the MODFLOW-LGR distribution
     url = "http://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
     download_and_unzip(url)
 
-    dirname = 'mflgrpth.2_0'
+    dirname = 'mflgr.2_0'
     srcdir = os.path.join(dirname, 'src')
     target = 'mflgrdbl'
 
+    print('Present working directory: ', os.getcwd())
+    # pymake.main(srcdir, target, 'ifort', 'gcc', makeclean=True,
+    #            expedite=False, dryrun=False, double=True, debug=False)
     pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
                 expedite=False, dryrun=False, double=True, debug=False)
+
 
     assert os.path.isfile(target), 'Target does not exist.'
 
