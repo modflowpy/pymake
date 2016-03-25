@@ -550,7 +550,8 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
 
 def compare_heads(namefile1, namefile2, precision='single',
-                  htol=0.001, outfile=None, files1=None, files2=None):
+                  htol=0.001, outfile=None, files1=None, files2=None,
+                  difftol=False):
     """
     Compare the results from these two simulations.
 
@@ -574,6 +575,8 @@ def compare_heads(namefile1, namefile2, precision='single',
             entries = get_entries_from_namefile(namefile1, unit=abs(hu1))
             hfpth1, status1 = entries[0][0], entries[0][1]
     else:
+        if isinstance(files1, str):
+            files1 = [files1]
         for file in files1:
             if 'hds' in os.path.basename(
                     file).lower() or 'hed' in os.path.basename(file).lower():
@@ -595,6 +598,8 @@ def compare_heads(namefile1, namefile2, precision='single',
             entries = get_entries_from_namefile(namefile2, unit=abs(hu2))
             hfpth2, status2 = entries[0][0], entries[0][1]
     else:
+        if isinstance(files2, str):
+            files2 = [files2]
         for file in files2:
             if 'hds' in os.path.basename(
                     file).lower() or 'hed' in os.path.basename(file).lower():
@@ -645,7 +650,10 @@ def compare_heads(namefile1, namefile2, precision='single',
         h1 = headobj1.get_data(totim=time)
         h2 = headobj2.get_data(totim=time)
 
-        diffmax, indices = calculate_difference(h1, h2)
+        if difftol:
+            diffmax, indices = calculate_difftol(h1, h2, htol)
+        else:
+            diffmax, indices = calculate_diffmax(h1, h2)
 
         if idx < 1:
             f.write(header)
@@ -655,8 +663,14 @@ def compare_heads(namefile1, namefile2, precision='single',
 
         if diffmax >= htol:
             icnt += 1
-            e = 'Maximum head difference ({}) exceeds {} at node location(s):\n'.format(
-                    diffmax, htol)
+            if difftol:
+                e = 'Maximum head difference ({}) -- '.format(diffmax) + \
+                    '{} tolerance exceeded at '.format(htol) + \
+                    '{} node location(s):'.format(indices[0].shape[0])
+            else:
+                e = 'Maximum head difference ' + \
+                    '({}) exceeded '.format(diffmax) + \
+                    'at {} node location(s):'.format(indices[0].shape[0])
             e = textwrap.fill(e, width=70, initial_indent='  ',
                               subsequent_indent='  ')
             f.write('{}\n'.format(e))
@@ -683,7 +697,7 @@ def compare_heads(namefile1, namefile2, precision='single',
 
 
 def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
-                   htol=0.001, outfile=None):
+                   htol=0.001, outfile=None, difftol=False):
     """
     Compare the swr stage results from these two simulations.
 
@@ -704,6 +718,8 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
                 sfpth1 = sfpth
                 break
     elif files1 is not None:
+        if isinstance(files1, str):
+            files1 = [files1]
         for file in files1:
             for ext in valid_ext:
                 if ext in os.path.basename(file).lower():
@@ -720,6 +736,8 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
                 sfpth2 = sfpth
                 break
     elif files2 is not None:
+        if isinstance(files2, str):
+            files2 = [files2]
         for file in files2:
             for ext in valid_ext:
                 if ext in os.path.basename(file).lower():
@@ -768,7 +786,11 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
         s1 = s1['stage']
         s2 = s2['stage']
 
-        diffmax, indices = calculate_difference(s1, s2)
+
+        if difftol:
+            diffmax, indices = calculate_difftol(h1, h2, htol)
+        else:
+            diffmax, indices = calculate_diffmax(h1, h2)
 
         if idx < 1:
             f.write(header)
@@ -779,8 +801,14 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
 
         if diffmax >= htol:
             icnt += 1
-            e = 'Maximum stage difference ' + \
-                '({}) exceeds {} at node location(s):\n'.format(diffmax, htol)
+            if difftol:
+                e = 'Maximum head difference ({}) -- '.format(diffmax) + \
+                    '{} tolerance exceeded at '.format(htol) + \
+                    '{} node location(s):'.format(indices[0].shape[0])
+            else:
+                e = 'Maximum head difference ' + \
+                    '({}) exceeded '.format(diffmax) + \
+                    'at {} node location(s):'.format(indices[0].shape[0])
             e = textwrap.fill(e, width=70, initial_indent='  ',
                               subsequent_indent='  ')
             f.write('{}\n'.format(e))
@@ -806,13 +834,8 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
     return success
 
 
-def calculate_difference(v1, v2):
+def calculate_diffmax(v1, v2):
     import numpy as np
-    # For a usg simulation, the row and column are switched in the binary
-    # head file.
-    #    nl1, nr1, nc1 = v1.shape
-    #    nl2, nr2, nc2 = v2.shape
-    #    if nl1 == nl2 and nr1 == nc2 and nc1 == nr2:
     if v1.ndim > 1 or v2.ndim > 1:
         v1 = v1.flatten()
         v2 = v2.flatten()
@@ -824,6 +847,22 @@ def calculate_difference(v1, v2):
     diff = abs(v1 - v2)
     diffmax = diff.max()
     indices = np.where(diff == diffmax)
+    return diffmax, indices
+
+
+def calculate_difftol(v1, v2, tol):
+    import numpy as np
+    if v1.ndim > 1 or v2.ndim > 1:
+        v1 = v1.flatten()
+        v2 = v2.flatten()
+    if v1.size != v2.size:
+        err = 'Error: calculate_difference v1 size ({}) '.format(
+                v1.size) + 'is not equal to v2 size ({})'.format(v2.size)
+        raise Exception(err)
+
+    diff = abs(v1 - v2)
+    diffmax = diff.max()
+    indices = np.where(diff > tol)
     return diffmax, indices
 
 
