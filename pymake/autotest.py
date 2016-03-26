@@ -696,6 +696,159 @@ def compare_heads(namefile1, namefile2, precision='single',
     return success
 
 
+def compare_concs(namefile1, namefile2, precision='single',
+                  ctol=0.001, outfile=None, files1=None, files2=None,
+                  difftol=False):
+    """
+    Compare the swr stage results from these two simulations.
+
+    """
+    import numpy as np
+    import flopy
+
+    # list of valid extensions
+    valid_ext = ['ucn']
+
+    # Get info for first ucn file
+    ufpth1 = None
+    if files1 is None:
+        for ext in valid_ext:
+            ucn = get_entries_from_namefile(namefile1, extension=ext)
+            ufpth = ucn[0][0]
+            if ufpth is not None:
+                ufpth1 = ufpth
+                break
+        if ufpth1 is None:
+            ufpth1 = os.path.join(os.path.dirname(namefile1, 'MT3D001.UCN'))
+    else:
+        if isinstance(files1, str):
+            files1 = [files1]
+        for file in files1:
+            for ext in valid_ext:
+                if ext in os.path.basename(file).lower():
+                    ufpth1 = file
+                    break
+
+    # Get info for second ucn file
+    ufpth2 = None
+    if files2 is None:
+        for ext in valid_ext:
+            ucn = get_entries_from_namefile(namefile2, extension=ext)
+            ufpth = ucn[0][0]
+            if ufpth is not None:
+                ufpth2 = ufpth
+                break
+        if ufpth2 is None:
+            ufpth2 = os.path.join(os.path.dirname(namefile2, 'MT3D001.UCN'))
+    else:
+        if isinstance(files2, str):
+            files2 = [files2]
+        for file in files2:
+            for ext in valid_ext:
+                if ext in os.path.basename(file).lower():
+                    ufpth2 = file
+                    break
+
+    # confirm that there are two files to compare
+    if ufpth1 is None or ufpth2 is None:
+        if ufpth1 is None:
+            print('  UCN file 1 not set')
+        if ufpth2 is None:
+            print('  UCN file 2 not set')
+        return True
+
+    if not os.path.isfile(ufpth1) or not os.path.isfile(ufpth2):
+        if not os.path.isfile(ufpth1):
+            print('  {} does not exist'.format(ufpth1))
+        if not os.path.isfile(ufpth2):
+            print('  {} does not exist'.format(ufpth2))
+        return True
+
+    # Open output file
+    if outfile is not None:
+        f = open(outfile, 'w')
+        f.write('Created by pymake.autotest.compare_stages\n')
+
+    # Get stage objects
+    uobj1 = flopy.utils.UcnFile(ufpth1, precision=precision)
+    uobj2 = flopy.utils.UcnFile(ufpth2, precision=precision)
+
+    # get times
+    times1 = uobj1.get_times()
+    times2 = uobj2.get_times()
+    nt1 = len(times1)
+    nt2 = len(times2)
+    nt = min(nt1, nt2)
+
+    assert times1[0:nt] == times2[0:nt], 'times in two ucn files are not equal'
+
+    if nt == nt1:
+        kstpkper = uobj1.get_kstpkper()
+    else:
+        kstpkper = uobj2.get_kstpkper()
+
+    header = '{:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', 'MAXIMUM') + \
+             '{:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD', 'TIME STEP',
+                                                'CONC DIFFERENCE') + \
+             '{0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
+
+    icnt = 0
+    # Process cumulative and incremental
+    for idx, time in enumerate(times1[0:nt]):
+        try:
+            u1 = uobj1.get_data(totim=time)
+            u2 = uobj2.get_data(totim=time)
+
+            if difftol:
+                diffmax, indices = calculate_difftol(u1, u2, ctol)
+            else:
+                diffmax, indices = calculate_diffmax(u1, u2)
+
+            if idx < 1:
+                f.write(header)
+            f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1,
+                                                      kstpkper[idx][0] + 1,
+                                                      diffmax))
+
+            if diffmax >= ctol:
+                icnt += 1
+                if difftol:
+                    e = 'Maximum concentration difference ({})'.format(diffmax) + \
+                        ' -- {} tolerance exceeded at '.format(htol) + \
+                        '{} node location(s):'.format(indices[0].shape[0])
+                else:
+                    e = 'Maximum concentration difference ' + \
+                        '({}) exceeded '.format(diffmax) + \
+                        'at {} node location(s):'.format(indices[0].shape[0])
+                e = textwrap.fill(e, width=70, initial_indent='  ',
+                                  subsequent_indent='  ')
+                f.write('{}\n'.format(e))
+                e = ''
+                for itupe in indices:
+                    for ind in itupe:
+                        e += '{} '.format(ind + 1)  # convert to one-based
+                e = textwrap.fill(e, width=70, initial_indent='    ',
+                                  subsequent_indent='    ')
+                f.write('{}\n'.format(e))
+                # Write header again, unless it is the last record
+                if idx + 1 < len(times1):
+                    f.write('\n{}'.format(header))
+        except:
+            print('  could not process time={}'.format(time))
+            print('  terminating ucn processing...')
+            break
+
+    # Close output file
+    if outfile is not None:
+        f.close()
+
+    # test for failure
+    success = True
+    if icnt > 0:
+        success = False
+    return success
+
+
 def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
                    htol=0.001, outfile=None, difftol=False):
     """
