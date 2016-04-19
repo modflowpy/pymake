@@ -13,7 +13,7 @@ if not sys.version_info[0] in [2, 3]:
     sys.exit(1) # return non-zero value for failure
 
 
-setup(name=__name__,
+setup(name='pymake',
       description='pymake is a Python package to compile MODFLOW-based models.',
       long_description='...TO DO...',
       author='Christian D. Langevin',
