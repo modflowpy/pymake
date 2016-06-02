@@ -223,6 +223,35 @@ def get_iso_c(srcfiles):
                     return True
     return False
 
+def flag_available(flag):
+    """
+    Determine if a specified flag exists
+    """
+    found = False
+    # determin the gfortran command line flags available
+    logfn = 'gfortran.txt'
+    errfn = 'gfortran.err'
+    logfile = open(logfn, 'w')
+    errfile = open(errfn, 'w')
+    proc = subprocess.Popen(["gfortran", "--help", "-v"],
+                            stdout=logfile, stderr=errfile)
+    ret_code = proc.wait()
+    logfile.close()
+    errfile.close()
+    # read data
+    f = open(logfn, 'r')
+    lines = f.readlines()
+    for line in lines:
+        if flag.lower() in line.lower():
+            found=True
+            break
+    f.close()
+    # remove file
+    os.remove(logfn)
+    os.remove(errfn)
+    # return
+    return found
+
 
 def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                      expedite, dryrun, double, debug, fflags):
@@ -249,7 +278,9 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         # Production version
         compileflags = ['-O2', '-fbacktrace',]
         if not sys.platform == 'win32':
-            compileflags.append('-ffpe-summary=overflow')
+            lflag = flag_available('-ffpe-summary')
+            if lflag:
+                compileflags.append('-ffpe-summary=overflow')
     objext = '.o'
     if double:
         compileflags.append('-fdefault-real-8')
@@ -258,6 +289,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         t = fflags.split()
         for fflag in t:
             compileflags.append(fflag)
+
 
     # C/C++ compiler switches -- thanks to mja
     if debug:
