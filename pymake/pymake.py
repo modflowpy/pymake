@@ -208,7 +208,7 @@ def get_iso_c(srcfiles):
         try:
             f = open(srcfile, 'rb')
         except:
-            print('get_f_nodelist: could not open {}'.format(os.path.basename(srcfile)))
+            print('get_f_nodelist: could not open {0}'.format(os.path.basename(srcfile)))
             continue
         lines = f.read()
         lines = lines.decode('ascii', 'replace').splitlines()
@@ -361,7 +361,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         objfiles.append(objfile)
 
     # Build the link command and then link
-    print(('\nLinking object files to make {}...'.format(os.path.basename(target))))
+    print(('\nLinking object files to make {0}...'.format(os.path.basename(target))))
     cmd = fc + ' '
     cmdlist = []
     cmdlist.append(fc)
@@ -481,7 +481,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
         objfiles.append(objfile)
 
     # Build the link command and then link
-    print(('\nLinking object files to make {}...'.format(os.path.basename(target))))
+    print(('\nLinking object files to make {0}...'.format(os.path.basename(target))))
     cmd = fc + ' '
     cmdlist = []
     cmdlist.append(fc)
@@ -571,7 +571,7 @@ def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
         raise Exception('Pymake could not find IFORT compiler.')
     cpvars += os.path.join('bin', 'compilervars.bat')
     if not os.path.isfile(cpvars):
-        raise Exception('Could not find cpvars: {}'.format(cpvars))
+        raise Exception('Could not find cpvars: {0}'.format(cpvars))
     f = open(batchfile, 'w')
     line = 'call ' + '"' + os.path.normpath(cpvars) + '" ' + arch + '\n'
     f.write(line)
@@ -592,8 +592,8 @@ def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
             for switch in compileflags:
                 cmd += switch + ' '
             cmd += '-c' + ' '
-            cmd += '/module:{}\ '.format(moddir_temp)
-            cmd += '/object:{}\ '.format(objdir_temp)
+            cmd += '/module:{0}\ '.format(moddir_temp)
+            cmd += '/object:{0}\ '.format(objdir_temp)
             cmd += srcfile
             f.write('echo ' + os.path.basename(srcfile) + '\n')
         f.write(cmd + '\n')
@@ -616,9 +616,9 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
 
     '''
     # write summary information
-    print('\nsource files are in: {}'.format(srcdir))
-    print('executable name to be created: {}'.format(target))
-    
+    print('\nsource files are in: {0}'.format(srcdir))
+    print('executable name to be created: {0}'.format(target))
+
     # initialize
     srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target)
 
