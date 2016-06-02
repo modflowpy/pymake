@@ -615,6 +615,10 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
     Main part of program
 
     '''
+    # write summary information
+    print('\nsource files are in: {}'.format(srcdir))
+    print('executable name to be created: {}'.format(target))
+    
     # initialize
     srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target)
 
