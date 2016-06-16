@@ -288,7 +288,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     if fflags is not None:
         t = fflags.split()
         for fflag in t:
-            compileflags.append(fflag)
+            compileflags.append('-'+fflag)
 
 
     # C/C++ compiler switches -- thanks to mja
@@ -415,7 +415,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
     if fflags is not None:
         t = fflags.split()
         for fflag in t:
-            compileflags.append(fflag)
+            compileflags.append('-'+fflag)
 
     # C/C++ compiler switches
     if debug:
@@ -533,7 +533,7 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
     if fflagsu is not None:
         t = fflagsu.split()
         for fflag in t:
-            fflags.append(fflag)
+            fflags.append('-'+fflag)
     objext = '.obj'
     batchfile = 'compile.bat'
     if os.path.isfile(batchfile):

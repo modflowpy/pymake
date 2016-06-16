@@ -941,9 +941,9 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
 
 
         if difftol:
-            diffmax, indices = calculate_difftol(h1, h2, htol)
+            diffmax, indices = calculate_difftol(s1, s2, htol)
         else:
-            diffmax, indices = calculate_diffmax(h1, h2)
+            diffmax, indices = calculate_diffmax(s1, s2)
 
         if idx < 1:
             f.write(header)
