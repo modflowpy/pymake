@@ -5,18 +5,24 @@ import textwrap
 
 ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
               '.ddn', '.ucn', '.glo', '.lst', '.list',
-              '.gwv', '.mv']
+              '.gwv', '.mv', '.out']
 
 
-def setup(namefile, dst):
+def setup(namefile, dst, remove_existing=True):
     # Construct src pth from namefile
     src = os.path.dirname(namefile)
 
-    # Create the destination folder
+    # Create the destination folder, if required
+    create_dir = False
     if os.path.exists(dst):
-        print('Removing folder ' + dst)
-        shutil.rmtree(dst)
-    os.mkdir(dst)
+        if remove_existing:
+            print('Removing folder ' + dst)
+            shutil.rmtree(dst)
+            create_dir = True
+    else:
+        create_dir = True
+    if create_dir:
+        os.mkdir(dst)
 
     # Make list of files to copy
     fname = os.path.abspath(namefile)
@@ -47,7 +53,7 @@ def setup(namefile, dst):
     return
 
 
-def setup_comparison(namefile, dst):
+def setup_comparison(namefile, dst, remove_existing=True):
     # Construct src pth from namefile
     src = os.path.dirname(namefile)
     action = None
@@ -99,7 +105,7 @@ def setup_comparison(namefile, dst):
                     files2copy.append(
                             os.path.join(cmppth, os.path.basename(file)))
                     nf = os.path.join(src, action, os.path.basename(file))
-                    setup(nf, dst)
+                    setup(nf, dst, remove_existing=remove_existing)
                     break
 
     return action
@@ -700,7 +706,7 @@ def compare_concs(namefile1, namefile2, precision='single',
                   ctol=0.001, outfile=None, files1=None, files2=None,
                   difftol=False):
     """
-    Compare the swr stage results from these two simulations.
+    Compare the mt3dms concentration results from these two simulations.
 
     """
     import numpy as np
@@ -719,7 +725,7 @@ def compare_concs(namefile1, namefile2, precision='single',
                 ufpth1 = ufpth
                 break
         if ufpth1 is None:
-            ufpth1 = os.path.join(os.path.dirname(namefile1, 'MT3D001.UCN'))
+            ufpth1 = os.path.join(os.path.dirname(namefile1), 'MT3D001.UCN')
     else:
         if isinstance(files1, str):
             files1 = [files1]
@@ -739,7 +745,7 @@ def compare_concs(namefile1, namefile2, precision='single',
                 ufpth2 = ufpth
                 break
         if ufpth2 is None:
-            ufpth2 = os.path.join(os.path.dirname(namefile2, 'MT3D001.UCN'))
+            ufpth2 = os.path.join(os.path.dirname(namefile2), 'MT3D001.UCN')
     else:
         if isinstance(files2, str):
             files2 = [files2]
