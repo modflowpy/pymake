@@ -10,7 +10,7 @@ except ImportError:
     # Fall back to Python 2's urllib
     from urllib import urlretrieve
 
-def download_and_unzip(url, pth='./'):
+def download_and_unzip(url, pth='./', delete_zip=True):
     if not os.path.exists(pth):
         print('Creating the directory: {}'.format(pth))
         os.makedirs(pth)
@@ -36,6 +36,7 @@ def download_and_unzip(url, pth='./'):
         ar = tarfile.open(file_name)
         ar.extractall(path=pth)
         ar.close()
-    print('Deleting the zipfile...')
-    os.remove(file_name)
+    if delete_zip:
+        print('Deleting the zipfile...')
+        os.remove(file_name)
     print('Done downloading and extracting...')
