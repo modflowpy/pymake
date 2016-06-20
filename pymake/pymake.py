@@ -177,16 +177,20 @@ def create_openspec(srcdir_temp):
     Create a new openspec.inc file that uses STREAM ACCESS.  This is specific
     to MODFLOW.
     '''
-    fname = os.path.join(srcdir_temp, 'openspec.inc')
-    f = open(fname, 'w')
-    line = "c -- created by pymake.py\n" + \
-           "      CHARACTER*20 ACCESS,FORM,ACTION(2)\n" + \
-           "      DATA ACCESS/'STREAM'/\n" + \
-           "      DATA FORM/'UNFORMATTED'/\n" + \
-           "      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/\n" + \
-           "c -- end of include file\n"
-    f.write(line)
-    f.close()
+    files = ['openspec.inc', 'filespec.inc']
+    for f in files:
+        fname = os.path.join(srcdir_temp, f)
+        if os.path.isfile(fname):
+            print('replacing...{}'.format(os.path.basename(fname)))
+            f = open(fname, 'w')
+            line = "c -- created by pymake.py\n" + \
+                   "      CHARACTER*20 ACCESS,FORM,ACTION(2)\n" + \
+                   "      DATA ACCESS/'STREAM'/\n" + \
+                   "      DATA FORM/'UNFORMATTED'/\n" + \
+                   "      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/\n" + \
+                   "c -- end of include file\n"
+            f.write(line)
+            f.close()
     return
 
 
@@ -634,6 +638,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
     elif fc == 'ifort':
         platform = sys.platform
         if platform.lower() == 'darwin':
+            create_openspec(srcdir_temp)
             objext = '.o'
             compile_with_mac_ifort(srcfiles, target, cc,
                                    objdir_temp, moddir_temp,
