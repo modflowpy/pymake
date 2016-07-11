@@ -41,7 +41,7 @@ def make_swtv4():
           DATA FORM/'UNFORMATTED'/
           DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
     '''
-    fn = os.path.join(srcdir, 'filespec.inc')
+    fn = os.path.join(srcdir, 'FILESPEC.INC')
     f = open(fn, 'w')
     f.write(l)
     f.close()
