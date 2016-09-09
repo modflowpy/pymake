@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import argparse
 from .dag import order_source_files, order_c_source_files
+import datetime
 
 def parser():
     '''
@@ -646,6 +647,19 @@ def create_makefile(target, srcdir, objfiles,
     # open makefile
     f = open('makefile', 'w')
 
+    # write header for the make file
+    f.write('# makefile created on {}\n'.format(datetime.datetime.now()) +
+            '# by pymake (version {})\n'.format(__version__))
+    f.write('# using the {} fortran and {} c/c++ compilers.\n'.format(fc, cc))
+    f.write('\n')
+
+    # specify directory for the executable
+    f.write('# Define the directories for the object and module files,\n' +
+            '# the executable, and the executable name and path.\n')
+    pth = os.path.dirname(objfiles[0]).replace('\\', '/')
+    f.write('OBJDIR = {}\n'.format(pth))
+    pth = os.path.dirname(target).replace('\\', '/')
+    f.write('BINDIR = {}\n'.format(pth))
     pth = target.replace('\\', '/')
     f.write('PROGRAM = {}\n'.format(pth))
     f.write('\n')
@@ -655,9 +669,6 @@ def create_makefile(target, srcdir, objfiles,
         srcdirs.append('SOURCEDIR{}'.format(idx+1))
         line = '{}={}\n'.format(srcdirs[idx], dir)
         f.write(line)
-    f.write('\n')
-    pth = os.path.dirname(objfiles[0]).replace('\\', '/')
-    f.write('OBJDIR = {}\n'.format(pth))
     f.write('\n')
     f.write('VPATH = \\\n')
     for idx, sd in enumerate(srcdirs):
@@ -712,9 +723,16 @@ def create_makefile(target, srcdir, objfiles,
     f.write('# Define task functions\n')
     f.write('\n')
 
+    f.write('# Create the bin directory and compile and link the executable\n')
     all = os.path.splitext(os.path.basename(target))[0]
-    f.write('all: {}\n'.format(all))
+    f.write('all: makebin | {}\n'.format(all))
     f.write('\n')
+
+    f.write('# Make the bin directory for the executable\n')
+    f.write('makebin :\n')
+    f.write('\tmkdir -p $(BINDIR)\n')
+    f.write('\n')
+
 
     f.write('# Define the objects ' +
             'that make up {}\n'.format(os.path.basename(target)))
@@ -737,17 +755,21 @@ def create_makefile(target, srcdir, objfiles,
     for tc in cfiles:
         f.write('$(OBJDIR)/%.o : %{}\n'.format(tc))
         f.write('\t@mkdir -p $(@D)\n')
-        line = '\t$(CC) $(CFLAGS) -c $< -o $@\n'
+        line = '\t$(CC) $(CFLAGS) -c $< -o $@'
         f.write('{}\n'.format(line))
         f.write('\n')
 
-    f.write('.PHONY : clean\nclean : \n' +
-            '\t-rm $(OBJDIR)/*.o $(OBJDIR)/*.mod\n')
+    f.write('# Clean the object and module files and the executable\n')
+    f.write('.PHONY : clean\n' +
+            'clean : \n' +
+            '\t-rm -rf $(OBJDIR)\n' +
+            '\t-rm -rf $(BINDIR)\n')
     f.write('\n')
 
-    f.write('.PHONY : cleanall\ncleanall : \n' +
-            '\t-rm $(PROGRAM) '+
-            '$(OBJDIR)/*.o $(OBJDIR)/*.mod\n')
+    f.write('# Clean the object and module files\n')
+    f.write('.PHONY : cleanobj\n' +
+            'cleanobj : \n' +
+            '\t-rm -rf $(OBJDIR)\n')
     f.write('\n')
 
     # close the make file
@@ -765,6 +787,12 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
     # write summary information
     print('\nsource files are in: {0}'.format(srcdir))
     print('executable name to be created: {0}'.format(target))
+
+    # make sure the path for the target exists
+    pth = os.path.dirname(target)
+    if not os.path.exists(pth):
+        print('creating target path - {}'.format(pth))
+        os.makedirs(pth)
 
     # initialize
     srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target)
