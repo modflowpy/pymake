@@ -16,16 +16,16 @@ def make_mfnwt():
     os.chdir(dstpth)
 
     # Remove the existing directory if it exists
-    dirname = 'MODFLOW-NWT_1.0.9'
+    dirname = 'MODFLOW-NWT_1.1.1'
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
 
     # Download the MODFLOW-NWT distribution
-    url = "http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-v1.0.9/MODFLOW-NWT_1.0.9.zip"
+    url = "http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-v1.1.1/MODFLOW-NWT_1.1.1.zip"
     download_and_unzip(url)
 
     # Remove the parallel and serial folders from the source directory
-    srcdir = os.path.join('MODFLOW-NWT_1.0.9', 'src')
+    srcdir = os.path.join('MODFLOW-NWT_1.1.1', 'src')
     target = 'mfnwt'
 
     pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
@@ -34,7 +34,7 @@ def make_mfnwt():
     assert os.path.isfile(target), 'Target does not exist.'
 
     # Clean up
-    dirname = 'MODFLOW-NWT_1.0.9'
+    dirname = 'MODFLOW-NWT_1.1.1'
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
 
