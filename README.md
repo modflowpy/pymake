@@ -7,11 +7,11 @@ This is a relatively simple python package for compiling MODFLOW-based programs.
 
 pymake can be run from the command line or it can be called from within python.
 
-pymake includes example scripts for building MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MT3D, and SEAWAT using gfortran on Mac or Linux.  The scripts download the distribution file from the USGS and compile the source into a binary executable.  The MODFLOW-NWT script does not work yet with the present version of MODFLOW-NWT due to some non-standard Fortran.  This should be fixed in future MODFLOW-NWT releases.
+pymake includes example scripts for building MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MT3D, and SEAWAT using gfortran on Mac or Linux.  The scripts download the distribution file from the USGS and compile the source into a binary executable.  The MODFLOW-NWT script now works with the present version of MODFLOW-NWT.
 
-pymake includes code for compiling with ifort on Windows, but this has not been tested recently.
+pymake includes code for compiling with ifort on Windows, and limited testing has shown that it is working properly.
 
-Note that if gfortran is used, the openspec.f file will be changed to:
+Note that if gfortran is used, the openspec.f file will automatically be changed to the following so that binary files are created properly using standard Fortran:
 
     c -- created by pymake.py
       CHARACTER*20 ACCESS,FORM,ACTION(2)
@@ -76,7 +76,7 @@ To see help for running from command line, use the following statement.
 The following scripts can be run directly from the command line to build MODFLOW and SEAWAT binaries on Mac and Linux.  The scripts will download the distribution file from the USGS (requires internet connection), unzip the file, and compile the source.  MT3D will be downloaded from the University of Alabama.
 
     python make_mf2005.py
-    python make_mfnwt.py (not working yet)
+    python make_mfnwt.py
     python make_swtv4.py
     python make_mt3d.py
     python make_mfusg.py

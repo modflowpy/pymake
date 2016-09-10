@@ -6,9 +6,6 @@ from pymake.download import download_and_unzip
 
 def make_mfnwt():
 
-    # Note, this script does not work yet due to some non-standard Fortran
-    # in one or more of the source files.
-
     # get current directory
     dstpth = os.path.join('temp')
     if not os.path.exists(dstpth):

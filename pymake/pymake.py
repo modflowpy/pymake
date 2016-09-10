@@ -790,6 +790,8 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
 
     # make sure the path for the target exists
     pth = os.path.dirname(target)
+    if pth == '':
+        pth = '.'
     if not os.path.exists(pth):
         print('creating target path - {}'.format(pth))
         os.makedirs(pth)
