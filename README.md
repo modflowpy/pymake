@@ -64,7 +64,7 @@ To see help for running from command line, use the following statement.
 
 ## From Python
     
-    # For this script to compile mfnwt, the non-standard Fortran needS to be corrected first
+    # Script to compile mfnwt (or see make_mfnwt.py in examples directory)
     import pymake
     srcdir = '../mfnwt/src'
     target = 'mfnwt'
