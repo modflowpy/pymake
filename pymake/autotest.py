@@ -700,7 +700,7 @@ def compare_concs(namefile1, namefile2, precision='single',
                   ctol=0.001, outfile=None, files1=None, files2=None,
                   difftol=False):
     """
-    Compare the swr stage results from these two simulations.
+    Compare concentrations from these two simulations.
 
     """
     import numpy as np
