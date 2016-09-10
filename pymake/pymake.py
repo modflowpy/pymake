@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import argparse
 from .dag import order_source_files, order_c_source_files
+import datetime
 
 def parser():
     '''
@@ -67,6 +68,9 @@ def parser():
     parser.add_argument('-ff', '--fflags',
                         help='''Additional fortran compiler flags.''',
                         default=None)
+    parser.add_argument('-mf', '--makefile',
+                        help='''Create a standard makefile.''',
+                        action='store_true')
     args = parser.parse_args()
     return args
 
@@ -177,16 +181,22 @@ def create_openspec(srcdir_temp):
     Create a new openspec.inc file that uses STREAM ACCESS.  This is specific
     to MODFLOW.
     '''
-    fname = os.path.join(srcdir_temp, 'openspec.inc')
-    f = open(fname, 'w')
-    line = "c -- created by pymake.py\n" + \
-           "      CHARACTER*20 ACCESS,FORM,ACTION(2)\n" + \
-           "      DATA ACCESS/'STREAM'/\n" + \
-           "      DATA FORM/'UNFORMATTED'/\n" + \
-           "      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/\n" + \
-           "c -- end of include file\n"
-    f.write(line)
-    f.close()
+    files = ['openspec.inc', 'FILESPEC.INC']
+    dirs = [d[0] for d in os.walk(srcdir_temp)]
+    for d in dirs:
+        for f in files:
+            fname = os.path.join(d, f)
+            if os.path.isfile(fname):
+                print('replacing..."{}"'.format(fname))
+                f = open(fname, 'w')
+                line = "c -- created by pymake.py\n" + \
+                       "      CHARACTER*20 ACCESS,FORM,ACTION(2)\n" + \
+                       "      DATA ACCESS/'STREAM'/\n" + \
+                       "      DATA FORM/'UNFORMATTED'/\n" + \
+                       "      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/\n" + \
+                       "c -- end of include file\n"
+                f.write(line)
+                f.close()
     return
 
 
@@ -208,7 +218,7 @@ def get_iso_c(srcfiles):
         try:
             f = open(srcfile, 'rb')
         except:
-            print('get_f_nodelist: could not open {}'.format(os.path.basename(srcfile)))
+            print('get_f_nodelist: could not open {0}'.format(os.path.basename(srcfile)))
             continue
         lines = f.read()
         lines = lines.decode('ascii', 'replace').splitlines()
@@ -223,9 +233,39 @@ def get_iso_c(srcfiles):
                     return True
     return False
 
+def flag_available(flag):
+    """
+    Determine if a specified flag exists
+    """
+    found = False
+    # determin the gfortran command line flags available
+    logfn = 'gfortran.txt'
+    errfn = 'gfortran.err'
+    logfile = open(logfn, 'w')
+    errfile = open(errfn, 'w')
+    proc = subprocess.Popen(["gfortran", "--help", "-v"],
+                            stdout=logfile, stderr=errfile)
+    ret_code = proc.wait()
+    logfile.close()
+    errfile.close()
+    # read data
+    f = open(logfn, 'r')
+    lines = f.readlines()
+    for line in lines:
+        if flag.lower() in line.lower():
+            found=True
+            break
+    f.close()
+    # remove file
+    os.remove(logfn)
+    os.remove(errfn)
+    # return
+    return found
+
 
 def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
-                     expedite, dryrun, double, debug, fflags):
+                     expedite, dryrun, double, debug, fflags,
+                     srcdir, makefile):
     """
     Compile the program using the gnu compilers (gfortran and gcc)
 
@@ -249,7 +289,9 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         # Production version
         compileflags = ['-O2', '-fbacktrace',]
         if not sys.platform == 'win32':
-            compileflags.append('-ffpe-summary=overflow')
+            lflag = flag_available('-ffpe-summary')
+            if lflag:
+                compileflags.append('-ffpe-summary=overflow')
     objext = '.o'
     if double:
         compileflags.append('-fdefault-real-8')
@@ -257,7 +299,8 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     if fflags is not None:
         t = fflags.split()
         for fflag in t:
-            compileflags.append(fflag)
+            compileflags.append('-'+fflag)
+
 
     # C/C++ compiler switches -- thanks to mja
     if debug:
@@ -329,7 +372,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         objfiles.append(objfile)
 
     # Build the link command and then link
-    print(('\nLinking object files to make {}...'.format(os.path.basename(target))))
+    print(('\nLinking object files to make {0}...'.format(os.path.basename(target))))
     cmd = fc + ' '
     cmdlist = []
     cmdlist.append(fc)
@@ -348,12 +391,21 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     print(s)
     if not dryrun:
         subprocess.check_call(cmdlist, shell=shellflg)
+
+    # create makefile
+    if makefile:
+        create_makefile(target, srcdir, objfiles,
+                        fc, compileflags, cc, cflags, syslibs,
+                        modules=['-I', '-J'])
+
+    # return
     return
 
 
 def compile_with_mac_ifort(srcfiles, target, cc,
                            objdir_temp, moddir_temp,
-                           expedite, dryrun, double, debug, fflags):
+                           expedite, dryrun, double, debug, fflags,
+                           srcdir, makefile):
     """
     Make target on Mac OSX
     """
@@ -383,7 +435,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
     if fflags is not None:
         t = fflags.split()
         for fflag in t:
-            compileflags.append(fflag)
+            compileflags.append('-'+fflag)
 
     # C/C++ compiler switches
     if debug:
@@ -449,7 +501,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
         objfiles.append(objfile)
 
     # Build the link command and then link
-    print(('\nLinking object files to make {}...'.format(os.path.basename(target))))
+    print(('\nLinking object files to make {0}...'.format(os.path.basename(target))))
     cmd = fc + ' '
     cmdlist = []
     cmdlist.append(fc)
@@ -469,11 +521,19 @@ def compile_with_mac_ifort(srcfiles, target, cc,
         print(s)
         subprocess.check_call(cmdlist)
 
+    # create makefile
+    if makefile:
+        create_makefile(target, srcdir, objfiles,
+                        fc, compileflags, cc, cflags, syslibs,
+                        modules=['-module '])
+
+    # return
     return
 
 
 def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
-                       expedite, dryrun, double, debug, fflagsu, arch):
+                       expedite, dryrun, double, debug, fflagsu, arch,
+                       srcdir, makefile):
     """
     Make target on Windows OS
     
@@ -501,7 +561,7 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
     if fflagsu is not None:
         t = fflagsu.split()
         for fflag in t:
-            fflags.append(fflag)
+            fflags.append('-'+fflag)
     objext = '.obj'
     batchfile = 'compile.bat'
     if os.path.isfile(batchfile):
@@ -518,6 +578,11 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
     except:
         print('Could not make x64 target: ', target)
 
+    # create makefile
+    if makefile:
+        print('makefile not created for Windows with Intel Compiler.')
+
+    # return
     return
 
 
@@ -539,7 +604,7 @@ def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
         raise Exception('Pymake could not find IFORT compiler.')
     cpvars += os.path.join('bin', 'compilervars.bat')
     if not os.path.isfile(cpvars):
-        raise Exception('Could not find cpvars: {}'.format(cpvars))
+        raise Exception('Could not find cpvars: {0}'.format(cpvars))
     f = open(batchfile, 'w')
     line = 'call ' + '"' + os.path.normpath(cpvars) + '" ' + arch + '\n'
     f.write(line)
@@ -560,8 +625,8 @@ def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
             for switch in compileflags:
                 cmd += switch + ' '
             cmd += '-c' + ' '
-            cmd += '/module:{}\ '.format(moddir_temp)
-            cmd += '/object:{}\ '.format(objdir_temp)
+            cmd += '/module:{0}\ '.format(moddir_temp)
+            cmd += '/object:{0}\ '.format(objdir_temp)
             cmd += srcfile
             f.write('echo ' + os.path.basename(srcfile) + '\n')
         f.write(cmd + '\n')
@@ -576,13 +641,159 @@ def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
     return
 
 
+def create_makefile(target, srcdir, objfiles,
+                    fc, fflags, cc, cflags, syslibs,
+                    objext='.o', modules=['-I', '-J']):
+    # open makefile
+    f = open('makefile', 'w')
+
+    # write header for the make file
+    f.write('# makefile created on {}\n'.format(datetime.datetime.now()) +
+            '# by pymake (version {})\n'.format(__version__))
+    f.write('# using the {} fortran and {} c/c++ compilers.\n'.format(fc, cc))
+    f.write('\n')
+
+    # specify directory for the executable
+    f.write('# Define the directories for the object and module files,\n' +
+            '# the executable, and the executable name and path.\n')
+    pth = os.path.dirname(objfiles[0]).replace('\\', '/')
+    f.write('OBJDIR = {}\n'.format(pth))
+    pth = os.path.dirname(target).replace('\\', '/')
+    f.write('BINDIR = {}\n'.format(pth))
+    pth = target.replace('\\', '/')
+    f.write('PROGRAM = {}\n'.format(pth))
+    f.write('\n')
+    dirs = [d[0] for d in os.walk(srcdir)]
+    srcdirs = []
+    for idx, dir in enumerate(dirs):
+        srcdirs.append('SOURCEDIR{}'.format(idx+1))
+        line = '{}={}\n'.format(srcdirs[idx], dir)
+        f.write(line)
+    f.write('\n')
+    f.write('VPATH = \\\n')
+    for idx, sd in enumerate(srcdirs):
+        f.write('${' + '{}'.format(sd) + '} ')
+        if idx+1 < len(srcdirs):
+            f.write('\\')
+        f.write('\n')
+    f.write('\n')
+
+    ffiles = ['.f', '.f90', '.F90', '.fpp']
+    cfiles = ['.c', '.cpp']
+    line = '.SUFFIXES: '
+    for tc in cfiles:
+        line += '{} '.format(tc)
+    for tf in ffiles:
+        line += '{} '.format(tf)
+    line += objext
+    f.write('{}\n'.format(line))
+    f.write('\n')
+
+    f.write('# Define the Fortran compile flags\n')
+    f.write('F90 = {}\n'.format(fc))
+    line = 'F90FLAGS = '
+    for ff in fflags:
+        line += '{} '.format(ff)
+    f.write('{}\n'.format(line))
+    f.write('\n')
+
+    f.write('# Define the C compile flags\n')
+    f.write('CC = {}\n'.format(cc))
+    line = 'CFLAGS = '
+    for cf in cflags:
+        line += '{} '.format(cf)
+    f.write('{}\n'.format(line))
+    f.write('\n')
+
+    f.write('# Define the libraries\n')
+    line = 'SYSLIBS = '
+    for sl in syslibs:
+        line += '{} '.format(sl)
+    f.write('{}\n'.format(line))
+    f.write('\n')
+
+    f.write('OBJECTS = \\\n')
+    for idx, objfile in enumerate(objfiles):
+        f.write('$(OBJDIR)/{} '.format(os.path.basename(objfile)))
+        if idx+1 < len(objfiles):
+            f.write('\\')
+        f.write('\n')
+    f.write('\n')
+
+    f.write('# Define task functions\n')
+    f.write('\n')
+
+    f.write('# Create the bin directory and compile and link the executable\n')
+    all = os.path.splitext(os.path.basename(target))[0]
+    f.write('all: makebin | {}\n'.format(all))
+    f.write('\n')
+
+    f.write('# Make the bin directory for the executable\n')
+    f.write('makebin :\n')
+    f.write('\tmkdir -p $(BINDIR)\n')
+    f.write('\n')
+
+
+    f.write('# Define the objects ' +
+            'that make up {}\n'.format(os.path.basename(target)))
+    f.write('{}: $(OBJECTS)\n'.format(all))
+    line = '\t-$(F90) $(F90FLAGS) -o $(PROGRAM) $(OBJECTS) $(SYSLIBS) '
+    for m in modules:
+        line += '{}$(OBJDIR) '.format(m)
+    f.write('{}\n'.format(line))
+    f.write('\n')
+
+    for tf in ffiles:
+        f.write('$(OBJDIR)/%{} : %{}\n'.format(objext, tf))
+        f.write('\t@mkdir -p $(@D)\n')
+        line = '\t$(F90) $(F90FLAGS) -c $< -o $@ '
+        for m in modules:
+            line += '{}$(OBJDIR) '.format(m)
+        f.write('{}\n'.format(line))
+        f.write('\n')
+
+    for tc in cfiles:
+        f.write('$(OBJDIR)/%.o : %{}\n'.format(tc))
+        f.write('\t@mkdir -p $(@D)\n')
+        line = '\t$(CC) $(CFLAGS) -c $< -o $@'
+        f.write('{}\n'.format(line))
+        f.write('\n')
+
+    f.write('# Clean the object and module files and the executable\n')
+    f.write('.PHONY : clean\n' +
+            'clean : \n' +
+            '\t-rm -rf $(OBJDIR)\n' +
+            '\t-rm -rf $(BINDIR)\n')
+    f.write('\n')
+
+    f.write('# Clean the object and module files\n')
+    f.write('.PHONY : cleanobj\n' +
+            'cleanobj : \n' +
+            '\t-rm -rf $(OBJDIR)\n')
+    f.write('\n')
+
+    # close the make file
+    f.close()
+
+
 def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
          dryrun=False, double=False, debug=False,
-         include_subdirs=False, fflags=None, arch='intel64'):
+         include_subdirs=False, fflags=None, arch='intel64',
+         makefile=False):
     '''
     Main part of program
 
     '''
+    # write summary information
+    print('\nsource files are in: {0}'.format(srcdir))
+    print('executable name to be created: {0}'.format(target))
+
+    # make sure the path for the target exists
+    pth = os.path.dirname(target)
+    if not os.path.exists(pth):
+        print('creating target path - {}'.format(pth))
+        os.makedirs(pth)
+
     # initialize
     srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target)
 
@@ -594,19 +805,23 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
         objext = '.o'
         create_openspec(srcdir_temp)
         compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
-                         expedite, dryrun, double, debug, fflags)
+                         expedite, dryrun, double, debug, fflags,
+                         srcdir, makefile)
     elif fc == 'ifort':
         platform = sys.platform
         if platform.lower() == 'darwin':
+            create_openspec(srcdir_temp)
             objext = '.o'
             compile_with_mac_ifort(srcfiles, target, cc,
                                    objdir_temp, moddir_temp,
-                                   expedite, dryrun, double, debug, fflags)
+                                   expedite, dryrun, double, debug, fflags,
+                                   srcdir, makefile)
         else:
             objext = '.obj'
             cc = 'cl.exe'
             compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
-                               expedite, dryrun, double, debug, fflags, arch)
+                               expedite, dryrun, double, debug, fflags, arch,
+                               srcdir, makefile)
     else:
         raise Exception('Unsupported compiler')
 
@@ -625,4 +840,4 @@ if __name__ == "__main__":
     # from python as a function.
     main(args.srcdir, args.target, args.fc, args.cc, args.makeclean,
          args.expedite, args.dryrun, args.double, args.debug,
-         args.subdirs, args.fflags, args.arch)
+         args.subdirs, args.fflags, args.arch, args.makefile)
