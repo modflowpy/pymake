@@ -66,11 +66,11 @@ def setup_comparison(namefile, dst, remove_existing=True):
                     idx = jdx
                     break
             if idx is not None:
-                if 'mf2005.cmp' in dl[idx]:
+                if 'mf2005.cmp' in dl[idx] or 'mf2005' in dl[idx]:
                     action = dirs[idx]
-                elif 'mfnwt.cmp' in dl[idx]:
+                elif 'mfnwt.cmp' in dl[idx] or 'mfnwt' in dl[idx]:
                     action = dirs[idx]
-                elif 'mfusg.cmp' in dl[idx]:
+                elif 'mfusg.cmp' in dl[idx] or 'mfusg' in dl[idx]:
                     action = dirs[idx]
                 else:
                     action = dirs[idx]
@@ -259,6 +259,284 @@ def get_sim_name(namefiles, rootpth=None):
     return sim_name
 
 
+# modflow 6 readers and copiers
+def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
+    """
+
+    Copy all of the MODFLOW 6 input files from the src directory to
+    the dst directory.
+
+    :param src:
+    :type src:
+    :param dst:
+    :type dst:
+    :param mfnamefile:
+    :type mfnamefile:
+    :param extrafiles:
+    :type extrafiles:
+    :return:
+    :rtype:
+    """
+    import shutil
+
+    # Create the destination folder
+    if os.path.exists(dst):
+        print('Removing folder ' + dst)
+        shutil.rmtree(dst)
+    os.mkdir(dst)
+
+    # Make list of files to copy
+    fname = os.path.join(src, mfnamefile)
+    fname = os.path.abspath(fname)
+    files2copy = [mfnamefile] + get_mf6_input_files(fname)
+    if extrafiles is not None:
+        files2copy += extrafiles
+
+    # Copy the files
+    for f in files2copy:
+        srcf = os.path.join(src, f)
+        dstf = os.path.join(dst, f)
+
+        # Check to see if dstf is going into a subfolder, and create that
+        # subfolder if it doesn't exist
+        sf = os.path.dirname(dstf)
+        if not os.path.isdir(sf):
+            try:
+                os.mkdir(sf)
+            except:
+                print('Could not make ' + sf)
+
+        # Now copy the file
+        if os.path.exists(srcf):
+            print('Copy file from/to ' + srcf + ' ' + dstf)
+            shutil.copy(srcf, dstf)
+        else:
+            print(srcf + ' does not exist')
+
+
+def setup_mf6_comparison(src, dst, remove_existing=True):
+    """
+    Setup comparision for MODFLOW 6 simulation
+
+    :param src:
+    :type src:
+    :param dst:
+    :type dst:
+    :param remove_existing:
+    :type remove_existing:
+    :return:
+    :rtype:
+    """
+    # Possible comparison - the order matters
+    optcomp = ['compare', '.cmp',
+               'mf2005', 'mf2005.cmp',
+               'mfnwt', 'mfnwt.cmp',
+               'mfusg', 'mfusg.cmp',
+               'mflgr', 'mflgr.cmp']
+    # Construct src pth from namefile
+    action = None
+    for root, dirs, files in os.walk(src):
+        dl = [d.lower() for d in dirs]
+        for oc in optcomp:
+            if any(oc in s for s in dl):
+                action = oc
+                pth = root
+                break
+    if action is not None:
+        dst = os.path.join(dst, '{}'.format(action))
+        if not os.path.isdir(dst):
+            try:
+                os.mkdir(dst)
+            except:
+                print('Could not make ' + dst)
+        cmppth = os.path.join(src, action)
+        files = os.listdir(cmppth)
+        files2copy = []
+        if action.lower() == 'compare' or action.lower() == '.cmp':
+            for file in files:
+                if '.cmp' in os.path.splitext(file)[1].lower():
+                    files2copy.append(os.path.join(cmppth, file))
+            for srcf in files2copy:
+                f = os.path.basename(srcf)
+                dstf = os.path.join(dst, f)
+                # Now copy the file
+                if os.path.exists(srcf):
+                    print('Copy file from/to ' + srcf + ' ' + dstf)
+                    shutil.copy(srcf, dstf)
+                else:
+                    print(srcf + ' does not exist')
+        else:
+            for file in files:
+                if '.nam' in os.path.splitext(file)[1].lower():
+                    files2copy.append(
+                            os.path.join(cmppth, os.path.basename(file)))
+                    nf = os.path.join(src, action, os.path.basename(file))
+                    setup(nf, dst, remove_existing=remove_existing)
+                    break
+
+    return action
+
+
+def get_mf6_input_files(mfnamefile):
+    """
+    Return a list of all the MODFLOW 6 input files in this model
+
+    """
+
+    srcdir = os.path.dirname(mfnamefile)
+    filelist = []
+
+    filekeys = ['TDIS', 'GWF', 'GWT', 'NM-NM', 'GWF-GWF', 'GWF-GWT', 'NUMERICAL']
+    namefilekeys = ['GWF', 'GWT']
+    namefiles = []
+
+
+    with open(mfnamefile) as f:
+
+        # Read line and skip comments
+        lines = f.readlines()
+
+    for line in lines:
+
+        # Skip over blank and commented lines
+        ll = line.strip().split()
+        if len(ll) < 2:
+            continue
+        if line.strip()[0] in ['#', '!']:
+            continue
+
+        for key in filekeys:
+            if key in ll[0].upper():
+                fname = ll[1]
+                filelist.append(fname)
+
+        for key in namefilekeys:
+            if key in ll[0].upper():
+                fname = ll[1]
+                namefiles.append(fname)
+
+    # Go through name files and get files
+    for namefile in namefiles:
+        fname = os.path.join(srcdir, namefile)
+        with open(fname, 'r') as f:
+            lines = f.readlines()
+        insideblock = False
+
+        for line in lines:
+            if 'BEGIN PACKAGES' in line.upper():
+                insideblock = True
+                continue
+            if 'END PACKAGES' in line.upper():
+                insideblock = False
+
+            if insideblock:
+                ll = line.strip().split()
+                if len(ll) < 2:
+                    continue
+                if line.strip()[0] in ['#', '!']:
+                    continue
+                filelist.append(ll[1])
+
+    # Now go through every file and look for other files to copy,
+    # such as 'OPEN/CLOSE' and 'TIMESERIESFILE'.  If found, then
+    # add that file to the list of files to copy.
+    otherfiles = []
+    for fname in filelist:
+        fname = os.path.join(srcdir, fname)
+        f = open(fname, 'r')
+        for line in f:
+
+            # Skip invalid lines
+            ll = line.strip().split()
+            if len(ll) < 2:
+                continue
+            if line.strip()[0] in ['#', '!']:
+                continue
+
+            if 'OPEN/CLOSE' in line.upper():
+                for i, s in enumerate(ll):
+                    if s.upper() == 'OPEN/CLOSE':
+                        stmp = ll[i + 1]
+                        stmp = stmp.replace('"', '')
+                        stmp = stmp.replace("'", '')
+                        otherfiles.append(stmp)
+                        break
+
+            if 'TIMESERIESFILE' in line.upper():
+                for i, s in enumerate(ll):
+                    if s.upper() == 'TIMESERIESFILE':
+                        stmp = ll[i + 1]
+                        stmp = stmp.replace('"', '')
+                        stmp = stmp.replace("'", '')
+                        otherfiles.append(stmp)
+                        break
+
+            if 'TIMEARRAYSERIESFILE' in line.upper():
+                for i, s in enumerate(ll):
+                    if s.upper() == 'TIMEARRAYSERIESFILE':
+                        stmp = ll[i + 1]
+                        stmp = stmp.replace('"', '')
+                        stmp = stmp.replace("'", '')
+                        otherfiles.append(stmp)
+                        break
+
+            if 'OBS8' in line.upper():
+                for i, s in enumerate(ll):
+                    if s.upper() == 'OBS8':
+                        stmp = ll[i + 1]
+                        stmp = stmp.replace('"', '')
+                        stmp = stmp.replace("'", '')
+                        otherfiles.append(stmp)
+                        break
+
+            if 'FILE' in line.upper():
+                if 'SAVE' in line.upper():
+                    if 'HEAD' in line.upper() or 'BUDGET' in line.upper() or \
+                                    'DRAWDOWN' in line.upper():
+                        continue
+                for i, s in enumerate(ll):
+                    if s.upper() == 'FILE':
+                        stmp = ll[i + 1]
+                        stmp = stmp.replace('"', '')
+                        stmp = stmp.replace("'", '')
+                        otherfiles.append(stmp)
+                        break
+
+    filelist = filelist + otherfiles
+
+    return filelist
+
+
+def get_mf6_blockdata(f, blockstr):
+    """
+    Return list with all non comments between start and end of block specified
+    by blockstr
+
+    :param f:
+    :type f:
+    :param block:
+    :type block:
+    :return:
+    :rtype:
+    """
+    data = []
+    # find beginning of block
+    for line in f:
+        if line[0] != '#':
+            t = line.split()
+            if t[0].lower() == 'begin' and t[1].lower() == blockstr.lower():
+                break
+    for line in f:
+        if line[0] != '#':
+            t = line.split()
+            if t[0].lower() == 'end' and t[1].lower() == blockstr.lower():
+                break
+            else:
+                data.append(line.rstrip())
+    return data
+
+
+# compare functions
 def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                    outfile=None, files1=None, files2=None):
     """
