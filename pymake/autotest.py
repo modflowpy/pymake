@@ -1,7 +1,7 @@
 import os
 import shutil
-import subprocess
 import textwrap
+import numpy as np
 
 ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
               '.ddn', '.ucn', '.glo', '.lst', '.list',
@@ -288,7 +288,8 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
     # Make list of files to copy
     fname = os.path.join(src, mfnamefile)
     fname = os.path.abspath(fname)
-    files2copy = [mfnamefile] + get_mf6_input_files(fname)
+    mf6inp, mf6outp = get_mf6_input_files(fname)
+    files2copy = [mfnamefile] + mf6inp
     if extrafiles is not None:
         files2copy += extrafiles
 
@@ -312,6 +313,7 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
             shutil.copy(srcf, dstf)
         else:
             print(srcf + ' does not exist')
+    return mf6inp, mf6outp
 
 
 def setup_mf6_comparison(src, dst, remove_existing=True):
@@ -385,6 +387,7 @@ def get_mf6_input_files(mfnamefile):
 
     srcdir = os.path.dirname(mfnamefile)
     filelist = []
+    outplist = []
 
     filekeys = ['TDIS', 'GWF', 'GWT', 'NM-NM', 'GWF-GWF', 'GWF-GWT', 'NUMERICAL']
     namefilekeys = ['GWF', 'GWT']
@@ -490,21 +493,22 @@ def get_mf6_input_files(mfnamefile):
                         break
 
             if 'FILE' in line.upper():
-                if 'SAVE' in line.upper():
-                    if 'HEAD' in line.upper() or 'BUDGET' in line.upper() or \
-                                    'DRAWDOWN' in line.upper():
-                        continue
                 for i, s in enumerate(ll):
                     if s.upper() == 'FILE':
                         stmp = ll[i + 1]
                         stmp = stmp.replace('"', '')
                         stmp = stmp.replace("'", '')
-                        otherfiles.append(stmp)
+                        if 'SAVE' in line.upper():
+                            if 'HEAD' in line.upper() or 'BUDGET' in line.upper() or \
+                                            'DRAWDOWN' in line.upper():
+                                outplist.append(stmp)
+                        else:
+                            otherfiles.append(stmp)
                         break
 
     filelist = filelist + otherfiles
 
-    return filelist
+    return filelist, outplist
 
 
 def get_mf6_blockdata(f, blockstr):
@@ -835,7 +839,7 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
 def compare_heads(namefile1, namefile2, precision='single',
                   htol=0.001, outfile=None, files1=None, files2=None,
-                  difftol=False):
+                  difftol=False, verbose=False):
     """
     Compare the results from these two simulations.
 
@@ -918,8 +922,9 @@ def compare_heads(namefile1, namefile2, precision='single',
     # get times
     times1 = headobj1.get_times()
     times2 = headobj2.get_times()
-
-    assert times1 == times2, 'times in two head files are not equal'
+    for (t1, t2) in zip(times1, times2):
+        assert np.allclose([t1], [t2]), 'times in two head files are not ' + \
+                         'equal ({},{})'.format(t1, t2)
 
     kstpkper = headobj1.get_kstpkper()
 
@@ -927,6 +932,9 @@ def compare_heads(namefile1, namefile2, precision='single',
              '{:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD', 'TIME STEP',
                                                 'HEAD DIFFERENCE') + \
              '{0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
+
+    if verbose:
+        print('Comparing results for {} times'.format(len(times1)))
 
     icnt = 0
     # Process cumulative and incremental
@@ -948,16 +956,18 @@ def compare_heads(namefile1, namefile2, precision='single',
         if diffmax >= htol:
             icnt += 1
             if difftol:
-                e = 'Maximum head difference ({}) -- '.format(diffmax) + \
+                ee = 'Maximum head difference ({}) -- '.format(diffmax) + \
                     '{} tolerance exceeded at '.format(htol) + \
-                    '{} node location(s):'.format(indices[0].shape[0])
+                    '{} node location(s)'.format(indices[0].shape[0])
             else:
-                e = 'Maximum head difference ' + \
-                    '({}) exceeded '.format(diffmax) + \
-                    'at {} node location(s):'.format(indices[0].shape[0])
-            e = textwrap.fill(e, width=70, initial_indent='  ',
+                ee = 'Maximum head difference ' + \
+                     '({}) exceeded '.format(diffmax) + \
+                     'at {} node location(s)'.format(indices[0].shape[0])
+            e = textwrap.fill(ee+':', width=70, initial_indent='  ',
                               subsequent_indent='  ')
-            f.write('{}\n'.format(e))
+            f.write('{}\n'.format(ee))
+            if verbose:
+                print(ee+' at time {}'.format(time))
             e = ''
             for itupe in indices:
                 for ind in itupe:
@@ -982,7 +992,7 @@ def compare_heads(namefile1, namefile2, precision='single',
 
 def compare_concs(namefile1, namefile2, precision='single',
                   ctol=0.001, outfile=None, files1=None, files2=None,
-                  difftol=False):
+                  difftol=False, verbose=False):
     """
     Compare the mt3dms concentration results from these two simulations.
 
@@ -1076,6 +1086,9 @@ def compare_concs(namefile1, namefile2, precision='single',
                                                 'CONC DIFFERENCE') + \
              '{0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
 
+    if verbose:
+        print('Comparing results for {} times'.format(len(times1)))
+
     icnt = 0
     # Process cumulative and incremental
     for idx, time in enumerate(times1[0:nt]):
@@ -1097,16 +1110,18 @@ def compare_concs(namefile1, namefile2, precision='single',
             if diffmax >= ctol:
                 icnt += 1
                 if difftol:
-                    e = 'Maximum concentration difference ({})'.format(diffmax) + \
-                        ' -- {} tolerance exceeded at '.format(htol) + \
-                        '{} node location(s):'.format(indices[0].shape[0])
+                    ee = 'Maximum concentration difference ({})'.format(diffmax) + \
+                         ' -- {} tolerance exceeded at '.format(htol) + \
+                         '{} node location(s)'.format(indices[0].shape[0])
                 else:
-                    e = 'Maximum concentration difference ' + \
-                        '({}) exceeded '.format(diffmax) + \
-                        'at {} node location(s):'.format(indices[0].shape[0])
-                e = textwrap.fill(e, width=70, initial_indent='  ',
+                    ee = 'Maximum concentration difference ' + \
+                         '({}) exceeded '.format(diffmax) + \
+                         'at {} node location(s)'.format(indices[0].shape[0])
+                e = textwrap.fill(ee+':', width=70, initial_indent='  ',
                                   subsequent_indent='  ')
                 f.write('{}\n'.format(e))
+                if verbose:
+                    print(ee + ' at time {}'.format(time))
                 e = ''
                 for itupe in indices:
                     for ind in itupe:
@@ -1134,7 +1149,7 @@ def compare_concs(namefile1, namefile2, precision='single',
 
 
 def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
-                   htol=0.001, outfile=None, difftol=False):
+                   htol=0.001, outfile=None, difftol=False, verbose=False):
     """
     Compare the swr stage results from these two simulations.
 
@@ -1211,6 +1226,9 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
                                                         'STAGE DIFFERENCE') + \
              '{0:>15s} {0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
 
+    if verbose:
+        print('Comparing results for {} times'.format(len(times1)))
+
     icnt = 0
     # Process stage data
     for idx, (kon, time) in enumerate(zip(kk, times1)):
@@ -1239,16 +1257,18 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
         if diffmax >= htol:
             icnt += 1
             if difftol:
-                e = 'Maximum head difference ({}) -- '.format(diffmax) + \
-                    '{} tolerance exceeded at '.format(htol) + \
-                    '{} node location(s):'.format(indices[0].shape[0])
+                ee = 'Maximum head difference ({}) -- '.format(diffmax) + \
+                     '{} tolerance exceeded at '.format(htol) + \
+                     '{} node location(s)'.format(indices[0].shape[0])
             else:
-                e = 'Maximum head difference ' + \
-                    '({}) exceeded '.format(diffmax) + \
-                    'at {} node location(s):'.format(indices[0].shape[0])
-            e = textwrap.fill(e, width=70, initial_indent='  ',
+                ee = 'Maximum head difference ' + \
+                     '({}) exceeded '.format(diffmax) + \
+                     'at {} node location(s):'.format(indices[0].shape[0])
+            e = textwrap.fill(ee+':', width=70, initial_indent='  ',
                               subsequent_indent='  ')
             f.write('{}\n'.format(e))
+            if verbose:
+                print(ee+' at time {}'.format(time))
             e = ''
             for itupe in indices:
                 for ind in itupe:
