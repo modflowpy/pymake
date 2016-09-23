@@ -1074,9 +1074,9 @@ def compare_concs(namefile1, namefile2, precision='single',
     nt2 = len(times2)
     nt = min(nt1, nt2)
 
-    errmsg = 'times in ucn files are not equal\n{}\n{}'.format(times1[0:nt],
-                                                               times2[0:nt])
-    assert times1[0:nt] == times2[0:nt], errmsg
+    for (t1, t2) in zip(times1, times2):
+        assert np.allclose([t1], [t2]), 'times in two ucn files are not ' + \
+                         'equal ({},{})'.format(t1, t2)
 
     if nt == nt1:
         kstpkper = uobj1.get_kstpkper()
