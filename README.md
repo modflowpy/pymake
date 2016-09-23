@@ -11,7 +11,7 @@ pymake includes example scripts for building MODFLOW-2005, MODFLOW-NWT, MODFLOW-
 
 pymake includes code for compiling with ifort on Windows, and limited testing has shown that it is working properly.
 
-Note that if gfortran is used, the openspec.f file will automatically be changed to the following so that binary files are created properly using standard Fortran:
+Note that if gfortran is used, the openspec.f and FILESPEC.inc (MT3DMS) file will automatically be changed to the following so that binary files are created properly using standard Fortran:
 
     c -- created by pymake.py
       CHARACTER*20 ACCESS,FORM,ACTION(2)
@@ -57,6 +57,8 @@ To see help for running from command line, use the following statement.
                             --makeclean is used. Does not work yet for ifort.
       -sd, --subdirs        Include source files in srcdir subdirectories.
       -ff, --fflags         Additional fortran compiler flags.
+      -mf, --makefile       Create a standard makefile. Does not work for
+                            ifort for Windows yet.
 
     Note that the source directory should not contain any bad or duplicate source
     files as all source files in the source directory will be built and linked.
