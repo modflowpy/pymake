@@ -1061,7 +1061,7 @@ def compare_concs(namefile1, namefile2, precision='single',
     # Open output file
     if outfile is not None:
         f = open(outfile, 'w')
-        f.write('Created by pymake.autotest.compare_stages\n')
+        f.write('Created by pymake.autotest.compare_concs\n')
 
     # Get stage objects
     uobj1 = flopy.utils.UcnFile(ufpth1, precision=precision)
@@ -1074,7 +1074,9 @@ def compare_concs(namefile1, namefile2, precision='single',
     nt2 = len(times2)
     nt = min(nt1, nt2)
 
-    assert times1[0:nt] == times2[0:nt], 'times in two ucn files are not equal'
+    errmsg = 'times in ucn files are not equal\n{}\n{}'.format(times1[0:nt],
+                                                               times2[0:nt])
+    assert times1[0:nt] == times2[0:nt], errmsg
 
     if nt == nt1:
         kstpkper = uobj1.get_kstpkper()
