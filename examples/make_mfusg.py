@@ -19,11 +19,11 @@ def make_mfusg():
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
 
-    url = 'http://water.usgs.gov/ogw/mfusg/mfusg.1_3.zip'
+    url = 'http://water.usgs.gov/ogw/mfusg/{0}.zip'.format(dirname)
     download_and_unzip(url)
 
     # Set src and target
-    srcdir = os.path.join('mfusg.1_3', 'src')
+    srcdir = os.path.join(dirname, 'src')
     target = 'mfusg'
 
     # Remove extraneous source directories
@@ -40,7 +40,6 @@ def make_mfusg():
     assert os.path.isfile(target), 'Target does not exist.'
 
     # Remove the existing mfusg.1_3 directory if it exists
-    dirname = 'mfusg.1_3'
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
 

@@ -22,7 +22,7 @@ def make_swtv4():
         shutil.rmtree(dirname)
 
     # Download the SEAWAT distribution
-    url = "http://water.usgs.gov/ogw/seawat/swt_v4_00_05.zip"
+    url = "http://water.usgs.gov/ogw/seawat/{0}.zip".format(dirname)
     download_and_unzip(url)
 
     # Remove the parallel and serial folders from the source directory
@@ -53,7 +53,6 @@ def make_swtv4():
     assert os.path.isfile(target), 'Target does not exist.'
 
     # Remove the existing directory if it exists
-    dirname = 'swt_v4_00_05'
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
 
