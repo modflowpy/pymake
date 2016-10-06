@@ -38,12 +38,12 @@ def make_modpath6():
 
     target = 'mp6'
     pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
-                expedite=False, dryrun=False, double=True, debug=False)
+                expedite=False, dryrun=False, double=False, debug=False)
 
     assert os.path.isfile(target), 'Target does not exist.'
 
-#    if os.path.isdir(dirname):
-#        shutil.rmtree(dirname)
+    # if os.path.isdir(dirname):
+    #     shutil.rmtree(dirname)
 
 if __name__ == "__main__":
     make_modpath6()

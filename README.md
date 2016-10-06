@@ -7,7 +7,7 @@ This is a relatively simple python package for compiling MODFLOW-based programs.
 
 pymake can be run from the command line or it can be called from within python.
 
-pymake includes example scripts for building MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MT3D, and SEAWAT using gfortran on Mac or Linux.  The scripts download the distribution file from the USGS and compile the source into a binary executable.  The MODFLOW-NWT script now works with the present version of MODFLOW-NWT.
+pymake includes example scripts for building MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODPATH6, MT3D, and SEAWAT using gfortran on Mac or Linux.  The scripts download the distribution file from the USGS and compile the source into a binary executable.  The MODFLOW-NWT script now works with the present version of MODFLOW-NWT.
 
 pymake includes code for compiling with ifort on Windows, and limited testing has shown that it is working properly.
 
@@ -75,7 +75,7 @@ To see help for running from command line, use the following statement.
 
 ## Automatic Download and Build
 
-The following scripts can be run directly from the command line to build MODFLOW and SEAWAT binaries on Mac and Linux.  The scripts will download the distribution file from the USGS (requires internet connection), unzip the file, and compile the source.  MT3D will be downloaded from the University of Alabama.
+The following scripts can be run directly from the command line to build MODFLOW, MODPATH, MT3D, and SEAWAT binaries on Mac and Linux.  The scripts will download the distribution file from the USGS (requires internet connection), unzip the file, and compile the source.  MT3D will be downloaded from the University of Alabama.
 
     python make_mf2005.py
     python make_mfnwt.py
