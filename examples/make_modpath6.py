@@ -14,7 +14,7 @@ def make_modpath6():
     os.chdir(dstpth)
 
     # Download the MODFLOW-2005 distribution
-    url = "http://water.usgs.gov/ogw/modpath/modpath.6_0_01.zip"
+    url = "http://water.usgs.gov/ogw/modpath/archive/modpath_v6.0.01/modpath.6_0_01.zip"
     download_and_unzip(url)
     dirname = 'modpath.6_0'
     dwpath = os.path.join(dstpth, dirname)
