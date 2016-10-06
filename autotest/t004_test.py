@@ -16,12 +16,12 @@ srcpth = os.path.join(mp6pth, 'src')
 target = os.path.join(dstpth, exe_name)
 
 def compile_code():
-    # Remove the existing mfusg directory if it exists
+    # Remove the existing modpath6 directory if it exists
     if os.path.isdir(mp6pth):
         shutil.rmtree(mp6pth)
 
     # Download the MODPATH 6 distribution
-    url = "http://water.usgs.gov/ogw/modpath/modpath.6_0_01.zip"
+    url = "http://water.usgs.gov/ogw/modpath/archive/modpath_v6.0.01/modpath.6_0_01.zip"
     pymake.download_and_unzip(url, pth=dstpth)
 
     fname1 = os.path.join(srcpth, 'MP6Flowdata.for')
@@ -48,8 +48,6 @@ def clean_up():
     shutil.rmtree(mp6pth)
     print('Removing ' + target)
     os.remove(target)
-    return
-
     return
 
 
