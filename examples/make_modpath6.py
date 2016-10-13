@@ -24,6 +24,8 @@ def make_modpath6():
     # Name src folders
     srcdir = os.path.join(dirname, 'src')
 
+    # start of edit a few files so it can compile with gfortran
+    # file 1
     fname1 = os.path.join(srcdir, 'MP6Flowdata.for')
     f = open(fname1, 'r')
 
@@ -35,6 +37,21 @@ def make_modpath6():
     f.close()
     f2.close()
     os.remove(fname1)
+        
+    # file 2
+    fname1 = os.path.join(srcdir, 'MP6MPBAS1.for')
+    f = open(fname1, 'r')
+
+    fname2 = os.path.join(srcdir, 'MP6MPBAS1_mod.for')
+    f2 = open(fname2, 'w')
+    for line in f:
+        line = line.replace('MPBASDAT(IGRID)%NCPPL=NCPPL', 
+                            'MPBASDAT(IGRID)%NCPPL=>NCPPL')
+        f2.write(line)
+    f.close()
+    f2.close()
+    os.remove(fname1)
+    # end of edit a few files so it can compile with gfortran
 
     target = 'mp6'
     pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
