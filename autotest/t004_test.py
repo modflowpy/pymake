@@ -9,7 +9,7 @@ dstpth = os.path.join('temp')
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
 mp6pth = os.path.join(dstpth, 'modpath.6_0')
-expth = os.path.join(mp6pth, 'test')
+expth = os.path.join(mp6pth, 'example-run')
 
 exe_name = 'mp6'
 srcpth = os.path.join(mp6pth, 'src')
@@ -26,10 +26,10 @@ def compile_code():
 
     # start of edit a few files so it can compile with gfortran
     # file 1
-    fname1 = os.path.join(srcdir, 'MP6Flowdata.for')
+    fname1 = os.path.join(srcpth, 'MP6Flowdata.for')
     f = open(fname1, 'r')
 
-    fname2 = os.path.join(srcdir, 'MP6Flowdata_mod.for')
+    fname2 = os.path.join(srcpth, 'MP6Flowdata_mod.for')
     f2 = open(fname2, 'w')
     for line in f:
         line = line.replace('CD.QX2', 'CD%QX2')
@@ -39,10 +39,10 @@ def compile_code():
     os.remove(fname1)
         
     # file 2
-    fname1 = os.path.join(srcdir, 'MP6MPBAS1.for')
+    fname1 = os.path.join(srcpth, 'MP6MPBAS1.for')
     f = open(fname1, 'r')
 
-    fname2 = os.path.join(srcdir, 'MP6MPBAS1_mod.for')
+    fname2 = os.path.join(srcpth, 'MP6MPBAS1_mod.for')
     f2 = open(fname2, 'w')
     for line in f:
         line = line.replace('MPBASDAT(IGRID)%NCPPL=NCPPL', 
@@ -59,6 +59,17 @@ def compile_code():
     assert os.path.isfile(target), 'Target does not exist.'
 
 
+def get_simfiles():
+    simfiles = [f for f in os.listdir(expth) if f.endswith('.mpsim')]
+    return simfiles
+
+def run_modpath6(fn):
+    print('running model...{}'.format(fn))
+    exe = os.path.abspath(target)
+    success, buff = flopy.run_model(exe, fn, model_ws=expth, silent=False)
+    assert success, 'could not run...{}'.format(os.path.basename(fn))
+    return
+
 def clean_up():
     # clean up
     print('Removing folder ' + mp6pth)
@@ -72,10 +83,18 @@ def test_compile():
     # compile MODPATH 6
     compile_code()
 
+def test_app():
+    simfiles = get_simfiles()
+    for fn in simfiles:
+        yield run_modpath6, fn
+
 def test_clean_up():
     yield clean_up
 
 
 if __name__ == "__main__":
     compile_code()
+    simfiles = get_simfiles()
+    for fn in simfiles:
+        run_modpath6(fn)
     clean_up()

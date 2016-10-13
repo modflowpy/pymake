@@ -132,8 +132,13 @@ def test_seawat():
         yield run_seawat, namepth, dst
 
 def test_dependency_graphs():
-    # build dependency graphs
-    yield build_seawat_dependency_graphs
+    try:
+        import pydotplus.graphviz as pydot
+        # build dependency graphs
+        yield build_seawat_dependency_graphs
+    except:
+        print('pymake graphing capabilities not available.')
+
 
 def test_clean_up():
     yield clean_up
