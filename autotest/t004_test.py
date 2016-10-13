@@ -15,6 +15,7 @@ exe_name = 'mp6'
 srcpth = os.path.join(mp6pth, 'src')
 target = os.path.join(dstpth, exe_name)
 
+
 def compile_code():
     # Remove the existing modpath6 directory if it exists
     if os.path.isdir(mp6pth):
@@ -37,7 +38,7 @@ def compile_code():
     f.close()
     f2.close()
     os.remove(fname1)
-        
+
     # file 2
     fname1 = os.path.join(srcpth, 'MP6MPBAS1.for')
     f = open(fname1, 'r')
@@ -45,7 +46,7 @@ def compile_code():
     fname2 = os.path.join(srcpth, 'MP6MPBAS1_mod.for')
     f2 = open(fname2, 'w')
     for line in f:
-        line = line.replace('MPBASDAT(IGRID)%NCPPL=NCPPL', 
+        line = line.replace('MPBASDAT(IGRID)%NCPPL=NCPPL',
                             'MPBASDAT(IGRID)%NCPPL=>NCPPL')
         f2.write(line)
     f.close()
@@ -63,12 +64,31 @@ def get_simfiles():
     simfiles = [f for f in os.listdir(expth) if f.endswith('.mpsim')]
     return simfiles
 
+
 def run_modpath6(fn):
+    # rename a few files for linux
+    replace_files = ['example-6', 'example-7', 'example-8']
+    for rf in replace_files:
+        if rf in fn.lower():
+            fname1 = os.path.join(expth, '{}.locations'.format(rf))
+            fname2 = os.path.join(expth, '{}_mod.locations'.format(rf))
+            print('copy {} to {}'.format(os.path.basename(fname1),
+                                         os.path.basename(fname2)))
+            shutil.copy(fname1, fname2)
+            print('deleting {}'.format(os.path.basename(fname1)))
+            os.remove(fname1)
+            fname1 = os.path.join(expth, '{}.locations'.format(rf.upper()))
+            print('renmae {} to {}'.format(os.path.basename(fname2),
+                                            os.path.basename(fname1)))
+            os.rename(fname2, fname1)
+
+    # run the model
     print('running model...{}'.format(fn))
     exe = os.path.abspath(target)
     success, buff = flopy.run_model(exe, fn, model_ws=expth, silent=False)
     assert success, 'could not run...{}'.format(os.path.basename(fn))
     return
+
 
 def clean_up():
     # clean up
@@ -83,10 +103,12 @@ def test_compile():
     # compile MODPATH 6
     compile_code()
 
-def test_app():
+
+def test_modpath6():
     simfiles = get_simfiles()
     for fn in simfiles:
         yield run_modpath6, fn
+
 
 def test_clean_up():
     yield clean_up
@@ -97,4 +119,4 @@ if __name__ == "__main__":
     simfiles = get_simfiles()
     for fn in simfiles:
         run_modpath6(fn)
-    clean_up()
+        # clean_up()
