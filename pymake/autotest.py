@@ -42,19 +42,6 @@ def setup(namefile, dst, remove_existing=True):
                 os.mkdir(sf)
             except:
                 print('Could not make ' + sf)
-        # clean directory
-        else:
-            print('cleaning...{}'.format(sf))
-            for root, dirs, files in os.walk(sf):
-                for f in files:
-                    tpth = os.path.join(root, f)
-                    print('  removing...{}'.format(tpth))
-                    os.remove(tpth)
-                for d in dirs:
-                    tdir = os.path.join(root, d)
-                    print('  removing...{}'.format(tdir))
-                    shutil.rmtree(tdir)
-
         # Now copy the file
         if os.path.exists(srcf):
             print('Copy file from/to ' + srcf + ' ' + dstf)
@@ -331,19 +318,6 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
                 os.mkdir(sf)
             except:
                 print('Could not make ' + sf)
-        # clean directory
-        else:
-            print('cleaning...{}'.format(sf))
-            for root, dirs, files in os.walk(sf):
-                for f in files:
-                    tpth = os.path.join(root, f)
-                    print('  removing...{}'.format(tpth))
-                    os.remove(tpth)
-                for d in dirs:
-                    tdir = os.path.join(root, d)
-                    print('  removing...{}'.format(tdir))
-                    shutil.rmtree(tdir)
-
         # Now copy the file
         if os.path.exists(srcf):
             print('Copy file from/to ' + srcf + ' ' + dstf)
