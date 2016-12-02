@@ -83,6 +83,19 @@ def setup_comparison(namefile, dst, remove_existing=True):
                 os.mkdir(dst)
             except:
                 print('Could not make ' + dst)
+        # clean directory
+        else:
+            print('cleaning...{}'.format(dst))
+            for root, dirs, files in os.walk(dst):
+                for f in files:
+                    tpth = os.path.join(root, f)
+                    print('  removing...{}'.format(tpth))
+                    os.remove(tpth)
+                for d in dirs:
+                    tdir = os.path.join(root, d)
+                    print('  removing...{}'.format(tdir))
+                    shutil.rmtree(tdir)
+        # copy files
         cmppth = os.path.join(src, action)
         files = os.listdir(cmppth)
         files2copy = []
@@ -306,6 +319,7 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
                 os.mkdir(sf)
             except:
                 print('Could not make ' + sf)
+        else:
 
         # Now copy the file
         if os.path.exists(srcf):
@@ -351,6 +365,19 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
                 os.mkdir(dst)
             except:
                 print('Could not make ' + dst)
+        # clean directory
+        else:
+            print('cleaning...{}'.format(dst))
+            for root, dirs, files in os.walk(dst):
+                for f in files:
+                    tpth = os.path.join(root, f)
+                    print('  removing...{}'.format(tpth))
+                    os.remove(tpth)
+                for d in dirs:
+                    tdir = os.path.join(root, d)
+                    print('  removing...{}'.format(tdir))
+                    shutil.rmtree(tdir)
+        # copy files
         cmppth = os.path.join(src, action)
         files = os.listdir(cmppth)
         files2copy = []
