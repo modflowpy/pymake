@@ -81,6 +81,7 @@ The following scripts can be run directly from the command line to build MODFLOW
     python make_mfnwt.py
     python make_swtv4.py
     python make_mt3d.py
+    python make_mt3dusgs
     python make_mfusg.py
     python make_modpath6.py
     python make_mflgr.py
