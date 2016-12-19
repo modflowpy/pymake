@@ -618,6 +618,10 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
 
     # Create target
     try:
+        # clean exe prior to build so that test for exe below can return a
+        # non-zero error code
+        if flopy.is_exe(target):
+            os.remove(target)
         makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target,
                   arch, objdir_temp, moddir_temp)
         #subprocess.check_call([batchfile, ])
@@ -632,8 +636,8 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
                 print('{}'.format(c))
             else:
                 break
-        if proc.returncode != 0:
-            return proc.returncode
+        if not flopy.is_exe(target):
+            return 1
     except:
         print('Could not make x64 target: ', target)
 
