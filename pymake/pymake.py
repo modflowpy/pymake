@@ -25,6 +25,8 @@ import argparse
 from .dag import order_source_files, order_c_source_files
 import datetime
 
+from flopy import is_exe as flopy_is_exe
+
 def parser():
     '''
     Construct the parser and return argument values
@@ -620,7 +622,7 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
     try:
         # clean exe prior to build so that test for exe below can return a
         # non-zero error code
-        if flopy.is_exe(target):
+        if flopy_is_exe(target):
             os.remove(target)
         makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target,
                   arch, objdir_temp, moddir_temp)
@@ -636,7 +638,7 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
                 print('{}'.format(c))
             else:
                 break
-        if not flopy.is_exe(target):
+        if not flopy_is_exe(target):
             return 1
     except:
         print('Could not make x64 target: ', target)
