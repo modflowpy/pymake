@@ -691,16 +691,17 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
             for kdx, t in enumerate(err):
                 if abs(t) > max_pd:
                     icnt += 1
-                    e = '"{} {}" percent difference ({})'.format(headers[idx],
-                                                                 dir[kdx], t) + \
-                        ' for stress period {} and time step {} > {}.'.format(
+                    if outfile is not None:
+                        e = '"{} {}" percent difference ({})'.format(
+                            headers[idx], dir[kdx], t) + \
+                            ' for stress period {} and time step {} > {}.'.format(
                                 kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
-                        ' Reference value = {}. Simulated value = {}.'.format(
+                            ' Reference value = {}. Simulated value = {}.'.format(
                                 v0[kdx], v1[kdx])
-                    e = textwrap.fill(e, width=70, initial_indent='    ',
-                                      subsequent_indent='    ')
-                    f.write('{}\n'.format(e))
-                    f.write('\n')
+                        e = textwrap.fill(e, width=70, initial_indent='    ',
+                                          subsequent_indent='    ')
+                        f.write('{}\n'.format(e))
+                        f.write('\n')
 
     # Close output file
     if outfile is not None:
@@ -971,37 +972,39 @@ def compare_heads(namefile1, namefile2, precision='single',
         else:
             diffmax, indices = calculate_diffmax(h1, h2)
 
-        if idx < 1:
-            f.write(header)
-        f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1,
-                                                  kstpkper[idx][0] + 1,
-                                                  diffmax))
+        if outfile is not None:
+            if idx < 1:
+                f.write(header)
+            f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1,
+                                                      kstpkper[idx][0] + 1,
+                                                      diffmax))
 
         if diffmax >= htol:
             icnt += 1
-            if difftol:
-                ee = 'Maximum head difference ({}) -- '.format(diffmax) + \
-                    '{} tolerance exceeded at '.format(htol) + \
-                    '{} node location(s)'.format(indices[0].shape[0])
-            else:
-                ee = 'Maximum head difference ' + \
-                     '({}) exceeded '.format(diffmax) + \
-                     'at {} node location(s)'.format(indices[0].shape[0])
-            e = textwrap.fill(ee+':', width=70, initial_indent='  ',
-                              subsequent_indent='  ')
-            f.write('{}\n'.format(ee))
-            if verbose:
-                print(ee+' at time {}'.format(time))
-            e = ''
-            for itupe in indices:
-                for ind in itupe:
-                    e += '{} '.format(ind + 1)  # convert to one-based
-            e = textwrap.fill(e, width=70, initial_indent='    ',
-                              subsequent_indent='    ')
-            f.write('{}\n'.format(e))
-            # Write header again, unless it is the last record
-            if idx + 1 < len(times1):
-                f.write('\n{}'.format(header))
+            if outfile is not None:
+                if difftol:
+                    ee = 'Maximum head difference ({}) -- '.format(diffmax) + \
+                        '{} tolerance exceeded at '.format(htol) + \
+                        '{} node location(s)'.format(indices[0].shape[0])
+                else:
+                    ee = 'Maximum head difference ' + \
+                         '({}) exceeded '.format(diffmax) + \
+                         'at {} node location(s)'.format(indices[0].shape[0])
+                e = textwrap.fill(ee+':', width=70, initial_indent='  ',
+                                  subsequent_indent='  ')
+                f.write('{}\n'.format(ee))
+                if verbose:
+                    print(ee+' at time {}'.format(time))
+                e = ''
+                for itupe in indices:
+                    for ind in itupe:
+                        e += '{} '.format(ind + 1)  # convert to one-based
+                e = textwrap.fill(e, width=70, initial_indent='    ',
+                                  subsequent_indent='    ')
+                f.write('{}\n'.format(e))
+                # Write header again, unless it is the last record
+                if idx + 1 < len(times1):
+                    f.write('\n{}'.format(header))
 
     # Close output file
     if outfile is not None:
@@ -1127,37 +1130,41 @@ def compare_concs(namefile1, namefile2, precision='single',
             else:
                 diffmax, indices = calculate_diffmax(u1, u2)
 
-            if idx < 1:
-                f.write(header)
-            f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1,
-                                                      kstpkper[idx][0] + 1,
-                                                      diffmax))
+            if outfile is not None:
+                if idx < 1:
+                    f.write(header)
+                f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1,
+                                                          kstpkper[idx][0] + 1,
+                                                          diffmax))
 
             if diffmax >= ctol:
                 icnt += 1
-                if difftol:
-                    ee = 'Maximum concentration difference ({})'.format(diffmax) + \
-                         ' -- {} tolerance exceeded at '.format(htol) + \
-                         '{} node location(s)'.format(indices[0].shape[0])
-                else:
-                    ee = 'Maximum concentration difference ' + \
-                         '({}) exceeded '.format(diffmax) + \
-                         'at {} node location(s)'.format(indices[0].shape[0])
-                e = textwrap.fill(ee+':', width=70, initial_indent='  ',
-                                  subsequent_indent='  ')
-                f.write('{}\n'.format(e))
-                if verbose:
-                    print(ee + ' at time {}'.format(time))
-                e = ''
-                for itupe in indices:
-                    for ind in itupe:
-                        e += '{} '.format(ind + 1)  # convert to one-based
-                e = textwrap.fill(e, width=70, initial_indent='    ',
-                                  subsequent_indent='    ')
-                f.write('{}\n'.format(e))
-                # Write header again, unless it is the last record
-                if idx + 1 < len(times1):
-                    f.write('\n{}'.format(header))
+                if outfile is not None:
+                    if difftol:
+                        ee = 'Maximum concentration difference ({})'.format(
+                            diffmax) + \
+                             ' -- {} tolerance exceeded at '.format(htol) + \
+                             '{} node location(s)'.format(indices[0].shape[0])
+                    else:
+                        ee = 'Maximum concentration difference ' + \
+                             '({}) exceeded '.format(diffmax) + \
+                             'at {} node location(s)'.format(
+                                 indices[0].shape[0])
+                    e = textwrap.fill(ee + ':', width=70, initial_indent='  ',
+                                      subsequent_indent='  ')
+                    f.write('{}\n'.format(e))
+                    if verbose:
+                        print(ee + ' at time {}'.format(time))
+                    e = ''
+                    for itupe in indices:
+                        for ind in itupe:
+                            e += '{} '.format(ind + 1)  # convert to one-based
+                    e = textwrap.fill(e, width=70, initial_indent='    ',
+                                      subsequent_indent='    ')
+                    f.write('{}\n'.format(e))
+                    # Write header again, unless it is the last record
+                    if idx + 1 < len(times1):
+                        f.write('\n{}'.format(header))
         except:
             print('  could not process time={}'.format(time))
             print('  terminating ucn processing...')
@@ -1273,38 +1280,40 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
         else:
             diffmax, indices = calculate_diffmax(s1, s2)
 
-        if idx < 1:
-            f.write(header)
-        f.write('{:15d} {:15d} {:15d} {:15.6g}\n'.format(kon[2] + 1,
-                                                         kon[1] + 1,
-                                                         kon[0] + 1,
-                                                         diffmax))
+        if outfile is not None:
+            if idx < 1:
+                f.write(header)
+            f.write('{:15d} {:15d} {:15d} {:15.6g}\n'.format(kon[2] + 1,
+                                                             kon[1] + 1,
+                                                             kon[0] + 1,
+                                                             diffmax))
 
         if diffmax >= htol:
             icnt += 1
-            if difftol:
-                ee = 'Maximum head difference ({}) -- '.format(diffmax) + \
-                     '{} tolerance exceeded at '.format(htol) + \
-                     '{} node location(s)'.format(indices[0].shape[0])
-            else:
-                ee = 'Maximum head difference ' + \
-                     '({}) exceeded '.format(diffmax) + \
-                     'at {} node location(s):'.format(indices[0].shape[0])
-            e = textwrap.fill(ee+':', width=70, initial_indent='  ',
-                              subsequent_indent='  ')
-            f.write('{}\n'.format(e))
-            if verbose:
-                print(ee+' at time {}'.format(time))
-            e = ''
-            for itupe in indices:
-                for ind in itupe:
-                    e += '{} '.format(ind + 1)  # convert to one-based
-            e = textwrap.fill(e, width=70, initial_indent='    ',
-                              subsequent_indent='    ')
-            f.write('{}\n'.format(e))
-            # Write header again, unless it is the last record
-            if idx + 1 < len(times1):
-                f.write('\n{}'.format(header))
+            if outfile is not None:
+                if difftol:
+                    ee = 'Maximum head difference ({}) -- '.format(diffmax) + \
+                         '{} tolerance exceeded at '.format(htol) + \
+                         '{} node location(s)'.format(indices[0].shape[0])
+                else:
+                    ee = 'Maximum head difference ' + \
+                         '({}) exceeded '.format(diffmax) + \
+                         'at {} node location(s):'.format(indices[0].shape[0])
+                e = textwrap.fill(ee+':', width=70, initial_indent='  ',
+                                  subsequent_indent='  ')
+                f.write('{}\n'.format(e))
+                if verbose:
+                    print(ee+' at time {}'.format(time))
+                e = ''
+                for itupe in indices:
+                    for ind in itupe:
+                        e += '{} '.format(ind + 1)  # convert to one-based
+                e = textwrap.fill(e, width=70, initial_indent='    ',
+                                  subsequent_indent='    ')
+                f.write('{}\n'.format(e))
+                # Write header again, unless it is the last record
+                if idx + 1 < len(times1):
+                    f.write('\n{}'.format(header))
 
     # Close output file
     if outfile is not None:
