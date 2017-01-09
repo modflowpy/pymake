@@ -938,9 +938,9 @@ def compare_heads(namefile1, namefile2, precision='single',
 
     icnt = 0
     # Process cumulative and incremental
-    for idx, time in enumerate(times1):
-        h1 = headobj1.get_data(totim=time)
-        h2 = headobj2.get_data(totim=time)
+    for idx in range(len(times1)):
+        h1 = headobj1.get_data(totim=times1[idx])
+        h2 = headobj2.get_data(totim=times2[idx])
 
         if difftol:
             diffmax, indices = calculate_difftol(h1, h2, htol)
