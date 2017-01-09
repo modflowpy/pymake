@@ -119,4 +119,4 @@ if __name__ == "__main__":
     simfiles = get_simfiles()
     for fn in simfiles:
         run_modpath6(fn)
-        # clean_up()
+    clean_up()

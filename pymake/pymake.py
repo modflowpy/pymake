@@ -25,6 +25,8 @@ import argparse
 from .dag import order_source_files, order_c_source_files
 import datetime
 
+from flopy import is_exe as flopy_is_exe
+
 def parser():
     '''
     Construct the parser and return argument values
@@ -365,14 +367,27 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                 s += c + ' '
             print(s)
             if not dryrun:
-                subprocess.check_call(cmdlist, shell=shellflg)
+                #subprocess.check_call(cmdlist, shell=shellflg)
+                proc = subprocess.Popen(cmdlist, shell=shellflg,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT)
+                stdout_data, stderr_data = proc.communicate()
+                if proc.returncode != 0:
+                    msg = '{} failed, '.format(cmdlist) + \
+                          'status code {} '.format(proc.returncode) + \
+                          'stdout {} '.format(stdout_data) + \
+                          'stderr {}'.format(stderr_data)
+                    print(msg)
+                    return proc.returncode
 
         # Save the name of the object file so that they can all be linked
         # at the end
         objfiles.append(objfile)
 
     # Build the link command and then link
-    print(('\nLinking object files to make {0}...'.format(os.path.basename(target))))
+    msg = '\nLinking object files ' + \
+          'to make {}...'.format(os.path.basename(target))
+    print(msg)
     cmd = fc + ' '
     cmdlist = []
     cmdlist.append(fc)
@@ -390,7 +405,18 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         s += c + ' '
     print(s)
     if not dryrun:
-        subprocess.check_call(cmdlist, shell=shellflg)
+        #subprocess.check_call(cmdlist, shell=shellflg)
+        proc = subprocess.Popen(cmdlist, shell=shellflg,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
+        stdout_data, stderr_data = proc.communicate()
+        if proc.returncode != 0:
+            msg = '{} failed, '.format(cmdlist) + \
+                  'status code {} '.format(proc.returncode) + \
+                  'stdout {} '.format(stdout_data) + \
+                  'stderr {}'.format(stderr_data)
+            print(msg)
+            return proc.returncode
 
     # create makefile
     if makefile:
@@ -399,7 +425,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                         modules=['-I', '-J'])
 
     # return
-    return
+    return 0
 
 
 def compile_with_mac_ifort(srcfiles, target, cc,
@@ -494,7 +520,18 @@ def compile_with_mac_ifort(srcfiles, target, cc,
             print(s)
 
             if not dryrun:
-                subprocess.check_call(cmdlist)
+                #subprocess.check_call(cmdlist)
+                proc = subprocess.Popen(cmdlist,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT)
+                stdout_data, stderr_data = proc.communicate()
+                if proc.returncode != 0:
+                    msg = '{} failed, '.format(cmdlist) + \
+                          'status code {} '.format(proc.returncode) + \
+                          'stdout {} '.format(stdout_data) + \
+                          'stderr {}'.format(stderr_data)
+                    print(msg)
+                    return proc.returncode
 
         # Save the name of the object file so that they can all be linked
         # at the end
@@ -519,7 +556,18 @@ def compile_with_mac_ifort(srcfiles, target, cc,
         for c in cmdlist:
             s += c + ' '
         print(s)
-        subprocess.check_call(cmdlist)
+        #subprocess.check_call(cmdlist)
+        proc = subprocess.Popen(cmdlist,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
+        stdout_data, stderr_data = proc.communicate()
+        if proc.returncode != 0:
+            msg = '{} failed, '.format(cmdlist) + \
+                  'status code {} '.format(proc.returncode) + \
+                  'stdout {} '.format(stdout_data) + \
+                  'stderr {}'.format(stderr_data)
+            print(msg)
+            return proc.returncode
 
     # create makefile
     if makefile:
@@ -528,7 +576,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
                         modules=['-module '])
 
     # return
-    return
+    return 0
 
 
 def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
@@ -572,9 +620,26 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
 
     # Create target
     try:
+        # clean exe prior to build so that test for exe below can return a
+        # non-zero error code
+        if flopy_is_exe(target):
+            os.remove(target)
         makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target,
                   arch, objdir_temp, moddir_temp)
-        subprocess.check_call([batchfile, ], )
+        #subprocess.check_call([batchfile, ])
+        proc = subprocess.Popen([batchfile, ],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
+        while True:
+            line = proc.stdout.readline()
+            c = line.decode('utf-8')
+            if c != '':
+                c = c.rstrip('\r\n')
+                print('{}'.format(c))
+            else:
+                break
+        if not flopy_is_exe(target):
+            return 1
     except:
         print('Could not make x64 target: ', target)
 
@@ -583,7 +648,7 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
         print('makefile not created for Windows with Intel Compiler.')
 
     # return
-    return
+    return 0
 
 
 def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
@@ -784,6 +849,9 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
     Main part of program
 
     '''
+    # initializa success
+    success = 0
+
     # write summary information
     print('\nsource files are in: {0}'.format(srcdir))
     print('executable name to be created: {0}'.format(target))
@@ -806,24 +874,28 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
     if fc == 'gfortran':
         objext = '.o'
         create_openspec(srcdir_temp)
-        compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
-                         expedite, dryrun, double, debug, fflags,
-                         srcdir, makefile)
+        success = compile_with_gnu(srcfiles, target, cc,
+                                   objdir_temp, moddir_temp,
+                                   expedite, dryrun, double, debug, fflags,
+                                   srcdir, makefile)
     elif fc == 'ifort':
         platform = sys.platform
         if platform.lower() == 'darwin':
             create_openspec(srcdir_temp)
             objext = '.o'
-            compile_with_mac_ifort(srcfiles, target, cc,
-                                   objdir_temp, moddir_temp,
-                                   expedite, dryrun, double, debug, fflags,
-                                   srcdir, makefile)
+            success = compile_with_mac_ifort(srcfiles, target, cc,
+                                             objdir_temp, moddir_temp,
+                                             expedite, dryrun, double,
+                                             debug, fflags,
+                                             srcdir, makefile)
         else:
             objext = '.obj'
             cc = 'cl.exe'
-            compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
-                               expedite, dryrun, double, debug, fflags, arch,
-                               srcdir, makefile)
+            success = compile_with_ifort(srcfiles, target, cc,
+                                         objdir_temp, moddir_temp,
+                                         expedite, dryrun, double, debug,
+                                         fflags, arch,
+                                         srcdir, makefile)
     else:
         raise Exception('Unsupported compiler')
 
@@ -831,7 +903,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
     if makeclean:
         clean(srcdir_temp, objdir_temp, moddir_temp, objext)
         
-    return
+    return success
 
 
 if __name__ == "__main__":
