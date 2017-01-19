@@ -112,10 +112,11 @@ def initialize(srcdir, target):
     return srcdir_temp, objdir_temp, moddir_temp
 
 
-def clean(srcdir_temp, objdir_temp, moddir_temp, objext):
-    '''
+def clean(srcdir_temp, objdir_temp, moddir_temp, objext, winifort):
+    """
     Remove mod and object files, and remove the temp source directory.
-    '''
+
+    """
     # clean things up
     print('\nCleaning up temporary source, object, and module files...')
     filelist = os.listdir('.')
@@ -127,6 +128,8 @@ def clean(srcdir_temp, objdir_temp, moddir_temp, objext):
     shutil.rmtree(srcdir_temp)
     shutil.rmtree(objdir_temp)
     shutil.rmtree(moddir_temp)
+    if winifort:
+        os.remove('compile.bat')
     return
 
 
@@ -879,6 +882,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
     srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
 
     # compile with gfortran or ifort
+    winifort = False
     if fc == 'gfortran':
         objext = '.o'
         create_openspec(srcdir_temp)
@@ -897,6 +901,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
                                              debug, fflags,
                                              srcdir, makefile)
         else:
+            winifort = True
             objext = '.obj'
             cc = 'cl.exe'
             success = compile_with_ifort(srcfiles, target, cc,
@@ -909,7 +914,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
 
     # Clean it up
     if makeclean:
-        clean(srcdir_temp, objdir_temp, moddir_temp, objext)
+        clean(srcdir_temp, objdir_temp, moddir_temp, objext, winifort)
         
     return success
 
