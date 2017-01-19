@@ -571,8 +571,11 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     Compare the results from these two simulations.
 
     """
-    import numpy as np
-    import flopy
+    try:
+        import flopy
+    except:
+        msg = 'flopy not available - cannot use compare_budget'
+        raise ValueError(msg)
 
     # headers
     headers = ('INCREMENTAL', 'CUMULATIVE')
@@ -721,7 +724,11 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
     """
     import numpy as np
-    import flopy
+    try:
+        import flopy
+    except:
+        msg = 'flopy not available - cannot use compare_swrbudget'
+        raise ValueError(msg)
 
     # headers
     headers = ('INCREMENTAL', 'CUMULATIVE')
@@ -869,7 +876,11 @@ def compare_heads(namefile1, namefile2, precision='single',
     Compare the results from these two simulations.
 
     """
-    import flopy
+    try:
+        import flopy
+    except:
+        msg = 'flopy not available - cannot use compare_heads'
+        raise ValueError(msg)
 
     dbs = 'DATA(BINARY)'
 
@@ -1025,7 +1036,11 @@ def compare_concs(namefile1, namefile2, precision='single',
 
     """
     import numpy as np
-    import flopy
+    try:
+        import flopy
+    except:
+        msg = 'flopy not available - cannot use compare_concs'
+        raise ValueError(msg)
 
     # list of valid extensions
     valid_ext = ['ucn']
@@ -1187,8 +1202,11 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
     Compare the swr stage results from these two simulations.
 
     """
-    import numpy as np
-    import flopy
+    try:
+        import flopy
+    except:
+        msg = 'flopy not available - cannot use compare_stages'
+        raise ValueError(msg)
 
     # list of valid extensions
     valid_ext = ['stg']
