@@ -74,7 +74,7 @@ def test_compile_prev():
 
     # Download the MODFLOW-USG distribution
     pymake.download_and_unzip(url, pth=config.testdir)
-    os.rename(config.dir_release, config.dir_previous)
+    #os.rename(config.dir_release, config.dir_previous)
 
     # compile
     pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
@@ -141,8 +141,8 @@ def test_teardown():
 
 
 if __name__ == '__main__':
-    test_compile_prev()
     test_compile_ref()
+    test_compile_prev()
 
     namefiles = get_namefiles(config.testpaths[0], exclude=config.exclude)
     for namefile in namefiles:
