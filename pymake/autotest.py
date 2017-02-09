@@ -468,31 +468,34 @@ def get_mf6_input_files(mfnamefile):
     # such as 'OPEN/CLOSE' and 'TIMESERIESFILE'.  If found, then
     # add that file to the list of files to copy.
     flist = filelist
+    olist = outplist
     while True:
-        flist = _get_mf6_external_files(srcdir, flist)
+        flist, olist = _get_mf6_external_files(srcdir, olist, flist)
+        # add to filelist
         if len(flist) > 0:
             filelist = filelist + flist
-        else:
+        # add to outplist
+        if len(olist) > 0:
+            outplist = outplist + olist
+        # terminate loop if no additional files
+        if len(flist) < 1 and len(olist) < 1:
             break
 
-    return filelist
+    return filelist, outplist
 
 
-def _get_mf6_external_files(srcdir, files):
+def _get_mf6_external_files(srcdir, outplist, files):
     """
 
     :param files:
     :return:
     """
     extfiles = []
-    outplist = []
 
     for fname in files:
         fname = os.path.join(srcdir, fname)
-        print(fname)
         try:
             f = open(fname, 'r')
-
             for line in f:
 
                 # Skip invalid lines
@@ -501,8 +504,6 @@ def _get_mf6_external_files(srcdir, files):
                     continue
                 if line.strip()[0] in ['#', '!']:
                     continue
-
-                print(line.upper())
 
                 if 'OPEN/CLOSE' in line.upper():
                     for i, s in enumerate(ll):
@@ -556,7 +557,8 @@ def _get_mf6_external_files(srcdir, files):
                             break
         except:
             pass
-    return extfiles
+
+    return extfiles, outplist
 
 
 def get_mf6_blockdata(f, blockstr):
