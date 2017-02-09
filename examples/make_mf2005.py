@@ -14,23 +14,12 @@ def make_mf2005():
     os.chdir(dstpth)
 
     # Download the MODFLOW-2005 distribution
-    url = "http://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip"
+    url = "https://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.12.00/MF2005.1_12u.zip"
     download_and_unzip(url)
 
-    # Rename Unix to a more reasonable name
-    dirname = 'MF2005.1_11u'
-    if os.path.isdir(dirname):
-        shutil.rmtree(dirname)
-    os.rename('Unix', 'MF2005.1_11u')
-
-    # Remove two src folders
+    # Set dir name
+    dirname = 'MF2005.1_12u'
     srcdir = os.path.join(dirname, 'src')
-    dlist = ['hydprograms', 'mnw1to2']
-    for d in dlist:
-        dname = os.path.join(srcdir, d)
-        if os.path.isdir(dname):
-            print('Removing ', dname)
-            shutil.rmtree(os.path.join(srcdir, d))
 
     target = 'mf2005dbl'
     pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
@@ -38,7 +27,7 @@ def make_mf2005():
 
     assert os.path.isfile(target), 'Target does not exist.'
 
-    dirname = 'MF2005.1_11u'
+    # Clean up downloaded directory
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
 
