@@ -115,7 +115,7 @@ def setup_comparison(namefile, dst, remove_existing=True):
             for file in files:
                 if '.nam' in os.path.splitext(file)[1].lower():
                     files2copy.append(
-                            os.path.join(cmppth, os.path.basename(file)))
+                        os.path.join(cmppth, os.path.basename(file)))
                     nf = os.path.join(src, action, os.path.basename(file))
                     setup(nf, dst, remove_existing=remove_existing)
                     break
@@ -395,7 +395,7 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
             for file in files:
                 if '.nam' in os.path.splitext(file)[1].lower():
                     files2copy.append(
-                            os.path.join(cmppth, os.path.basename(file)))
+                        os.path.join(cmppth, os.path.basename(file)))
                     nf = os.path.join(src, action, os.path.basename(file))
                     setup(nf, dst, remove_existing=remove_existing)
                     break
@@ -413,10 +413,10 @@ def get_mf6_input_files(mfnamefile):
     filelist = []
     outplist = []
 
-    filekeys = ['TDIS', 'GWF', 'GWT', 'NM-NM', 'GWF-GWF', 'GWF-GWT', 'NUMERICAL']
+    filekeys = ['TDIS', 'GWF', 'GWT', 'NM-NM', 'GWF-GWF', 'GWF-GWT',
+                'NUMERICAL']
     namefilekeys = ['GWF', 'GWT']
     namefiles = []
-
 
     with open(mfnamefile) as f:
 
@@ -467,72 +467,94 @@ def get_mf6_input_files(mfnamefile):
     # Now go through every file and look for other files to copy,
     # such as 'OPEN/CLOSE' and 'TIMESERIESFILE'.  If found, then
     # add that file to the list of files to copy.
-    otherfiles = []
-    for fname in filelist:
-        fname = os.path.join(srcdir, fname)
-        f = open(fname, 'r')
-        for line in f:
-
-            # Skip invalid lines
-            ll = line.strip().split()
-            if len(ll) < 2:
-                continue
-            if line.strip()[0] in ['#', '!']:
-                continue
-
-            if 'OPEN/CLOSE' in line.upper():
-                for i, s in enumerate(ll):
-                    if s.upper() == 'OPEN/CLOSE':
-                        stmp = ll[i + 1]
-                        stmp = stmp.replace('"', '')
-                        stmp = stmp.replace("'", '')
-                        otherfiles.append(stmp)
-                        break
-
-            if 'TIMESERIESFILE' in line.upper():
-                for i, s in enumerate(ll):
-                    if s.upper() == 'TIMESERIESFILE':
-                        stmp = ll[i + 1]
-                        stmp = stmp.replace('"', '')
-                        stmp = stmp.replace("'", '')
-                        otherfiles.append(stmp)
-                        break
-
-            if 'TIMEARRAYSERIESFILE' in line.upper():
-                for i, s in enumerate(ll):
-                    if s.upper() == 'TIMEARRAYSERIESFILE':
-                        stmp = ll[i + 1]
-                        stmp = stmp.replace('"', '')
-                        stmp = stmp.replace("'", '')
-                        otherfiles.append(stmp)
-                        break
-
-            if 'OBS8' in line.upper():
-                for i, s in enumerate(ll):
-                    if s.upper() == 'OBS8':
-                        stmp = ll[i + 1]
-                        stmp = stmp.replace('"', '')
-                        stmp = stmp.replace("'", '')
-                        otherfiles.append(stmp)
-                        break
-
-            if 'FILE' in line.upper():
-                for i, s in enumerate(ll):
-                    if s.upper() == 'FILE':
-                        stmp = ll[i + 1]
-                        stmp = stmp.replace('"', '')
-                        stmp = stmp.replace("'", '')
-                        if 'SAVE' in line.upper():
-                            if 'HEAD' in line.upper() or 'BUDGET' in line.upper() or \
-                                            'DRAWDOWN' in line.upper():
-                                outplist.append(stmp)
-                        else:
-                            otherfiles.append(stmp)
-                        break
-
+    otherfiles = _get_mf6_external_files(srcdir, filelist)
     filelist = filelist + otherfiles
 
-    return filelist, outplist
+    morefiles = _get_mf6_external_files(srcdir, otherfiles)
+    filelist = filelist + morefiles
+
+    return filelist
+
+
+def _get_mf6_external_files(srcdir, files):
+    """
+
+    :param files:
+    :return:
+    """
+    extfiles = []
+    outplist = []
+
+    for fname in files:
+        fname = os.path.join(srcdir, fname)
+        print(fname)
+        try:
+            f = open(fname, 'r')
+
+            for line in f:
+
+                # Skip invalid lines
+                ll = line.strip().split()
+                if len(ll) < 2:
+                    continue
+                if line.strip()[0] in ['#', '!']:
+                    continue
+
+                print(line.upper())
+
+                if 'OPEN/CLOSE' in line.upper():
+                    for i, s in enumerate(ll):
+                        if s.upper() == 'OPEN/CLOSE':
+                            stmp = ll[i + 1]
+                            stmp = stmp.replace('"', '')
+                            stmp = stmp.replace("'", '')
+                            extfiles.append(stmp)
+                            break
+
+                if 'TIMESERIESFILE' in line.upper():
+                    for i, s in enumerate(ll):
+                        if s.upper() == 'TIMESERIESFILE':
+                            stmp = ll[i + 1]
+                            stmp = stmp.replace('"', '')
+                            stmp = stmp.replace("'", '')
+                            extfiles.append(stmp)
+                            break
+
+                if 'TIMEARRAYSERIESFILE' in line.upper():
+                    for i, s in enumerate(ll):
+                        if s.upper() == 'TIMEARRAYSERIESFILE':
+                            stmp = ll[i + 1]
+                            stmp = stmp.replace('"', '')
+                            stmp = stmp.replace("'", '')
+                            extfiles.append(stmp)
+                            break
+
+                if 'OBS8' in line.upper():
+                    for i, s in enumerate(ll):
+                        if s.upper() == 'OBS8':
+                            stmp = ll[i + 1]
+                            stmp = stmp.replace('"', '')
+                            stmp = stmp.replace("'", '')
+                            extfiles.append(stmp)
+                            break
+
+                if 'FILE' in line.upper():
+                    for i, s in enumerate(ll):
+                        if s.upper() == 'FILE':
+                            stmp = ll[i + 1]
+                            stmp = stmp.replace('"', '')
+                            stmp = stmp.replace("'", '')
+                            if 'SAVE' in line.upper():
+                                if 'HEAD' in line.upper() or \
+                                   'BUDGET' in line.upper() or \
+                                   'DRAWDOWN' in line.upper():
+                                    outplist.append(stmp)
+                            else:
+                                extfiles.append(stmp)
+                            break
+        except:
+            pass
+    return extfiles
 
 
 def get_mf6_blockdata(f, blockstr):
@@ -669,10 +691,10 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
                         s = '{:<21} {:>21} {:>21} {:>21}\n'.format(
-                                'Budget Entry',
-                                'Model 1',
-                                'Model 2',
-                                'Difference')
+                            'Budget Entry',
+                            'Model 1',
+                            'Model 2',
+                            'Difference')
                         f.write(s)
                         s = 87 * '-' + '\n'
                         f.write(s)
@@ -822,10 +844,10 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
                         s = '{:<21} {:>21} {:>21} {:>21}\n'.format(
-                                'Budget Entry',
-                                'Model 1',
-                                'Model 2',
-                                'Difference')
+                            'Budget Entry',
+                            'Model 1',
+                            'Model 2',
+                            'Difference')
                         f.write(s)
                         s = 87 * '-' + '\n'
                         f.write(s)
@@ -850,9 +872,9 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                     e = '"{} {}" percent difference ({})'.format(headers[idx],
                                                                  dir[kdx], t) + \
                         ' for stress period {} and time step {} > {}.'.format(
-                                kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
+                            kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
                         ' Reference value = {}. Simulated value = {}.'.format(
-                                v0[kdx], v1[kdx])
+                            v0[kdx], v1[kdx])
                     e = textwrap.fill(e, width=70, initial_indent='    ',
                                       subsequent_indent='    ')
                     f.write('{}\n'.format(e))
@@ -894,7 +916,7 @@ def compare_heads(namefile1, namefile2, precision='single',
             return True
 
         hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(
-                ocf1[0][0])
+            ocf1[0][0])
         if hu1 != 0:
             entries = get_entries_from_namefile(namefile1, unit=abs(hu1))
             hfpth1, status1 = entries[0][0], entries[0][1]
@@ -917,7 +939,7 @@ def compare_heads(namefile1, namefile2, precision='single',
             return True
 
         hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(
-                ocf2[0][0])
+            ocf2[0][0])
         if hu2 != 0:
             entries = get_entries_from_namefile(namefile2, unit=abs(hu2))
             hfpth2, status2 = entries[0][0], entries[0][1]
@@ -960,7 +982,7 @@ def compare_heads(namefile1, namefile2, precision='single',
     times2 = headobj2.get_times()
     for (t1, t2) in zip(times1, times2):
         assert np.allclose([t1], [t2]), 'times in two head files are not ' + \
-                         'equal ({},{})'.format(t1, t2)
+                                        'equal ({},{})'.format(t1, t2)
 
     kstpkper = headobj1.get_kstpkper()
 
@@ -995,17 +1017,17 @@ def compare_heads(namefile1, namefile2, precision='single',
             if outfile is not None:
                 if difftol:
                     ee = 'Maximum head difference ({}) -- '.format(diffmax) + \
-                        '{} tolerance exceeded at '.format(htol) + \
-                        '{} node location(s)'.format(indices[0].shape[0])
+                         '{} tolerance exceeded at '.format(htol) + \
+                         '{} node location(s)'.format(indices[0].shape[0])
                 else:
                     ee = 'Maximum head difference ' + \
                          '({}) exceeded '.format(diffmax) + \
                          'at {} node location(s)'.format(indices[0].shape[0])
-                e = textwrap.fill(ee+':', width=70, initial_indent='  ',
+                e = textwrap.fill(ee + ':', width=70, initial_indent='  ',
                                   subsequent_indent='  ')
                 f.write('{}\n'.format(ee))
                 if verbose:
-                    print(ee+' at time {}'.format(time))
+                    print(ee + ' at time {}'.format(time))
                 e = ''
                 for itupe in indices:
                     for ind in itupe:
@@ -1118,7 +1140,7 @@ def compare_concs(namefile1, namefile2, precision='single',
 
     for (t1, t2) in zip(times1, times2):
         assert np.allclose([t1], [t2]), 'times in two ucn files are not ' + \
-                         'equal ({},{})'.format(t1, t2)
+                                        'equal ({},{})'.format(t1, t2)
 
     if nt == nt1:
         kstpkper = uobj1.get_kstpkper()
@@ -1264,7 +1286,7 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
     sobj2 = flopy.utils.SwrStage(sfpth2)
 
     # get totim
-    times1 =sobj1.get_times()
+    times1 = sobj1.get_times()
 
     # get kswr, kstp, and kper
     kk = sobj1.get_kswrkstpkper()
@@ -1292,7 +1314,6 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
         s1 = s1['stage']
         s2 = s2['stage']
 
-
         if difftol:
             diffmax, indices = calculate_difftol(s1, s2, htol)
         else:
@@ -1317,11 +1338,11 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
                     ee = 'Maximum head difference ' + \
                          '({}) exceeded '.format(diffmax) + \
                          'at {} node location(s):'.format(indices[0].shape[0])
-                e = textwrap.fill(ee+':', width=70, initial_indent='  ',
+                e = textwrap.fill(ee + ':', width=70, initial_indent='  ',
                                   subsequent_indent='  ')
                 f.write('{}\n'.format(e))
                 if verbose:
-                    print(ee+' at time {}'.format(time))
+                    print(ee + ' at time {}'.format(time))
                 e = ''
                 for itupe in indices:
                     for ind in itupe:
@@ -1351,7 +1372,7 @@ def calculate_diffmax(v1, v2):
         v2 = v2.flatten()
     if v1.size != v2.size:
         err = 'Error: calculate_difference v1 size ({}) '.format(
-                v1.size) + 'is not equal to v2 size ({})'.format(v2.size)
+            v1.size) + 'is not equal to v2 size ({})'.format(v2.size)
         raise Exception(err)
 
     diff = abs(v1 - v2)
@@ -1367,7 +1388,7 @@ def calculate_difftol(v1, v2, tol):
         v2 = v2.flatten()
     if v1.size != v2.size:
         err = 'Error: calculate_difference v1 size ({}) '.format(
-                v1.size) + 'is not equal to v2 size ({})'.format(v2.size)
+            v1.size) + 'is not equal to v2 size ({})'.format(v2.size)
         raise Exception(err)
 
     diff = abs(v1 - v2)
