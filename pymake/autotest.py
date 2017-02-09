@@ -464,14 +464,16 @@ def get_mf6_input_files(mfnamefile):
                     continue
                 filelist.append(ll[1])
 
-    # Now go through every file and look for other files to copy,
+    # Recursively go through every file and look for other files to copy,
     # such as 'OPEN/CLOSE' and 'TIMESERIESFILE'.  If found, then
     # add that file to the list of files to copy.
-    otherfiles = _get_mf6_external_files(srcdir, filelist)
-    filelist = filelist + otherfiles
-
-    morefiles = _get_mf6_external_files(srcdir, otherfiles)
-    filelist = filelist + morefiles
+    flist = filelist
+    while True:
+        flist = _get_mf6_external_files(srcdir, flist)
+        if len(flist) > 0:
+            filelist = filelist + flist
+        else:
+            break
 
     return filelist
 
