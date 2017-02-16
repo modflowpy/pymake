@@ -77,11 +77,14 @@ def parser():
     parser.add_argument('-mf', '--makefile',
                         help='''Create a standard makefile.''',
                         action='store_true')
+    parser.add_argument('-cs', '--commonsrc',
+                        help='''Additional directory with common source files.''',
+                        default=None)
     args = parser.parse_args()
     return args
 
 
-def initialize(srcdir, target):
+def initialize(srcdir, target, commonsrc):
     '''
     Remove temp source directory and target, and then copy source into
     source temp directory.  Return temp directory path.
@@ -101,6 +104,15 @@ def initialize(srcdir, target):
     except:
         pass
     shutil.copytree(srcdir, srcdir_temp)
+
+    # copy files from a specified common source directory if
+    # commonsrc is not None
+    if commonsrc is not None:
+        pth = os.path.basename(os.path.normpath(commonsrc))
+        pth = os.path.join(srcdir_temp, pth)
+        shutil.copytree(commonsrc, pth)
+
+    # set srcdir_temp
     srcdir_temp = os.path.join(srcdir_temp)
 
     # if they don't exist, create directories for objects and mods
@@ -855,17 +867,19 @@ def create_makefile(target, srcdir, objfiles,
 def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
          dryrun=False, double=False, debug=False,
          include_subdirs=False, fflags=None, arch='intel64',
-         makefile=False):
+         makefile=False, include_commonsrc=None):
     '''
     Main part of program
 
     '''
-    # initializa success
+    # initialize success
     success = 0
 
     # write summary information
     print('\nsource files are in: {0}'.format(srcdir))
     print('executable name to be created: {0}'.format(target))
+    if include_commonsrc is not None:
+        print('additional source files are in: {}'.format(include_commonsrc))
 
     # make sure the path for the target exists
     pth = os.path.dirname(target)
@@ -876,7 +890,8 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
         os.makedirs(pth)
 
     # initialize
-    srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target)
+    srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target,
+                                                       include_commonsrc)
 
     # get ordered list of files to compile
     srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
@@ -927,4 +942,5 @@ if __name__ == "__main__":
     # from python as a function.
     main(args.srcdir, args.target, args.fc, args.cc, args.makeclean,
          args.expedite, args.dryrun, args.double, args.debug,
-         args.subdirs, args.fflags, args.arch, args.makefile)
+         args.subdirs, args.fflags, args.arch, args.makefile,
+         args.commonsrc)
