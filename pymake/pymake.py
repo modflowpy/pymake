@@ -286,7 +286,7 @@ def flag_available(flag):
 
 def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                      expedite, dryrun, double, debug, fflags,
-                     srcdir, makefile):
+                     srcdir, srcdir2, makefile):
     """
     Compile the program using the gnu compilers (gfortran and gcc)
 
@@ -439,7 +439,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
 
     # create makefile
     if makefile:
-        create_makefile(target, srcdir, objfiles,
+        create_makefile(target, srcdir, srcdir2, objfiles,
                         fc, compileflags, cc, cflags, syslibs,
                         modules=['-I', '-J'])
 
@@ -450,7 +450,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
 def compile_with_mac_ifort(srcfiles, target, cc,
                            objdir_temp, moddir_temp,
                            expedite, dryrun, double, debug, fflags,
-                           srcdir, makefile):
+                           srcdir, srcdir2, makefile):
     """
     Make target on Mac OSX
     """
@@ -590,7 +590,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
 
     # create makefile
     if makefile:
-        create_makefile(target, srcdir, objfiles,
+        create_makefile(target, srcdir, srcdir2, objfiles,
                         fc, compileflags, cc, cflags, syslibs,
                         modules=['-module '])
 
@@ -600,7 +600,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
 
 def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
                        expedite, dryrun, double, debug, fflagsu, arch,
-                       srcdir, makefile):
+                       srcdir, srcdir2, makefile):
     """
     Make target on Windows OS
     
@@ -729,7 +729,7 @@ def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
     return
 
 
-def create_makefile(target, srcdir, objfiles,
+def create_makefile(target, srcdir, srcdir2, objfiles,
                     fc, fflags, cc, cflags, syslibs,
                     objext='.o', modules=['-I', '-J']):
     # open makefile
@@ -747,11 +747,16 @@ def create_makefile(target, srcdir, objfiles,
     pth = os.path.dirname(objfiles[0]).replace('\\', '/')
     f.write('OBJDIR = {}\n'.format(pth))
     pth = os.path.dirname(target).replace('\\', '/')
+    if len(pth) < 1:
+        pth = '.'
     f.write('BINDIR = {}\n'.format(pth))
     pth = target.replace('\\', '/')
     f.write('PROGRAM = {}\n'.format(pth))
     f.write('\n')
     dirs = [d[0] for d in os.walk(srcdir)]
+    if srcdir2 is not None:
+        dirs2 = [d[0] for d in os.walk(srcdir2)]
+        dirs = dirs + dirs2
     srcdirs = []
     for idx, dir in enumerate(dirs):
         srcdirs.append('SOURCEDIR{}'.format(idx+1))
@@ -867,7 +872,7 @@ def create_makefile(target, srcdir, objfiles,
 def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
          dryrun=False, double=False, debug=False,
          include_subdirs=False, fflags=None, arch='intel64',
-         makefile=False, include_commonsrc=None):
+         makefile=False, srcdir2=None):
     '''
     Main part of program
 
@@ -878,8 +883,8 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
     # write summary information
     print('\nsource files are in: {0}'.format(srcdir))
     print('executable name to be created: {0}'.format(target))
-    if include_commonsrc is not None:
-        print('additional source files are in: {}'.format(include_commonsrc))
+    if srcdir2 is not None:
+        print('additional source files are in: {}'.format(srcdir2))
 
     # make sure the path for the target exists
     pth = os.path.dirname(target)
@@ -891,7 +896,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
 
     # initialize
     srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target,
-                                                       include_commonsrc)
+                                                       srcdir2)
 
     # get ordered list of files to compile
     srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
@@ -904,7 +909,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
         success = compile_with_gnu(srcfiles, target, cc,
                                    objdir_temp, moddir_temp,
                                    expedite, dryrun, double, debug, fflags,
-                                   srcdir, makefile)
+                                   srcdir, srcdir2, makefile)
     elif fc == 'ifort':
         platform = sys.platform
         if platform.lower() == 'darwin':
@@ -914,7 +919,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
                                              objdir_temp, moddir_temp,
                                              expedite, dryrun, double,
                                              debug, fflags,
-                                             srcdir, makefile)
+                                             srcdir, srcdir2, makefile)
         else:
             winifort = True
             objext = '.obj'
@@ -923,7 +928,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
                                          objdir_temp, moddir_temp,
                                          expedite, dryrun, double, debug,
                                          fflags, arch,
-                                         srcdir, makefile)
+                                         srcdir, srcdir2, makefile)
     else:
         raise Exception('Unsupported compiler')
 
