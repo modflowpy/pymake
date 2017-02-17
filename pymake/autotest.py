@@ -9,7 +9,7 @@ ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
 
 
 def setup(namefile, dst, remove_existing=True):
-    # Construct src pth from namefile
+    # Construct src pth from namefile or lgr file
     src = os.path.dirname(namefile)
 
     # Create the destination folder, if required
@@ -24,10 +24,32 @@ def setup(namefile, dst, remove_existing=True):
     if create_dir:
         os.mkdir(dst)
 
+    # determine if a namefile is a lgr control file - get individual
+    # name files out of the lgr control file
+    namefiles = [namefile]
+    ext = os.path.splitext(namefile)[1]
+    if '.lgr' in ext.lower():
+        lines = [line.rstrip('\n') for line in open(namefile)]
+        for line in lines:
+            if len(line) < 1:
+                continue
+            if line[0] == '#':
+                continue
+            t = line.split()
+            if '.nam' in t[0].lower():
+                fpth = os.path.join(src, t[0])
+                namefiles.append(fpth)
+
     # Make list of files to copy
-    fname = os.path.abspath(namefile)
-    nf = os.path.basename(namefile)
-    files2copy = [nf] + get_input_files(fname)
+    files2copy = []
+    for fpth in namefiles:
+        files2copy.append(os.path.basename(fpth))
+        ext = os.path.splitext(fpth)[1]
+        # copy additional files contained in the name file and
+        # associated package files
+        if ext.lower() == '.nam':
+            fname = os.path.abspath(fpth)
+            files2copy = files2copy + get_input_files(fname)
 
     # Copy the files
     for f in files2copy:
@@ -549,8 +571,8 @@ def _get_mf6_external_files(srcdir, outplist, files):
                             stmp = stmp.replace("'", '')
                             if 'SAVE' in line.upper():
                                 if 'HEAD' in line.upper() or \
-                                   'BUDGET' in line.upper() or \
-                                   'DRAWDOWN' in line.upper():
+                                                'BUDGET' in line.upper() or \
+                                                'DRAWDOWN' in line.upper():
                                     outplist.append(stmp)
                             else:
                                 extfiles.append(stmp)
