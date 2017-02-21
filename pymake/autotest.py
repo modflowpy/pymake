@@ -563,6 +563,15 @@ def _get_mf6_external_files(srcdir, outplist, files):
                             extfiles.append(stmp)
                             break
 
+                if 'EXTERNAL' in line.upper():
+                    for i, s in enumerate(ll):
+                        if s.upper() == 'EXTERNAL':
+                            stmp = ll[i + 1]
+                            stmp = stmp.replace('"', '')
+                            stmp = stmp.replace("'", '')
+                            extfiles.append(stmp)
+                            break
+
                 if 'FILE' in line.upper():
                     for i, s in enumerate(ll):
                         if s.upper() == 'FILE':
