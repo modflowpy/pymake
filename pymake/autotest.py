@@ -1015,15 +1015,16 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
 
     # confirm that there are two files to compare
     if hfpth1 is None or hfpth2 is None:
-        print('hpth1 or hpth2 is None')
-        print('hpth1: {}'.format(hfpth1))
-        print('hpth2: {}'.format(hfpth2))
-        return False
+        print('hfpth1 or hfpth2 is None')
+        print('hfpth1: {}'.format(hfpth1))
+        print('hfpth2: {}'.format(hfpth2))
+        return True
 
+    # make sure the file paths exist
     if not os.path.isfile(hfpth1) or not os.path.isfile(hfpth2):
-        print('hpth1 or hpth2 is not a file')
-        print('hpth1 isfile: {}'.format(os.path.isfile(hfpth1)))
-        print('hpth2 isfile: {}'.format(os.path.isfile(hfpth2)))
+        print('hfpth1 or hfpth2 is not a file')
+        print('hfpth1 isfile: {}'.format(os.path.isfile(hfpth1)))
+        print('hfpth2 isfile: {}'.format(os.path.isfile(hfpth2)))
         return False
 
     # Open output file

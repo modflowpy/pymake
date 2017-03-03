@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import shutil
 import pymake
 from pymake.autotest import get_namefiles, compare_budget, compare_heads
@@ -29,7 +30,7 @@ def run_mf2005(namefile, regression=True):
     success, buff = flopy.run_model(exe_name, nam, model_ws=testpth,
                                     silent=True)
 
-    assert success, 'basemodel {} '.format(nam) + 'did not run.'
+    assert success, 'base model {} '.format(nam) + 'did not run.'
 
     # If it is a regression run, then setup and run the model with the
     # release target and the reference target
@@ -42,20 +43,22 @@ def run_mf2005(namefile, regression=True):
         exe_name = os.path.abspath(config.target_previous)
         success_reg, buff = flopy.run_model(exe_name, nam,
                                             model_ws=testpth_reg,
-                                            silent=True)
-        if success_reg:
-            outfile1 = os.path.join(os.path.split(os.path.join(testpth, nam))[0], 'bud.cmp')
-            outfile2 = os.path.join(os.path.split(os.path.join(testpth, nam))[0], 'hds.cmp')
-            success_reg = pymake.compare(os.path.join(testpth, nam),
-                                         os.path.join(testpth_reg, nam),
-                                         precision='single',
-                                         max_cumpd=0.01, max_incpd=0.01, htol=0.001,
-                                         outfile1=outfile1, outfile2=outfile2)
+                                            silent=False)
+
+        assert success_reg, 'regression model {} '.format(nam) + 'did not run.'
+
+        # compare results
+        outfile1 = os.path.join(os.path.split(os.path.join(testpth, nam))[0], 'bud.cmp')
+        outfile2 = os.path.join(os.path.split(os.path.join(testpth, nam))[0], 'hds.cmp')
+        success_reg = pymake.compare(os.path.join(testpth, nam),
+                                     os.path.join(testpth_reg, nam),
+                                     precision='single',
+                                     max_cumpd=0.01, max_incpd=0.01, htol=0.001,
+                                     outfile1=outfile1, outfile2=outfile2)
 
     # Clean things up
-    if success and success_reg and not config.retain:
+    if not config.retain:
         pymake.teardown(testpth)
-    assert success and success_reg
 
     return
 
@@ -76,10 +79,14 @@ def test_compile_prev():
 
     # Download the MODFLOW-2005 distribution
     pymake.download_and_unzip(url, pth=config.testdir)
-    #os.rename(config.dir_release, config.dir_previous)
+
+    # use cc on mac and gcc on all others
+    cc = 'gcc'
+    if sys.platform.lower() == 'darwin':
+        cc = 'cc'
 
     # compile
-    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+    pymake.main(srcdir, target, 'gfortran', cc, makeclean=True,
                 expedite=False, dryrun=False, double=False, debug=False,
                 include_subdirs=False)
 
@@ -105,8 +112,13 @@ def test_compile_ref():
     # Download the MODFLOW-USG distribution
     pymake.download_and_unzip(url, pth=config.testdir)
 
+    # use cc on mac and gcc on all others
+    cc = 'gcc'
+    if sys.platform.lower() == 'darwin':
+        cc = 'cc'
+
     # compile
-    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+    pymake.main(srcdir, target, 'gfortran', cc, makeclean=True,
                 expedite=False, dryrun=False, double=False, debug=False,
                 include_subdirs=False)
 
@@ -116,6 +128,11 @@ def test_compile_ref():
 
 
 def test_mf2005():
+    target = config.target_release
+    assert os.path.isfile(target), 'Target {} does not exist.'.format(target)
+    target = config.target_previous
+    assert os.path.isfile(target), 'Target {} does not exist.'.format(target)
+
     namefiles = get_namefiles(config.testpaths[0], exclude=config.exclude)
     for namefile in namefiles:
         yield run_mf2005, namefile
@@ -123,14 +140,6 @@ def test_mf2005():
 
 
 def test_teardown():
-    if os.path.isdir(config.dir_previous):
-        print('Removing folder ' + config.dir_previous)
-        shutil.rmtree(config.dir_previous)
-
-    if os.path.isdir(config.dir_release):
-        print('Removing folder ' + config.dir_release)
-        shutil.rmtree(config.dir_release)
-
     if os.path.isfile(config.target_previous):
         print('Removing ' + config.target_previous)
         os.remove(config.target_previous)
@@ -138,6 +147,16 @@ def test_teardown():
     if os.path.isfile(config.target_release):
         print('Removing ' + config.target_release)
         os.remove(config.target_release)
+
+    # remove release source files if target was built
+    if os.path.isdir(config.dir_release):
+        print('Removing folder ' + config.dir_release)
+        shutil.rmtree(config.dir_release)
+
+    # remove previous release source files if target was built
+    if os.path.isdir(config.dir_previous):
+        print('Removing folder ' + config.dir_previous)
+        shutil.rmtree(config.dir_previous)
 
     return
 
