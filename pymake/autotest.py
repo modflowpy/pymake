@@ -644,6 +644,8 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
         list = get_entries_from_namefile(namefile1, 'list')
         list1 = list[0][0]
     else:
+        if isinstance(files1, str):
+            files1 = [files1]
         for file in files1:
             if 'list' in os.path.basename(
                     file).lower() or 'lst' in os.path.basename(file).lower():
@@ -654,6 +656,8 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
         list = get_entries_from_namefile(namefile2, 'list')
         list2 = list[0][0]
     else:
+        if isinstance(files2, str):
+            files2 = [files2]
         for file in files2:
             if 'list' in os.path.basename(
                     file).lower() or 'lst' in os.path.basename(file).lower():
@@ -661,6 +665,9 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                 break
     # Determine if there are two files to compare
     if list1 is None or list2 is None:
+        print('list1 or list2 is None')
+        print('list1: {}'.format(list1))
+        print('list2: {}'.format(list2))
         return True
 
     # Open output file
@@ -926,7 +933,7 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     return success
 
 
-def compare_heads(namefile1, namefile2, precision='single',
+def compare_heads(namefile1, namefile2, precision='single', text='head',
                   htol=0.001, outfile=None, files1=None, files2=None,
                   difftol=False, verbose=False):
     """
@@ -952,17 +959,27 @@ def compare_heads(namefile1, namefile2, precision='single',
 
         hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(
             ocf1[0][0])
-        if hu1 != 0:
-            entries = get_entries_from_namefile(namefile1, unit=abs(hu1))
+        if text.lower() == 'head':
+            iut = hu1
+        elif text.lower() == 'drawdown':
+            iut = du1
+        if iut != 0:
+            entries = get_entries_from_namefile(namefile1, unit=abs(iut))
             hfpth1, status1 = entries[0][0], entries[0][1]
+
     else:
         if isinstance(files1, str):
             files1 = [files1]
         for file in files1:
-            if 'hds' in os.path.basename(
-                    file).lower() or 'hed' in os.path.basename(file).lower():
-                hfpth1 = file
-                break
+            if text.lower() == 'head':
+                if 'hds' in os.path.basename(file).lower() or \
+                                'hed' in os.path.basename(file).lower():
+                    hfpth1 = file
+                    break
+            elif text.lower() == 'drawdown':
+                if 'ddn' in os.path.basename(file).lower():
+                    hfpth1 = file
+                    break
 
     # Get head info for namefile2
     hfpth2 = None
@@ -975,42 +992,74 @@ def compare_heads(namefile1, namefile2, precision='single',
 
         hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(
             ocf2[0][0])
-        if hu2 != 0:
-            entries = get_entries_from_namefile(namefile2, unit=abs(hu2))
+        if text.lower() == 'head':
+            iut = hu2
+        elif text.lower() == 'drawdown':
+            iut = du2
+        if iut != 0:
+            entries = get_entries_from_namefile(namefile2, unit=abs(iut))
             hfpth2, status2 = entries[0][0], entries[0][1]
     else:
         if isinstance(files2, str):
             files2 = [files2]
         for file in files2:
-            if 'hds' in os.path.basename(
-                    file).lower() or 'hed' in os.path.basename(file).lower():
-                hfpth2 = file
-                break
+            if text.lower() == 'head':
+                if 'hds' in os.path.basename(file).lower() or \
+                                'hed' in os.path.basename(file).lower():
+                    hfpth2 = file
+                    break
+            elif text.lower() == 'drawdown':
+                if 'ddn' in os.path.basename(file).lower():
+                    hfpth2 = file
+                    break
 
     # confirm that there are two files to compare
     if hfpth1 is None or hfpth2 is None:
-        return True
+        print('hpth1 or hpth2 is None')
+        print('hpth1: {}'.format(hpth1))
+        print('hpth2: {}'.format(hpth2))
+        return False
 
     if not os.path.isfile(hfpth1) or not os.path.isfile(hfpth2):
-        return True
+        print('hpth1 or hpth2 is not a file')
+        print('hpth1 isfile: {}'.format(os.path.isfile(hfpth1)))
+        print('hpth2 isfile: {}'.format(os.path.isfile(hfpth2)))
+        return False
 
     # Open output file
     if outfile is not None:
         f = open(outfile, 'w')
         f.write('Created by pymake.autotest.compare\n')
+        f.write('Performing {} comparison\n'.format(text.upper()))
+        msg = '{} is a '.format(hfpth1)
+        if status1 == dbs:
+            msg += 'binary file.'
+        else:
+            msg += 'ascii file.'
+        f.write(msg + '\n')
+        msg = '{} is a '.format(hfpth2)
+        if status2 == dbs:
+            msg += 'binary file.'
+        else:
+            msg += 'ascii file.'
+        f.write(msg + '\n')
 
     # Get head objects
     status1 = status1.upper()
     if status1 == dbs:
-        headobj1 = flopy.utils.HeadFile(hfpth1, precision=precision)
+        headobj1 = flopy.utils.HeadFile(hfpth1, precision=precision,
+                                        verbose=verbose, text=text)
     else:
-        headobj1 = flopy.utils.FormattedHeadFile(hfpth1)
+        headobj1 = flopy.utils.FormattedHeadFile(hfpth1, verbose=verbose,
+                                                 text=text)
 
     status2 = status2.upper()
     if status2 == dbs:
-        headobj2 = flopy.utils.HeadFile(hfpth2, precision=precision)
+        headobj2 = flopy.utils.HeadFile(hfpth2, precision=precision,
+                                        verbose=verbose, text=text)
     else:
-        headobj2 = flopy.utils.FormattedHeadFile(hfpth2)
+        headobj2 = flopy.utils.FormattedHeadFile(hfpth2, verbose=verbose,
+                                                 text=text)
 
     # get times
     times1 = headobj1.get_times()
@@ -1163,8 +1212,8 @@ def compare_concs(namefile1, namefile2, precision='single',
         f.write('Created by pymake.autotest.compare_concs\n')
 
     # Get stage objects
-    uobj1 = flopy.utils.UcnFile(ufpth1, precision=precision)
-    uobj2 = flopy.utils.UcnFile(ufpth2, precision=precision)
+    uobj1 = flopy.utils.UcnFile(ufpth1, precision=precision, verbose=verbose)
+    uobj2 = flopy.utils.UcnFile(ufpth2, precision=precision, verbose=verbose)
 
     # get times
     times1 = uobj1.get_times()
@@ -1306,10 +1355,16 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
 
     # confirm that there are two files to compare
     if sfpth1 is None or sfpth2 is None:
-        return True
+        print('spth1 or spth2 is None')
+        print('spth1: {}'.format(spth1))
+        print('spth2: {}'.format(spth2))
+        return False
 
     if not os.path.isfile(sfpth1) or not os.path.isfile(sfpth2):
-        return True
+        print('spth1 or spth2 is not a file')
+        print('spth1 isfile: {}'.format(os.path.isfile(sfpth1)))
+        print('spth2 isfile: {}'.format(os.path.isfile(sfpth2)))
+        return False
 
     # Open output file
     if outfile is not None:
@@ -1317,8 +1372,8 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
         f.write('Created by pymake.autotest.compare_stages\n')
 
     # Get stage objects
-    sobj1 = flopy.utils.SwrStage(sfpth1)
-    sobj2 = flopy.utils.SwrStage(sfpth2)
+    sobj1 = flopy.utils.SwrStage(sfpth1, verbose=verbose)
+    sobj2 = flopy.utils.SwrStage(sfpth2, verbose=verbose)
 
     # get totim
     times1 = sobj1.get_times()
