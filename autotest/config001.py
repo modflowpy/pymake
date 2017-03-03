@@ -19,7 +19,7 @@ target_release = os.path.join(testdir, program + '_' + version_release)
 testdir_previous = os.path.join(testdir)
 version_previous = '1.11.00'
 target_previous = os.path.join(testdir, program_previous + '_' + version_previous)
-url_previous = 'http://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip'
+url_previous = 'https://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip'
 dir_previous = os.path.join(testdir_previous, 'Unix')
 srcdir_previous = os.path.join(dir_previous, 'src')
 

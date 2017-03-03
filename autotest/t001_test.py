@@ -29,6 +29,8 @@ def run_mf2005(namefile, regression=True):
     success, buff = flopy.run_model(exe_name, nam, model_ws=testpth,
                                     silent=True)
 
+    assert success, 'basemodel {} '.format(nam) + 'did not run.'
+
     # If it is a regression run, then setup and run the model with the
     # release target and the reference target
     success_reg = True
@@ -72,7 +74,7 @@ def test_compile_prev():
     srcdir = config.srcdir_previous
     target = config.target_previous
 
-    # Download the MODFLOW-USG distribution
+    # Download the MODFLOW-2005 distribution
     pymake.download_and_unzip(url, pth=config.testdir)
     #os.rename(config.dir_release, config.dir_previous)
 
