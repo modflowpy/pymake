@@ -490,8 +490,9 @@ def get_mf6_input_files(mfnamefile):
     # such as 'OPEN/CLOSE' and 'TIMESERIESFILE'.  If found, then
     # add that file to the list of files to copy.
     flist = filelist
-    olist = outplist
+    #olist = outplist
     while True:
+        olist = []
         flist, olist = _get_mf6_external_files(srcdir, olist, flist)
         # add to filelist
         if len(flist) > 0:
@@ -500,7 +501,8 @@ def get_mf6_input_files(mfnamefile):
         if len(olist) > 0:
             outplist = outplist + olist
         # terminate loop if no additional files
-        if len(flist) < 1 and len(olist) < 1:
+        #if len(flist) < 1 and len(olist) < 1:
+        if len(flist) < 1:
             break
 
     return filelist, outplist
@@ -578,11 +580,10 @@ def _get_mf6_external_files(srcdir, outplist, files):
                             stmp = ll[i + 1]
                             stmp = stmp.replace('"', '')
                             stmp = stmp.replace("'", '')
-                            if 'SAVE' in line.upper():
-                                if 'HEAD' in line.upper() or \
-                                                'BUDGET' in line.upper() or \
-                                                'DRAWDOWN' in line.upper():
-                                    outplist.append(stmp)
+                            if 'HEAD' in line.upper() or \
+                                            'BUDGET' in line.upper() or \
+                                            'DRAWDOWN' in line.upper():
+                                outplist.append(stmp)
                             else:
                                 extfiles.append(stmp)
                             break
@@ -1112,7 +1113,7 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
                                   subsequent_indent='  ')
                 f.write('{}\n'.format(ee))
                 if verbose:
-                    print(ee + ' at time {}'.format(time))
+                    print(ee + ' at time {}'.format(times1[idx]))
                 e = ''
                 for itupe in indices:
                     for ind in itupe:

@@ -80,13 +80,8 @@ def test_compile_prev():
     # Download the MODFLOW-2005 distribution
     pymake.download_and_unzip(url, pth=config.testdir)
 
-    # use cc on mac and gcc on all others
-    cc = 'gcc'
-    if sys.platform.lower() == 'darwin':
-        cc = 'cc'
-
     # compile
-    pymake.main(srcdir, target, 'gfortran', cc, makeclean=True,
+    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
                 expedite=False, dryrun=False, double=False, debug=False,
                 include_subdirs=False)
 
@@ -112,13 +107,8 @@ def test_compile_ref():
     # Download the MODFLOW-USG distribution
     pymake.download_and_unzip(url, pth=config.testdir)
 
-    # use cc on mac and gcc on all others
-    cc = 'gcc'
-    if sys.platform.lower() == 'darwin':
-        cc = 'cc'
-
     # compile
-    pymake.main(srcdir, target, 'gfortran', cc, makeclean=True,
+    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
                 expedite=False, dryrun=False, double=False, debug=False,
                 include_subdirs=False)
 
