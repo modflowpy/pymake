@@ -77,6 +77,7 @@ To see help for running from command line, use the following statement.
 
 The following scripts can be run directly from the command line to build MODFLOW, MODPATH, MT3D, and SEAWAT binaries on Mac and Linux.  The scripts will download the distribution file from the USGS (requires internet connection), unzip the file, and compile the source.  MT3D will be downloaded from the University of Alabama.
 
+    python make_mf2000.py
     python make_mf2005.py
     python make_mfnwt.py
     python make_swtv4.py
