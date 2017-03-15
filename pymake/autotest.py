@@ -538,18 +538,18 @@ def _get_mf6_external_files(srcdir, outplist, files):
                             extfiles.append(stmp)
                             break
 
-                if 'TIMESERIESFILE' in line.upper():
+                if 'TS8' in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'TIMESERIESFILE':
+                        if s.upper() == 'FILEIN':
                             stmp = ll[i + 1]
                             stmp = stmp.replace('"', '')
                             stmp = stmp.replace("'", '')
                             extfiles.append(stmp)
                             break
 
-                if 'TIMEARRAYSERIESFILE' in line.upper():
+                if 'TAS8' in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'TIMEARRAYSERIESFILE':
+                        if s.upper() == 'FILEIN':
                             stmp = ll[i + 1]
                             stmp = stmp.replace('"', '')
                             stmp = stmp.replace("'", '')
@@ -558,7 +558,7 @@ def _get_mf6_external_files(srcdir, outplist, files):
 
                 if 'OBS8' in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'OBS8':
+                        if s.upper() == 'FILEIN':
                             stmp = ll[i + 1]
                             stmp = stmp.replace('"', '')
                             stmp = stmp.replace("'", '')
@@ -576,17 +576,22 @@ def _get_mf6_external_files(srcdir, outplist, files):
 
                 if 'FILE' in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'FILE':
+                        if s.upper() == 'FILEIN':
                             stmp = ll[i + 1]
                             stmp = stmp.replace('"', '')
                             stmp = stmp.replace("'", '')
-                            if 'HEAD' in line.upper() or \
-                                            'BUDGET' in line.upper() or \
-                                            'DRAWDOWN' in line.upper():
-                                outplist.append(stmp)
-                            else:
-                                extfiles.append(stmp)
+                            extfiles.append(stmp)
                             break
+
+                if 'FILE' in line.upper():
+                    for i, s in enumerate(ll):
+                        if s.upper() == 'FILEOUT':
+                            stmp = ll[i + 1]
+                            stmp = stmp.replace('"', '')
+                            stmp = stmp.replace("'", '')
+                            outplist.append(stmp)
+                            break
+
         except:
             pass
 
