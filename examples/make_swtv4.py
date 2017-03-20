@@ -41,11 +41,24 @@ def make_swtv4():
           DATA FORM/'UNFORMATTED'/
           DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
     '''
-    fn = os.path.join(srcdir, 'FILESPEC.INC')
+    try:
+        os.remove(os.path.join(srcdir, 'FILESPEC.INC'))
+    except:
+        pass
+    fn = os.path.join(srcdir, 'filespec.inc')
     f = open(fn, 'w')
     f.write(l)
     f.close()
+    
+    # rename all source files to lower case so compilation doesn't
+    # bomb on case-sensitive operating systems
+    srcfiles = os.listdir(srcdir)
+    for filename in srcfiles:
+        src = os.path.join(srcdir, filename)
+        dst = os.path.join(srcdir, filename.lower())
+        os.rename(src, dst)
 
+    # make target
     target = 'swtv4'
     pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
                 expedite=False, dryrun=False, double=True, debug=False)
@@ -53,8 +66,8 @@ def make_swtv4():
     assert os.path.isfile(target), 'Target does not exist.'
 
     # Remove the existing directory if it exists
-    if os.path.isdir(dirname):
-        shutil.rmtree(dirname)
+    #if os.path.isdir(dirname):
+    #    shutil.rmtree(dirname)
 
     return
 
