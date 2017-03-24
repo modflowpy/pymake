@@ -80,11 +80,17 @@ def parser():
     parser.add_argument('-cs', '--commonsrc',
                         help='''Additional directory with common source files.''',
                         default=None)
+    parser.add_argument('-ef', '--extrafiles',
+                        help='''List of extra source files to in the
+                        compilation.  extrafiles can be either a list of files
+                        or the name of a text file that contains a list of
+                        files.''',
+                        default=None)
     args = parser.parse_args()
     return args
 
 
-def initialize(srcdir, target, commonsrc):
+def initialize(srcdir, target, commonsrc, extrafiles):
     '''
     Remove temp source directory and target, and then copy source into
     source temp directory.  Return temp directory path.
@@ -111,6 +117,37 @@ def initialize(srcdir, target, commonsrc):
         pth = os.path.basename(os.path.normpath(commonsrc))
         pth = os.path.join(srcdir_temp, pth)
         shutil.copytree(commonsrc, pth)
+
+    # if extrafiles is not none, then it is a text file with a list of
+    # additional source files that need to be copied into srctemp and
+    # compiled.
+    files = []
+    if extrafiles is not None:
+        if isinstance(extrafiles, list):
+            files = extrafiles
+        elif os.path.isfile(extrafiles):
+            with open(extrafiles, 'r') as f:
+                files = []
+                for line in f:
+                    fname = line.strip().replace('\\','/')
+                    if len(fname) > 0:
+                        files.append(fname)
+        else:
+            raise Exception('extrafiles must be either a list of files '
+                            'or the name of a text file that contains a list'
+                            'of files.')
+    for fname in files:
+        fwithpath = os.path.abspath(fname)
+        if not os.path.isfile(fwithpath):
+            print('Current working directory: {}'.format(os.getcwd()))
+            print('Error in extrafiles: {}'.format(extrafiles))
+            print('Could not find file: {}'.format(fwithpath))
+            raise Exception()
+        dst = os.path.join(srcdir_temp, os.path.basename(fname))
+        if os.path.isfile(dst):
+            raise Exception('Error with extrafile.  Name conflicts with '
+                            'an existing source file: {}'.format(dst))
+        shutil.copy(fwithpath, dst)
 
     # set srcdir_temp
     srcdir_temp = os.path.join(srcdir_temp)
@@ -146,10 +183,10 @@ def clean(srcdir_temp, objdir_temp, moddir_temp, objext, winifort):
 
 
 def get_ordered_srcfiles(srcdir_temp, include_subdir=False):
-    '''
+    """
     Create a list of ordered source files (both fortran and c).  Ordering
     is build using a directed acyclic graph to determine module dependencies.
-    '''
+    """
     # create a list of all c(pp), f and f90 source files
 
     templist = []
@@ -198,10 +235,10 @@ def get_ordered_srcfiles(srcdir_temp, include_subdir=False):
 
 
 def create_openspec(srcdir_temp):
-    '''
+    """
     Create a new openspec.inc file that uses STREAM ACCESS.  This is specific
     to MODFLOW.
-    '''
+    """
     files = ['openspec.inc', 'FILESPEC.INC']
     dirs = [d[0] for d in os.walk(srcdir_temp)]
     for d in dirs:
@@ -676,10 +713,10 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
 
 def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
               objdir_temp, moddir_temp):
-    '''
+    """
     Make an ifort batch file
     
-    '''
+    """
     iflist = ['IFORT_COMPILER17', 'IFORT_COMPILER16', 'IFORT_COMPILER15',
               'IFORT_COMPILER14', 'IFORT_COMPILER13']
     found = False
@@ -872,11 +909,11 @@ def create_makefile(target, srcdir, srcdir2, objfiles,
 def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
          dryrun=False, double=False, debug=False,
          include_subdirs=False, fflags=None, arch='intel64',
-         makefile=False, srcdir2=None):
-    '''
+         makefile=False, srcdir2=None, extrafiles=None):
+    """
     Main part of program
 
-    '''
+    """
     # initialize success
     success = 0
 
@@ -896,7 +933,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
 
     # initialize
     srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target,
-                                                       srcdir2)
+                                                       srcdir2, extrafiles)
 
     # get ordered list of files to compile
     srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
@@ -948,4 +985,4 @@ if __name__ == "__main__":
     main(args.srcdir, args.target, args.fc, args.cc, args.makeclean,
          args.expedite, args.dryrun, args.double, args.debug,
          args.subdirs, args.fflags, args.arch, args.makefile,
-         args.commonsrc)
+         args.commonsrc, args.extrafiles)
