@@ -126,28 +126,29 @@ def initialize(srcdir, target, commonsrc, extrafiles):
         if isinstance(extrafiles, list):
             files = extrafiles
         elif os.path.isfile(extrafiles):
+            efpth = os.path.dirname(extrafiles)
             with open(extrafiles, 'r') as f:
                 files = []
                 for line in f:
                     fname = line.strip().replace('\\','/')
                     if len(fname) > 0:
+                        fname = os.path.abspath(os.path.join(efpth, fname))
                         files.append(fname)
         else:
             raise Exception('extrafiles must be either a list of files '
                             'or the name of a text file that contains a list'
                             'of files.')
     for fname in files:
-        fwithpath = os.path.abspath(fname)
-        if not os.path.isfile(fwithpath):
+        if not os.path.isfile(fname):
             print('Current working directory: {}'.format(os.getcwd()))
             print('Error in extrafiles: {}'.format(extrafiles))
-            print('Could not find file: {}'.format(fwithpath))
+            print('Could not find file: {}'.format(fname))
             raise Exception()
         dst = os.path.join(srcdir_temp, os.path.basename(fname))
         if os.path.isfile(dst):
             raise Exception('Error with extrafile.  Name conflicts with '
                             'an existing source file: {}'.format(dst))
-        shutil.copy(fwithpath, dst)
+        shutil.copy(fname, dst)
 
     # set srcdir_temp
     srcdir_temp = os.path.join(srcdir_temp)
