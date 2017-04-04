@@ -950,7 +950,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
                                    srcdir, srcdir2, makefile)
     elif fc == 'ifort':
         platform = sys.platform
-        if platform.lower() == 'darwin':
+        if platform.lower() == 'darwin' or platform.lower() == 'linux':
             create_openspec(srcdir_temp)
             objext = '.o'
             success = compile_with_mac_ifort(srcfiles, target, cc,
