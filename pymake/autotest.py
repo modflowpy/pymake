@@ -436,7 +436,7 @@ def get_mf6_input_files(mfnamefile):
     outplist = []
 
     filekeys = ['TDIS', 'GWF', 'GWT', 'NM-NM', 'GWF-GWF', 'GWF-GWT',
-                'NUMERICAL']
+                'IMS8']
     namefilekeys = ['GWF', 'GWT']
     namefiles = []
 
