@@ -351,6 +351,9 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
             lflag = flag_available('-ffpe-summary')
             if lflag:
                 compileflags.append('-ffpe-summary=overflow')
+            lflag = flag_available('-ffpe-trap')
+            if lflag:
+                compileflags.append('-ffpe-trap=overflow,zero,invalid')
     objext = '.o'
     if double:
         compileflags.append('-fdefault-real-8')
