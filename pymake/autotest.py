@@ -425,6 +425,48 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
     return action
 
 
+def get_mf6_nper(tdisfile):
+    """
+    Return the number of stress periods in the MODFLOW 6 model
+
+    """
+    with open(tdisfile, 'r') as f:
+        lines = f.readlines()
+    line = [line for line in lines if 'NPER' in line.upper()][0]
+    nper = line.strip().split()[1]
+    return nper
+
+
+def get_mf6_mshape(disfile):
+    with open(disfile, 'r') as f:
+        lines = f.readlines()
+
+    d = {}
+    for line in lines:
+
+        # Skip over blank and commented lines
+        ll = line.strip().split()
+        if len(ll) < 2:
+            continue
+        if line.strip()[0] in ['#', '!']:
+            continue
+
+        for key in ['NODES', 'NCPL', 'NLAY', 'NROW', 'NCOL']:
+            if ll[0].upper() in key:
+                d[key] = int(ll[1])
+
+    if 'NODES' in d:
+        mshape = (d['NODES'],)
+    elif 'NCPL' in d:
+        mshape = (d['NLAY'], d['NCPL'])
+    elif 'NLAY' in d:
+        mshape = (d['NLAY'], d['NROW'], d['NCOL'])
+    else:
+        print(d)
+        raise Exception('Could not determine model shape')
+    return mshape
+
+
 def get_mf6_input_files(mfnamefile):
     """
     Return a list of all the MODFLOW 6 input files in this model
@@ -511,8 +553,6 @@ def get_mf6_input_files(mfnamefile):
 def _get_mf6_external_files(srcdir, outplist, files):
     """
 
-    :param files:
-    :return:
     """
     extfiles = []
 
@@ -598,17 +638,36 @@ def _get_mf6_external_files(srcdir, outplist, files):
     return extfiles, outplist
 
 
+def get_mf6_ftypes(namefile, ftypekeys):
+    """
+    Return a list of FTYPES that are in the name file and in ftypekeys
+
+    """
+    with open(namefile, 'r') as f:
+        lines = f.readlines()
+
+    ftypes = []
+    for line in lines:
+
+        # Skip over blank and commented lines
+        ll = line.strip().split()
+        if len(ll) < 2:
+            continue
+        if line.strip()[0] in ['#', '!']:
+            continue
+
+        for key in ftypekeys:
+            if ll[0].upper() in key:
+                ftypes.append(ll[0])
+
+    return ftypes
+
+
 def get_mf6_blockdata(f, blockstr):
     """
     Return list with all non comments between start and end of block specified
     by blockstr
 
-    :param f:
-    :type f:
-    :param block:
-    :type block:
-    :return:
-    :rtype:
     """
     data = []
     # find beginning of block
