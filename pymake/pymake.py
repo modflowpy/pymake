@@ -121,23 +121,25 @@ def initialize(srcdir, target, commonsrc, extrafiles):
     # if extrafiles is not none, then it is a text file with a list of
     # additional source files that need to be copied into srctemp and
     # compiled.
-    files = []
-    if extrafiles is not None:
-        if isinstance(extrafiles, list):
-            files = extrafiles
-        elif os.path.isfile(extrafiles):
-            efpth = os.path.dirname(extrafiles)
-            with open(extrafiles, 'r') as f:
-                files = []
-                for line in f:
-                    fname = line.strip().replace('\\','/')
-                    if len(fname) > 0:
-                        fname = os.path.abspath(os.path.join(efpth, fname))
-                        files.append(fname)
-        else:
-            raise Exception('extrafiles must be either a list of files '
-                            'or the name of a text file that contains a list'
-                            'of files.')
+    files = parse_extrafiles(extrafiles)
+    if files is None:
+        files = []
+    # if extrafiles is not None:
+    #     if isinstance(extrafiles, list):
+    #         files = extrafiles
+    #     elif os.path.isfile(extrafiles):
+    #         efpth = os.path.dirname(extrafiles)
+    #         with open(extrafiles, 'r') as f:
+    #             files = []
+    #             for line in f:
+    #                 fname = line.strip().replace('\\','/')
+    #                 if len(fname) > 0:
+    #                     fname = os.path.abspath(os.path.join(efpth, fname))
+    #                     files.append(fname)
+    #     else:
+    #         raise Exception('extrafiles must be either a list of files '
+    #                         'or the name of a text file that contains a list'
+    #                         'of files.')
     for fname in files:
         if not os.path.isfile(fname):
             print('Current working directory: {}'.format(os.getcwd()))
@@ -161,6 +163,26 @@ def initialize(srcdir, target, commonsrc, extrafiles):
 
     return srcdir_temp, objdir_temp, moddir_temp
 
+def parse_extrafiles(extrafiles):
+    if extrafiles is None:
+        files = None
+    else:
+        if isinstance(extrafiles, list):
+            files = extrafiles
+        elif os.path.isfile(extrafiles):
+            efpth = os.path.dirname(extrafiles)
+            with open(extrafiles, 'r') as f:
+                files = []
+                for line in f:
+                    fname = line.strip().replace('\\','/')
+                    if len(fname) > 0:
+                        fname = os.path.abspath(os.path.join(efpth, fname))
+                        files.append(fname)
+        else:
+            raise Exception('extrafiles must be either a list of files '
+                            'or the name of a text file that contains a list'
+                            'of files.')
+    return files
 
 def clean(srcdir_temp, objdir_temp, moddir_temp, objext, winifort):
     """
@@ -324,7 +346,7 @@ def flag_available(flag):
 
 def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                      expedite, dryrun, double, debug, fflags,
-                     srcdir, srcdir2, makefile):
+                     srcdir, srcdir2, extrafiles, makefile):
     """
     Compile the program using the gnu compilers (gfortran and gcc)
 
@@ -480,7 +502,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
 
     # create makefile
     if makefile:
-        create_makefile(target, srcdir, srcdir2, objfiles,
+        create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
                         fc, compileflags, cc, cflags, syslibs,
                         modules=['-I', '-J'])
 
@@ -491,7 +513,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
 def compile_with_mac_ifort(srcfiles, target, cc,
                            objdir_temp, moddir_temp,
                            expedite, dryrun, double, debug, fflags,
-                           srcdir, srcdir2, makefile):
+                           srcdir, srcdir2, extrafiles, makefile):
     """
     Make target on Mac OSX
     """
@@ -631,7 +653,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
 
     # create makefile
     if makefile:
-        create_makefile(target, srcdir, srcdir2, objfiles,
+        create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
                         fc, compileflags, cc, cflags, syslibs,
                         modules=['-module '])
 
@@ -641,7 +663,7 @@ def compile_with_mac_ifort(srcfiles, target, cc,
 
 def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
                        expedite, dryrun, double, debug, fflagsu, arch,
-                       srcdir, srcdir2, makefile):
+                       srcdir, srcdir2, extrafiles, makefile):
     """
     Make target on Windows OS
     
@@ -770,7 +792,7 @@ def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
     return
 
 
-def create_makefile(target, srcdir, srcdir2, objfiles,
+def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
                     fc, fflags, cc, cflags, syslibs,
                     objext='.o', modules=['-I', '-J']):
     # open makefile
@@ -798,6 +820,13 @@ def create_makefile(target, srcdir, srcdir2, objfiles,
     if srcdir2 is not None:
         dirs2 = [d[0] for d in os.walk(srcdir2)]
         dirs = dirs + dirs2
+    files = parse_extrafiles(extrafiles)
+    if files is not None:
+        for ef in files:
+            fdir = os.path.dirname(ef)
+            rdir = os.path.relpath(fdir, os.getcwd())
+            if rdir not in dirs:
+                dirs.append(rdir)
     srcdirs = []
     for idx, dir in enumerate(dirs):
         srcdirs.append('SOURCEDIR{}'.format(idx+1))
@@ -897,7 +926,7 @@ def create_makefile(target, srcdir, srcdir2, objfiles,
     f.write('.PHONY : clean\n' +
             'clean : \n' +
             '\t-rm -rf $(OBJDIR)\n' +
-            '\t-rm -rf $(BINDIR)\n')
+            '\t-rm -rf $(PROGRAM)\n')
     f.write('\n')
 
     f.write('# Clean the object and module files\n')
@@ -950,7 +979,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
         success = compile_with_gnu(srcfiles, target, cc,
                                    objdir_temp, moddir_temp,
                                    expedite, dryrun, double, debug, fflags,
-                                   srcdir, srcdir2, makefile)
+                                   srcdir, srcdir2, extrafiles, makefile)
     elif fc == 'ifort':
         platform = sys.platform
         if platform.lower() == 'darwin' or platform.lower() == 'linux':
@@ -960,7 +989,8 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
                                              objdir_temp, moddir_temp,
                                              expedite, dryrun, double,
                                              debug, fflags,
-                                             srcdir, srcdir2, makefile)
+                                             srcdir, srcdir2, extrafiles,
+                                             makefile)
         else:
             winifort = True
             objext = '.obj'
@@ -969,7 +999,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
                                          objdir_temp, moddir_temp,
                                          expedite, dryrun, double, debug,
                                          fflags, arch,
-                                         srcdir, srcdir2, makefile)
+                                         srcdir, srcdir2, extrafiles, makefile)
     else:
         raise Exception('Unsupported compiler')
 
