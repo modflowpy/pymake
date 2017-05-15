@@ -47,10 +47,11 @@ def parser():
     parser.add_argument('-fc', help='Fortran compiler to use (default is gfortran)',
                         default='gfortran', choices=['ifort', 'gfortran'])
     parser.add_argument('-cc', help='C compiler to use (default is gcc)',
-                        default='gcc', choices=['gcc', 'clang'])
+                        default='gcc', choices=['gcc', 'clang', 'icc'])
     parser.add_argument('-ar', '--arch',
                         help='Architecture to use for ifort (default is intel64)',
-                        default='intel64', choices=['ia32', 'ia32_intel64', 'intel64'])
+                        default='intel64',
+                        choices=['ia32', 'ia32_intel64', 'intel64'])
     parser.add_argument('-mc', '--makeclean', help='Clean files when done',
                         action='store_true')
     parser.add_argument('-dbl', '--double', help='Force double precision',
