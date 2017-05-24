@@ -320,7 +320,7 @@ def flag_available(flag):
     Determine if a specified flag exists
     """
     found = False
-    # determin the gfortran command line flags available
+    # determine the gfortran command line flags available
     logfn = 'gfortran.txt'
     errfn = 'gfortran.err'
     logfile = open(logfn, 'w')
@@ -854,8 +854,8 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
     f.write('\n')
 
     f.write('# Define the Fortran compile flags\n')
-    f.write('F90 = {}\n'.format(fc))
-    line = 'F90FLAGS = '
+    f.write('FC = {}\n'.format(fc))
+    line = 'FFLAGS = '
     for ff in fflags:
         line += '{} '.format(ff)
     f.write('{}\n'.format(line))
@@ -887,9 +887,8 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
     f.write('# Define task functions\n')
     f.write('\n')
 
-    f.write('# Create the bin directory and compile and link the executable\n')
-    all = os.path.splitext(os.path.basename(target))[0]
-    f.write('all: makebin | {}\n'.format(all))
+    f.write('# Create the bin directory and compile and link the program\n')
+    f.write('all: makebin | $(PROGRAM)\n')
     f.write('\n')
 
     f.write('# Make the bin directory for the executable\n')
@@ -898,10 +897,9 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
     f.write('\n')
 
 
-    f.write('# Define the objects ' +
-            'that make up {}\n'.format(os.path.basename(target)))
-    f.write('{}: $(OBJECTS)\n'.format(all))
-    line = '\t-$(F90) $(F90FLAGS) -o $(PROGRAM) $(OBJECTS) $(SYSLIBS) '
+    f.write('# Define the objects that make up the program\n')
+    f.write('$(PROGRAM) : $(OBJECTS)\n')
+    line = '\t-$(FC) $(FFLAGS) -o $@ $(OBJECTS) $(SYSLIBS) '
     for m in modules:
         line += '{}$(OBJDIR) '.format(m)
     f.write('{}\n'.format(line))
@@ -910,7 +908,7 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
     for tf in ffiles:
         f.write('$(OBJDIR)/%{} : %{}\n'.format(objext, tf))
         f.write('\t@mkdir -p $(@D)\n')
-        line = '\t$(F90) $(F90FLAGS) -c $< -o $@ '
+        line = '\t$(FC) $(FFLAGS) -c $< -o $@ '
         for m in modules:
             line += '{}$(OBJDIR) '.format(m)
         f.write('{}\n'.format(line))
