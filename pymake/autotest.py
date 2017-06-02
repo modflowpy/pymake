@@ -477,9 +477,9 @@ def get_mf6_input_files(mfnamefile):
     filelist = []
     outplist = []
 
-    filekeys = ['TDIS', 'GWF', 'GWT', 'NM-NM', 'GWF-GWF', 'GWF-GWT',
+    filekeys = ['TDIS6', 'GWF6', 'GWT', 'GWF6-GWF6', 'GWF-GWT',
                 'IMS6']
-    namefilekeys = ['GWF', 'GWT']
+    namefilekeys = ['GWF6', 'GWT']
     namefiles = []
 
     with open(mfnamefile) as f:
