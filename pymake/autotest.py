@@ -478,7 +478,7 @@ def get_mf6_input_files(mfnamefile):
     outplist = []
 
     filekeys = ['TDIS', 'GWF', 'GWT', 'NM-NM', 'GWF-GWF', 'GWF-GWT',
-                'IMS8']
+                'IMS6']
     namefilekeys = ['GWF', 'GWT']
     namefiles = []
 
@@ -578,7 +578,7 @@ def _get_mf6_external_files(srcdir, outplist, files):
                             extfiles.append(stmp)
                             break
 
-                if 'TS8' in line.upper():
+                if 'TS6' in line.upper():
                     for i, s in enumerate(ll):
                         if s.upper() == 'FILEIN':
                             stmp = ll[i + 1]
@@ -587,7 +587,7 @@ def _get_mf6_external_files(srcdir, outplist, files):
                             extfiles.append(stmp)
                             break
 
-                if 'TAS8' in line.upper():
+                if 'TAS6' in line.upper():
                     for i, s in enumerate(ll):
                         if s.upper() == 'FILEIN':
                             stmp = ll[i + 1]
@@ -596,7 +596,7 @@ def _get_mf6_external_files(srcdir, outplist, files):
                             extfiles.append(stmp)
                             break
 
-                if 'OBS8' in line.upper():
+                if 'OBS6' in line.upper():
                     for i, s in enumerate(ll):
                         if s.upper() == 'FILEIN':
                             stmp = ll[i + 1]
