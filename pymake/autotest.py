@@ -324,6 +324,16 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
     fname = os.path.abspath(fname)
     mf6inp, mf6outp = get_mf6_input_files(fname)
     files2copy = [mfnamefile] + mf6inp
+    # determine if there are any .ex files
+    exinp = []
+    for f in mf6outp:
+        ext = os.path.splitext(f)[1]
+        if ext.lower() == '.hds':
+            pth = os.path.join(src, f + '.ex')
+            if os.path.isfile(pth):
+                exinp.append(f + '.ex')
+    if len(exinp) > 0:
+        files2copy += exinp
     if extrafiles is not None:
         files2copy += extrafiles
 
@@ -1000,7 +1010,7 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
 def compare_heads(namefile1, namefile2, precision='single', text='head',
                   htol=0.001, outfile=None, files1=None, files2=None,
-                  difftol=False, verbose=False):
+                  difftol=False, verbose=False, exfile=None):
     """
     Compare the results from these two simulations.
 
@@ -1097,6 +1107,8 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
         f = open(outfile, 'w')
         f.write('Created by pymake.autotest.compare\n')
         f.write('Performing {} comparison\n'.format(text.upper()))
+        if exfile is not None:
+            f.write('Using exclusion file {}\n'.format(exfile))
         msg = '{} is a '.format(hfpth1)
         if status1 == dbs:
             msg += 'binary file.'
@@ -1109,6 +1121,17 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
         else:
             msg += 'ascii file.'
         f.write(msg + '\n')
+
+    # Get exclusion file
+    exd = None
+    if exfile is not None:
+        e = None
+        try:
+            exd = np.genfromtxt(exfile).flatten()
+        except:
+            e = 'Could not read exclusion ' + \
+                'file {}'.format(os.path.basename(exfile))
+        assert e is None, e
 
     # Get head objects
     status1 = status1.upper()
@@ -1149,6 +1172,20 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
     for idx in range(len(times1)):
         h1 = headobj1.get_data(totim=times1[idx])
         h2 = headobj2.get_data(totim=times2[idx])
+
+        if exfile is not None:
+            # reshape exd to the shape of the head arrays
+            if idx == 0:
+                e = 'shape of {} ({})'.format(exfile, exd.shape) + \
+                    'can not be reshaped to the size of the ' + \
+                    'head arrays ()'.format(h1.shape)
+                assert h1.flatten().shape == exd.shape, e
+                exd = exd.reshape(h1.shape)
+                iexd = exd > 0
+
+            # reset h1 and h2 to the same value in the excluded area
+            h1[iexd] = 0.
+            h2[iexd] = 0.
 
         if difftol:
             diffmax, indices = calculate_difftol(h1, h2, htol)
