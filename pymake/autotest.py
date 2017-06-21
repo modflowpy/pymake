@@ -1131,7 +1131,8 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
         except:
             e = 'Could not read exclusion ' + \
                 'file {}'.format(os.path.basename(exfile))
-        assert e is None, e
+            print(e)
+            return False
 
     # Get head objects
     status1 = status1.upper()
