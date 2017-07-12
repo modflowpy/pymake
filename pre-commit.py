@@ -17,7 +17,15 @@ def get_version_str(v0, v1, v2, v3):
                   '{}'.format(v2),
                   '{}'.format(v3))
     build = '.'.join(build_type)
-    return version, build   
+    return version, build  
+
+    
+def get_tag(v0, v1):
+    tag_type = ('{}'.format(v0), 
+                '{}'.format(v1), 
+                '{}'.format(0))
+    tag = '.'.join(tag_type)
+     
 
 def update_version():
     try:
@@ -44,9 +52,16 @@ def update_version():
         # get current build number
         b = subprocess.Popen(("git", "describe", "--match", "build"),
                              stdout=subprocess.PIPE).communicate()[0]
-        
-        vmicro = vmicro + 1
         vcommit = int(b.decode().strip().split('-')[1]) + 2
+        
+        tag = get_tag(vmajor, vminor)
+        print('determining version micro from {}'.format(tag))
+        try:
+            b = subprocess.Popen(("git", "describe", "--match", tag),
+                                 stdout=subprocess.PIPE).communicate()[0]
+            vmicro = int(b.decode().strip().split('-')[1]) + 1
+        except:
+            vmicro = vmicro + 1
     
         v1, b1 = get_version_str(vmajor, vminor, vmicro, vcommit)
     
