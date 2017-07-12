@@ -22,8 +22,7 @@ def get_version_str(v0, v1, v2, v3):
     
 def get_tag(v0, v1):
     tag_type = ('{}'.format(v0), 
-                '{}'.format(v1), 
-                '{}'.format(0))
+                '{}'.format(v1))
     tag = '.'.join(tag_type)
     return tag
      
@@ -62,7 +61,7 @@ def update_version():
                                  stdout=subprocess.PIPE).communicate()[0]
             vmicro = int(b.decode().strip().split('-')[1]) + 1
         except:
-            vmicro = vmicro + 1
+            vmicro = 0
     
         v1, b1 = get_version_str(vmajor, vminor, vmicro, vcommit)
     
@@ -73,17 +72,18 @@ def update_version():
     
         # write new version file
         f = open(pth, 'w')
-        f.write('#{} version file automatically '.format(pak) +
+        f.write('# {} version file automatically '.format(pak) +
                 'created using...{0}\n'.format(os.path.basename(__file__)))
-        f.write('#            created on......' +
+        f.write('# created on...' +
                 '{0}\n'.format(datetime.datetime.now().strftime("%B %d, %Y %H:%M:%S")))
         f.write('\n')
         f.write('major = {}\n'.format(vmajor))
         f.write('minor = {}\n'.format(vminor))
         f.write('micro = {}\n'.format(vmicro))
         f.write('commit = {}\n\n'.format(vcommit))
-        f.write("__version__='{}'\n".format(v1))
-        f.write("__build__='{}'\n".format(b1))
+        f.write("__version__ = '{:d}.{:d}'.format(major, minor)\n")
+        f.write("__build__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)\n")
+        f.write("__git_commit__ = '{:d}'.format(commit)\n")
         f.close()
         print('Succesfully updated version.py')
     except:
@@ -92,17 +92,10 @@ def update_version():
 
 def add_updated_version():
     try:
-        opth = os.getcwd() 
-        print('In: {}'.format(opth))
-        #npth = os.path.join('..', '..')
-        #print('Changing to: {}'.format(os.path.abspath(npth)))
-        #os.chdir(npth)
         # add modified version file
         print('Adding updated version file to repo')
         b = subprocess.Popen(("git", "add", "{}/version.py".format(pak)),
                              stdout=subprocess.PIPE).communicate()[0]
-        #print('Changing back to: {}'.format(opth))
-        #os.chdir(opth)
         
     except:
         print('Could not add updated version file')
