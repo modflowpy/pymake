@@ -20,7 +20,7 @@ setup(name='pymake',
       author_email='langevin@usgs.gov',
       url='https://github.com/modflowpy/pymake.git',
       license='New BSD',
-      platforms='Windows, Mac OS-X',
+      platforms='Windows, Mac OS-X, Linux',
       install_requires=[], # ['pydotplus>=2.0'],
       packages=['pymake'],
       version=__version__ )
