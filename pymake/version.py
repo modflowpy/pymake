@@ -1,10 +1,10 @@
 #pymake version file automatically created using...pre-commit.py
-#            created on......July 12, 2017 11:11:24
+#            created on......July 12, 2017 12:18:12
 
 major = 1
 minor = 1
 micro = 0
-commit = 187
+commit = 188
 
-__version__='1.1.1'
-__build__='1.1.0.187'
+__version__='1.1.2'
+__build__='1.1.2.188'
