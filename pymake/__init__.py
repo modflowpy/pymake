@@ -1,4 +1,7 @@
 # __init__.py
+__name__ = 'pymake'
+__author__ = 'Christian D. Langevin, Joseph Hughes'
+from .version import __version__, __build__
 
 from .pymake import main, parser, get_ordered_srcfiles
 from .dag import order_source_files, order_c_source_files, get_f_nodelist
