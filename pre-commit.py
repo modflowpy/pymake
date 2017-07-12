@@ -21,7 +21,7 @@ def get_version_str(v0, v1, v2, v3):
 
 def update_version():
     try:
-        pth = os.path.join('..', '..', pak, 'version.py')
+        pth = os.path.join(pak, 'version.py')
         
         vmajor = 0
         vminor = 0
@@ -78,15 +78,15 @@ def add_updated_version():
     try:
         opth = os.getcwd() 
         print('In: {}'.format(opth))
-        npth = os.path.join('..', '..')
-        print('Changing to: {}'.format(os.path.abspath(npth)))
-        os.chdir(npth)
+        #npth = os.path.join('..', '..')
+        #print('Changing to: {}'.format(os.path.abspath(npth)))
+        #os.chdir(npth)
         # add modified version file
         print('Adding updated version file to repo')
         b = subprocess.Popen(("git", "add", "{}/version.py".format(pak)),
                              stdout=subprocess.PIPE).communicate()[0]
-        print('Changing back to: {}'.format(opth))
-        os.chdir(opth)
+        #print('Changing back to: {}'.format(opth))
+        #os.chdir(opth)
         
     except:
         print('Could not add updated version file')
