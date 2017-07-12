@@ -6,5 +6,5 @@ minor = 1
 micro = 0
 commit = 188
 
-__version__='1.1.2'
-__build__='1.1.2.188'
+__version__='1.1.0'
+__build__='1.1.0.188'
