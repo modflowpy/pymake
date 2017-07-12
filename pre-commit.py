@@ -25,6 +25,7 @@ def get_tag(v0, v1):
                 '{}'.format(v1), 
                 '{}'.format(0))
     tag = '.'.join(tag_type)
+    return tag
      
 
 def update_version():
