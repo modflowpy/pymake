@@ -21,6 +21,14 @@ def make_mf2005():
     dirname = 'MF2005.1_12u'
     srcdir = os.path.join(dirname, 'src')
 
+    # make single precision version
+    target = 'mf2005'
+    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+                expedite=False, dryrun=False, double=False, debug=False)
+
+    assert os.path.isfile(target), 'Target does not exist.'
+
+    # make double precision version
     target = 'mf2005dbl'
     pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
                 expedite=False, dryrun=False, double=True, debug=False)

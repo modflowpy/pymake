@@ -817,9 +817,9 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
     pth = target.replace('\\', '/')
     f.write('PROGRAM = {}\n'.format(pth))
     f.write('\n')
-    dirs = [d[0] for d in os.walk(srcdir)]
+    dirs = [d[0].replace('\\', '/') for d in os.walk(srcdir)]
     if srcdir2 is not None:
-        dirs2 = [d[0] for d in os.walk(srcdir2)]
+        dirs2 = [d[0].replace('\\', '/') for d in os.walk(srcdir2)]
         dirs = dirs + dirs2
     files = parse_extrafiles(extrafiles)
     if files is not None:
