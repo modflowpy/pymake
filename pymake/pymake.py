@@ -826,6 +826,7 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
         for ef in files:
             fdir = os.path.dirname(ef)
             rdir = os.path.relpath(fdir, os.getcwd())
+            rdir = rdir.replace('\\', '/')
             if rdir not in dirs:
                 dirs.append(rdir)
     srcdirs = []
