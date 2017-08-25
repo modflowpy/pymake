@@ -263,7 +263,7 @@ def create_openspec(srcdir_temp):
     Create a new openspec.inc file that uses STREAM ACCESS.  This is specific
     to MODFLOW.
     """
-    files = ['openspec.inc', 'FILESPEC.INC']
+    files = ['openspec.inc', 'FILESPEC.INC', 'filespec.inc']
     dirs = [d[0] for d in os.walk(srcdir_temp)]
     for d in dirs:
         for f in files:
