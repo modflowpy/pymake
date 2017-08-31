@@ -12,7 +12,14 @@ except ImportError:
     from urllib import urlretrieve
 
 
-def download_and_unzip(url, pth='./', delete_zip=True, verify=True):
+def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
+                       timeout=10):
+    try:
+        import requests
+    except Exception as e:
+        msg = "pymake.download_and_unzip() error import requests: " + \
+              str(e)
+        raise Exception(msg)
     if not os.path.exists(pth):
         print('Creating the directory: {}'.format(pth))
         os.makedirs(pth)
@@ -20,28 +27,35 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True):
     file_name = os.path.join(pth, url.split('/')[-1])
     ierr = 0
     try:
-        f, header = urlretrieve(url, file_name)
+        # f, header = urlretrieve(url, file_name)
+        req = requests.get(url, verify=verify, timeout=timeout)
+        f = open(file_name, 'wb')
+        for chunk in req.iter_content(100000):
+            f.write(chunk)
+        f.close()
     except:
-        if 'exe' in os.path.basename(file_name).lower():
-            try:
-                import requests
-            except Exception as e:
-                msg = "pymake.download_and_unzip() error import requests: " + \
-                      str(e)
-                raise Exception(msg)
-            try:
-                req = requests.get(url, verify=verify)
-                f = open(file_name, 'wb')
-                for chunk in req.iter_content(100000):
-                    f.write(chunk)
-                f.close()
-            except:
-                ierr = 1
-        else:
-            ierr = 1
-        if ierr != 0:
-            msg = 'Cannot download file: {}'.format(url)
-            raise Exception(msg)
+        # if 'exe' in os.path.basename(file_name).lower():
+        #     try:
+        #         import requests
+        #     except Exception as e:
+        #         msg = "pymake.download_and_unzip() error import requests: " + \
+        #               str(e)
+        #         raise Exception(msg)
+        #     try:
+        #         req = requests.get(url, verify=verify)
+        #         f = open(file_name, 'wb')
+        #         for chunk in req.iter_content(100000):
+        #             f.write(chunk)
+        #         f.close()
+        #     except:
+        #         ierr = 1
+        # else:
+        #     ierr = 1
+        # if ierr != 0:
+        #     msg = 'Cannot download file: {}'.format(url)
+        #     raise Exception(msg)
+        msg = 'Cannot download file: {}'.format(url)
+        raise Exception(msg)
 
     # Unzip the file, and delete zip file if successful.
     if 'zip' in os.path.basename(file_name) or \
