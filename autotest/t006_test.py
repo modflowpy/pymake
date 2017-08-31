@@ -21,7 +21,7 @@ def compile_code():
         shutil.rmtree(mfnwtpth)
 
     # Download the MODFLOW-NWT distribution
-    url = "http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT_1.1.2.zip"
+    url = "https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT_1.1.3.zip"
     download_and_unzip(url, pth=dstpth)
 
     pymake.main(srcpth, target, 'gfortran', 'gcc', makeclean=True,

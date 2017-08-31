@@ -13,12 +13,12 @@ def make_mfnwt():
     os.chdir(dstpth)
 
     # Remove the existing directory if it exists
-    dirname = 'MODFLOW-NWT_1.1.2'
+    dirname = 'MODFLOW-NWT_1.1.3'
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
 
     # Download the MODFLOW-NWT distribution
-    url = "http://water.usgs.gov/ogw/modflow-nwt/{0}.zip".format(dirname)
+    url = "https://water.usgs.gov/ogw/modflow-nwt/{0}.zip".format(dirname)
     download_and_unzip(url)
 
     # Remove the parallel and serial folders from the source directory

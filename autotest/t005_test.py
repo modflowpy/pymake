@@ -21,7 +21,7 @@ def compile_code():
         shutil.rmtree(mflgrpth)
 
     # Download the MODFLOW-LGR distribution
-    url = "http://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
+    url = "https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
     pymake.download_and_unzip(url, pth=dstpth)
 
     # compile MODFLOW-LGR

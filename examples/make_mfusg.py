@@ -19,7 +19,7 @@ def make_mfusg():
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
 
-    url = 'http://water.usgs.gov/ogw/mfusg/{0}.zip'.format(dirname)
+    url = 'https://water.usgs.gov/ogw/mfusg/{0}.zip'.format(dirname)
     download_and_unzip(url)
 
     # Set src and target

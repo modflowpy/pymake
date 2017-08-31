@@ -15,7 +15,7 @@ def make_mf2000():
     os.chdir(dstpth)
 
     # Download the MODFLOW-2005 distribution
-    url = "http://water.usgs.gov/nrp/gwsoftware/modflow2000/mf2k1_19_01.tar.gz"
+    url = "https://water.usgs.gov/nrp/gwsoftware/modflow2000/mf2k1_19_01.tar.gz"
     download_and_unzip(url)
 
     dirname = 'mf2k.1_19'

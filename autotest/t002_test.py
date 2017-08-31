@@ -41,7 +41,7 @@ def compile_code():
         shutil.rmtree(swtpth)
 
     # Download the SEAWAT distribution
-    url = 'http://water.usgs.gov/ogw/seawat/swt_v4_00_05.zip'
+    url = 'https://water.usgs.gov/ogw/seawat/swt_v4_00_05.zip'
     pymake.download_and_unzip(url, pth=dstpth)
 
     # Remove the parallel and serial folders from the source directory

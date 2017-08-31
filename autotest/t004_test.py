@@ -22,7 +22,7 @@ def compile_code():
         shutil.rmtree(mp6pth)
 
     # Download the MODPATH 6 distribution
-    url = "http://water.usgs.gov/ogw/modpath/archive/modpath_v6.0.01/modpath.6_0_01.zip"
+    url = "https://water.usgs.gov/ogw/modpath/archive/modpath_v6.0.01/modpath.6_0_01.zip"
     pymake.download_and_unzip(url, pth=dstpth)
 
     # start of edit a few files so it can compile with gfortran

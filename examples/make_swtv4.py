@@ -22,7 +22,7 @@ def make_swtv4():
         shutil.rmtree(dirname)
 
     # Download the SEAWAT distribution
-    url = "http://water.usgs.gov/ogw/seawat/{0}.zip".format(dirname)
+    url = "https://water.usgs.gov/ogw/seawat/{0}.zip".format(dirname)
     download_and_unzip(url)
 
     # Remove the parallel and serial folders from the source directory

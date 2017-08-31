@@ -13,7 +13,7 @@ def make_mt3d():
     os.chdir(dstpth)
 
     # Download the MT3D distribution
-    url = "http://hydro.geo.ua.edu/mt3d/mt3dms_530.exe"
+    url = "https://hydro.geo.ua.edu/mt3d/mt3dms_530.exe"
     download_and_unzip(url)
 
     # Set srcdir and remove unneeded files

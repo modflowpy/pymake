@@ -18,7 +18,7 @@ def make_mt3dusgs():
         shutil.rmtree(dirname)
 
     # Download the MT3D-USGS distribution
-    url = "http://water.usgs.gov/ogw/mt3d-usgs/mt3d-usgs_1.0.zip"
+    url = "https://water.usgs.gov/ogw/mt3d-usgs/mt3d-usgs_1.0.zip"
     download_and_unzip(url)
 
     # Set srcdir and target

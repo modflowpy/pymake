@@ -47,7 +47,7 @@ def parser():
     parser.add_argument('-fc', help='Fortran compiler to use (default is gfortran)',
                         default='gfortran', choices=['ifort', 'gfortran'])
     parser.add_argument('-cc', help='C compiler to use (default is gcc)',
-                        default='gcc', choices=['gcc', 'clang', 'icc'])
+                        default='gcc', choices=['gcc', 'clang', 'icc', 'g++'])
     parser.add_argument('-ar', '--arch',
                         help='Architecture to use for ifort (default is intel64)',
                         default='intel64',
@@ -363,6 +363,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     if debug:
         # Debug flags
         compileflags = ['-g',
+                        '-O0',
                         '-fcheck=all',
                         '-fbacktrace',
                         '-fbounds-check'

@@ -14,7 +14,7 @@ def make_mflgr():
     os.chdir(dstpth)
 
     # Download the MODFLOW-LGR distribution
-    url = "http://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
+    url = "https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
     download_and_unzip(url)
 
     dirname = 'mflgr.2_0'
