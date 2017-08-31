@@ -6,6 +6,7 @@ import os
 import sys
 import datetime
 
+files = ['version.py', 'README.md']
 pak = 'pymake'
 
 
@@ -31,7 +32,7 @@ def get_tag(v0, v1):
 
 def update_version():
     try:
-        pth = os.path.join(pak, 'version.py')
+        pth = os.path.join(pak, files[0])
 
         vmajor = 0
         vminor = 0
@@ -88,7 +89,7 @@ def update_version():
         f.write("__build__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)\n")
         f.write("__git_commit__ = '{:d}'.format(commit)\n")
         f.close()
-        print('Succesfully updated version.py')
+        print('Succesfully updated {}'.format(files[0]))
     except:
         print('There was a problem updating the version file')
         sys.exit(1)
@@ -110,7 +111,7 @@ def add_updated_files():
 
 def update_readme_markdown(vmajor, vminor, vmicro):
     try:
-        # determine current buildstat branch
+        # determine current branch
         b = subprocess.Popen(("git", "status"),
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT).communicate()[0]
