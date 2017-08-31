@@ -8,7 +8,7 @@ from pymake.download import download_and_unzip
 dstpth = os.path.join('temp')
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
-mfnwtpth = os.path.join(dstpth, 'MODFLOW-NWT_1.1.2')
+mfnwtpth = os.path.join(dstpth, 'MODFLOW-NWT_1.1.3')
 
 exe_name = 'mfnwt'
 srcpth = os.path.join(mfnwtpth, 'src')

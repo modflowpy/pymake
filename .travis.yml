@@ -60,8 +60,12 @@ install:
       else pip install -r requirements.travis.txt;
       fi
     - pip install https://github.com/modflowpy/flopy/zipball/develop
+    - pip install nose-timer
+    - pip install coveralls
 
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
-    - nosetests -v -w ./autotest
+    - nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=pymake
+after_success:
+    - coveralls

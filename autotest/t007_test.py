@@ -94,7 +94,7 @@ def replace_files():
     dirs = [name for name in os.listdir(expth) if
             os.path.isdir(os.path.join(expth, name))]
     # rename a few files for linux
-    replace_files = ['example_1.BUD']
+    replace_files = ['example_1.BUD', 'Zones_layer_3.txt']
     for d in dirs:
         pth = os.path.join(expth, d, 'original')
         for rf in replace_files:
