@@ -4,16 +4,9 @@ import os
 from zipfile import ZipFile
 import tarfile
 
-try:
-    # For Python 3.0 and later
-    from urllib.request import urlretrieve
-except ImportError:
-    # Fall back to Python 2's urllib
-    from urllib import urlretrieve
-
 
 def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
-                       timeout=30, nattempts=10):
+                       timeout=30, nattempts=10, chunk_size=204800):
     try:
         import requests
     except Exception as e:
@@ -25,15 +18,26 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         os.makedirs(pth)
     print('Attempting to download the file: ', url)
     file_name = os.path.join(pth, url.split('/')[-1])
+    # download the file
     success = False
     for idx in range(nattempts):
         print(' download attempt: {}'.format(idx + 1))
+        #
+        fs = requests.get(url, stream=True).headers['Content-length']
+        bfmt = '{:' + '{}'.format(18) + ',d} bytes'
+        print('   file size: ' + bfmt.format(int(fs)))
+        ds = 0
         try:
             req = requests.get(url, verify=verify, timeout=timeout)
-            f = open(file_name, 'wb')
-            for chunk in req.iter_content(100000):
-                f.write(chunk)
-            f.close()
+            with open(file_name, 'wb') as f:
+                for chunk in req.iter_content(chunk_size=chunk_size):
+                    if chunk:
+                        ds += len(chunk)
+                        msg = '     downloaded ' + bfmt.format(ds) + \
+                              ' of ' + bfmt.format(int(fs)) + \
+                              ' ({:10.4%})'.format(float(ds)/float(fs))
+                        print(msg)
+                        f.write(chunk)
             success = True
         except:
             if idx + 1 == nattempts:
@@ -41,30 +45,6 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
                 raise Exception(msg)
         if success:
             break
-    # ierr = 0
-    # try:
-    #     f, header = urlretrieve(url, file_name)
-    # except:
-    #     if 'exe' in os.path.basename(file_name).lower():
-    #         try:
-    #             import requests
-    #         except Exception as e:
-    #             msg = "pymake.download_and_unzip() error import requests: " + \
-    #                   str(e)
-    #             raise Exception(msg)
-    #         try:
-    #             req = requests.get(url, verify=verify)
-    #             f = open(file_name, 'wb')
-    #             for chunk in req.iter_content(100000):
-    #                 f.write(chunk)
-    #             f.close()
-    #         except:
-    #             ierr = 1
-    #     else:
-    #         ierr = 1
-    #     if ierr != 0:
-    #         msg = 'Cannot download file: {}'.format(url)
-    #         raise Exception(msg)
 
     # Unzip the file, and delete zip file if successful.
     if 'zip' in os.path.basename(file_name) or \
