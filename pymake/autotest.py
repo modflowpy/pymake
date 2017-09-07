@@ -1010,7 +1010,8 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
 def compare_heads(namefile1, namefile2, precision='single', text='head',
                   htol=0.001, outfile=None, files1=None, files2=None,
-                  difftol=False, verbose=False, exfile=None):
+                  difftol=False, verbose=False, exfile=None,
+                  maxerr=None):
     """
     Compare the results from these two simulations.
 
@@ -1217,11 +1218,18 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
                 if verbose:
                     print(ee + ' at time {}'.format(times1[idx]))
                 e = ''
+                ncells = h1.flatten().shape[0]
+                fmtn = '{:' + '{}'.format(len(str(ncells))) + 'd}'
                 for itupe in indices:
-                    for ind in itupe:
-                        e += '{} '.format(ind + 1)  # convert to one-based
-                e = textwrap.fill(e, width=70, initial_indent='    ',
-                                  subsequent_indent='    ')
+                    for jdx, ind in enumerate(itupe):
+                        e += '    ' + fmtn.format(jdx + 1) + ' node: '
+                        e += fmtn.format(ind + 1)  # convert to one-based
+                        e += ' -- '
+                        e += 'h1: {:20} '.format(h1.flatten()[ind])
+                        e += 'h2: {:20}\n'.format(h2.flatten()[ind])
+                        if isinstance(maxerr, int):
+                            if jdx + 1 >= maxerr:
+                                break
                 f.write('{}\n'.format(e))
                 # Write header again, unless it is the last record
                 if idx + 1 < len(times1):
