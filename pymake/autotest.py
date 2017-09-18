@@ -524,10 +524,13 @@ def get_mf6_input_files(mfnamefile):
         insideblock = False
 
         for line in lines:
-            if 'BEGIN PACKAGES' in line.upper():
+            ll = line.upper().strip().split()
+            if len(ll) < 2:
+                continue
+            if ll[0] in 'BEGIN' and ll[1] in 'PACKAGES':
                 insideblock = True
                 continue
-            if 'END PACKAGES' in line.upper():
+            if ll[0] in 'END' and ll[1] in 'PACKAGES':
                 insideblock = False
 
             if insideblock:
