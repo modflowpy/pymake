@@ -30,10 +30,19 @@ def compile_code():
     fname1 = os.path.join(srcpth, 'MP6Flowdata.for')
     f = open(fname1, 'r')
 
+    bigline = 'CB%BALANCE = ABS(100.0*CB%QRESIDUAL/CB%QAVE)'
+    newline = '      IF (ABS(CB%QAVE) > 0.) THEN\n' + \
+              '        CB%BALANCE = ABS(100.0*CB%QRESIDUAL/CB%QAVE)\n' + \
+              '      ELSE\n' + \
+              '        CB%BALANCE = 0.\n' + \
+              '      END IF\n'
+
     fname2 = os.path.join(srcpth, 'MP6Flowdata_mod.for')
     f2 = open(fname2, 'w')
     for line in f:
         line = line.replace('CD.QX2', 'CD%QX2')
+        if bigline in line:
+            line = newline
         f2.write(line)
     f.close()
     f2.close()
