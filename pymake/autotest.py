@@ -1044,7 +1044,7 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
             iut = du1
         if iut != 0:
             entries = get_entries_from_namefile(namefile1, unit=abs(iut))
-            hfpth1, status1 = entries[0][0], entries[0][1].upper()
+            hfpth1, status1 = entries[0][0], entries[0][1]
 
     else:
         if isinstance(files1, str):
@@ -1077,7 +1077,7 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
             iut = du2
         if iut != 0:
             entries = get_entries_from_namefile(namefile2, unit=abs(iut))
-            hfpth2, status2 = entries[0][0], entries[0][1].upper()
+            hfpth2, status2 = entries[0][0], entries[0][1]
     else:
         if isinstance(files2, str):
             files2 = [files2]
@@ -1144,11 +1144,13 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
     if status1 == dbs:
         headobj1 = flopy.utils.HeadFile(hfpth1, precision=precision,
                                         verbose=verbose, text=text)
-        if 'HEADU' in headobj1.recordarray['text'][0].decode('utf-8'):
+        txt = headobj1.recordarray['text'][0]
+        if isinstance(txt, bytes):
+            txt = txt.decode('utf-8')
+        if 'HEADU' in txt:
             unstructured1 = True
             headobj1 = flopy.utils.HeadUFile(hfpth1, precision=precision,
                                              verbose=verbose)
-
     else:
         headobj1 = flopy.utils.FormattedHeadFile(hfpth1, verbose=verbose,
                                                  text=text)
@@ -1158,7 +1160,10 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
     if status2 == dbs:
         headobj2 = flopy.utils.HeadFile(hfpth2, precision=precision,
                                         verbose=verbose, text=text)
-        if 'HEADU' in headobj2.recordarray['text'][0].decode('utf-8'):
+        txt = headobj2.recordarray['text'][0]
+        if isinstance(txt, bytes):
+            txt = txt.decode('utf-8')
+        if 'HEADU' in txt:
             unstructured2 = True
             headobj2 = flopy.utils.HeadUFile(hfpth2, precision=precision,
                                              verbose=verbose)
