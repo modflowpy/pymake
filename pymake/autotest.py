@@ -1044,7 +1044,7 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
             iut = du1
         if iut != 0:
             entries = get_entries_from_namefile(namefile1, unit=abs(iut))
-            hfpth1, status1 = entries[0][0], entries[0][1]
+            hfpth1, status1 = entries[0][0], entries[0][1].upper()
 
     else:
         if isinstance(files1, str):
@@ -1077,7 +1077,7 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
             iut = du2
         if iut != 0:
             entries = get_entries_from_namefile(namefile2, unit=abs(iut))
-            hfpth2, status2 = entries[0][0], entries[0][1]
+            hfpth2, status2 = entries[0][0], entries[0][1].upper()
     else:
         if isinstance(files2, str):
             files2 = [files2]
@@ -1140,17 +1140,28 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
 
     # Get head objects
     status1 = status1.upper()
+    unstructured1 = False
     if status1 == dbs:
         headobj1 = flopy.utils.HeadFile(hfpth1, precision=precision,
                                         verbose=verbose, text=text)
+        if 'HEADU' in headobj1.recordarray['text'][0].decode('utf-8'):
+            unstructured1 = True
+            headobj1 = flopy.utils.HeadUFile(hfpth1, precision=precision,
+                                             verbose=verbose)
+
     else:
         headobj1 = flopy.utils.FormattedHeadFile(hfpth1, verbose=verbose,
                                                  text=text)
 
     status2 = status2.upper()
+    unstructured2 = False
     if status2 == dbs:
         headobj2 = flopy.utils.HeadFile(hfpth2, precision=precision,
                                         verbose=verbose, text=text)
+        if 'HEADU' in headobj2.recordarray['text'][0].decode('utf-8'):
+            unstructured2 = True
+            headobj2 = flopy.utils.HeadUFile(hfpth2, precision=precision,
+                                             verbose=verbose)
     else:
         headobj2 = flopy.utils.FormattedHeadFile(hfpth2, verbose=verbose,
                                                  text=text)
@@ -1176,7 +1187,17 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
     # Process cumulative and incremental
     for idx in range(len(times1)):
         h1 = headobj1.get_data(totim=times1[idx])
+        if unstructured1:
+            temp = np.array([])
+            for a in h1:
+                temp = np.hstack((temp, a))
+            h1 = temp
         h2 = headobj2.get_data(totim=times2[idx])
+        if unstructured2:
+            temp = np.array([])
+            for a in h2:
+                temp = np.hstack((temp, a))
+            h2 = temp
 
         if exfile is not None:
             # reshape exd to the shape of the head arrays
