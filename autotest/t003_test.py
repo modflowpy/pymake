@@ -8,7 +8,7 @@ import flopy
 dstpth = os.path.join('temp')
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
-mfusgpth = os.path.join(dstpth, 'mfusg.1_3')
+mfusgpth = os.path.join(dstpth, 'mfusg.1_4')
 expth = os.path.join(mfusgpth, 'test')
 
 exe_name = 'mfusgr'
@@ -46,7 +46,7 @@ def compile_code():
         shutil.rmtree(mfusgpth)
 
     # Download the MODFLOW-USG distribution
-    url = 'https://water.usgs.gov/ogw/mfusg/mfusg.1_3.zip'
+    url = 'https://water.usgs.gov/ogw/mfusg/mfusg.1_4.zip'
     pymake.download_and_unzip(url, pth=dstpth)
 
     # Remove extraneous source directories

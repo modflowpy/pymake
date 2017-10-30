@@ -1011,7 +1011,7 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     return success
 
 
-def compare_heads(namefile1, namefile2, precision='single', text='head',
+def compare_heads(namefile1, namefile2, precision='auto', text='head',
                   htol=0.001, outfile=None, files1=None, files2=None,
                   difftol=False, verbose=False, exfile=None,
                   maxerr=None):
@@ -1275,7 +1275,7 @@ def compare_heads(namefile1, namefile2, precision='single', text='head',
     return success
 
 
-def compare_concs(namefile1, namefile2, precision='single',
+def compare_concs(namefile1, namefile2, precision='auto',
                   ctol=0.001, outfile=None, files1=None, files2=None,
                   difftol=False, verbose=False):
     """
@@ -1628,7 +1628,7 @@ def calculate_difftol(v1, v2, tol):
     return diffmax, indices
 
 
-def compare(namefile1, namefile2, precision='single',
+def compare(namefile1, namefile2, precision='auto',
             max_cumpd=0.01, max_incpd=0.01, htol=0.001,
             outfile1=None, outfile2=None,
             files1=None, files2=None):
