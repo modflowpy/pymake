@@ -13,11 +13,10 @@ compiles the source files using gfortran or intel Fortran (ifort).
 
 pymake can be run from the command line or it can be called from within python.
 
-pymake includes example scripts for building MODFLOW-2005, MODFLOW-NWT,
-MODFLOW-USG, MODFLOW-LGR, MODPATH 6, MODPATH 7, MT3DMS, MT3D-USGS, and SEAWAT
-using gfortran on Mac or Linux.  The scripts download the distribution file
-from the USGS and compile the source into a binary executable.  The MODFLOW-NWT
-script now works with the present version of MODFLOW-NWT.
+pymake includes example scripts for building MODFLOW 6, MODFLOW-2005, MODFLOW-NWT,
+MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7, MT3DMS, MT3D-USGS, 
+and SEAWAT using gfortran on Mac or Linux.  The scripts download the distribution 
+file from the USGS and compile the source into a binary executable.
 
 pymake includes code for compiling with ifort on Windows and OSX.
 
@@ -95,22 +94,25 @@ dryrun=False, double=False, debug=False, include_subdirs=False)
 ## Automatic Download and Build
 
 The following scripts can be run directly from the command line to build
-MODFLOW, MODPATH, MT3DMS, MT3D-USGS, and SEAWAT binaries on Mac and Linux.
-The scripts will download the distribution file from the USGS (requires
-internet connection), unzip the file, and compile the source.  MT3DMS will be
-downloaded from the University of Alabama.
+MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, 
+MODFLOW-2000, MODPATH 6, MODPATH 7, MT3DMS, MT3D-USGS, and SEAWAT 
+binaries on Mac and Linux. The scripts will download the distribution 
+file from the USGS (requires internet connection), unzip the file, and 
+compile the source.  MT3DMS will be downloaded from the University of 
+Alabama.
 
 ```
-python make_mf2000.py
+python make_modflow6.py
 python make_mf2005.py
 python make_mfnwt.py
-python make_swtv4.py
-python make_mt3d.py
-python make_mt3dusgs
 python make_mfusg.py
+python make_mflgr.py
+python make_mf2000.py
 python make_modpath6.py
 python make_modpath7.py
-python make_mflgr.py
+python make_mt3d.py
+python make_mt3dusgs
+python make_swtv4.py
 ```
 
 ## Installation
