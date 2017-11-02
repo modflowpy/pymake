@@ -19,6 +19,7 @@ the source files in the proper order.
 
 import os
 import sys
+import traceback
 import shutil
 import subprocess
 import argparse
@@ -730,6 +731,7 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
             return 0
     except:
         print('Could not make x64 target: ', target)
+        print(traceback.print_exc())
 
     # create makefile
     if makefile:
@@ -746,7 +748,7 @@ def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
     
     """
     iflist = ['IFORT_COMPILER17', 'IFORT_COMPILER16', 'IFORT_COMPILER15',
-              'IFORT_COMPILER14', 'IFORT_COMPILER13']
+              'IFORT_COMPILER14', 'IFORT_COMPILER13', 'IFORT_COMPILERS12']
     found = False
     for ift in iflist:
         cpvars = os.environ.get(ift)
