@@ -748,7 +748,7 @@ def makebatch(batchfile, fc, cc, compileflags, cflags, srcfiles, target, arch,
     
     """
     iflist = ['IFORT_COMPILER17', 'IFORT_COMPILER16', 'IFORT_COMPILER15',
-              'IFORT_COMPILER14', 'IFORT_COMPILER13', 'IFORT_COMPILERS12']
+              'IFORT_COMPILER14', 'IFORT_COMPILER13', 'IFORT_COMPILER12']
     found = False
     for ift in iflist:
         cpvars = os.environ.get(ift)
