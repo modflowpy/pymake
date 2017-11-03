@@ -512,10 +512,10 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     return 0
 
 
-def compile_with_mac_ifort(srcfiles, target, cc,
-                           objdir_temp, moddir_temp,
-                           expedite, dryrun, double, debug, fflags,
-                           srcdir, srcdir2, extrafiles, makefile):
+def compile_with_macnix_ifort(srcfiles, target, cc,
+                              objdir_temp, moddir_temp,
+                              expedite, dryrun, double, debug, fflags,
+                              srcdir, srcdir2, extrafiles, makefile):
     """
     Make target on Mac OSX
     """
@@ -983,15 +983,15 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
                                    srcdir, srcdir2, extrafiles, makefile)
     elif fc == 'ifort':
         platform = sys.platform
-        if platform.lower() == 'darwin' or platform.lower() == 'linux':
+        if 'darwin' in platform.lower() or 'linux' in platform.lower():
             create_openspec(srcdir_temp)
             objext = '.o'
-            success = compile_with_mac_ifort(srcfiles, target, cc,
-                                             objdir_temp, moddir_temp,
-                                             expedite, dryrun, double,
-                                             debug, fflags,
-                                             srcdir, srcdir2, extrafiles,
-                                             makefile)
+            success = compile_with_macnix_ifort(srcfiles, target, cc,
+                                                objdir_temp, moddir_temp,
+                                                expedite, dryrun, double,
+                                                debug, fflags,
+                                                srcdir, srcdir2, extrafiles,
+                                                makefile)
         else:
             winifort = True
             objext = '.obj'
