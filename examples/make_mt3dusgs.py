@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import shutil
 import pymake
 from pymake.download import download_and_unzip
@@ -40,6 +41,16 @@ def make_mt3dusgs():
     pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
                 expedite=False, dryrun=False, double=False, debug=False)
 
+    if sys.platform == 'win32':
+        # Based on ifort 12 compilation, 'exe' is appended on the target
+        # This necessitates assert expression with different target name
+        try:
+            # Additional check in case the target does not have 'exe'
+            # extension with different compiler 
+            assert os.path.isfile(target), 'Target does not exist.'
+        except:
+            target = target + '.exe'
+            
     assert os.path.isfile(target), 'Target does not exist.'
 
     # Remove the existing MT3D-USGS directory if it exists
