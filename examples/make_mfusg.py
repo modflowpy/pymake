@@ -39,15 +39,16 @@ def make_mfusg():
                 expedite=False, dryrun=False, double=False, debug=False)
     
     if sys.platform == 'win32':
-        # Based on ifort 12 compilation, 'exe' is appended on the target
-        # This necessitates assert expression with different target name
+        # 'exe' is appended to the target name upon compilation
+        # 'exe' is not appended if target already has extension part
         try:
             # Additional check in case the target does not have 'exe'
             # extension with different compiler 
             assert os.path.isfile(target), 'Target does not exist.'
         except:
-            target = target + '.exe'
-
+            if not '.' in target:
+                target = target + '.exe'
+            
     assert os.path.isfile(target), 'Target does not exist.'
 
     # Remove the existing mfusg.1_3 directory if it exists
