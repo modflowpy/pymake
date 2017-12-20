@@ -49,7 +49,6 @@ source files that come with MODFLOW. The program works by building a directed
 acyclic graph of the module dependencies and then compiling the source files
 in the proper order.
 
-```
 positional arguments:
 srcdir                Location of source directory
 target                Name of target to create
@@ -72,7 +71,6 @@ for ifort.
 -ff, --fflags         Additional fortran compiler flags.
 -mf, --makefile       Create a standard makefile. Does not work for
 ifort for Windows yet.
-```
 
 Note that the source directory should not contain any bad or duplicate source
 files as all source files in the source directory will be built and linked.
@@ -81,13 +79,13 @@ files as all source files in the source directory will be built and linked.
 ## From Python
 
 ### Script to compile mfnwt
-```
+
 import pymake
 srcdir = '../mfnwt/src'
 target = 'mfnwt'
 pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True, expedite=False,
 dryrun=False, double=False, debug=False, include_subdirs=False)
-```
+
 *or see make_mfnwt.py in examples directory*
 
 
@@ -101,7 +99,6 @@ file from the USGS (requires internet connection), unzip the file, and
 compile the source.  MT3DMS will be downloaded from the University of
 Alabama.
 
-```
 python make_modflow6.py
 python make_mf2005.py
 python make_mfnwt.py
@@ -113,18 +110,13 @@ python make_modpath7.py
 python make_mt3d.py
 python make_mt3dusgs
 python make_swtv4.py
-```
 
 ## Installation
 
 To install pymake directly from the git repository type:
 
-```
 pip install https://github.com/modflowpy/pymake/zipball/master
-```
 
 To update your version of pymake with the latest from the git repository type:
 
-```
 pip install https://github.com/modflowpy/pymake/zipball/master --upgrade
-```

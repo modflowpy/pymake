@@ -8,7 +8,6 @@ sudo: false #true
 matrix:
   include:
     - python: 2.7
-    - python: 3.3
     - python: 3.4
     - python: 3.5
     - python: 3.6
@@ -55,8 +54,8 @@ install:
     - export FC=/usr/bin/gfortran-5
     - ln -fs /usr/bin/gfortran-5 "$HOME/.local/bin/gfortran" && gfortran --version
     - ls -l /usr/bin/gfortran-5
-    - if [[ $TRAVIS_PYTHON_VERSION == 3.3 ]];
-      then pip install -r requirements33.travis.txt;
+    - if [[ $TRAVIS_PYTHON_VERSION < 3.5 ]];
+      then pip install -r requirements2-34.travis.txt;
       else pip install -r requirements.travis.txt;
       fi
     - pip install https://github.com/modflowpy/flopy/zipball/develop

@@ -1,4 +1,0 @@
-requests
-pydotplus>=2.0
-matplotlib<2.0
-pyshp
