@@ -1059,6 +1059,10 @@ def compare_heads(namefile1, namefile2, precision='auto', text='head',
                 if 'ddn' in os.path.basename(file).lower():
                     hfpth1 = file
                     break
+            elif text.lower() == 'concentration':
+                if 'ucn' in os.path.basename(file).lower():
+                    hfpth1 = file
+                    break
 
     # Get head info for namefile2
     hfpth2 = None
@@ -1089,6 +1093,10 @@ def compare_heads(namefile1, namefile2, precision='auto', text='head',
                     break
             elif text.lower() == 'drawdown':
                 if 'ddn' in os.path.basename(file).lower():
+                    hfpth2 = file
+                    break
+            elif text.lower() == 'concentration':
+                if 'ucn' in os.path.basename(file).lower():
                     hfpth2 = file
                     break
 
