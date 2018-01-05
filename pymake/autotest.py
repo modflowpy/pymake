@@ -322,7 +322,7 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
     # Make list of files to copy
     fname = os.path.join(src, mfnamefile)
     fname = os.path.abspath(fname)
-    mf6inp, mf6outp = get_mf6_input_files(fname)
+    mf6inp, mf6outp = get_mf6_files(fname)
     files2copy = [mfnamefile] + mf6inp
     # determine if there are any .ex files
     exinp = []
@@ -359,19 +359,14 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
     return mf6inp, mf6outp
 
 
-def setup_mf6_comparison(src, dst, remove_existing=True):
+def get_mf6_comparison(src):
     """
-    Setup comparision for MODFLOW 6 simulation
+    Determine comparison for MODFLOW 6 simulation
 
     :param src:
-    :type src:
-    :param dst:
-    :type dst:
-    :param remove_existing:
-    :type remove_existing:
     :return:
-    :rtype:
     """
+    action = None
     # Possible comparison - the order matters
     optcomp = ['compare', '.cmp',
                'mf2005', 'mf2005.cmp',
@@ -385,8 +380,27 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
         for oc in optcomp:
             if any(oc in s for s in dl):
                 action = oc
-                pth = root
                 break
+    return action
+
+
+def setup_mf6_comparison(src, dst, remove_existing=True):
+    """
+    Setup comparision for MODFLOW 6 simulation
+
+    :param src:
+    :type src:
+    :param dst:
+    :type dst:
+    :param remove_existing:
+    :type remove_existing:
+    :return:
+    :rtype:
+    """
+
+    # get the type of comparison to use (compare, mf2005, etc.)
+    action = get_mf6_comparison(src)
+
     if action is not None:
         dst = os.path.join(dst, '{}'.format(action))
         if not os.path.isdir(dst):
@@ -477,7 +491,7 @@ def get_mf6_mshape(disfile):
     return mshape
 
 
-def get_mf6_input_files(mfnamefile):
+def get_mf6_files(mfnamefile):
     """
     Return a list of all the MODFLOW 6 input files in this model
 
@@ -545,7 +559,7 @@ def get_mf6_input_files(mfnamefile):
     # such as 'OPEN/CLOSE' and 'TIMESERIESFILE'.  If found, then
     # add that file to the list of files to copy.
     flist = filelist
-    #olist = outplist
+    # olist = outplist
     while True:
         olist = []
         flist, olist = _get_mf6_external_files(srcdir, olist, flist)
@@ -556,7 +570,7 @@ def get_mf6_input_files(mfnamefile):
         if len(olist) > 0:
             outplist = outplist + olist
         # terminate loop if no additional files
-        #if len(flist) < 1 and len(olist) < 1:
+        # if len(flist) < 1 and len(olist) < 1:
         if len(flist) < 1:
             break
 

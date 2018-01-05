@@ -12,5 +12,5 @@ from .autotest import setup, setup_comparison, teardown, \
     get_sim_name, get_input_files, \
     compare_budget, compare_swrbudget, compare_heads, compare_concs, \
     compare_stages, compare, \
-    setup_mf6, setup_mf6_comparison
+    setup_mf6, setup_mf6_comparison, get_mf6_comparison, get_mf6_files
 
