@@ -13,7 +13,7 @@ def make_mfnwt():
     os.chdir(dstpth)
 
     # Remove the existing directory if it exists
-    dirname = 'MODFLOW-NWT_1.1.3'
+    dirname = 'MODFLOW-NWT_1.1.4'
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
 
