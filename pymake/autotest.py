@@ -1025,9 +1025,10 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     return success
 
 
-def compare_heads(namefile1, namefile2, precision='auto', text='head',
+def compare_heads(namefile1, namefile2, precision='auto',
+                  text='head', text2=None,
                   htol=0.001, outfile=None, files1=None, files2=None,
-                  difftol=False, verbose=False, exfile=None,
+                  difftol=False, verbose=False, exfile=None, exarr=None,
                   maxerr=None):
     """
     Compare the results from these two simulations.
@@ -1038,6 +1039,9 @@ def compare_heads(namefile1, namefile2, precision='auto', text='head',
     except:
         msg = 'flopy not available - cannot use compare_heads'
         raise ValueError(msg)
+
+    if text2 is None:
+        text2 = text
 
     dbs = 'DATA(BINARY)'
 
@@ -1077,6 +1081,9 @@ def compare_heads(namefile1, namefile2, precision='auto', text='head',
                 if 'ucn' in os.path.basename(file).lower():
                     hfpth1 = file
                     break
+            else:
+                hfpth1 = file
+                break
 
     # Get head info for namefile2
     hfpth2 = None
@@ -1100,19 +1107,22 @@ def compare_heads(namefile1, namefile2, precision='auto', text='head',
         if isinstance(files2, str):
             files2 = [files2]
         for file in files2:
-            if text.lower() == 'head':
+            if text2.lower() == 'head':
                 if 'hds' in os.path.basename(file).lower() or \
                                 'hed' in os.path.basename(file).lower():
                     hfpth2 = file
                     break
-            elif text.lower() == 'drawdown':
+            elif text2.lower() == 'drawdown':
                 if 'ddn' in os.path.basename(file).lower():
                     hfpth2 = file
                     break
-            elif text.lower() == 'concentration':
+            elif text2.lower() == 'concentration':
                 if 'ucn' in os.path.basename(file).lower():
                     hfpth2 = file
                     break
+            else:
+                hfpth2 = file
+                break
 
     # confirm that there are two files to compare
     if hfpth1 is None or hfpth2 is None:
@@ -1132,9 +1142,14 @@ def compare_heads(namefile1, namefile2, precision='auto', text='head',
     if outfile is not None:
         f = open(outfile, 'w')
         f.write('Created by pymake.autotest.compare\n')
-        f.write('Performing {} comparison\n'.format(text.upper()))
+        f.write('Performing {} to {} comparison\n'.format(text.upper(),
+                                                          text2.upper()))
+
         if exfile is not None:
             f.write('Using exclusion file {}\n'.format(exfile))
+        if exarr is not None:
+            f.write('Using exclusion array\n')
+
         msg = '{} is a '.format(hfpth1)
         if status1 == dbs:
             msg += 'binary file.'
@@ -1148,15 +1163,34 @@ def compare_heads(namefile1, namefile2, precision='auto', text='head',
             msg += 'ascii file.'
         f.write(msg + '\n')
 
-    # Get exclusion file
+    # Process exclusion data
     exd = None
+    # get data from exclusion file
     if exfile is not None:
         e = None
-        try:
-            exd = np.genfromtxt(exfile).flatten()
-        except:
-            e = 'Could not read exclusion ' + \
-                'file {}'.format(os.path.basename(exfile))
+        if isinstance(exfile, str):
+            try:
+                exd = np.genfromtxt(exfile).flatten()
+            except:
+                e = 'Could not read exclusion ' + \
+                    'file {}'.format(os.path.basename(exfile))
+                print(e)
+                return False
+        else:
+            e = 'exfile is not a valid file path'
+            print(e)
+            return False
+
+    # process exclusion array
+    if exarr is not None:
+        e = None
+        if isinstance(exarr, np.ndarray):
+            if exd is None:
+                exd = exarr.flatten()
+            else:
+                exd += exarr.flatten()
+        else:
+            e = 'exarr is not a numpy array'
             print(e)
             return False
 
@@ -1181,7 +1215,7 @@ def compare_heads(namefile1, namefile2, precision='auto', text='head',
     unstructured2 = False
     if status2 == dbs:
         headobj2 = flopy.utils.HeadFile(hfpth2, precision=precision,
-                                        verbose=verbose, text=text)
+                                        verbose=verbose, text=text2)
         txt = headobj2.recordarray['text'][0]
         if isinstance(txt, bytes):
             txt = txt.decode('utf-8')
@@ -1191,7 +1225,7 @@ def compare_heads(namefile1, namefile2, precision='auto', text='head',
                                              verbose=verbose)
     else:
         headobj2 = flopy.utils.FormattedHeadFile(hfpth2, verbose=verbose,
-                                                 text=text)
+                                                 text=text2)
 
     # get times
     times1 = headobj1.get_times()
@@ -1226,10 +1260,10 @@ def compare_heads(namefile1, namefile2, precision='auto', text='head',
                 temp = np.hstack((temp, a))
             h2 = temp
 
-        if exfile is not None:
+        if exd is not None:
             # reshape exd to the shape of the head arrays
             if idx == 0:
-                e = 'shape of {} ({})'.format(exfile, exd.shape) + \
+                e = 'shape of exclusion data ({})'.format(exd.shape) + \
                     'can not be reshaped to the size of the ' + \
                     'head arrays ()'.format(h1.shape)
                 assert h1.flatten().shape == exd.shape, e
