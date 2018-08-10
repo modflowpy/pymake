@@ -1290,11 +1290,12 @@ def compare_heads(namefile1, namefile2, precision='auto',
             icnt += 1
             if outfile is not None:
                 if difftol:
-                    ee = 'Maximum head difference ({}) -- '.format(diffmax) + \
+                    ee = 'Maximum absolute head difference ' + \
+                         '({}) -- '.format(diffmax) + \
                          '{} tolerance exceeded at '.format(htol) + \
                          '{} node location(s)'.format(indices[0].shape[0])
                 else:
-                    ee = 'Maximum head difference ' + \
+                    ee = 'Maximum absolute head difference ' + \
                          '({}) exceeded '.format(diffmax) + \
                          'at {} node location(s)'.format(indices[0].shape[0])
                 e = textwrap.fill(ee + ':', width=70, initial_indent='  ',
@@ -1307,11 +1308,19 @@ def compare_heads(namefile1, namefile2, precision='auto',
                 fmtn = '{:' + '{}'.format(len(str(ncells))) + 'd}'
                 for itupe in indices:
                     for jdx, ind in enumerate(itupe):
-                        e += '    ' + fmtn.format(jdx + 1) + ' node: '
-                        e += fmtn.format(ind + 1)  # convert to one-based
+                        iv = np.unravel_index(ind, h1.shape)
+                        iv = tuple(i + 1 for i in iv)
+                        v1 = h1.flatten()[ind]
+                        v2 = h2.flatten()[ind]
+                        d12 = v1 - v2
+                        #e += '    ' + fmtn.format(jdx + 1) + ' node: '
+                        #e += fmtn.format(ind + 1)  # convert to one-based
+                        e += '    ' + fmtn.format(jdx + 1)
+                        e += ' {}'.format(iv)
                         e += ' -- '
-                        e += 'h1: {:20} '.format(h1.flatten()[ind])
-                        e += 'h2: {:20}\n'.format(h2.flatten()[ind])
+                        e += 'h1: {:20} '.format(v1)
+                        e += 'h2: {:20} '.format(v2)
+                        e += 'diff: {:20}\n'.format(d12)
                         if isinstance(maxerr, int):
                             if jdx + 1 >= maxerr:
                                 break
