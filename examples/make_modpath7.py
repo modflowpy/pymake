@@ -41,7 +41,7 @@ def make_modpath7():
     f2.close()
     os.remove(fname1)
     os.rename(fname2, fname1)
-    
+
     fname1 = os.path.join(srcdir, 'ModpathCellData.f90')
     f = open(fname1, 'r')
     fname2 = os.path.join(srcdir, 'ModpathCellData_mod.f90')
@@ -54,7 +54,7 @@ def make_modpath7():
     f2.close()
     os.remove(fname1)
     os.rename(fname2, fname1)
-    
+
     fname1 = os.path.join(srcdir, 'MPath7.f90')
     f = open(fname1, 'r')
     fname2 = os.path.join(srcdir, 'MPath7_mod.f90')
@@ -71,7 +71,7 @@ def make_modpath7():
     fflags='ffree-line-length-512'
 
     # make modpath 7 in starting directory
-    target = os.path.join('..', 'mp7')
+    target = os.path.join('.', 'mp7')
     pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
                 expedite=False, dryrun=False, double=False, debug=False,
                 fflags=fflags)
@@ -82,8 +82,8 @@ def make_modpath7():
     os.chdir(srcpth)
 
     # remove temporary directory
-    if os.path.isdir(dstpth):
-        shutil.rmtree(dstpth)
+    if os.path.isdir(dwpath):
+        shutil.rmtree(dwpath)
 
 if __name__ == "__main__":
     make_modpath7()
