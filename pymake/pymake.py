@@ -46,9 +46,11 @@ def parser():
     parser.add_argument('srcdir', help='Location of source directory')
     parser.add_argument('target', help='Name of target to create')
     parser.add_argument('-fc', help='Fortran compiler to use (default is gfortran)',
-                        default='gfortran', choices=['ifort', 'gfortran'])
+                        default='gfortran', choices=['ifort', 'mpiifort',
+                                                     'gfortran'])
     parser.add_argument('-cc', help='C compiler to use (default is gcc)',
-                        default='gcc', choices=['gcc', 'clang', 'icc', 'g++'])
+                        default='gcc', choices=['gcc', 'clang', 'icc',
+                                                'mpiicc', 'g++'])
     parser.add_argument('-ar', '--arch',
                         help='Architecture to use for ifort (default is intel64)',
                         default='intel64',
