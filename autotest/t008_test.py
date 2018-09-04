@@ -8,7 +8,9 @@ import flopy
 dstpth = os.path.join('temp')
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
-mf6pth = os.path.join(dstpth, 'mf6.0.2')
+#https://water.usgs.gov/ogw/modflow/mf6.0.3.zip
+mf6ver = 'mf6.0.3'
+mf6pth = os.path.join(dstpth, mf6ver)
 expth = os.path.join(mf6pth, 'examples')
 
 exe_name = 'mf6'
@@ -26,7 +28,7 @@ def compile_code():
         shutil.rmtree(mf6pth)
 
     # Download the MODFLOW 6 distribution
-    url = 'https://water.usgs.gov/ogw/modflow/mf6.0.2.zip'
+    url = 'https://water.usgs.gov/ogw/modflow/{}.zip'.format(mf6ver)
     pymake.download_and_unzip(url, pth=dstpth)
 
     # compile MODFLOW 6

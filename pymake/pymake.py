@@ -513,7 +513,7 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     return 0
 
 
-def compile_with_macnix_ifort(srcfiles, target, cc,
+def compile_with_macnix_ifort(srcfiles, target, fc, cc,
                               objdir_temp, moddir_temp,
                               expedite, dryrun, double, debug, fflags,
                               srcdir, srcdir2, extrafiles, makefile):
@@ -521,7 +521,6 @@ def compile_with_macnix_ifort(srcfiles, target, cc,
     Make target on Mac OSX
     """
     # fortran compiler switches
-    fc = 'ifort'
     if debug:
         compileflags = [
             '-O0',
@@ -664,7 +663,7 @@ def compile_with_macnix_ifort(srcfiles, target, cc,
     return 0
 
 
-def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
+def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
                        expedite, dryrun, double, debug, fflagsu, arch,
                        srcdir, srcdir2, extrafiles, makefile):
     """
@@ -678,8 +677,14 @@ def compile_with_ifort(srcfiles, target, cc, objdir_temp, moddir_temp,
         cflags = ['-O3']
     syslibs = ['-lc']
 
-    fc = 'ifort.exe'
-    cc = 'cl.exe'
+    if fc == 'ifort':
+        fc = 'ifort.exe'
+    else:
+        fc = '{}.exe'.format(fc)
+    if icc == 'icc':
+        cc = 'icc.exe'
+    else:
+        cc = 'cl.exe'
     cflags = ['-nologo', '-c']
     fflags = ['-heap-arrays:0', '-fpe:0', '-traceback', '-nologo']
     if debug:
@@ -984,12 +989,12 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
                                    objdir_temp, moddir_temp,
                                    expedite, dryrun, double, debug, fflags,
                                    srcdir, srcdir2, extrafiles, makefile)
-    elif fc == 'ifort':
+    elif fc == 'ifort' or fc == 'mpiifort':
         platform = sys.platform
         if 'darwin' in platform.lower() or 'linux' in platform.lower():
             create_openspec(srcdir_temp)
             objext = '.o'
-            success = compile_with_macnix_ifort(srcfiles, target, cc,
+            success = compile_with_macnix_ifort(srcfiles, target, fc, cc,
                                                 objdir_temp, moddir_temp,
                                                 expedite, dryrun, double,
                                                 debug, fflags,
@@ -999,7 +1004,7 @@ def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
             winifort = True
             objext = '.obj'
             cc = 'cl.exe'
-            success = compile_with_ifort(srcfiles, target, cc,
+            success = compile_with_ifort(srcfiles, target, fc, cc,
                                          objdir_temp, moddir_temp,
                                          expedite, dryrun, double, debug,
                                          fflags, arch,
