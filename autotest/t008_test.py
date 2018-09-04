@@ -57,8 +57,8 @@ def run_mf6(d):
     # run test models
     print('running model...{}'.format(os.path.basename(d)))
     epth = os.path.abspath(target)
-    success, buff = flopy.run_model(epth, 'mfsim.nam',
-                                    model_ws=testpth, silent=True)
+    success, buff = flopy.run_model(epth, None,
+                                    model_ws=testpth, silent=False)
     if success:
         pymake.teardown(testpth)
     assert success is True
