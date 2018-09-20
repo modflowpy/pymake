@@ -683,7 +683,7 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         fc = 'ifort.exe'
     else:
         fc = '{}.exe'.format(fc)
-    if icc == 'icc':
+    if cc == 'icc':
         cc = 'icc.exe'
     else:
         cc = 'cl.exe'
