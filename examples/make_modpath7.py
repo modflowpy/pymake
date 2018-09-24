@@ -14,58 +14,16 @@ def make_modpath7():
         os.makedirs(dstpth)
     os.chdir(dstpth)
 
-    # Download the MODFLOW-2005 distribution
-    url = "https://water.usgs.gov/ogw/modpath/Modpath_7_1_000.zip"
+    # Download the MODPATH 7 distribution
+    url = "https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip"
     download_and_unzip(url)
-    dirname = 'Modpath_7_1_000'
+    dirname = 'Modpath_7_2_001'
     dwpath = os.path.join(dstpth, dirname)
     if os.path.isdir(dwpath):
         shutil.rmtree(dwpath)
 
     # Name src folders
     srcdir = os.path.join(dirname, 'source')
-
-    # modify source files that prevent compiling with gfortran
-    pth = os.path.join(srcdir, 'utl7u1.f')
-    if os.path.isfile(pth):
-        os.remove(pth)
-
-    fname1 = os.path.join(srcdir, 'ModpathSubCellData.f90')
-    f = open(fname1, 'r')
-    fname2 = os.path.join(srcdir, 'ModpathSubCellData_mod.f90')
-    f2 = open(fname2, 'w')
-    for line in f:
-        line = line.replace('location.', 'location%')
-        f2.write(line)
-    f.close()
-    f2.close()
-    os.remove(fname1)
-    os.rename(fname2, fname1)
-
-    fname1 = os.path.join(srcdir, 'ModpathCellData.f90')
-    f = open(fname1, 'r')
-    fname2 = os.path.join(srcdir, 'ModpathCellData_mod.f90')
-    f2 = open(fname2, 'w')
-    for line in f:
-        line = line.replace('dimension(grid%GetCellCount())', 'dimension(:)')
-        line = line.replace('dimension(grid%GetReducedConnectionCount())', 'dimension(:)')
-        f2.write(line)
-    f.close()
-    f2.close()
-    os.remove(fname1)
-    os.rename(fname2, fname1)
-
-    fname1 = os.path.join(srcdir, 'MPath7.f90')
-    f = open(fname1, 'r')
-    fname2 = os.path.join(srcdir, 'MPath7_mod.f90')
-    f2 = open(fname2, 'w')
-    for line in f:
-        line = line.replace("form='binary', access='stream'", "form='unformatted', access='stream'")
-        f2.write(line)
-    f.close()
-    f2.close()
-    os.remove(fname1)
-    os.rename(fname2, fname1)
 
     # allow line lengths greater than 132 columns
     fflags='ffree-line-length-512'

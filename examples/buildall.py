@@ -448,6 +448,20 @@ def test_build_modpath6():
     return
 
 
+def test_build_modpath7():
+    if pymake is None:
+        return
+    starget = 'MODPATH 7'
+    exe_name = 'mp7'
+    dirname = 'Modpath_7_2_001'
+    url = "https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip"
+
+    build_target(starget, exe_name, url, dirname, srcname='source',
+                 replace_function=None,
+                 keep=True)
+    return
+
+
 if __name__ == '__main__':
     test_build_seawat()
     test_build_mf2000()
@@ -455,6 +469,7 @@ if __name__ == '__main__':
     test_build_modflow()
     test_build_mfnwt()
     test_build_modpath6()
+    test_build_modpath7()
     test_build_usg()
     test_build_mt3dms()
     test_build_mt3dusgs()
