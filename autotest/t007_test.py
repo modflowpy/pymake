@@ -67,6 +67,25 @@ def run_modpath7(fn):
         nam = [name for name in os.listdir(model_ws) if '.nam' in name.lower()]
         if len(nam) > 0:
             fpth = nam[0]
+            # read and rewrite
+            npth = os.path.join(model_ws, fpth)
+            with open(npth, 'r') as f:
+                content = f.readlines()
+            for idx, line in enumerate(content):
+                content[idx] = line.lower()
+            with open(npth, 'w') as f:
+                f.writelines(content)
+        else:
+            fpth = None
+            run = False
+    elif 'modflow-usg' in fn.lower():
+        exe = 'mfusg'
+        v = flopy.which(exe)
+        if v is None:
+            run = False
+        nam = [name for name in os.listdir(model_ws) if '.nam' in name.lower()]
+        if len(nam) > 0:
+            fpth = nam[0]
         else:
             fpth = None
             run = False
