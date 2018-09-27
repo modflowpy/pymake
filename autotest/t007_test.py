@@ -9,31 +9,59 @@ dstpth = os.path.join('temp')
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
 mp7pth = os.path.join(dstpth, 'modpath_7_2_001')
+mp7url = "https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip"
 expth = os.path.join(mp7pth, 'examples')
 
 exe_name = 'mp7'
 srcpth = os.path.join(mp7pth, 'source')
 target = os.path.join(dstpth, exe_name)
 
+mf2005pth = 'MF2005.1_12u'
+mf2005url = 'https://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.12.00/MF2005.1_12u.zip'
+mfusgpth = 'mfusg.1_3'
+mfusgurl = 'https://water.usgs.gov/ogw/mfusg/{0}.zip'.format(mfusgpth)
+mf6pth = 'mf6.0.3'
+mf6url = 'https://water.usgs.gov/ogw/modflow/{0}.zip'.format(mf6pth)
 
-def compile_code():
+pths = [mf2005pth, mfusgpth, mf6pth, 'modpath_7_2_001']
+urls = [mf2005url, mfusgurl, mf6url, mp7url]
+srcdirs = ['src', 'src', 'src', 'source']
+exes = ['mf2005', 'mfusg', 'mf6', exe_name]
+
+def compile_code(pth=None, url=None, srcdir=None, exe=None):
+    if pth is None:
+        pth = mp7pth
+    if url is None:
+        url = mp7url
+    include_subdirs = False
+    if exe is None:
+        exe = exe_name
+    elif 'mf6' in exe:
+        include_subdirs = True
+    if srcdir is None:
+        src = srcpth
+        binpth = target
+    else:
+        src = os.path.join(dstpth, pth, srcdir)
+        binpth = os.path.join(dstpth, exe)
+
     # Remove the existing modpath6 directory if it exists
-    if os.path.isdir(mp7pth):
-        shutil.rmtree(mp7pth)
+    if os.path.isdir(pth):
+        shutil.rmtree(pth)
 
     # Download the MODPATH 7 distribution
-    url = "https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip"
     pymake.download_and_unzip(url, pth=dstpth)
 
     # allow line lengths greater than 132 columns
     fflags = 'ffree-line-length-512'
 
-    # make modpath 7
-    pymake.main(srcpth, target, 'gfortran', 'gcc', makeclean=True,
+    # make binary file
+    pymake.main(src, binpth, 'gfortran', 'gcc', makeclean=True,
                 expedite=False, dryrun=False, double=False, debug=False,
-                fflags=fflags)
+                fflags=fflags, include_subdirs=include_subdirs)
 
-    assert os.path.isfile(target), 'Target does not exist.'
+    msg = 'Target ({}) does not exist.'.format(os.path.basename(binpth))
+    assert os.path.isfile(binpth), msg
 
 
 def get_simfiles():
@@ -87,9 +115,7 @@ def replace_data(dpth):
         for idx, line in enumerate(content):
             for jdx, sfind in enumerate(sfinds):
                 if sfind in line:
-                    print(line)
                     content[idx] = line.replace(line, srepls[jdx])
-                    print(content[idx])
         with open(fpth, 'w') as f:
             f.writelines(content)
     return
@@ -110,7 +136,7 @@ def run_modpath7(fn):
     # run the flow model
     run = True
     if 'modflow-2005' in fn.lower():
-        exe = 'mf2005'
+        exe = os.path.abspath(os.path.join(dstpth, 'mf2005'))
         v = flopy.which(exe)
         if v is None:
             run = False
@@ -123,7 +149,7 @@ def run_modpath7(fn):
             fpth = None
             run = False
     elif 'modflow-usg' in fn.lower():
-        exe = 'mfusg'
+        exe = os.path.abspath(os.path.join(dstpth, 'mfusg'))
         v = flopy.which(exe)
         if v is None:
             run = False
@@ -134,7 +160,7 @@ def run_modpath7(fn):
             fpth = None
             run = False
     elif 'modflow-6' in fn.lower():
-        exe = 'mf6'
+        exe = os.path.abspath(os.path.join(dstpth, 'mf6'))
         v = flopy.which(exe)
         if v is None:
             run = False
@@ -160,18 +186,20 @@ def run_modpath7(fn):
     return
 
 
-def clean_up():
+def clean_up(pth, exe):
     # clean up
-    print('Removing folder ' + mp7pth)
-    shutil.rmtree(mp7pth)
-    print('Removing ' + target)
-    os.remove(target)
+    print('Removing folder ' + pth)
+    shutil.rmtree(pth)
+    binpth = os.path.join(dstpth, exe)
+    print('Removing ' + binpth)
+    os.remove(binpth)
     return
 
 
 def test_compile():
-    # compile MODPATH 7
-    compile_code()
+    # compile code
+    for pth, url, srcdir, exe in zip(pths, urls, srcdirs, exes):
+        yield compile_code, pth, url, srcdir, exe
 
 
 def test_modpath7():
@@ -182,14 +210,17 @@ def test_modpath7():
 
 
 def test_clean_up():
-    yield clean_up
+    for pth, exe in zip(pths, exes):
+        yield clean_up, pth, exe
     return
 
 
 if __name__ == "__main__":
-    compile_code()
+    for pth, url, srcdir, exe in zip(pths, urls, srcdirs, exes):
+        compile_code(pth=pth, url=url, srcdir=srcdir, exe=exe)
     simfiles = get_simfiles()
     replace_files()
     for fn in simfiles:
         run_modpath7(fn)
-    clean_up()
+    for pth, exe in zip(pths, exes):
+        clean_up(pth, exe)
