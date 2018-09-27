@@ -23,7 +23,8 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     for idx in range(nattempts):
         print(' download attempt: {}'.format(idx + 1))
         #
-        fs = requests.get(url, stream=True).headers['Content-length']
+        fs = requests.get(url, stream=True,
+                          verify=verify).headers['Content-length']
         bfmt = '{:' + '{}'.format(18) + ',d} bytes'
         print('   file size: ' + bfmt.format(int(fs)))
         ds = 0
