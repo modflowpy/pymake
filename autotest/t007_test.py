@@ -187,12 +187,16 @@ def run_modpath7(fn):
 
 
 def clean_up(pth, exe):
-    # clean up
-    print('Removing folder ' + pth)
-    shutil.rmtree(pth)
+    # clean up downloaded directories
+    pth = os.path.join(dstpth, pth)
+    if os.path.isdir(pth):
+        print('Removing folder ' + pth)
+        shutil.rmtree(pth)
+    # clean up compiled executables
     binpth = os.path.join(dstpth, exe)
-    print('Removing ' + binpth)
-    os.remove(binpth)
+    if os.path.isfile(binpth):
+        print('Removing ' + binpth)
+        os.remove(binpth)
     return
 
 
