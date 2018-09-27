@@ -56,11 +56,37 @@ def replace_files():
     return
 
 def run_modpath7(fn):
+    model_ws = os.path.dirname(fn)
+    # run the flow model
+    run = False
+    if 'modflow-2005' in fn.lower():
+        exe = 'mf2005'
+        v = flopy.which(exe)
+        if v is None:
+            run = False
+        nam = [name for name in os.listdir(model_ws) if '.nam' in name.lower()]
+        if len(nam) > 0:
+            fpth = nam[0]
+        else:
+            fpth = None
+            run = False
+    elif 'modflow-6' in fn.lower():
+        exe = 'mf6'
+        v = flopy.which(exe)
+        if v is None:
+            run = False
+        fpth = None
+    if run:
+        msg = '{}'.format(exe)
+        if fpth is not None:
+            msg += ' {}'.format(os.path.basename(fpth))
+        success, buff = flopy.run_model(exe, fpth, model_ws=model_ws,
+                                        silent=False)
+        assert success, 'could not run...{}'.format(msg)
     # run the model
     print('running model...{}'.format(fn))
     exe = os.path.abspath(target)
     fpth = os.path.basename(fn)
-    model_ws = os.path.dirname(fn)
     success, buff = flopy.run_model(exe, fpth, model_ws=model_ws, silent=False)
     assert success, 'could not run...{}'.format(os.path.basename(fn))
     return
