@@ -52,13 +52,63 @@ def get_simfiles():
                      f.endswith('.mpsim')]
     return simfiles
 
+
 def replace_files():
     return
+
+
+def replace_data(dpth):
+    fpths = [name for name in os.listdir(dpth) if
+             os.path.isfile(os.path.join(dpth, name))]
+    repl = False
+    if 'ex01_mf2005.dis' in fpths:
+        sfinds = ['! Example 1: MODFLOW-2005 discretization file']
+        srepls = ['# Example 1: MODFLOW-2005 discretization file\n']
+        fpth = 'ex01_mf2005.dis'
+        repl = True
+    elif 'ex04_mf6.disv' in fpths:
+        sfinds = ['  OPEN/CLOSE  mptest006_idomain.csv']
+        srepls = ['  OPEN/CLOSE  ex04_mf6_idomain.csv\n']
+        fpth = 'ex04_mf6.disv'
+        repl = True
+    elif 'mfsim.nam' in fpths:
+        sfinds = ['  TDIS6  ex02a_mf6.tdis',
+                  '  GWF6  ex02a_mf6.nam  ex02a_mf6',
+                  '  IMS6  ex02a_mf6.ims  ex02a_mf6']
+        srepls = ['  TDIS6  ex02_mf6.tdis\n',
+                  '  GWF6  ex02_mf6.nam  ex02_mf6\n',
+                  '  IMS6  ex02_mf6.ims  ex02_mf6\n']
+        fpth = 'mfsim.nam'
+        repl = True
+    if repl:
+        fpth = os.path.join(dpth, fpth)
+        with open(fpth, 'r') as f:
+            content = f.readlines()
+        for idx, line in enumerate(content):
+            for jdx, sfind in enumerate(sfinds):
+                if sfind in line:
+                    print(line)
+                    content[idx] = line.replace(line, srepls[jdx])
+                    print(content[idx])
+        with open(fpth, 'w') as f:
+            f.writelines(content)
+    return
+
+
+def set_lowercase(fpth):
+    with open(fpth, 'r') as f:
+        content = f.readlines()
+    for idx, line in enumerate(content):
+        content[idx] = line.lower()
+    with open(fpth, 'w') as f:
+        f.writelines(content)
+    return
+
 
 def run_modpath7(fn):
     model_ws = os.path.dirname(fn)
     # run the flow model
-    run = False
+    run = True
     if 'modflow-2005' in fn.lower():
         exe = 'mf2005'
         v = flopy.which(exe)
@@ -67,14 +117,8 @@ def run_modpath7(fn):
         nam = [name for name in os.listdir(model_ws) if '.nam' in name.lower()]
         if len(nam) > 0:
             fpth = nam[0]
-            # read and rewrite
-            npth = os.path.join(model_ws, fpth)
-            with open(npth, 'r') as f:
-                content = f.readlines()
-            for idx, line in enumerate(content):
-                content[idx] = line.lower()
-            with open(npth, 'w') as f:
-                f.writelines(content)
+            # read and rewrite the name file
+            set_lowercase(os.path.join(model_ws, fpth))
         else:
             fpth = None
             run = False
@@ -95,7 +139,12 @@ def run_modpath7(fn):
         if v is None:
             run = False
         fpth = None
+    else:
+        run = False
     if run:
+        # fix any known problems
+        replace_data(model_ws)
+        # run the model
         msg = '{}'.format(exe)
         if fpth is not None:
             msg += ' {}'.format(os.path.basename(fpth))
