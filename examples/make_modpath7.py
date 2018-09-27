@@ -17,7 +17,7 @@ def make_modpath7():
     # Download the MODPATH 7 distribution
     url = "https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip"
     download_and_unzip(url)
-    dirname = 'Modpath_7_2_001'
+    dirname = 'modpath_7_2_001'
     dwpath = os.path.join(dstpth, dirname)
     if os.path.isdir(dwpath):
         shutil.rmtree(dwpath)
