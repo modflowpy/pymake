@@ -52,6 +52,10 @@ def compile_code(pth=None, url=None, srcdir=None, exe=None):
     # Download the MODPATH 7 distribution
     pymake.download_and_unzip(url, pth=dstpth)
 
+    # update files
+    if exe == exe_name:
+        update_files()
+
     # allow line lengths greater than 132 columns
     fflags = 'ffree-line-length-512'
 
@@ -81,7 +85,18 @@ def get_simfiles():
     return simfiles
 
 
-def replace_files():
+def update_files():
+    fpth = os.path.join(srcdir, 'StartingLocationReader.f90')
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if 'pGroup%Particles(n)%InitialFace = 0' in line:
+            continue
+        # line = line.replace('pGroup%Particles(n)%InitialFace = 0',
+        #                     '! pGroup%Particles(n)%InitialFace = 0')
+        f.write(line)
+    f.close()
     return
 
 
@@ -208,7 +223,6 @@ def test_compile():
 
 def test_modpath7():
     simfiles = get_simfiles()
-    replace_files()
     for fn in simfiles:
         yield run_modpath7, fn
 
