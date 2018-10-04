@@ -54,7 +54,7 @@ def compile_code(pth=None, url=None, srcdir=None, exe=None):
 
     # update files
     if exe == exe_name:
-        update_files()
+        update_files(src)
 
     # allow line lengths greater than 132 columns
     fflags = 'ffree-line-length-512'
@@ -85,7 +85,7 @@ def get_simfiles():
     return simfiles
 
 
-def update_files():
+def update_files(srcdir):
     fpth = os.path.join(srcdir, 'StartingLocationReader.f90')
     with open(fpth) as f:
         lines = f.readlines()
