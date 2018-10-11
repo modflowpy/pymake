@@ -93,6 +93,8 @@ def setup_comparison(namefile, dst, remove_existing=True):
                     action = dirs[idx]
                 elif 'mfusg.cmp' in dl[idx] or 'mfusg' in dl[idx]:
                     action = dirs[idx]
+                elif 'mf6.cmp' in dl[idx] or 'mf6' in dl[idx]:
+                    action = dirs[idx]
                 else:
                     action = dirs[idx]
                 pth = root
@@ -372,7 +374,8 @@ def get_mf6_comparison(src):
                'mf2005', 'mf2005.cmp',
                'mfnwt', 'mfnwt.cmp',
                'mfusg', 'mfusg.cmp',
-               'mflgr', 'mflgr.cmp']
+               'mflgr', 'mflgr.cmp',
+               'mf6', 'mf6.cmp']
     # Construct src pth from namefile
     action = None
     for root, dirs, files in os.walk(src):
