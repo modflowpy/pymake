@@ -47,8 +47,10 @@ def getmfexes(pth='.'):
             zipname = 'win64'
         else:
             zipname = 'win32'
-    if zipname is not None:
-        downloadurl = '{}/{}.zip'.format(downloadurl, zipname)
+    else:
+        errmsg = 'Could not determine platform.  sys.platform is {}'.format(sys.platform)
+        raise Exception(errmsg)
+    downloadurl = '{}/{}.zip'.format(downloadurl, zipname)
     pymake.download_and_unzip(downloadurl, pth)
     return
 
