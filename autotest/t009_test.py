@@ -39,7 +39,7 @@ def getmfexes(pth='.'):
     zipname = None
     if sys.platform.lower() == 'darwin':
         zipname = 'mac'
-    elif sys.platform.lower() == 'linux':
+    elif sys.platform.lower().startswith('linux'):
         zipname = 'linux'
     elif 'win' in sys.platform.lower():
         is_64bits = sys.maxsize > 2 ** 32
