@@ -33,7 +33,9 @@ class MyZipFile(ZipFile):
         if path is None:
             path = os.getcwd()
         else:
-            path = os.fspath(path)
+            if hasattr(os, 'fspath'):
+                # introduced in python 3.6 and above
+                path = os.fspath(path)
 
         for zipinfo in members:
             self.extract(zipinfo, path, pwd)
