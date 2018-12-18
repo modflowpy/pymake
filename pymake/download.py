@@ -1,8 +1,42 @@
 from __future__ import print_function
 
 import os
-from zipfile import ZipFile
+from zipfile import ZipFile, ZipInfo
 import tarfile
+
+
+class MyZipFile(ZipFile):
+    """
+    ZipFile file attributes are not being preserved.  This preserves file
+    attributes as described here
+    https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
+
+    """
+
+    def extract(self, member, path=None, pwd=None):
+        if not isinstance(member, ZipInfo):
+            member = self.getinfo(member)
+
+        if path is None:
+            path = os.getcwd()
+
+        ret_val = self._extract_member(member, path, pwd)
+        attr = member.external_attr >> 16
+        if attr != 0:
+            os.chmod(ret_val, attr)
+        return ret_val
+
+    def extractall(self, path=None, members=None, pwd=None):
+        if members is None:
+            members = self.namelist()
+
+        if path is None:
+            path = os.getcwd()
+        else:
+            path = os.fspath(path)
+
+        for zipinfo in members:
+            self.extract(zipinfo, path, pwd)
 
 
 def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
@@ -50,7 +84,7 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     # Unzip the file, and delete zip file if successful.
     if 'zip' in os.path.basename(file_name) or \
                     'exe' in os.path.basename(file_name):
-        z = ZipFile(file_name)
+        z = MyZipFile(file_name)
         try:
             print('Extracting the zipfile...')
             z.extractall(pth)
