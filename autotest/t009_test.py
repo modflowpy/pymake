@@ -65,7 +65,7 @@ def repo_latest_assets(github_repo):
     return result_dict
 
 
-def getmfexes(pth='.', platform=None):
+def getmfexes(pth='.', version='', platform=None):
     """
     Get the latest MODFLOW binary executables from a github site
     (https://github.com/MODFLOW-USGS/executables) for the specified
@@ -75,6 +75,9 @@ def getmfexes(pth='.', platform=None):
     ----------
     pth : str
         Location to put the executables (default is current working directory)
+
+    version : str
+        Version of the MODFLOW-USGS/executables release to use.
 
     platform : str
         Platform that will run the executables.  Valid values include mac,
@@ -103,9 +106,15 @@ def getmfexes(pth='.', platform=None):
         assert platform in ['mac', 'linux', 'win32', 'win64']
     zipname = '{}.zip'.format(platform)
 
+    # Wanted to use github api, but this is timing out on travis too often
+    #mfexes_repo_name = 'MODFLOW-USGS/executables'
+    # assets = repo_latest_assets(mfexes_repo_name)
+
     # Determine path for file download and then download and unzip
-    mfexes_repo_name = 'MODFLOW-USGS/executables'
-    assets = repo_latest_assets(mfexes_repo_name)
+    url = ('https://github.com/MODFLOW-USGS/executables/'
+           'releases/download/{}/'.format(version))
+    assets = {p: url + p for p in ['mac.zip', 'linux.zip',
+                                   'win32.zip', 'win64.zip']}
     download_url = assets[zipname]
     pymake.download_and_unzip(download_url, pth)
 
@@ -114,7 +123,7 @@ def getmfexes(pth='.', platform=None):
 
 def test_download_and_unzip():
     pth = './temp/t009'
-    getmfexes(pth)
+    getmfexes(pth, '1.0')
     for f in os.listdir(pth):
         fname = os.path.join(pth, f)
         errmsg = '{} not executable'.format(fname)
