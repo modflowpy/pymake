@@ -27,31 +27,85 @@ def which(program):
     return None
 
 
-def getmfexes(pth='.'):
+def repo_latest_assets(github_repo):
     """
-    Download a zip file of MODFLOW executables from github and extract the
-    executables into a user bin folder, which is under the user name, followed
-    by .local and bin.
+    Return a dictionary containing the file name and the link to the asset
+    contained in a github repository.
+
+    Parameters
+    ----------
+    github_repo : str
+        Repository name, such as MODFLOW-USGS/modflow6
+
+    Returns
+    -------
+    result_dict : dict
+        dictionary of file names and links
 
     """
-    downloadurl = ('https://github.com/MODFLOW-USGS/executables'
-                   '/releases/download/1.0')
-    zipname = None
-    if sys.platform.lower() == 'darwin':
-        zipname = 'mac'
-    elif sys.platform.lower().startswith('linux'):
-        zipname = 'linux'
-    elif 'win' in sys.platform.lower():
-        is_64bits = sys.maxsize > 2 ** 32
-        if is_64bits:
-            zipname = 'win64'
+    import requests
+    import json
+    repo_url = 'https://api.github.com/repos/{}'.format(github_repo)
+
+    request_url = '{}/releases/latest'.format(repo_url)
+    print('Requesting from: {}'.format(request_url))
+    r = requests.get(request_url)
+    if (r.ok):
+        jsonobj = json.loads(r.text or r.content)
+        assets = jsonobj['assets']
+
+    result_dict = {}
+    for asset in assets:
+        k = asset['name']
+        v = asset['browser_download_url']
+        result_dict[k] = v
+    return result_dict
+
+
+def getmfexes(pth='.', platform=None):
+    """
+    Get the latest MODFLOW binary executables from a github site
+    (https://github.com/MODFLOW-USGS/executables) for the specified
+    operating system and put them in the specified path.
+
+    Parameters
+    ----------
+    pth : str
+        Location to put the executables (default is current working directory)
+
+    platform : str
+        Platform that will run the executables.  Valid values include mac,
+        linux, win32 and win64.  If platform is None, then routine will
+        download the latest asset from the github reposity.
+
+    """
+
+    # Determine the platform in order to construct the zip file name
+    if platform is None:
+        if sys.platform.lower() == 'darwin':
+            platform = 'mac'
+        elif sys.platform.lower().startswith('linux'):
+            platform = 'linux'
+        elif 'win' in sys.platform.lower():
+            is_64bits = sys.maxsize > 2 ** 32
+            if is_64bits:
+                platform = 'win64'
+            else:
+                platform = 'win32'
         else:
-            zipname = 'win32'
+            errmsg = ('Could not determine platform'
+                      '.  sys.platform is {}'.format(sys.platform))
+            raise Exception(errmsg)
     else:
-        errmsg = 'Could not determine platform.  sys.platform is {}'.format(sys.platform)
-        raise Exception(errmsg)
-    downloadurl = '{}/{}.zip'.format(downloadurl, zipname)
-    pymake.download_and_unzip(downloadurl, pth)
+        assert platform in ['mac', 'linux', 'win32', 'win64']
+    zipname = '{}.zip'.format(platform)
+
+    # Determine path for file download and then download and unzip
+    mfexes_repo_name = 'MODFLOW-USGS/executables'
+    assets = repo_latest_assets(mfexes_repo_name)
+    download_url = assets[zipname]
+    pymake.download_and_unzip(download_url, pth)
+
     return
 
 
