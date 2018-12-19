@@ -47,12 +47,15 @@ def repo_latest_assets(github_repo):
     import json
     repo_url = 'https://api.github.com/repos/{}'.format(github_repo)
 
+    assets = None
     request_url = '{}/releases/latest'.format(repo_url)
     print('Requesting from: {}'.format(request_url))
     r = requests.get(request_url)
     if (r.ok):
         jsonobj = json.loads(r.text or r.content)
         assets = jsonobj['assets']
+    else:
+        assert assets, 'Could not find latest executables from ' + request_url
 
     result_dict = {}
     for asset in assets:
