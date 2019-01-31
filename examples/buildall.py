@@ -316,6 +316,32 @@ def update_mp6files(srcdir):
     os.remove(fname1)
 
 
+def update_vs2dtfiles(srcdir):
+
+    # move the main source into the source directory
+    f1 = os.path.join(srcdir, '..', 'vs2dt3_3.f')
+    f1 = os.path.abspath(f1)
+    assert os.path.isfile(f1)
+    f2 = os.path.join(srcdir, 'vs2dt3_3.f')
+    f2 = os.path.abspath(f2)
+    shutil.move(f1, f2)
+    assert os.path.isfile(f2)
+
+    f1 = open(os.path.join(srcdir, 'vs2dt3_3.f'), 'r')
+    f2 = open(os.path.join(srcdir, 'vs2dt3_3.f.tmp'), 'w')
+    for line in f1:
+        srctxt = "     `POSITION='REWIND')"
+        rpctxt = "     `POSITION='REWIND',ACCESS='STREAM')"
+        f2.write(line.replace(srctxt, rpctxt))
+    f1.close()
+    f2.close()
+    os.remove(os.path.join(srcdir, 'vs2dt3_3.f'))
+    shutil.move(os.path.join(srcdir, 'vs2dt3_3.f.tmp'),
+                os.path.join(srcdir, 'vs2dt3_3.f'))
+
+    return
+
+
 def test_build_modflow():
     if pymake is None:
         return
@@ -462,7 +488,23 @@ def test_build_modpath7():
     return
 
 
+def test_build_vs2dt():
+    if pymake is None:
+        return
+    starget = 'VS2DT'
+    exe_name = 'vs2dt'
+    dirname = 'vs2dt3_3'
+    url = 'https://water.usgs.gov/water-resources/software/VS2DI/{}.zip'.format(dirname)
+
+    build_target(starget, exe_name, url, dirname,
+                 srcname='include',
+                 replace_function=update_vs2dtfiles,
+                 dble=False, keep=True)
+    return
+
+
 if __name__ == '__main__':
+    test_build_vs2dt()
     test_build_seawat()
     test_build_mf2000()
     test_build_mf6()

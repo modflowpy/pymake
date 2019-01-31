@@ -14,7 +14,7 @@ def make_mf6():
         os.makedirs(dstpth)
     os.chdir(dstpth)
 
-    # Remove the existing mf6.0.2 directory if it exists
+    # Remove the existing mf6.0.3 directory if it exists
     dirname = 'mf6.0.3'
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
