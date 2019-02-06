@@ -316,6 +316,18 @@ def update_mp6files(srcdir):
     os.remove(fname1)
 
 
+def update_mp7files(srcdir):
+    fpth = os.path.join(srcdir, 'StartingLocationReader.f90')
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if 'pGroup%Particles(n)%InitialFace = 0' in line:
+            continue
+        f.write(line)
+    f.close()
+
+
 def update_vs2dtfiles(srcdir):
 
     # move the main source into the source directory
@@ -483,7 +495,7 @@ def test_build_modpath7():
     url = "https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip"
 
     build_target(starget, exe_name, url, dirname, srcname='source',
-                 replace_function=None,
+                 replace_function=update_mp7files,
                  keep=True)
     return
 
