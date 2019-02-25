@@ -385,7 +385,7 @@ def test_build_usg():
         return
     starget = 'MODFLOW-USG'
     exe_name = 'mfusg'
-    dirname = 'mfusg.1_3'
+    dirname = 'mfusg.1_4'
     url = 'https://water.usgs.gov/ogw/mfusg/{0}.zip'.format(dirname)
 
     build_target(starget, exe_name, url, dirname)

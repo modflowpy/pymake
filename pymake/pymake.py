@@ -369,8 +369,12 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
                         '-O0',
                         '-fcheck=all',
                         '-fbacktrace',
-                        '-fbounds-check'
+                        '-fbounds-check',
                         ]
+        lflag = flag_available('-ffpe-trap')
+        if lflag:
+            compileflags.append('-ffpe-trap=overflow,zero,invalid')
+
     else:
         # Production version
         compileflags = ['-O2', '-fbacktrace',]

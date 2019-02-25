@@ -39,7 +39,7 @@ def make_mfusg():
 
     assert os.path.isfile(target), 'Target does not exist.'
 
-    # Remove the existing mfusg.1_3 directory if it exists
+    # Remove the existing mfusg directory if it exists
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
 
