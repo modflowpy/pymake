@@ -81,9 +81,9 @@ def test_compile_prev():
     pymake.download_and_unzip(url, pth=config.testdir)
 
     # compile
-    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+    pymake.main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
                 expedite=False, dryrun=False, double=False, debug=False,
-                include_subdirs=False)
+                include_subdirs=False, fflags='O3')
 
     assert os.path.isfile(target), 'Target {} does not exist.'.format(target)
 
@@ -108,9 +108,9 @@ def test_compile_ref():
     pymake.download_and_unzip(url, pth=config.testdir)
 
     # compile
-    pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True,
+    pymake.main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
                 expedite=False, dryrun=False, double=False, debug=False,
-                include_subdirs=False)
+                include_subdirs=False, fflags='O3 fbacktrace')
 
     assert os.path.isfile(target), 'Target {} does not exist.'.format(target)
 

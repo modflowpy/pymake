@@ -363,21 +363,40 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
 
     # fortran compiler switches
     fc = 'gfortran'
+
+    # look for optimization levels in fflags
+    if debug:
+        opt = '-O0'
+    else:
+        opt = '-O2'
+    if fflags is not None:
+        t = fflags.split()
+        for fflag in t:
+            if 'O' in fflag.upper()[0]:
+                if not debug:
+                    opt = '-' + fflag
+                if len(t) > 1:
+                    fflags = fflags.replace(fflag, '')
+                else:
+                    fflags = None
+                # break after first optimization (O) flag
+                break
     if debug:
         # Debug flags
         compileflags = ['-g',
-                        '-O0',
+                        opt,
                         '-fcheck=all',
                         '-fbacktrace',
                         '-fbounds-check',
                         ]
         lflag = flag_available('-ffpe-trap')
         if lflag:
-            compileflags.append('-ffpe-trap=overflow,zero,invalid')
+            compileflags.append('-ffpe-trap=overflow,zero,invalid,denormal')
 
     else:
-        # Production version
-        compileflags = ['-O2', '-fbacktrace',]
+        # Production version with some level of optimization
+        compileflags = [opt, '-fbacktrace']
+        # add additional compile flags
         if not sys.platform == 'win32':
             lflag = flag_available('-ffpe-summary')
             if lflag:
@@ -392,7 +411,8 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     if fflags is not None:
         t = fflags.split()
         for fflag in t:
-            compileflags.append('-'+fflag)
+            if '-' + fflag not in compileflags:
+                compileflags.append('-'+fflag)
 
 
     # C/C++ compiler switches -- thanks to mja
@@ -527,9 +547,27 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     Make target on Mac OSX
     """
     # fortran compiler switches
+
+    # look for optimization levels in fflags
+    if debug:
+        opt = '-O0'
+    else:
+        opt = '-O2'
+    if fflags is not None:
+        t = fflags.split()
+        for fflag in t:
+            if 'O' in fflag.upper()[0] or fflag.upper() == 'FAST':
+                if not debug:
+                    opt = '-' + fflag
+                if len(t) > 1:
+                    fflags = fflags.replace(fflag, '')
+                else:
+                    fflags = None
+                # break after first optimization (O) flag
+                break
     if debug:
         compileflags = [
-            '-O0',
+            opt,
             '-debug',
             'all',
             '-no-heap-arrays',
@@ -539,7 +577,7 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     else:
         # production version compile flags
         compileflags = [
-            '-O2',
+            opt,
             '-no-heap-arrays',
             '-fpe0',
             '-traceback'
@@ -551,8 +589,9 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     if fflags is not None:
         t = fflags.split()
         for fflag in t:
+            if '-' + fflag not in compileflags:
+                compileflags.append('-'+fflag)
             compileflags.append('-'+fflag)
-
     # C/C++ compiler switches
     if debug:
         cflags = ['-O0', '-g']
@@ -693,19 +732,38 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         cc = 'cl.exe'
     cflags = ['-nologo', '-c']
     fflags = ['-heap-arrays:0', '-fpe:0', '-traceback', '-nologo']
+    # look for optimization levels
     if debug:
-        fflags += ['-debug']
-        cflags += ['-Zi']
+        opt = '-debug'
     else:
-        # production version compile flags
-        fflags += ['-O2']
-        cflags += ['-O2']
-    if double:
-        fflags.append('/real_size:64')
+        opt = '-O2'
     if fflagsu is not None:
         t = fflagsu.split()
         for fflag in t:
-            fflags.append('-'+fflag)
+            if 'O' in fflag.upper()[0] or fflag.upper() == 'FAST':
+                if not debug:
+                    opt = '-' + fflag
+                if len(t) > 1:
+                    fflagsu = fflagsu.replace(fflag, '')
+                else:
+                    fflagsu = None
+                # break after first optimization (O) flag
+                break
+    if debug:
+        fflags += [opt]
+        cflags += ['-Zi']
+    else:
+        # production version compile flags
+        fflags += [opt]
+        cflags += ['-O2']
+    if double:
+        fflags.append('/real_size:64')
+    # parse user options
+    if fflagsu is not None:
+        t = fflagsu.split()
+        for fflag in t:
+            if '-' + fflag not in fflags:
+                fflags.append('-'+fflag)
     objext = '.obj'
     batchfile = 'compile.bat'
     if os.path.isfile(batchfile):
@@ -952,8 +1010,8 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
     f.close()
 
 
-def main(srcdir, target, fc, cc, makeclean=True, expedite=False,
-         dryrun=False, double=False, debug=False,
+def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
+         expedite=False, dryrun=False, double=False, debug=False,
          include_subdirs=False, fflags=None, arch='intel64',
          makefile=False, srcdir2=None, extrafiles=None):
     """
@@ -1027,9 +1085,12 @@ if __name__ == "__main__":
     # get the arguments
     args = parser()
 
+
     # call main -- note that this form allows main to be called
     # from python as a function.
-    main(args.srcdir, args.target, args.fc, args.cc, args.makeclean,
-         args.expedite, args.dryrun, args.double, args.debug,
-         args.subdirs, args.fflags, args.arch, args.makefile,
-         args.commonsrc, args.extrafiles)
+    main(args.srcdir, args.target, fc=args.fc, cc=args.cc,
+         makeclean=args.makeclean, expedite=args.expedite,
+         dryrun=args.dryrun, double=args.double, debug=args.debug,
+         include_subdirs=args.subdirs, fflags=args.fflags,
+         arch=args.arch, makefile=args.makefile,
+         srcdir2=args.commonsrc, extrafiles=args.extrafiles)
