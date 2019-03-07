@@ -15,11 +15,11 @@ def make_mfusg():
     os.chdir(dstpth)
 
     # Remove the existing mfusg.1_3 directory if it exists
-    dirname = 'mfusg.1_4'
+    dirname = 'mfusg1_5'
     if os.path.isdir(dirname):
         shutil.rmtree(dirname)
 
-    url = 'https://water.usgs.gov/ogw/mfusg/{0}.zip'.format(dirname)
+    url = 'https://water.usgs.gov/water-resources/software/MODFLOW-USG/{0}.zip'.format(dirname)
     download_and_unzip(url)
 
     # Set src and target
