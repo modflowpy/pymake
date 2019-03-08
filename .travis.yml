@@ -1,23 +1,17 @@
 language: python
-
-compiler:
-  - gcc
-
-sudo: false #true
+compiler: gcc
+dist: xenial
 
 matrix:
   include:
     - python: 2.7
-    - python: 3.4
     - python: 3.5
     - python: 3.6
-    - python: "3.6-dev"
-    - python: "nightly"
+    - python: 3.7
+    - python: "3.7-dev"
 
   allow_failures:
-    - python: "3.6-dev"
-    - python: "nightly"
-
+    - python: "3.7-dev"
 
 cache:
   apt: true
@@ -29,34 +23,20 @@ cache:
 addons:
   apt:
     sources:
-      - kalakris-cmake
       - ubuntu-toolchain-r-test
     packages:
-      - gfortran-5
+      - gfortran
       - binutils
-      - cmake
       - graphviz
       - python-pip
 
-#before_install:
-#  #- sudo ln -fs /usr/bin/gfortran-5 /usr/bin/gfortran && gfortran --version
-#  #- export PATH=".:$PATH"
-#  - gcc -v
-#  - gfortran -v
-
 # command to install dependencies
 install:
-    - |
-      if [[ ! -d "$HOME/.local/bin" ]]; then
-        mkdir "$HOME/.local/bin"
-      fi
-    - export PATH="$HOME/.local/bin:$PATH"
-    - export FC=/usr/bin/gfortran-5
-    - ln -fs /usr/bin/gfortran-5 "$HOME/.local/bin/gfortran" && gfortran --version
-    - ls -l /usr/bin/gfortran-5
-    - if [[ $TRAVIS_PYTHON_VERSION < 3.5 ]];
-      then pip install -r requirements2-34.travis.txt;
-      else pip install -r requirements.travis.txt;
+    - export FC=/usr/bin/gfortran
+    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
+        pip install -r requirements27.travis.txt;
+      else
+        pip install -r requirements.travis.txt;
       fi
     - pip install https://github.com/modflowpy/flopy/zipball/develop
     - pip install nose-timer
