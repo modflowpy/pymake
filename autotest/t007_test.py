@@ -57,7 +57,7 @@ def compile_code(pth=None, url=None, srcdir=None, exe=None):
         update_files(src)
 
     # allow line lengths greater than 132 columns
-    fflags = 'ffree-line-length-512'
+    fflags = '-ffree-line-length-512'
 
     # make binary file
     pymake.main(src, binpth, 'gfortran', 'gcc', makeclean=True,
