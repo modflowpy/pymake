@@ -23,4 +23,6 @@ setup(name='pymake',
       platforms='Windows, Mac OS-X, Linux',
       install_requires=[], # ['pydotplus>=2.0'],
       packages=['pymake'],
+      package_data={'': ['usgsurls.txt']},
+      include_package_data=True,
       version=__version__ )

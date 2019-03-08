@@ -4,18 +4,23 @@ import shutil
 import pymake
 import flopy
 
+# define urls
+urls = pymake.build_urls()
+exe_name = 'mf6'
+prog_dict = urls[exe_name]
+
 # set up paths
 dstpth = os.path.join('temp')
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
 #https://water.usgs.gov/ogw/modflow/mf6.0.3.zip
-mf6ver = 'mf6.0.3'
-mf6pth = os.path.join(dstpth, mf6ver)
+mf6ver = prog_dict.version
+mf6pth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(mf6pth, 'examples')
 
-exe_name = 'mf6'
-srcpth = os.path.join(mf6pth, 'src')
+srcpth = os.path.join(mf6pth, prog_dict.srcdir)
 target = os.path.join(dstpth, exe_name)
+url = prog_dict.url
 
 def get_example_dirs():
     exdirs = [o for o in os.listdir(expth)
@@ -28,7 +33,6 @@ def compile_code():
         shutil.rmtree(mf6pth)
 
     # Download the MODFLOW 6 distribution
-    url = 'https://water.usgs.gov/ogw/modflow/{}.zip'.format(mf6ver)
     pymake.download_and_unzip(url, pth=dstpth)
 
     # compile MODFLOW 6

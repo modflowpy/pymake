@@ -1,0 +1,8 @@
+#target  version  url                                                                                             dirname           srcdir
+mf2k     1.19.01  https://water.usgs.gov/nrp/gwsoftware/modflow2000/mf2k1_19_01.tar.gz                            mf2k.1_19         src
+mf2005   1.12.00  https://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.12.00/MF2005.1_12u.zip                       MF2005.1_12u      src
+mf2005p  1.11.00  https://water.usgs.gov/ogw/modflow/archive-mf2005/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip Unix              src
+mfnwt    1.1.4    https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT_1.1.4.zip                                    MODFLOW-NWT_1.1.4 src
+mfusg    1.5      https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src
+mf6      6.0.3    https://water.usgs.gov/ogw/modflow/mf6.0.3.zip                                                  mf6.0.3           src
+
