@@ -21,7 +21,7 @@ import os
 import sys
 import traceback
 import shutil
-import subprocess
+from subprocess import Popen, PIPE
 import argparse
 from .dag import order_source_files, order_c_source_files
 import datetime
@@ -31,6 +31,9 @@ try:
     flopy_avail = True
 except:
     flopy_avail = False
+
+PY3 = sys.version_info[0] >= 3
+
 
 def parser():
     '''
@@ -318,34 +321,30 @@ def get_iso_c(srcfiles):
                     return True
     return False
 
+
 def flag_available(flag):
     """
     Determine if a specified flag exists
+
+    Not all flags will be detected, for example -O2 -fbounds-check=on
     """
-    found = False
     # determine the gfortran command line flags available
-    logfn = 'gfortran.txt'
-    errfn = 'gfortran.err'
-    logfile = open(logfn, 'w')
-    errfile = open(errfn, 'w')
-    proc = subprocess.Popen(["gfortran", "--help", "-v"],
-                            stdout=logfile, stderr=errfile)
-    ret_code = proc.wait()
-    logfile.close()
-    errfile.close()
-    # read data
-    f = open(logfn, 'r')
-    lines = f.readlines()
-    for line in lines:
-        if flag.lower() in line.lower():
-            found=True
-            break
-    f.close()
-    # remove file
-    os.remove(logfn)
-    os.remove(errfn)
-    # return
-    return found
+    cmdlist = ['gfortran', '--help', '-v']
+    proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = proc.communicate()
+    if PY3:
+        stdout = stdout.decode()
+    if proc.returncode != 0:
+        msg = '{} failed, status code {}\n'\
+            .format(' '.join(cmdlist), proc.returncode)
+        msg += 'stdout {}\n'.format(stdout)
+        if stderr:
+            if PY3:
+                stderr = stderr.decode()
+            msg += 'stderr {}\n'.format(stderr)
+        raise RuntimeError(msg)
+
+    return flag in stdout
 
 
 def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
@@ -364,23 +363,21 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     # fortran compiler switches
     fc = 'gfortran'
 
-    # look for optimization levels in fflags
     if debug:
         opt = '-O0'
     else:
         opt = '-O2'
-    if fflags is not None:
-        t = fflags.split()
-        for fflag in t:
-            if 'O' in fflag.upper()[0]:
-                if not debug:
-                    opt = '-' + fflag
-                if len(t) > 1:
-                    fflags = fflags.replace(fflag, '')
-                else:
-                    fflags = None
-                # break after first optimization (O) flag
-                break
+    if fflags is None:
+        fflags = []
+    elif isinstance(fflags, str):
+        fflags = fflags.split()
+    # look for optimization levels in fflags
+    for fflag in fflags:
+        if fflag[:2] == '-O':
+            if not debug:
+                opt = fflag
+            fflags.remove(fflag)
+            break  # after first optimization (O) flag
     if debug:
         # Debug flags
         compileflags = ['-g',
@@ -408,11 +405,10 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     if double:
         compileflags.append('-fdefault-real-8')
         compileflags.append('-fdefault-double-8')
-    if fflags is not None:
-        t = fflags.split()
-        for fflag in t:
-            if '-' + fflag not in compileflags:
-                compileflags.append('-'+fflag)
+    # Split all tokens by spaces
+    for fflag in ' '.join(fflags).split():
+        if fflag not in compileflags:
+            compileflags.append(fflag)
 
 
     # C/C++ compiler switches -- thanks to mja
@@ -473,21 +469,21 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
 
         # Compile
         if compilefile:
-            s = ''
-            for c in cmdlist:
-                s += c + ' '
-            print(s)
             if not dryrun:
                 #subprocess.check_call(cmdlist, shell=shellflg)
-                proc = subprocess.Popen(cmdlist, shell=shellflg,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT)
-                stdout_data, stderr_data = proc.communicate()
+                proc = Popen(cmdlist, shell=shellflg, stdout=PIPE, stderr=PIPE)
+                stdout, stderr = proc.communicate()
                 if proc.returncode != 0:
-                    msg = '{} failed, '.format(cmdlist) + \
-                          'status code {} '.format(proc.returncode) + \
-                          'stdout {} '.format(stdout_data) + \
-                          'stderr {}'.format(stderr_data)
+                    msg = '{} failed, status code {}\n'\
+                        .format(' '.join(cmdlist), proc.returncode)
+                    if stdout:
+                        if PY3:
+                            stdout = stdout.decode()
+                        msg += 'stdout {}\n'.format(stdout)
+                    if stderr:
+                        if PY3:
+                            stderr = stderr.decode()
+                        msg += 'stderr {}\n'.format(stderr)
                     print(msg)
                     return proc.returncode
 
@@ -511,21 +507,21 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         cmdlist.append(objfile)
     for switch in syslibs:
         cmdlist.append(switch)
-    s = ''
-    for c in cmdlist:
-        s += c + ' '
-    print(s)
     if not dryrun:
         #subprocess.check_call(cmdlist, shell=shellflg)
-        proc = subprocess.Popen(cmdlist, shell=shellflg,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
-        stdout_data, stderr_data = proc.communicate()
+        proc = Popen(cmdlist, shell=shellflg, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = proc.communicate()
         if proc.returncode != 0:
-            msg = '{} failed, '.format(cmdlist) + \
-                  'status code {} '.format(proc.returncode) + \
-                  'stdout {} '.format(stdout_data) + \
-                  'stderr {}'.format(stderr_data)
+            msg = '{} failed, status code {}\n'\
+                .format(' '.join(cmdlist), proc.returncode)
+            if stdout:
+                if PY3:
+                    stdout = stdout.decode()
+                msg += 'stdout {}\n'.format(stdout)
+            if stderr:
+                if PY3:
+                    stderr = stderr.decode()
+                msg += 'stderr {}\n'.format(stderr)
             print(msg)
             return proc.returncode
 
@@ -548,28 +544,25 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     """
     # fortran compiler switches
 
-    # look for optimization levels in fflags
     if debug:
         opt = '-O0'
     else:
         opt = '-O2'
-    if fflags is not None:
-        t = fflags.split()
-        for fflag in t:
-            if 'O' in fflag.upper()[0] or fflag.upper() == 'FAST':
-                if not debug:
-                    opt = '-' + fflag
-                if len(t) > 1:
-                    fflags = fflags.replace(fflag, '')
-                else:
-                    fflags = None
-                # break after first optimization (O) flag
-                break
+    if fflags is None:
+        fflags = []
+    elif isinstance(fflags, str):
+        fflags = fflags.split()
+    # look for optimization levels in fflags
+    for fflag in fflags:
+        if fflag[:2] == '-O' or fflag == '-fast':
+            if not debug:
+                opt = fflag
+            fflags.remove(fflag)
+            break  # after first optimization (O) flag
     if debug:
         compileflags = [
             opt,
-            '-debug',
-            'all',
+            '-debug', 'all',
             '-no-heap-arrays',
             '-fpe0',
             '-traceback'
@@ -583,15 +576,12 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
             '-traceback'
         ]
     if double:
-        compileflags.append('-r8')
-        compileflags.append('-double_size')
-        compileflags.append('64')
-    if fflags is not None:
-        t = fflags.split()
-        for fflag in t:
-            if '-' + fflag not in compileflags:
-                compileflags.append('-'+fflag)
-            compileflags.append('-'+fflag)
+        compileflags += ['-real-size', '64']
+        compileflags += ['-double-size', '64']
+    # Split all tokens by spaces
+    for fflag in ' '.join(fflags).split():
+        if fflag not in compileflags:
+            compileflags.append(fflag)
     # C/C++ compiler switches
     if debug:
         cflags = ['-O0', '-g']
@@ -643,22 +633,21 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
 
         # Compile
         if compilefile:
-            s = ''
-            for c in cmdlist:
-                s += c + ' '
-            print(s)
-
             if not dryrun:
                 #subprocess.check_call(cmdlist)
-                proc = subprocess.Popen(cmdlist,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT)
-                stdout_data, stderr_data = proc.communicate()
+                proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
+                stdout, stderr = proc.communicate()
                 if proc.returncode != 0:
-                    msg = '{} failed, '.format(cmdlist) + \
-                          'status code {} '.format(proc.returncode) + \
-                          'stdout {} '.format(stdout_data) + \
-                          'stderr {}'.format(stderr_data)
+                    msg = '{} failed, status code {}\n'\
+                        .format(' '.join(cmdlist), proc.returncode)
+                    if stdout:
+                        if PY3:
+                            stdout = stdout.decode()
+                        msg += 'stdout {}\n'.format(stdout)
+                    if stderr:
+                        if PY3:
+                            stderr = stderr.decode()
+                        msg += 'stderr {}\n'.format(stderr)
                     print(msg)
                     return proc.returncode
 
@@ -681,20 +670,20 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     for switch in syslibs:
         cmdlist.append(switch)
     if not dryrun:
-        s = ''
-        for c in cmdlist:
-            s += c + ' '
-        print(s)
         #subprocess.check_call(cmdlist)
-        proc = subprocess.Popen(cmdlist,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
-        stdout_data, stderr_data = proc.communicate()
+        proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = proc.communicate()
         if proc.returncode != 0:
-            msg = '{} failed, '.format(cmdlist) + \
-                  'status code {} '.format(proc.returncode) + \
-                  'stdout {} '.format(stdout_data) + \
-                  'stderr {}'.format(stderr_data)
+            msg = '{} failed, status code {}\n'\
+                .format(' '.join(cmdlist), proc.returncode)
+            if stdout:
+                if PY3:
+                    stdout = stdout.decode()
+                msg += 'stdout {}\n'.format(stdout)
+            if stderr:
+                if PY3:
+                    stderr = stderr.decode()
+                msg += 'stderr {}\n'.format(stderr)
             print(msg)
             return proc.returncode
 
@@ -713,13 +702,12 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
                        srcdir, srcdir2, extrafiles, makefile):
     """
     Make target on Windows OS
-    
     """
     # C/C++ compiler switches
     if debug:
-        cflags = ['-O0', '-g']
+        cflags = ['/O0', '/g']
     else:
-        cflags = ['-O3']
+        cflags = ['/O3']
     syslibs = ['-lc']
 
     if fc == 'ifort':
@@ -730,40 +718,37 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         cc = 'icc.exe'
     else:
         cc = 'cl.exe'
-    cflags = ['-nologo', '-c']
-    fflags = ['-heap-arrays:0', '-fpe:0', '-traceback', '-nologo']
-    # look for optimization levels
+    cflags = ['/nologo', '/c']
+    fflags = ['/heap-arrays:0', '/fpe:0', '/traceback', '/nologo']
     if debug:
-        opt = '-debug'
+        opt = '/debug'
     else:
-        opt = '-O2'
-    if fflagsu is not None:
-        t = fflagsu.split()
-        for fflag in t:
-            if 'O' in fflag.upper()[0] or fflag.upper() == 'FAST':
-                if not debug:
-                    opt = '-' + fflag
-                if len(t) > 1:
-                    fflagsu = fflagsu.replace(fflag, '')
-                else:
-                    fflagsu = None
-                # break after first optimization (O) flag
-                break
+        opt = '/O2'
+    if fflagsu is None:
+        fflagsu = []
+    elif isinstance(fflagsu, str):
+        fflagsu = fflagsu.split()
+    # look for optimization levels in fflags
+    for fflag in fflagsu:
+        if fflag[:2] in ('-O', '/O') or fflag in ('-fast', '/fast'):
+            if not debug:
+                opt = fflag
+            fflagsu.remove(fflag)
+            break  # after first optimization (O) flag
     if debug:
-        fflags += [opt]
-        cflags += ['-Zi']
+        fflags.append(opt)
+        cflags.append('/Zi')
     else:
         # production version compile flags
-        fflags += [opt]
-        cflags += ['-O2']
+        fflags.append(opt)
+        cflags.append('/O2')
     if double:
-        fflags.append('/real_size:64')
-    # parse user options
-    if fflagsu is not None:
-        t = fflagsu.split()
-        for fflag in t:
-            if '-' + fflag not in fflags:
-                fflags.append('-'+fflag)
+        fflags.append('/real-size:64')
+        fflags.append('/double-size:64')
+    # Split all tokens by spaces
+    for fflag in ' '.join(fflagsu).split():
+        if fflag not in fflags:
+            fflags.append(fflag)
     objext = '.obj'
     batchfile = 'compile.bat'
     if os.path.isfile(batchfile):
@@ -782,9 +767,7 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target,
                   arch, objdir_temp, moddir_temp)
         #subprocess.check_call([batchfile, ])
-        proc = subprocess.Popen([batchfile, ],
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
+        proc = Popen([batchfile, ], stdout=PIPE, stderr=PIPE)
         while True:
             line = proc.stdout.readline()
             c = line.decode('utf-8')
