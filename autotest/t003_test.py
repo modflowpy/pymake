@@ -4,16 +4,21 @@ import shutil
 import pymake
 import flopy
 
+# define program data
+target = 'mfusg'
+prog_dict = pymake.usgs_prog_data().get_target_data(target)
+
 # set up paths
 dstpth = os.path.join('temp')
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
-mfusgpth = os.path.join(dstpth, 'mfusg.1_4')
+
+mfusgpth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(mfusgpth, 'test')
 
-exe_name = 'mfusgr'
-srcpth = os.path.join(mfusgpth, 'src')
-target = os.path.join(dstpth, exe_name)
+srcpth = os.path.join(mfusgpth, prog_dict.srcdir)
+epth = os.path.abspath(os.path.join(dstpth, target))
+
 
 def edit_namefiles():
     namefiles = pymake.get_namefiles(expth)
@@ -34,41 +39,33 @@ def edit_namefiles():
             f.write('\n')
         f.close()
 
+
 def get_namefiles():
     exclude_tests = ('7_swtv4_ex',)
     namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
     simname = pymake.get_sim_name(namefiles, rootpth=expth)
     return zip(namefiles, simname)
 
+
 def compile_code():
     # Remove the existing mfusg directory if it exists
     if os.path.isdir(mfusgpth):
         shutil.rmtree(mfusgpth)
 
-    # Download the MODFLOW-USG distribution
-    url = 'https://water.usgs.gov/ogw/mfusg/mfusg.1_4.zip'
-    pymake.download_and_unzip(url, pth=dstpth)
-
-    # Remove extraneous source directories
-    dlist = ['zonebudusg', 'serial']
-    for d in dlist:
-        dname = os.path.join(srcpth, d)
-        if os.path.isdir(dname):
-            print('Removing ', dname)
-            shutil.rmtree(os.path.join(srcpth, d))
-
     # compile MODFLOW-USG
-    pymake.main(srcpth, target, 'gfortran', 'gcc', makeclean=True,
-                expedite=False, dryrun=False, double=False, debug=False)
-    assert os.path.isfile(target), 'Target does not exist.'
+    pymake.build_program(target=target,
+                         download_dir=dstpth,
+                         target_dir=dstpth)
 
 
 def clean_up():
-    # clean up
+    # clean up download directory
     print('Removing folder ' + mfusgpth)
     shutil.rmtree(mfusgpth)
+
+    # clean up executable
     print('Removing ' + target)
-    os.remove(target)
+    os.remove(epth)
     return
 
 
@@ -80,7 +77,6 @@ def run_mfusg(namepth, dst):
 
     # run test models
     print('running model...{}'.format(os.path.basename(namepth)))
-    epth = os.path.abspath(target)
     success, buff = flopy.run_model(epth, os.path.basename(namepth),
                                     model_ws=testpth, silent=True)
     if success:
@@ -112,12 +108,16 @@ def test_clean_up():
 if __name__ == "__main__":
     # compile MODFLOW-USG
     compile_code()
+
     # edit namefiles
     edit_namefiles()
+
     # get name files and simulation name
     sim_list = get_namefiles()
+
     # run models
     for namepth, dst in sim_list:
         run_mfusg(namepth, dst)
+
     # clean up
     clean_up()

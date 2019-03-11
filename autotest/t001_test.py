@@ -5,7 +5,25 @@ import shutil
 import pymake
 from pymake.autotest import get_namefiles, compare_budget, compare_heads
 import flopy
-import config001 as config
+
+retain = False
+key_release = 'mf2005'
+key_previous = 'mf2005p'
+pd_release = pymake.usgs_prog_data().get_target_data(key=key_release)
+pd_previous = pymake.usgs_prog_data().get_target_data(key=key_previous)
+
+testdir = 'temp'
+testdir_release = os.path.join(testdir, pd_release.dirname)
+target_release = os.path.join(testdir, key_release + '_' + pd_release.version)
+
+testdir_previous = os.path.join(testdir, pd_previous.dirname)
+target_previous = os.path.join(testdir,
+                               key_release + '_' +  pd_previous.version)
+
+exdir = 'test-run'
+testpaths = [os.path.join(testdir, pd_release.dirname, exdir)]
+exclude = ('MNW2-Fig28', 'swi2ex4sww', 'testsfr2_tab', 'UZFtest2')
+
 
 
 def run_mf2005(namefile, regression=True):
@@ -15,18 +33,18 @@ def run_mf2005(namefile, regression=True):
     """
 
     # Set root as the directory name where namefile is located
-    testname = pymake.get_sim_name(namefile, rootpth=config.testpaths[0])[0]
+    testname = pymake.get_sim_name(namefile, rootpth=testpaths[0])[0]
 
     # Set nam as namefile name without path
     nam = os.path.basename(namefile)
 
     # Setup
-    testpth = os.path.join(config.testdir, testname)
+    testpth = os.path.join(testdir, testname)
     pymake.setup(namefile, testpth)
 
     # run test models
     print('running model...{}'.format(testname))
-    exe_name = os.path.abspath(config.target_release)
+    exe_name = os.path.abspath(target_release)
     success, buff = flopy.run_model(exe_name, nam, model_ws=testpth,
                                     silent=True)
 
@@ -36,11 +54,11 @@ def run_mf2005(namefile, regression=True):
     # release target and the reference target
     success_reg = True
     if regression:
-        testname_reg = os.path.basename(config.target_previous)
+        testname_reg = os.path.basename(target_previous)
         testpth_reg = os.path.join(testpth, testname_reg)
         pymake.setup(namefile, testpth_reg)
         print('running regression model...{}'.format(testname_reg))
-        exe_name = os.path.abspath(config.target_previous)
+        exe_name = os.path.abspath(target_previous)
         success_reg, buff = flopy.run_model(exe_name, nam,
                                             model_ws=testpth_reg,
                                             silent=False)
@@ -57,7 +75,7 @@ def run_mf2005(namefile, regression=True):
                                      outfile1=outfile1, outfile2=outfile2)
 
     # Clean things up
-    if not config.retain:
+    if not retain:
         pymake.teardown(testpth)
 
     return
@@ -67,25 +85,14 @@ def test_compile_prev():
     # Compile reference version of the program from the source.
 
     # Remove the existing distribution directory if it exists
-    dir_previous = config.dir_previous
-    if os.path.isdir(dir_previous):
-        print('Removing folder ' + dir_previous)
-        shutil.rmtree(dir_previous)
+    if os.path.isdir(testdir_previous):
+        print('Removing folder ' + testdir_previous)
+        shutil.rmtree(testdir_previous)
 
-    # Setup variables
-    url = config.url_previous
-    srcdir = config.srcdir_previous
-    target = config.target_previous
 
-    # Download the MODFLOW-2005 distribution
-    pymake.download_and_unzip(url, pth=config.testdir)
-
-    # compile
-    pymake.main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
-                expedite=False, dryrun=False, double=False, debug=False,
-                include_subdirs=False, fflags='-O3')
-
-    assert os.path.isfile(target), 'Target {} does not exist.'.format(target)
+    pymake.build_program(target=key_previous, fflags='-O3',
+                         download_dir=testdir,
+                         exe_name=target_previous)
 
     return
 
@@ -94,59 +101,44 @@ def test_compile_ref():
     # Compile reference version of the program from the source.
 
     # Remove the existing distribution directory if it exists
-    dir_release = config.dir_release
-    if os.path.isdir(dir_release):
-        print('Removing folder ' + dir_release)
-        shutil.rmtree(dir_release)
+    if os.path.isdir(testdir_release):
+        print('Removing folder ' + testdir_release)
+        shutil.rmtree(testdir_release)
 
-    # Setup variables
-    url = config.url_release
-    srcdir = config.srcdir_release
-    target = config.target_release
 
-    # Download the MODFLOW-USG distribution
-    pymake.download_and_unzip(url, pth=config.testdir)
-
-    # compile
-    pymake.main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
-                expedite=False, dryrun=False, double=False, debug=False,
-                include_subdirs=False, fflags='-O3 -fbacktrace')
-
-    assert os.path.isfile(target), 'Target {} does not exist.'.format(target)
+    pymake.build_program(target=key_release, fflags='-O3 -fbacktrace',
+                         download_dir=testdir,
+                         exe_name=target_release)
 
     return
 
 
 def test_mf2005():
-    target = config.target_release
-    assert os.path.isfile(target), 'Target {} does not exist.'.format(target)
-    target = config.target_previous
-    assert os.path.isfile(target), 'Target {} does not exist.'.format(target)
-
-    namefiles = get_namefiles(config.testpaths[0], exclude=config.exclude)
+    namefiles = get_namefiles(testpaths[0], exclude=exclude)
+    namefiles = get_namefiles(testpaths[0], exclude=exclude)
     for namefile in namefiles:
         yield run_mf2005, namefile
     return
 
 
 def test_teardown():
-    if os.path.isfile(config.target_previous):
-        print('Removing ' + config.target_previous)
-        os.remove(config.target_previous)
+    if os.path.isfile(target_previous):
+        print('Removing ' + target_previous)
+        os.remove(target_previous)
 
-    if os.path.isfile(config.target_release):
-        print('Removing ' + config.target_release)
-        os.remove(config.target_release)
+    if os.path.isfile(target_release):
+        print('Removing ' + target_release)
+        os.remove(target_release)
 
     # remove release source files if target was built
-    if os.path.isdir(config.dir_release):
-        print('Removing folder ' + config.dir_release)
-        shutil.rmtree(config.dir_release)
+    if os.path.isdir(testdir_release):
+        print('Removing folder ' + testdir_release)
+        shutil.rmtree(testdir_release)
 
     # remove previous release source files if target was built
-    if os.path.isdir(config.dir_previous):
-        print('Removing folder ' + config.dir_previous)
-        shutil.rmtree(config.dir_previous)
+    if os.path.isdir(testdir_previous):
+        print('Removing folder ' + testdir_previous)
+        shutil.rmtree(testdir_previous)
 
     return
 
@@ -155,7 +147,7 @@ if __name__ == '__main__':
     test_compile_ref()
     test_compile_prev()
 
-    namefiles = get_namefiles(config.testpaths[0], exclude=config.exclude)
+    namefiles = get_namefiles(testpaths[0], exclude=exclude)
     for namefile in namefiles:
         run_mf2005(namefile)
 

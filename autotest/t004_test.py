@@ -1,72 +1,38 @@
 from __future__ import print_function
 import os
 import shutil
+
 import pymake
 import flopy
+
+# define program data
+target = 'mp6'
+prog_dict = pymake.usgs_prog_data().get_target_data(target)
 
 # set up paths
 dstpth = os.path.join('temp')
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
-mp6pth = os.path.join(dstpth, 'modpath.6_0')
+
+mp6pth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(mp6pth, 'example-run')
 
 exe_name = 'mp6'
-srcpth = os.path.join(mp6pth, 'src')
-target = os.path.join(dstpth, exe_name)
+srcpth = os.path.join(mp6pth, prog_dict.srcdir)
+epth = os.path.abspath(os.path.join(dstpth, target))
 
 
+# Download and compile the MODPATH 6 distribution
 def compile_code():
-    # Remove the existing modpath6 directory if it exists
+    # Remove the existing MODPATH 6 directory if it exists
     if os.path.isdir(mp6pth):
         shutil.rmtree(mp6pth)
 
-    # Download the MODPATH 6 distribution
-    url = "https://water.usgs.gov/ogw/modpath/archive/modpath_v6.0.01/modpath.6_0_01.zip"
-    pymake.download_and_unzip(url, pth=dstpth)
-
-    # start of edit a few files so it can compile with gfortran
-    # file 1
-    fname1 = os.path.join(srcpth, 'MP6Flowdata.for')
-    f = open(fname1, 'r')
-
-    bigline = 'CB%BALANCE = ABS(100.0*CB%QRESIDUAL/CB%QAVE)'
-    newline = '      IF (ABS(CB%QAVE) > 0.) THEN\n' + \
-              '        CB%BALANCE = ABS(100.0*CB%QRESIDUAL/CB%QAVE)\n' + \
-              '      ELSE\n' + \
-              '        CB%BALANCE = 0.\n' + \
-              '      END IF\n'
-
-    fname2 = os.path.join(srcpth, 'MP6Flowdata_mod.for')
-    f2 = open(fname2, 'w')
-    for line in f:
-        line = line.replace('CD.QX2', 'CD%QX2')
-        if bigline in line:
-            line = newline
-        f2.write(line)
-    f.close()
-    f2.close()
-    os.remove(fname1)
-
-    # file 2
-    fname1 = os.path.join(srcpth, 'MP6MPBAS1.for')
-    f = open(fname1, 'r')
-
-    fname2 = os.path.join(srcpth, 'MP6MPBAS1_mod.for')
-    f2 = open(fname2, 'w')
-    for line in f:
-        line = line.replace('MPBASDAT(IGRID)%NCPPL=NCPPL',
-                            'MPBASDAT(IGRID)%NCPPL=>NCPPL')
-        f2.write(line)
-    f.close()
-    f2.close()
-    os.remove(fname1)
-    # end of edit a few files so it can compile with gfortran
-
-    # compile MODPATH 6
-    pymake.main(srcpth, target, 'gfortran', 'gcc', makeclean=True,
-                expedite=False, dryrun=False, double=False, debug=False)
-    assert os.path.isfile(target), 'Target does not exist.'
+    # download and compile MODPATH 6
+    pymake.build_program(target=target,
+                         download_dir=dstpth,
+                         target_dir=dstpth,
+                         replace_function=pymake.update_mp6files)
 
 
 def get_simfiles():
@@ -88,23 +54,24 @@ def run_modpath6(fn):
             os.remove(fname1)
             fname1 = os.path.join(expth, '{}.locations'.format(rf.upper()))
             print('renmae {} to {}'.format(os.path.basename(fname2),
-                                            os.path.basename(fname1)))
+                                           os.path.basename(fname1)))
             os.rename(fname2, fname1)
 
     # run the model
     print('running model...{}'.format(fn))
-    exe = os.path.abspath(target)
-    success, buff = flopy.run_model(exe, fn, model_ws=expth, silent=False)
+    success, buff = flopy.run_model(epth, fn, model_ws=expth, silent=False)
     assert success, 'could not run...{}'.format(os.path.basename(fn))
     return
 
 
 def clean_up():
-    # clean up
+    # clean up download directory
     print('Removing folder ' + mp6pth)
     shutil.rmtree(mp6pth)
+
+    # clean up executable
     print('Removing ' + target)
-    os.remove(target)
+    os.remove(epth)
     return
 
 

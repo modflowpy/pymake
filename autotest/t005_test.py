@@ -2,41 +2,44 @@ from __future__ import print_function
 import os
 import shutil
 import pymake
-import flopy
+
+# define program data
+target = 'mflgr'
+prog_dict = pymake.usgs_prog_data().get_target_data(target)
 
 # set up paths
 dstpth = os.path.join('.', 'temp')
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
-mflgrpth = os.path.join(dstpth, 'mflgr.2_0')
+
+mflgrpth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(mflgrpth, 'test')
 
-exe_name = 'mflgr'
-srcpth = os.path.join(mflgrpth, 'src')
-target = os.path.join(dstpth, exe_name)
+srcpth = os.path.join(mflgrpth, prog_dict.srcdir)
+epth = os.path.join(dstpth, target)
+
 
 def compile_code():
     # Remove the existing mfusg directory if it exists
     if os.path.isdir(mflgrpth):
         shutil.rmtree(mflgrpth)
 
-    # Download the MODFLOW-LGR distribution
-    url = "https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
-    pymake.download_and_unzip(url, pth=dstpth)
-
     # compile MODFLOW-LGR
-    pymake.main(srcpth, target, 'gfortran', 'gcc', makeclean=True,
-                expedite=False, dryrun=False, double=False, debug=False)
-    assert os.path.isfile(target), 'Target does not exist.'
+    pymake.build_program(target=target,
+                         download_dir=dstpth,
+                         target_dir=dstpth)
+
     return
 
 
 def clean_up():
-    # clean up
+    # clean up download directory
     print('Removing folder ' + mflgrpth)
     shutil.rmtree(mflgrpth)
+
+    # clean up the executable
     print('Removing ' + target)
-    os.remove(target)
+    os.remove(epth)
     return
 
     return
@@ -45,6 +48,7 @@ def clean_up():
 def test_compile():
     # compile MFLGR
     compile_code()
+
 
 def test_clean_up():
     yield clean_up

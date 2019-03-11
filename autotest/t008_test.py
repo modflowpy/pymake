@@ -4,42 +4,35 @@ import shutil
 import pymake
 import flopy
 
-# define urls
-urls = pymake.build_urls()
-exe_name = 'mf6'
-prog_dict = urls[exe_name]
+# define program data
+target = 'mf6'
+prog_dict = pymake.usgs_prog_data().get_target_data(target)
 
 # set up paths
 dstpth = os.path.join('temp')
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
-#https://water.usgs.gov/ogw/modflow/mf6.0.3.zip
+
 mf6ver = prog_dict.version
 mf6pth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(mf6pth, 'examples')
 
-srcpth = os.path.join(mf6pth, prog_dict.srcdir)
-target = os.path.join(dstpth, exe_name)
-url = prog_dict.url
 
 def get_example_dirs():
     exdirs = [o for o in os.listdir(expth)
               if os.path.isdir(os.path.join(expth, o))]
     return exdirs
 
+
 def compile_code():
     # Remove the existing mf6 directory if it exists
     if os.path.isdir(mf6pth):
         shutil.rmtree(mf6pth)
 
-    # Download the MODFLOW 6 distribution
-    pymake.download_and_unzip(url, pth=dstpth)
-
     # compile MODFLOW 6
-    pymake.main(srcpth, target, 'gfortran', 'gcc', makeclean=True,
-                expedite=False, dryrun=False, double=False, debug=False,
-                include_subdirs=True)
-    assert os.path.isfile(target), 'Target does not exist.'
+    pymake.build_program(target=target,
+                         include_subdirs=True,
+                         download_dir=dstpth)
 
 
 def clean_up():
