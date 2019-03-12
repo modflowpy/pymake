@@ -2,61 +2,74 @@ from __future__ import print_function
 import os
 import shutil
 import pymake
-from pymake.download import download_and_unzip
+
+# define program data
+target = 'mfnwt'
+prog_dict = pymake.usgs_prog_data().get_target(target)
 
 # set up paths
 dstpth = os.path.join('temp')
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
-mfnwtpth = os.path.join(dstpth, 'MODFLOW-NWT_1.1.4')
 
-exe_name = 'mfnwt'
-srcpth = os.path.join(mfnwtpth, 'src')
-target = os.path.join(dstpth, exe_name)
+mfnwtpth = os.path.join(dstpth, prog_dict.dirname)
+
+srcpth = os.path.join(mfnwtpth, prog_dict.srcdir)
+epth = os.path.join(dstpth, target)
 
 
 def compile_code():
-    # Remove the existing directory if it exists
+    # Remove the existing MODFLOW-NWT directory if it exists
     if os.path.isdir(mfnwtpth):
         shutil.rmtree(mfnwtpth)
 
-    # Download the MODFLOW-NWT distribution
-    url = "https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT_1.1.4.zip"
-    download_and_unzip(url, pth=dstpth)
-
-    pymake.main(srcpth, target, 'gfortran', 'gcc', makeclean=True,
-                expedite=False, dryrun=False, double=False, debug=False,
-                makefile=True)
-
-    assert os.path.isfile(target), 'Target does not exist.'
+    # compile MODFLOW-NWT
+    pymake.build_program(target=target,
+                         download_dir=dstpth,
+                         makeclean=False,
+                         makefile=True,
+                         target_dir=dstpth)
 
 
 def build_with_makefile():
     if os.path.isfile('makefile'):
+
         # remove existing target
         print('Removing ' + target)
-        os.remove(target)
-        print('build mfnwt with makefile')
+        os.remove(epth)
+
+        print('Removing temporary build directories')
+        shutil.rmtree(os.path.join('src_temp'))
+        shutil.rmtree(os.path.join('obj_temp'))
+        shutil.rmtree(os.path.join('mod_temp'))
+
+        # build MODFLOW-NWT with makefile
+        print('build {} with makefile'.format(target))
         os.system('make')
-        assert os.path.isfile(target), \
-            'Target created by makefile does not exist.'
+        assert os.path.isfile(epth), \
+            '{} created by makefile does not exist.'.format(target)
     else:
         print('makefile does not exist...skipping build_with_make()')
     return
 
 
 def clean_up():
-    # clean up
+    # clean up make file
     if os.path.isfile('makefile'):
-        print('Removing makefile and obj_temp')
+        print('Removing makefile and temporary build directories')
         shutil.rmtree(os.path.join('obj_temp'))
         os.remove('makefile')
-    if os.path.isfile(target):
+
+    # clean up MODFLOW-NWT
+    if os.path.isfile(epth):
         print('Removing ' + target)
-        os.remove(target)
+        os.remove(epth)
+
+    # clean up MODFLOW-NWT download
     if os.path.isdir(mfnwtpth):
         print('Removing folder ' + mfnwtpth)
         shutil.rmtree(mfnwtpth)
+
     return
 
 

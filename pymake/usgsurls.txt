@@ -1,5 +1,5 @@
 #target  version  url                                                                                             dirname           srcdir
-mf2k     1.19.01  https://water.usgs.gov/nrp/gwsoftware/modflow2000/mf2k1_19_01.tar.gz                            mf2k.1_19         src
+mf2000   1.19.01  https://water.usgs.gov/nrp/gwsoftware/modflow2000/mf2k1_19_01.tar.gz                            mf2k.1_19         src
 mf2005   1.12.00  https://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.12.00/MF2005.1_12u.zip                       MF2005.1_12u      src
 mf2005p  1.11.00  https://water.usgs.gov/ogw/modflow/archive-mf2005/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip Unix              src
 mfnwt    1.1.4    https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT_1.1.4.zip                                    MODFLOW-NWT_1.1.4 src
@@ -7,5 +7,9 @@ mfusg    1.5      https://water.usgs.gov/water-resources/software/MODFLOW-USG/mf
 mf6      6.0.3    https://water.usgs.gov/ogw/modflow/mf6.0.3.zip                                                  mf6.0.3           src
 swt_v4   4.00.05  https://water.usgs.gov/ogw/seawat/swt_v4_00_05.zip                                              swt_v4_00_05      source
 mp6      6.0.1    https://water.usgs.gov/ogw/modpath/archive/modpath_v6.0.01/modpath.6_0_01.zip                   modpath.6_0       src
+mp7      7.2.001  https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip                                          modpath_7_2_001   source
 mflgr    2.0.0    https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip                      mflgr.2_0         src
+mt3dms   5.3.0    https://hydro.geo.ua.edu/mt3d/mt3dms_530.exe                                                    mt3dms5.3.0       src/true-binary
+mt3dusgs 1.0.1    https://water.usgs.gov/water-resources/software/MT3D-USGS/mt3dusgs1.0.1.zip                     mt3dusgs1.0.1     src
+vs2dt    3.3      https://water.usgs.gov/water-resources/software/VS2DI/vs2dt3_3.zip                              vs2dt3_3          include
 

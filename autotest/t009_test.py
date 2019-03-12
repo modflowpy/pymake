@@ -1,134 +1,144 @@
-# Test the download_and_unzip functionality of pymake
-
-import sys
+from __future__ import print_function
 import os
+import shutil
 import pymake
+import flopy
+
+# define program data
+target = 'mt3dusgs'
+prog_dict = pymake.usgs_prog_data().get_target_data(target)
+
+# set up paths
+dstpth = os.path.join('temp')
+if not os.path.exists(dstpth):
+    os.makedirs(dstpth)
+
+mtusgsver = prog_dict.version
+mtusgspth = os.path.join(dstpth, prog_dict.dirname)
+emtusgs = os.path.abspath(os.path.join(dstpth, target))
+
+mfnwt_target = 'mfnwt'
+temp_dict = pymake.usgs_prog_data().get_target(mfnwt_target)
+mfnwtpth = os.path.join(dstpth, temp_dict.dirname)
+emfnwt = os.path.abspath(os.path.join(dstpth, mfnwt_target))
+
+# example path
+expth = os.path.join(mtusgspth, 'data')
+
+# set up pths and exes
+pths = [mtusgspth, mfnwtpth]
+exes = [emtusgs, emfnwt]
 
 
-def which(program):
-    """
-    Test to make sure that the program is executable
-
-    """
-    import os
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-    fpath, fname = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-
-    return None
+def get_example_dirs():
+    exclude_dirs = ['Keating', 'Keating_UZF']
+    exdirs = [o for o in os.listdir(expth)
+              if os.path.isdir(os.path.join(expth, o)) and
+              o not in exclude_dirs]
+    return exdirs
 
 
-def repo_latest_assets(github_repo):
-    """
-    Return a dictionary containing the file name and the link to the asset
-    contained in a github repository.
+def run_mt3dusgs(temp_dir):
+    model_ws = os.path.join(expth, temp_dir)
 
-    Parameters
-    ----------
-    github_repo : str
-        Repository name, such as MODFLOW-USGS/modflow6
+    files = [f for f in os.listdir(model_ws)
+             if os.path.isfile(os.path.join(model_ws, f))]
 
-    Returns
-    -------
-    result_dict : dict
-        dictionary of file names and links
+    mf_nam = None
+    mt_nam = None
+    for f in files:
+        if '_mf.nam' in f.lower():
+            mf_nam = f
+        if '_mt.nam' in f.lower():
+            mt_nam = f
 
-    """
-    import requests
-    import json
-    repo_url = 'https://api.github.com/repos/{}'.format(github_repo)
+    msg = 'A MODFLOW name file not present in {}'.format(model_ws)
+    assert mf_nam is not None, msg
 
-    assets = None
-    request_url = '{}/releases/latest'.format(repo_url)
-    print('Requesting from: {}'.format(request_url))
-    r = requests.get(request_url)
-    if (r.ok):
-        jsonobj = json.loads(r.text or r.content)
-        assets = jsonobj['assets']
-    else:
-        assert assets, 'Could not find latest executables from ' + request_url
+    msg = 'A MT3D-USGS name file not present in {}'.format(model_ws)
+    assert mt_nam is not None, msg
 
-    result_dict = {}
-    for asset in assets:
-        k = asset['name']
-        v = asset['browser_download_url']
-        result_dict[k] = v
-    return result_dict
+    # run the flow model
+    msg = '{}'.format(emfnwt)
+    if mf_nam is not None:
+        msg += ' {}'.format(os.path.basename(mf_nam))
+    success, buff = flopy.run_model(emfnwt, mf_nam, model_ws=model_ws,
+                                    silent=False)
+    assert success, 'could not run...{}'.format(msg)
 
-
-def getmfexes(pth='.', version='', platform=None):
-    """
-    Get the latest MODFLOW binary executables from a github site
-    (https://github.com/MODFLOW-USGS/executables) for the specified
-    operating system and put them in the specified path.
-
-    Parameters
-    ----------
-    pth : str
-        Location to put the executables (default is current working directory)
-
-    version : str
-        Version of the MODFLOW-USGS/executables release to use.
-
-    platform : str
-        Platform that will run the executables.  Valid values include mac,
-        linux, win32 and win64.  If platform is None, then routine will
-        download the latest asset from the github reposity.
-
-    """
-
-    # Determine the platform in order to construct the zip file name
-    if platform is None:
-        if sys.platform.lower() == 'darwin':
-            platform = 'mac'
-        elif sys.platform.lower().startswith('linux'):
-            platform = 'linux'
-        elif 'win' in sys.platform.lower():
-            is_64bits = sys.maxsize > 2 ** 32
-            if is_64bits:
-                platform = 'win64'
-            else:
-                platform = 'win32'
-        else:
-            errmsg = ('Could not determine platform'
-                      '.  sys.platform is {}'.format(sys.platform))
-            raise Exception(errmsg)
-    else:
-        assert platform in ['mac', 'linux', 'win32', 'win64']
-    zipname = '{}.zip'.format(platform)
-
-    # Wanted to use github api, but this is timing out on travis too often
-    #mfexes_repo_name = 'MODFLOW-USGS/executables'
-    # assets = repo_latest_assets(mfexes_repo_name)
-
-    # Determine path for file download and then download and unzip
-    url = ('https://github.com/MODFLOW-USGS/executables/'
-           'releases/download/{}/'.format(version))
-    assets = {p: url + p for p in ['mac.zip', 'linux.zip',
-                                   'win32.zip', 'win64.zip']}
-    download_url = assets[zipname]
-    pymake.download_and_unzip(download_url, pth)
+    # run the MT3D-USGS model
+    print('running model...{}'.format(mt_nam))
+    exe = mt_nam
+    success, buff = flopy.run_model(emtusgs, mt_nam,
+                                    model_ws=model_ws, silent=False,
+                                    normal_msg='Program completed.')
+    assert success, 'could not run...{}'.format(os.path.basename(mt_nam))
 
     return
 
 
-def test_download_and_unzip():
-    pth = './temp/t009'
-    getmfexes(pth, '1.0')
-    for f in os.listdir(pth):
-        fname = os.path.join(pth, f)
-        errmsg = '{} not executable'.format(fname)
-        assert which(fname) is not None, errmsg
+def clean_up(pth, exe):
+    # clean up downloaded directories
+    if os.path.isdir(pth):
+        print('Removing folder ' + pth)
+        shutil.rmtree(pth)
+
+    # clean up compiled executables
+    if os.path.isfile(exe):
+        print('Removing ' + exe)
+        os.remove(exe)
     return
 
-if __name__ == '__main__':
-    test_download_and_unzip()
+
+def test_compile_mt3dusgs():
+    # Remove the existing MT3D-USGS directory if it exists
+    if os.path.isdir(mtusgspth):
+        shutil.rmtree(mtusgspth)
+
+    # download and compile MT3D-USGS
+    pymake.build_program(target=target,
+                         download_dir=dstpth,
+                         target_dir=dstpth)
+    return
+
+
+def test_compile_mfnwt():
+    # Remove the existing MODFLOW-NWT directory if it exists
+    if os.path.isdir(mfnwtpth):
+        shutil.rmtree(mfnwtpth)
+
+    # compile MODFLOW-NWT
+    pymake.build_program(target=mfnwt_target,
+                         download_dir=dstpth,
+                         target_dir=dstpth)
+
+
+def test_mt3dusgs():
+    example_dirs = get_example_dirs()
+    for dn in example_dirs:
+        yield run_mt3dusgs, dn
+
+
+def test_clean_up():
+    for pth, exe in zip(pths, exes):
+        yield clean_up, pth, exe
+    return
+
+
+if __name__ == "__main__":
+    # compile MT3D-USGS
+    test_compile_mt3dusgs()
+
+    # compile MODFLOW-NWT
+    test_compile_mfnwt()
+
+    # get name files and simulation name
+    example_dirs = get_example_dirs()
+
+    # run example problems
+    for dn in example_dirs:
+        run_mt3dusgs(dn)
+
+    # clean up test
+    for pth, exe in zip(pths, exes):
+        clean_up(pth, exe)
