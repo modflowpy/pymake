@@ -23,8 +23,9 @@ import traceback
 import shutil
 from subprocess import Popen, PIPE
 import argparse
-from .dag import order_source_files, order_c_source_files
 import datetime
+
+from .dag import order_source_files, order_c_source_files
 
 try:
     from flopy import is_exe as flopy_is_exe

@@ -3,12 +3,9 @@ import sys
 import shutil
 import platform
 
-import pymake
-import flopy
-
-# define program data
-prog_data = pymake.usgs_prog_data()
-
+from .pymake import main
+from .download import download_and_unzip
+from .usgsurls import usgs_prog_data
 
 def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                   expedite=False, dryrun=False, double=False, debug=False,
@@ -38,7 +35,8 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
     if target_dir is not None:
         exe_name = os.path.abspath(os.path.join(target_dir, exe_name))
 
-    prog_dict = prog_data.get_target_data(target)
+    # extract program data for target
+    prog_dict = usgs_prog_data.get_target(target)
 
     # set url
     url = prog_dict.url
@@ -56,7 +54,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
 
     # Download the distribution
     if download:
-        pymake.download_and_unzip(url, verify=verify, pth=download_dir)
+        download_and_unzip(url, verify=verify, pth=download_dir)
 
     if replace_function is not None:
         print('replacing select source files for {}'.format(target))
@@ -64,10 +62,10 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
 
     # compile code
     print('compiling...{}'.format(os.path.relpath(exe_name)))
-    pymake.main(srcdir, exe_name, fc=fc, cc=cc, makeclean=makeclean,
-                expedite=expedite, dryrun=dryrun, double=double, debug=debug,
-                include_subdirs=include_subdirs, fflags=fflags, arch=arch,
-                makefile=makefile, srcdir2=srcdir2, extrafiles=extrafiles)
+    main(srcdir, exe_name, fc=fc, cc=cc, makeclean=makeclean,
+         expedite=expedite, dryrun=dryrun, double=double, debug=debug,
+         include_subdirs=include_subdirs, fflags=fflags, arch=arch,
+         makefile=makefile, srcdir2=srcdir2, extrafiles=extrafiles)
 
     if verify:
         app = os.path.relpath(exe_name)

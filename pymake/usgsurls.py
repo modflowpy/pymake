@@ -9,9 +9,9 @@ class dotdict(dict):
 
 class usgs_prog_data:
     def __init__(self):
-        self._url_dict = self.build_urls()
+        self._url_dict = self._build_urls()
 
-    def build_urls(self):
+    def _build_urls(self):
         pth = os.path.dirname(os.path.abspath(pymake.__file__))
         fpth = os.path.join(pth, 'usgsurls.txt')
         url_in = open(fpth, 'r').read().split('\n')
@@ -38,3 +38,8 @@ class usgs_prog_data:
                 msg += '"{}"'.format(k)
             raise KeyError(msg)
         return self._url_dict[key]
+
+    @staticmethod
+    def get_target(key):
+        prog_data = usgs_prog_data()
+        return prog_data.get_target_data(key)
