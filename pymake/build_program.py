@@ -12,10 +12,10 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                   expedite=False, dryrun=False, double=False, debug=False,
                   include_subdirs=False, fflags=None, arch='intel64',
                   makefile=False, srcdir2=None, extrafiles=None,
-                  download_dir=None, download=True,
                   exe_name=None, target_dir=None,
                   replace_function=None, verify=True, modify_exe_name=True,
-                  download_verify=True, timeout=30):
+                  download_dir=None, download=True,
+                  download_clean=False, download_verify=True, timeout=30):
     # set exe_name
     if exe_name is None:
         exe_name = target
@@ -52,10 +52,9 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
     else:
         dirname = os.path.join(download_dir, dirname)
 
-    # # make the download directory
-    # if download_dir is not './':
-    #     if not os.path.exists(download_dir):
-    #         os.makedirs(download_dir)
+    # make the download directory if it does not exist
+    if not os.path.exists(download_dir):
+        os.makedirs(download_dir)
 
     # Set srcdir name
     srcdir = prog_dict.srcdir
@@ -82,13 +81,13 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         msg = '{} does not exist.'.format(app)
         assert os.path.isfile(exe_name), msg
 
-    # # clean download directory if different than directory with executable
-    # if makeclean:
-    #     edir = os.path.abspath(os.path.dirname(exe_name))
-    #     ddir = os.path.abspath(os.path.dirname(download_dir))
-    #     if edir is not ddir:
-    #         if os.path.isdir(ddir):
-    #             shutil.rmtree(ddir)
+    # clean download directory if different than directory with executable
+    if download_clean:
+        edir = os.path.abspath(os.path.dirname(exe_name))
+        ddir = os.path.abspath(download_dir)
+        if edir != ddir:
+            if os.path.isdir(ddir):
+                shutil.rmtree(ddir)
 
     return
 
