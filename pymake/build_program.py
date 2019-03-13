@@ -2,10 +2,37 @@ import os
 import sys
 import shutil
 import platform
+import types
 
 from .pymake import main
 from .download import download_and_unzip
 from .usgsurls import usgs_prog_data
+
+
+def get_function_names(module, select_name=None):
+    """
+
+    Parameters
+    ----------
+    module
+    select_name
+
+    Returns
+    -------
+
+    """
+    func = {}
+    for key, value in module.__dict__.items():
+        ladd = False
+        if type(value) is types.FunctionType:
+            if select_name is None:
+                ladd = True
+            else:
+                if select_name in value.__name__:
+                    ladd = True
+            if ladd:
+                func[value.__name__] = value
+    return func
 
 
 def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
@@ -16,6 +43,40 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                   replace_function=None, verify=True, modify_exe_name=True,
                   download_dir=None, download=True,
                   download_clean=False, download_verify=True, timeout=30):
+    """
+
+    Parameters
+    ----------
+    target : str
+
+    fc : str
+    cc : str
+    makeclean : bool
+    expedite : bool
+    dryrun : bool
+    double : bool
+    debug : bool
+    include_subdirs : bool
+    fflags : str or list
+    arch : str
+    makefile : bool
+    srcdir2 : str
+    extrafiles : str
+    exe_name : str
+    target_dir : str
+    replace_function : str
+    verify : bool
+    modify_exe_name : bool
+    download_dir : str
+    download : bool
+    download_clean : bool
+    download_verify : bool
+    timeout : int
+
+    Returns
+    -------
+
+    """
     # set exe_name
     if exe_name is None:
         exe_name = target
@@ -92,8 +153,81 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
     return
 
 
+def build_targets(current=True):
+    """
+    Build a list of targets
+
+    Parameters
+    ----------
+    current : bool
+        return list of current targets. If current is False, returned list
+        will include all available USGS applications included in usgsurls.txt.
+        Default is True
+
+    Returns
+    -------
+    targets : list
+        list of targets
+
+    """
+    return usgs_prog_data.get_keys(current=current)
+
+
+def build_replace(targets):
+    """
+    Get pointers to appropriate replace_function for a target
+
+    Parameters
+    ----------
+    targets : str or list of str
+        targets to determine replace_function function pointers.
+    Returns
+    -------
+    replace_funcs : function pointer or list of function pointers
+        None is returned as the function pointer if the target string is
+        not in the function name
+
+
+    """
+    if isinstance(targets, str):
+        targets = [targets]
+
+    # get a dictionary of update functions
+    funcs = get_function_names(sys.modules[__name__], select_name='update_')
+
+    # generate a list of available functions
+    replace_funcs = []
+    for target in targets:
+        f = None
+        for key, value in funcs.items():
+            if target in key:
+                f = value
+                break
+        replace_funcs.append(f)
+
+    # transform from a list to the function pointer if only one element
+    # is in the list
+    if len(replace_funcs) == 1:
+        replace_funcs = replace_funcs[0]
+    return replace_funcs
+
+
 # routines for updating source files to compile with gfortran
 def update_mt3dfiles(srcdir, fc, cc, arch):
+    """
+    Update the MT3D source files
+
+    Parameters
+    ----------
+    srcdir : str
+    fc : str
+    cc : str
+    arch : str
+
+    Returns
+    -------
+
+    """
     # move the downloaded files
     rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))
     prog_dict = usgs_prog_data().get_target('mt3dms')
@@ -276,6 +410,19 @@ def update_mp7files(srcdir, fc, cc, arch):
     for line in lines:
         if 'pGroup%Particles(n)%InitialFace = 0' in line:
             continue
+        f.write(line)
+    f.close()
+
+
+def update_mf6files(srcdir, fc, cc, arch):
+    fpth = os.path.join(srcdir, 'Solution', 'NumericalSolution.f90')
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for idx, line in enumerate(lines):
+        if "case ('NO_PTC')" in line:
+            if lines[idx + 1].strip() == 'call this%parser%DevOpt()':
+                lines[idx + 1] = lines[idx + 1].replace('call', '!call')
         f.write(line)
     f.close()
 

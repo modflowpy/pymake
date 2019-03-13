@@ -8,17 +8,16 @@ import flopy
 
 retain = False
 key_release = 'mf2005'
-key_previous = 'mf2005p'
+key_previous = 'mf2005.1.11'
 pd_release = pymake.usgs_prog_data().get_target_data(key=key_release)
 pd_previous = pymake.usgs_prog_data().get_target_data(key=key_previous)
 
 testdir = 'temp'
 testdir_release = os.path.join(testdir, pd_release.dirname)
-target_release = os.path.join(testdir, key_release + '_' + pd_release.version)
+target_release = os.path.join(testdir, key_release)
 
 testdir_previous = os.path.join(testdir, pd_previous.dirname)
-target_previous = os.path.join(testdir,
-                               key_release + '_' +  pd_previous.version)
+target_previous = os.path.join(testdir, key_previous)
 
 exdir = 'test-run'
 testpaths = [os.path.join(testdir, pd_release.dirname, exdir)]
@@ -114,7 +113,6 @@ def test_compile_ref():
 
 
 def test_mf2005():
-    namefiles = get_namefiles(testpaths[0], exclude=exclude)
     namefiles = get_namefiles(testpaths[0], exclude=exclude)
     for namefile in namefiles:
         yield run_mf2005, namefile
