@@ -55,7 +55,7 @@ def compile_code():
     # compile MODFLOW-USG
     pymake.build_program(target=target,
                          download_dir=dstpth,
-                         target_dir=dstpth)
+                         exe_dir=dstpth)
 
 
 def clean_up():

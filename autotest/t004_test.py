@@ -31,7 +31,7 @@ def compile_code():
     # download and compile MODPATH 6
     pymake.build_program(target=target,
                          download_dir=dstpth,
-                         target_dir=dstpth,
+                         exe_dir=dstpth,
                          replace_function=pymake.update_mp6files)
 
 

@@ -1,15 +1,18 @@
 from __future__ import print_function
 import pymake
 
+import buildall as ba
 
 # Download and compile the MODFLOW 6 distribution
 def make_mf6():
 
-    # compile MODFLOW 6
-    pymake.build_program(target='mf6',
-                         include_subdirs=True,
-                         download_dir='temp',
-                         download_clean=True)
+    ba.build_apps('mf6')
+
+    # # compile MODFLOW 6
+    # pymake.build_program(target='mf6',
+    #                      include_subdirs=True,
+    #                      download_dir='temp',
+    #                      download_clean=True)
 
 
 if __name__ == "__main__":

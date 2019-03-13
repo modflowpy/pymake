@@ -61,7 +61,7 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         #
         fs = requests.get(url, stream=True,
                           verify=verify).headers['Content-length']
-        bfmt = '{:' + '{}'.format(18) + ',d} bytes'
+        bfmt = '{:>' + '{}'.format(len(fs)) + ',d} bytes'
         print('   file size: ' + bfmt.format(int(fs)))
         ds = 0
         try:

@@ -98,7 +98,7 @@ def test_compile_mt3dusgs():
     # download and compile MT3D-USGS
     pymake.build_program(target=target,
                          download_dir=dstpth,
-                         target_dir=dstpth)
+                         exe_dir=dstpth)
     return
 
 
@@ -110,7 +110,7 @@ def test_compile_mfnwt():
     # compile MODFLOW-NWT
     pymake.build_program(target=mfnwt_target,
                          download_dir=dstpth,
-                         target_dir=dstpth)
+                         exe_dir=dstpth)
 
 
 def test_mt3dusgs():

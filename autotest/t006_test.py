@@ -28,7 +28,7 @@ def compile_code():
                          download_dir=dstpth,
                          makeclean=False,
                          makefile=True,
-                         target_dir=dstpth)
+                         exe_dir=dstpth)
 
 
 def build_with_makefile():

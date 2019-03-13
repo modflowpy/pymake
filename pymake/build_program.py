@@ -11,14 +11,23 @@ from .usgsurls import usgs_prog_data
 
 def get_function_names(module, select_name=None):
     """
+    Get a dictionary of functions available in a user-specified source file.
+    This function was developed to create a dictionary of functions in this
+    source file (build_program.py). Optionally, the user can get a get a
+    dictionary of functions that contain a specific text string in the name.
 
     Parameters
     ----------
-    module
-    select_name
+    module : module
+        module to evaluate function names
+    select_name : str
+        string that is used to select a subset of the available functions in
+        the module
 
     Returns
     -------
+    func : dict
+        dictionary with function name keys and values set to function pointers
 
     """
     func = {}
@@ -39,7 +48,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                   expedite=False, dryrun=False, double=False, debug=False,
                   include_subdirs=False, fflags=None, arch='intel64',
                   makefile=False, srcdir2=None, extrafiles=None,
-                  exe_name=None, target_dir=None,
+                  exe_name=None, exe_dir=None,
                   replace_function=None, verify=True, modify_exe_name=True,
                   download_dir=None, download=True,
                   download_clean=False, download_verify=True, timeout=30):
@@ -63,7 +72,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
     srcdir2 : str
     extrafiles : str
     exe_name : str
-    target_dir : str
+    exe_dir : str
     replace_function : str
     verify : bool
     modify_exe_name : bool
@@ -96,8 +105,8 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         if file_extension.lower() is not '.exe':
             exe_name += '.exe'
 
-    if target_dir is not None:
-        exe_name = os.path.abspath(os.path.join(target_dir, exe_name))
+    if exe_dir is not None:
+        exe_name = os.path.abspath(os.path.join(exe_dir, exe_name))
 
     # extract program data for target
     prog_dict = usgs_prog_data.get_target(target)

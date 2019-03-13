@@ -52,7 +52,7 @@ def compile_code():
     pymake.build_program(target=target,
                          double=True,
                          download_dir=dstpth,
-                         target_dir=dstpth,
+                         exe_dir=dstpth,
                          replace_function=pymake.update_seawatfiles,
                          modify_exe_name=False)
 

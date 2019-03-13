@@ -27,7 +27,7 @@ def compile_code():
     # compile MODFLOW-LGR
     pymake.build_program(target=target,
                          download_dir=dstpth,
-                         target_dir=dstpth)
+                         exe_dir=dstpth)
 
     return
 

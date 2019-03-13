@@ -8,6 +8,14 @@ class dotdict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
+def str_to_bool(s):
+    if s == 'True':
+        return True
+    elif s == 'False':
+        return False
+    else:
+        msg = 'Invalid string passed - "{}"'.format(s)
+        raise ValueError(msg)
 
 class usgs_prog_data:
     def __init__(self):
@@ -24,7 +32,7 @@ class usgs_prog_data:
             if len(t) < 1:
                 continue
             d = {'version': t[1],
-                 'current': t[2],
+                 'current': str_to_bool(t[2]),
                  'url': t[3],
                  'dirname': t[4],
                  'srcdir': t[5]}
@@ -47,15 +55,24 @@ class usgs_prog_data:
             keys = [key for key in self._url_dict.keys()
                     if self._url_dict[key].current]
         else:
-            keys = self._url_dict.keys()
+            keys = list(self._url_dict.keys())
         return keys
 
     @staticmethod
     def get_target(key):
-        prog_data = usgs_prog_data()
-        return prog_data.get_target_data(key)
+        return usgs_prog_data().get_target_data(key)
 
     @staticmethod
     def get_keys(current=False):
-        prog_data = usgs_prog_data()
-        return prog_data.get_target_keys(current=current)
+        return usgs_prog_data().get_target_keys(current=current)
+
+    @staticmethod
+    def list_targets(current=False):
+        targets = usgs_prog_data().get_target_keys(current=current)
+        targets.sort()
+        msg = 'Available targets:\n'
+        for idx, target in enumerate(targets):
+            msg += '    {:02d} {}\n'.format(idx+1, target)
+        print(msg)
+
+        return

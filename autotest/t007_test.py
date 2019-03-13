@@ -180,7 +180,7 @@ def test_compile_mp7():
     pymake.build_program(target=target,
                          fflags='-ffree-line-length-512',
                          download_dir=dstpth,
-                         target_dir=dstpth,
+                         exe_dir=dstpth,
                          replace_function=pymake.update_mp7files)
     return
 
@@ -193,7 +193,7 @@ def test_compile_mf2005():
     # download and compile MODFLOW-2005
     pymake.build_program(target=mf2005_target,
                          download_dir=dstpth,
-                         target_dir=dstpth)
+                         exe_dir=dstpth)
     return
 
 
@@ -205,7 +205,7 @@ def test_compile_mfusg():
     # download and compile MODFLOW-USG
     pymake.build_program(target=mfusg_target,
                          download_dir=dstpth,
-                         target_dir=dstpth)
+                         exe_dir=dstpth)
     return
 
 
@@ -218,7 +218,7 @@ def test_compile_mf6():
     pymake.build_program(target=mf6_target,
                          include_subdirs=True,
                          download_dir=dstpth,
-                         target_dir=dstpth)
+                         exe_dir=dstpth)
     return
 
 
