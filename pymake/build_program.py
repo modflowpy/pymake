@@ -146,37 +146,26 @@ def set_compiler(target):
 
     """
     fc = 'gfortran'
+    if target in ['triangle', 'gridgen']:
+        fc = None
     cc = 'gcc'
+    if target in ['gridgen']:
+        cc = 'g++'
     # parse command line arguments to see if user specified options
     # relative to building the target
-    msg = ''
     for idx, arg in enumerate(sys.argv):
-        if arg.lower() == '--ifort':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with ifort.'.format(target)
+        if arg.lower() == '--ifort' and fc is not None:
             fc = 'ifort'
         elif arg.lower() == '--icc':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with icc.'.format(target)
             cc = 'icc'
         elif arg.lower() == '--cl':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with cl.'.format(target)
             cc = 'cl'
         elif arg.lower() == '--clang':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with clang.'.format(target)
             cc = 'clang'
-    if len(msg) > 0:
-        print(msg)
+
+    msg = '{} fortran code will be built with {}.\n'.format(target, fc)
+    msg += '{} c/c++ code will be built with {}.\n'.format(target, cc)
+    print(msg)
 
     return fc, cc
 
@@ -532,7 +521,7 @@ def build_apps(targets=None):
         arch = set_arch(target)
 
         # set include_subdirs
-        if target in ['mf6']:
+        if target in ['mf6', 'gridgen']:
             include_subdirs = True
         else:
             include_subdirs = False

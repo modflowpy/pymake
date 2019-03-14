@@ -13,4 +13,5 @@ mt3dms       5.3.0    True    https://hydro.geo.ua.edu/mt3d/mt3dms_530.exe      
 mt3dusgs     1.0.1    True    https://water.usgs.gov/water-resources/software/MT3D-USGS/mt3dusgs1.0.1.zip                     mt3dusgs1.0.1     src
 vs2dt        3.3      True    https://water.usgs.gov/water-resources/software/VS2DI/vs2dt3_3.zip                              vs2dt3_3          include
 triangle     1.6      True    https://www.netlib.org/voronoi/triangle.zip                                                     triangle1.6       src
+gridgen      1.0.03   True    https://water.usgs.gov/ogw/gridgen/gridgen.1.0.02.zip                                           gridgen.1.0.02    src
 
