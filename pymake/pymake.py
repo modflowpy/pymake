@@ -348,7 +348,7 @@ def flag_available(flag):
     return flag in stdout
 
 
-def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
+def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
                      expedite, dryrun, double, debug, fflags,
                      srcdir, srcdir2, extrafiles, makefile):
     """
@@ -362,8 +362,6 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
         shellflg = True
 
     # fortran compiler switches
-    fc = 'gfortran'
-
     if debug:
         opt = '-O0'
     else:
@@ -433,6 +431,14 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     # build object files
     print('\nCompiling object files...')
     objfiles = []
+
+    # assume that header files may be in other folders, so make a list
+    searchdir = []
+    for f in srcfiles:
+        dirname = os.path.dirname(f)
+        if dirname not in searchdir:
+            searchdir.append(dirname)
+
     for srcfile in srcfiles:
         cmdlist = []
         iscfile = False
@@ -445,6 +451,11 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
             cmdlist.append(fc)
             for switch in compileflags:
                 cmdlist.append(switch)
+
+        # add search path for any header files
+        for sd in searchdir:
+            cmdlist.append('-I{}'.format(sd))
+
         cmdlist.append('-c')
         cmdlist.append(srcfile)
 
@@ -496,9 +507,13 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     msg = '\nLinking object files ' + \
           'to make {}...'.format(os.path.basename(target))
     print(msg)
-    cmd = fc + ' '
     cmdlist = []
-    cmdlist.append(fc)
+    if fc is None:
+        cmd = cc + ' '
+        cmdlist.append(cc)
+    else:
+        cmd = fc + ' '
+        cmdlist.append(fc)
     for switch in compileflags:
         cmd += switch + ' '
         cmdlist.append(switch)
@@ -509,7 +524,6 @@ def compile_with_gnu(srcfiles, target, cc, objdir_temp, moddir_temp,
     for switch in syslibs:
         cmdlist.append(switch)
     if not dryrun:
-        #subprocess.check_call(cmdlist, shell=shellflg)
         proc = Popen(cmdlist, shell=shellflg, stdout=PIPE, stderr=PIPE)
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
@@ -599,6 +613,14 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     # build object files
     print('\nCompiling object files...')
     objfiles = []
+
+    # assume that header files may be in other folders, so make a list
+    searchdir = []
+    for f in srcfiles:
+        dirname = os.path.dirname(f)
+        if dirname not in searchdir:
+            searchdir.append(dirname)
+
     for srcfile in srcfiles:
         cmdlist = []
         if srcfile.endswith('.c') or srcfile.endswith('.cpp'):  # mja
@@ -614,6 +636,10 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
 
             for switch in compileflags:
                 cmdlist.append(switch)
+
+        # add search path for any header files
+        for sd in searchdir:
+            cmdlist.append('-I{}'.format(sd))
 
         cmdlist.append('-c')
         cmdlist.append(srcfile)
@@ -658,9 +684,18 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
 
     # Build the link command and then link
     print(('\nLinking object files to make {0}...'.format(os.path.basename(target))))
-    cmd = fc + ' '
+
     cmdlist = []
-    cmdlist.append(fc)
+    if fc is None:
+        cmd = cc + ' '
+        cmdlist.append(cc)
+    else:
+        cmd = fc + ' '
+        cmdlist.append(fc)
+    for switch in compileflags:
+        cmd += switch + ' '
+        cmdlist.append(switch)
+
     for switch in compileflags:
         cmd += switch + ' '
         cmdlist.append(switch)
@@ -1028,10 +1063,10 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
 
     # compile with gfortran or ifort
     winifort = False
-    if fc == 'gfortran':
+    if fc == 'gfortran' or (fc is None and cc.startswith('g')):
         objext = '.o'
         create_openspec(srcdir_temp)
-        success = compile_with_gnu(srcfiles, target, cc,
+        success = compile_with_gnu(srcfiles, target, fc, cc,
                                    objdir_temp, moddir_temp,
                                    expedite, dryrun, double, debug, fflags,
                                    srcdir, srcdir2, extrafiles, makefile)
