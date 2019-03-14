@@ -3,6 +3,9 @@ import sys
 import shutil
 import platform
 import types
+from datetime import datetime
+
+import flopy
 
 from .pymake import main
 from .download import download_and_unzip
@@ -42,6 +45,259 @@ def get_function_names(module, select_name=None):
             if ladd:
                 func[value.__name__] = value
     return func
+
+
+def set_bindir(target):
+    """
+    Set path for target based on --travis or --appdir command line arguments
+
+    Parameters
+    ----------
+    target : str
+        target to build
+
+
+    Returns
+    -------
+    bindir : str
+        path to build application in. By default, bindir will be in the
+        current directory ('.'). Passing --travis command line argument will
+        set bindir to C:\\Users\\username\\.local\\bin on windows and
+        /Users/username/.local/bin on Linux and OSX. Passing --appdir bindir
+        command line argument will set bindir to user-defined path
+
+    """
+    bindir = None
+    for idx, arg in enumerate(sys.argv):
+        if '--travis' in arg.lower():
+            bindir = os.path.join(os.path.expanduser('~'), '.local', 'bin')
+            bindir = os.path.abspath(bindir)
+        elif '--appdir' in arg.lower():
+            bindir = sys.argv[idx + 1]
+            if not os.path.isdir(bindir):
+                os.mkdir(bindir)
+    if bindir is None:
+        bindir = '.'
+    if not os.path.isdir(bindir):
+        bindir = '.'
+    print('{} will be placed in the directory:\n'.format(target) +
+          '    "{}"\n'.format(bindir))
+
+    return bindir
+
+
+def set_build(exe_name):
+    """
+    Set boolean that defines whether the target should be built if it
+    already exists based on --keep command line argument
+
+    Parameters
+    ----------
+    exe_name : str
+        executable name that includes double ("dbl"), debug ("d"), and/or
+        extension (".exe") based on command line arguments and OS.
+
+    Returns
+    -------
+    build : bool
+
+    """
+    keep = False
+    for idx, arg in enumerate(sys.argv):
+        if '--keep' in arg.lower():
+            keep = True
+
+    build = True
+    exe_name = os.path.basename(exe_name)
+    if keep:
+        print('Determining if {} needs to be built'.format(exe_name))
+
+        exe_exists = flopy.which(exe_name)
+
+        # determine if it is in the current directory
+        if exe_exists is None:
+            exe_exists = flopy.which('./' + exe_name)
+
+        if exe_exists is not None:
+            build = False
+            print('No need to build {}'.format(exe_name) +
+                  ' since it exists in the current path')
+            print('    "{}"'.format(os.path.abspath(exe_exists)))
+
+    return build
+
+
+def set_compiler(target):
+    """
+    Set fortran and c compilers based on --ifort, --mpiifort, --icc, --cl,
+    and --clang command line arguments
+
+    Parameters
+    ----------
+    target : str
+        target to build
+
+    Returns
+    -------
+    fc : str
+        string denoting the fortran compiler to use. Default is gfortran.
+    cc : str
+        string denoting the c compiler to use. Default is gcc.
+
+    """
+    fc = 'gfortran'
+    cc = 'gcc'
+    # parse command line arguments to see if user specified options
+    # relative to building the target
+    msg = ''
+    for idx, arg in enumerate(sys.argv):
+        if arg.lower() == '--ifort':
+            if len(msg) > 0:
+                msg += '\n'
+            msg += '{} - '.format(arg.lower()) + \
+                   '{} will be built with ifort.'.format(target)
+            fc = 'ifort'
+        elif arg.lower() == '--icc':
+            if len(msg) > 0:
+                msg += '\n'
+            msg += '{} - '.format(arg.lower()) + \
+                   '{} will be built with icc.'.format(target)
+            cc = 'icc'
+        elif arg.lower() == '--cl':
+            if len(msg) > 0:
+                msg += '\n'
+            msg += '{} - '.format(arg.lower()) + \
+                   '{} will be built with cl.'.format(target)
+            cc = 'cl'
+        elif arg.lower() == '--clang':
+            if len(msg) > 0:
+                msg += '\n'
+            msg += '{} - '.format(arg.lower()) + \
+                   '{} will be built with clang.'.format(target)
+            cc = 'clang'
+    if len(msg) > 0:
+        print(msg)
+
+    return fc, cc
+
+
+def set_fflags(target):
+    """
+    Set appropriate fortran compiler flags based on target.
+
+    Parameters
+    ----------
+    target : str
+        target to build
+
+    Returns
+    -------
+    fflags : str
+        fortran compiler flags. Default is None
+
+    """
+    fflags = None
+    if target == 'mp7':
+        fflags = '-ffree-line-length-512'
+
+    return fflags
+
+
+def set_double(target):
+    """
+    Set boolean that defines if the target should use double precision reals
+    based on -dbl or --double command line arguments.
+
+    Parameters
+    ----------
+    target : str
+        target to build
+
+    Returns
+    -------
+    double : bool
+
+    """
+    double = False
+    for idx, arg in enumerate(sys.argv):
+        if arg.lower() == '-dbl' or arg.lower() == '--double':
+            double = True
+            break
+
+    if target in ['swtv4']:
+        double = True
+
+    # write a message
+    if double:
+        msg = '{} will be built using double precision floats.'.format(target)
+    else:
+        msg = '{} will be built using single precision floats.'.format(target)
+    print(msg)
+
+    return double
+
+
+def set_debug(target):
+    """
+    Set boolean that defines if the target should be compiled with debug
+    compiler options based on -dbg or --debug command line arguments.
+
+    Parameters
+    ----------
+    target : str
+        target to build
+
+    Returns
+    -------
+    debug : bool
+
+    """
+    debug = False
+    for idx, arg in enumerate(sys.argv):
+        if arg.lower() == '-dbg' or arg.lower() == '--debug':
+            debug = True
+            break
+
+    # write a message
+    if debug:
+        msg = '{} will be built with debug flags.'.format(target)
+    else:
+        msg = '{} will be built as a release application.'.format(target)
+    print(msg)
+
+    return debug
+
+
+def set_arch(target):
+    """
+    Set architecture to compile target for based on --ia32 command line
+    argument. Default architecture is intel64 (64-bit).
+
+    Parameters
+    ----------
+    target : str
+        target to build
+
+    Returns
+    -------
+    arch : str
+
+    """
+    arch = 'intel64'
+    for idx, arg in enumerate(sys.argv):
+        if arg.lower() == '--ia32':
+            arch = 'ia32'
+
+    # set arch to ia32 if building on windows
+    if target == 'triangle':
+        if platform.system().lower() == 'windows':
+            arch = 'ia32'
+
+    # write a message
+    msg = '{} will be built for {} architecture.'.format(target, arch)
+    print(msg)
+
+    return arch
 
 
 def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
@@ -105,59 +361,62 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         if file_extension.lower() is not '.exe':
             exe_name += '.exe'
 
-    if exe_dir is not None:
-        exe_name = os.path.abspath(os.path.join(exe_dir, exe_name))
+    build = set_build(exe_name)
 
-    # extract program data for target
-    prog_dict = usgs_prog_data.get_target(target)
+    if build:
+        if exe_dir is not None:
+            exe_name = os.path.abspath(os.path.join(exe_dir, exe_name))
 
-    # set url
-    url = prog_dict.url
+        # extract program data for target
+        prog_dict = usgs_prog_data.get_target(target)
 
-    # Set dir name
-    dirname = prog_dict.dirname
-    if download_dir is None:
-        dirname = './'
-        download_dir = './'
-    else:
-        dirname = os.path.join(download_dir, dirname)
+        # set url
+        url = prog_dict.url
 
-    # make the download directory if it does not exist
-    if not os.path.exists(download_dir):
-        os.makedirs(download_dir)
+        # Set dir name
+        dirname = prog_dict.dirname
+        if download_dir is None:
+            dirname = './'
+            download_dir = './'
+        else:
+            dirname = os.path.join(download_dir, dirname)
 
-    # Set srcdir name
-    srcdir = prog_dict.srcdir
-    srcdir = os.path.join(dirname, srcdir)
+        # make the download directory if it does not exist
+        if not os.path.exists(download_dir):
+            os.makedirs(download_dir)
 
-    # Download the distribution
-    if download:
-        download_and_unzip(url, pth=download_dir, verify=download_verify,
-                           timeout=timeout)
+        # Set srcdir name
+        srcdir = prog_dict.srcdir
+        srcdir = os.path.join(dirname, srcdir)
 
-    if replace_function is not None:
-        print('replacing select source files for {}'.format(target))
-        replace_function(srcdir, fc, cc, arch)
+        # Download the distribution
+        if download:
+            download_and_unzip(url, pth=download_dir, verify=download_verify,
+                               timeout=timeout)
 
-    # compile code
-    print('compiling...{}'.format(os.path.relpath(exe_name)))
-    main(srcdir, exe_name, fc=fc, cc=cc, makeclean=makeclean,
-         expedite=expedite, dryrun=dryrun, double=double, debug=debug,
-         include_subdirs=include_subdirs, fflags=fflags, arch=arch,
-         makefile=makefile, srcdir2=srcdir2, extrafiles=extrafiles)
+        if replace_function is not None:
+            print('replacing select source files for {}'.format(target))
+            replace_function(srcdir, fc, cc, arch)
 
-    if verify:
-        app = os.path.relpath(exe_name)
-        msg = '{} does not exist.'.format(app)
-        assert os.path.isfile(exe_name), msg
+        # compile code
+        print('compiling...{}'.format(os.path.relpath(exe_name)))
+        main(srcdir, exe_name, fc=fc, cc=cc, makeclean=makeclean,
+             expedite=expedite, dryrun=dryrun, double=double, debug=debug,
+             include_subdirs=include_subdirs, fflags=fflags, arch=arch,
+             makefile=makefile, srcdir2=srcdir2, extrafiles=extrafiles)
 
-    # clean download directory if different than directory with executable
-    if download_clean:
-        edir = os.path.abspath(os.path.dirname(exe_name))
-        ddir = os.path.abspath(download_dir)
-        if edir != ddir:
-            if os.path.isdir(ddir):
-                shutil.rmtree(ddir)
+        if verify:
+            app = os.path.relpath(exe_name)
+            msg = '{} does not exist.'.format(app)
+            assert os.path.isfile(exe_name), msg
+
+        # clean download directory if different than directory with executable
+        if download_clean:
+            edir = os.path.abspath(os.path.dirname(exe_name))
+            ddir = os.path.abspath(download_dir)
+            if edir != ddir:
+                if os.path.isdir(ddir):
+                    shutil.rmtree(ddir)
 
     return
 
@@ -221,8 +480,146 @@ def build_replace(targets):
     return replace_funcs
 
 
+def build_apps(targets=None):
+    """
+    Build all of the current targets or a subset of targets
+
+    Parameters
+    ----------
+    targets : str or list of str
+        targets to build. If targets is None, all current targets will
+        be build. Default is None
+
+    Returns
+    -------
+
+    """
+    start_time = datetime.now()
+    if targets is None:
+        targets = build_targets()
+    else:
+        if isinstance(targets, str):
+            targets = [targets]
+
+    for target in targets:
+        start_downcomp = datetime.now()
+
+        # set bindir
+        bindir = set_bindir(target)
+
+        # set double precision flag and whether the executable name
+        # can be modified
+        double = set_double(target)
+        if target == 'swtv4':
+            modify_exe_name = False
+        else:
+            modify_exe_name = True
+
+        # set debug flag
+        debug = set_debug(target)
+
+        # set
+        if target in ['swtv4']:
+            modify_exe_name = False
+
+        # set compiler
+        fc, cc = set_compiler(target)
+
+        # set fortran flags
+        fflags = set_fflags(target)
+
+        # set architecture
+        arch = set_arch(target)
+
+        # set include_subdirs
+        if target in ['mf6']:
+            include_subdirs = True
+        else:
+            include_subdirs = False
+
+        # set replace function
+        replace_function = build_replace(target)
+
+        # set download information
+        if target in ['mt3dms']:
+            download_verify = False
+            timeout = 10
+        else:
+            download_verify = True
+            timeout = 30
+
+        # build the code
+        build_program(target=target,
+                      fc=fc,
+                      cc=cc,
+                      double=double,
+                      debug=debug,
+                      fflags=fflags,
+                      arch=arch,
+                      include_subdirs=include_subdirs,
+                      replace_function=replace_function,
+                      modify_exe_name=modify_exe_name,
+                      exe_dir=bindir,
+                      download_dir='temp',
+                      download_clean=True,
+                      download_verify=download_verify,
+                      timeout=timeout)
+
+        # calculate download and compile time
+        end_downcomp = datetime.now()
+        elapsed = end_downcomp - start_downcomp
+        print('elapsed download and compile time (hh:mm:ss.ms): ' +
+              '{}'.format(elapsed))
+
+    end_time = datetime.now()
+    elapsed = end_time - start_time
+    print('elapsed time (hh:mm:ss.ms): {}'.format(elapsed))
+
+    return
+
+
 # routines for updating source files to compile with gfortran
-def update_mt3dfiles(srcdir, fc, cc, arch):
+def update_triangle_files(srcdir, fc, cc, arch):
+    """
+    Update the triangle source files
+
+    Parameters
+    ----------
+    srcdir : str
+    fc : str
+    cc : str
+    arch : str
+
+    Returns
+    -------
+
+    """
+    # move the downloaded files
+    rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))
+    prog_dict = usgs_prog_data().get_target('triangle')
+    dirname = prog_dict.dirname
+    dstpth = os.path.join(rootdir, dirname)
+
+    # make destination directory
+    if not os.path.exists(dstpth):
+        os.makedirs(dstpth)
+
+    # make src directory
+    if not os.path.exists(srcdir):
+        os.makedirs(srcdir)
+
+    # move the source files
+    src = os.path.join(rootdir, 'triangle.c')
+    dst = os.path.join(srcdir, 'triangle.c')
+    shutil.move(src, dst)
+    src = os.path.join(rootdir, 'triangle.h')
+    dst = os.path.join(srcdir, 'triangle.h')
+    shutil.move(src, dst)
+
+    return
+
+
+def update_mt3dms_files(srcdir, fc, cc, arch):
     """
     Update the MT3D source files
 
@@ -245,7 +642,7 @@ def update_mt3dfiles(srcdir, fc, cc, arch):
 
     # Clean up unneeded files
     for f in ['ReadMe_MT3DMS.pdf', 'upgrade.pdf']:
-        print('Removing {}'.format(f))
+        print('Removing..."{}"'.format(f))
         os.remove(os.path.join(rootdir, f))
 
     # remove some unneeded folders
@@ -253,7 +650,7 @@ def update_mt3dfiles(srcdir, fc, cc, arch):
     for d in dir_list:
         dname = os.path.join(rootdir, d)
         if os.path.isdir(dname):
-            print('Removing...', dname)
+            print('Removing..."{}"'.format(dname))
             shutil.rmtree(dname)
 
     # make destination directory
@@ -284,7 +681,7 @@ def update_mt3dfiles(srcdir, fc, cc, arch):
     # remove the original source directory
     dname = os.path.join(rootdir, 'src')
     if os.path.isdir(dname):
-        print('Removing...', dname)
+        print('Removing..."{}"'.format(dname))
         shutil.rmtree(dname)
 
     # remove some unneeded files
@@ -292,7 +689,7 @@ def update_mt3dfiles(srcdir, fc, cc, arch):
     for f in file_list:
         dname = os.path.join(srcdir, f)
         if os.path.isfile(dname):
-            print('Removing ', dname)
+            print('Removing..."{}"'.format(dname))
             os.remove(dname)
 
     # Replace the getcl command with getarg
@@ -306,16 +703,30 @@ def update_mt3dfiles(srcdir, fc, cc, arch):
     shutil.move(os.path.join(srcdir, 'mt3dms5.for.tmp'),
                 os.path.join(srcdir, 'mt3dms5.for'))
 
+    # Need to initialize the V array in SADV5B
+    # see here: https://github.com/MODFLOW-USGS/mt3d-usgs/pull/46
+    f1 = open(os.path.join(srcdir, 'mt_adv5.for'), 'r')
+    f2 = open(os.path.join(srcdir, 'mt_adv5.for.tmp'), 'w')
+    sfind = 'C--SET DT TO NEGATIVE FOR BACKWARD TRACKING'
+    sreplace = 'C--INITIALIZE\n      V(:)=0.\nC\n' + sfind
+    for line in f1:
+        f2.write(line.replace(sfind, sreplace))
+    f1.close()
+    f2.close()
+    os.remove(os.path.join(srcdir, 'mt_adv5.for'))
+    shutil.move(os.path.join(srcdir, 'mt_adv5.for.tmp'),
+                os.path.join(srcdir, 'mt_adv5.for'))
+
     return
 
 
-def update_seawatfiles(srcdir, fc, cc, arch):
+def update_swtv4_files(srcdir, fc, cc, arch):
     # Remove the parallel and serial folders from the source directory
     dlist = ['parallel', 'serial']
     for d in dlist:
         dname = os.path.join(srcdir, d)
         if os.path.isdir(dname):
-            print('Removing ', dname)
+            print('Removing..."{}"'.format(dname))
             shutil.rmtree(os.path.join(srcdir, d))
 
     # rename all source files to lower case so compilation doesn't
@@ -358,13 +769,13 @@ def update_seawatfiles(srcdir, fc, cc, arch):
     return
 
 
-def update_mf2000files(srcdir, fc, cc, arch):
+def update_mf2000_files(srcdir, fc, cc, arch):
     # Remove six src folders
     dlist = ['beale2k', 'hydprgm', 'mf96to2k', 'mfpto2k', 'resan2k', 'ycint2k']
     for d in dlist:
         dname = os.path.join(srcdir, d)
         if os.path.isdir(dname):
-            print('Removing ', dname)
+            print('Removing..."{}"'.format(dname))
             shutil.rmtree(os.path.join(srcdir, d))
 
     # Move src files and serial src file to src directory
@@ -384,7 +795,7 @@ def update_mf2000files(srcdir, fc, cc, arch):
     shutil.rmtree(tpth)
 
 
-def update_mp6files(srcdir, fc, cc, arch):
+def update_mp6_files(srcdir, fc, cc, arch):
     fname1 = os.path.join(srcdir, 'MP6Flowdata.for')
     f = open(fname1, 'r')
 
@@ -411,7 +822,7 @@ def update_mp6files(srcdir, fc, cc, arch):
     os.remove(fname1)
 
 
-def update_mp7files(srcdir, fc, cc, arch):
+def update_mp7_files(srcdir, fc, cc, arch):
     fpth = os.path.join(srcdir, 'StartingLocationReader.f90')
     with open(fpth) as f:
         lines = f.readlines()
@@ -423,20 +834,7 @@ def update_mp7files(srcdir, fc, cc, arch):
     f.close()
 
 
-def update_mf6files(srcdir, fc, cc, arch):
-    fpth = os.path.join(srcdir, 'Solution', 'NumericalSolution.f90')
-    with open(fpth) as f:
-        lines = f.readlines()
-    f = open(fpth, 'w')
-    for idx, line in enumerate(lines):
-        if "case ('NO_PTC')" in line:
-            if lines[idx + 1].strip() == 'call this%parser%DevOpt()':
-                lines[idx + 1] = lines[idx + 1].replace('call', '!call')
-        f.write(line)
-    f.close()
-
-
-def update_vs2dtfiles(srcdir, fc, cc, arch):
+def update_vs2dt_files(srcdir, fc, cc, arch):
     # move the main source into the source directory
     f1 = os.path.join(srcdir, '..', 'vs2dt3_3.f')
     f1 = os.path.abspath(f1)

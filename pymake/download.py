@@ -50,9 +50,9 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
               str(e)
         raise Exception(msg)
     if not os.path.exists(pth):
-        print('Creating the directory: {}'.format(pth))
+        print('Creating the directory:\n    {}'.format(pth))
         os.makedirs(pth)
-    print('Attempting to download the file: ', url)
+    print('Attempting to download the file:\n    {}'.format(url))
     file_name = os.path.join(pth, url.split('/')[-1])
     # download the file
     success = False
@@ -61,8 +61,9 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         #
         fs = requests.get(url, stream=True,
                           verify=verify).headers['Content-length']
-        bfmt = '{:>' + '{}'.format(len(fs)) + ',d} bytes'
-        print('   file size: ' + bfmt.format(int(fs)))
+        bfmt = '{:' + '{}'.format(len(fs)) + ',d}'
+        sbfmt = '{:>' + '{}'.format(len(bfmt.format(int(fs)))) + 's} bytes'
+        print('   file size: {}'.format(sbfmt.format(bfmt.format(int(fs)))))
         ds = 0
         try:
             req = requests.get(url, verify=verify, timeout=timeout)
@@ -70,15 +71,16 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
                 for chunk in req.iter_content(chunk_size=chunk_size):
                     if chunk:
                         ds += len(chunk)
-                        msg = '     downloaded ' + bfmt.format(ds) + \
-                              ' of ' + bfmt.format(int(fs)) + \
+                        msg = '     downloaded ' + \
+                              sbfmt.format(bfmt.format(ds)) + \
+                              ' of ' + bfmt.format(int(fs)) + ' bytes'+ \
                               ' ({:10.4%})'.format(float(ds)/float(fs))
                         print(msg)
                         f.write(chunk)
             success = True
         except:
             if idx + 1 == nattempts:
-                msg = 'Cannot download file: {}'.format(url)
+                msg = 'Cannot download file:\n    {}'.format(url)
                 raise Exception(msg)
         if success:
             break

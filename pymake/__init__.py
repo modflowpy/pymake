@@ -14,9 +14,5 @@ from .autotest import setup, setup_comparison, teardown, \
     compare_budget, compare_swrbudget, compare_heads, compare_concs, \
     compare_stages, compare, \
     setup_mf6, setup_mf6_comparison, get_mf6_comparison, get_mf6_files
-from .build_program import build_program, build_targets, build_replace, \
-    update_mf2000files, update_mf6files, \
-    update_mp6files, update_mp7files, \
-    update_mt3dfiles, update_seawatfiles, \
-    update_vs2dtfiles
+from .build_program import build_program, build_apps, build_replace
 

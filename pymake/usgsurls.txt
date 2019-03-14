@@ -5,11 +5,12 @@ mf2005.1.11  1.11.00  False   https://water.usgs.gov/ogw/modflow/archive-mf2005/
 mfnwt        1.1.4    True    https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT_1.1.4.zip                                    MODFLOW-NWT_1.1.4 src
 mfusg        1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src
 mf6          6.0.4    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.0.4.zip                           mf6.0.4           src
-swt_v4       4.00.05  True    https://water.usgs.gov/ogw/seawat/swt_v4_00_05.zip                                              swt_v4_00_05      source
+swtv4        4.00.05  True    https://water.usgs.gov/ogw/seawat/swt_v4_00_05.zip                                              swt_v4_00_05      source
 mp6          6.0.1    True    https://water.usgs.gov/ogw/modpath/archive/modpath_v6.0.01/modpath.6_0_01.zip                   modpath.6_0       src
 mp7          7.2.001  True    https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip                                          modpath_7_2_001   source
 mflgr        2.0.0    True    https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip                      mflgr.2_0         src
 mt3dms       5.3.0    True    https://hydro.geo.ua.edu/mt3d/mt3dms_530.exe                                                    mt3dms5.3.0       src/true-binary
 mt3dusgs     1.0.1    True    https://water.usgs.gov/water-resources/software/MT3D-USGS/mt3dusgs1.0.1.zip                     mt3dusgs1.0.1     src
 vs2dt        3.3      True    https://water.usgs.gov/water-resources/software/VS2DI/vs2dt3_3.zip                              vs2dt3_3          include
+triangle     1.6      True    https://www.netlib.org/voronoi/triangle.zip                                                     triangle1.6       src
 

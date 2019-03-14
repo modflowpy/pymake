@@ -25,9 +25,11 @@ def compile_code():
         shutil.rmtree(mflgrpth)
 
     # compile MODFLOW-LGR
+    replace_function = pymake.build_replace(target)
     pymake.build_program(target=target,
                          download_dir=dstpth,
-                         exe_dir=dstpth)
+                         exe_dir=dstpth,
+                         replace_function=replace_function)
 
     return
 

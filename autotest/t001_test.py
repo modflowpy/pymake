@@ -24,7 +24,6 @@ testpaths = [os.path.join(testdir, pd_release.dirname, exdir)]
 exclude = ('MNW2-Fig28', 'swi2ex4sww', 'testsfr2_tab', 'UZFtest2')
 
 
-
 def run_mf2005(namefile, regression=True):
     """
     Run the simulation.
@@ -65,12 +64,15 @@ def run_mf2005(namefile, regression=True):
         assert success_reg, 'regression model {} '.format(nam) + 'did not run.'
 
         # compare results
-        outfile1 = os.path.join(os.path.split(os.path.join(testpth, nam))[0], 'bud.cmp')
-        outfile2 = os.path.join(os.path.split(os.path.join(testpth, nam))[0], 'hds.cmp')
+        outfile1 = os.path.join(os.path.split(os.path.join(testpth, nam))[0],
+                                'bud.cmp')
+        outfile2 = os.path.join(os.path.split(os.path.join(testpth, nam))[0],
+                                'hds.cmp')
         success_reg = pymake.compare(os.path.join(testpth, nam),
                                      os.path.join(testpth_reg, nam),
                                      precision='single',
-                                     max_cumpd=0.01, max_incpd=0.01, htol=0.001,
+                                     max_cumpd=0.01, max_incpd=0.01,
+                                     htol=0.001,
                                      outfile1=outfile1, outfile2=outfile2)
 
     # Clean things up
@@ -88,7 +90,6 @@ def test_compile_prev():
         print('Removing folder ' + testdir_previous)
         shutil.rmtree(testdir_previous)
 
-
     pymake.build_program(target=key_previous, fflags='-O3',
                          download_dir=testdir,
                          exe_name=target_previous)
@@ -103,7 +104,6 @@ def test_compile_ref():
     if os.path.isdir(testdir_release):
         print('Removing folder ' + testdir_release)
         shutil.rmtree(testdir_release)
-
 
     pymake.build_program(target=key_release, fflags='-O3 -fbacktrace',
                          download_dir=testdir,

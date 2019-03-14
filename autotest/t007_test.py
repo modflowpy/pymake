@@ -177,11 +177,12 @@ def test_compile_mp7():
         shutil.rmtree(mp7pth)
 
     # download and compile MODPATH 6
+    replace_function = pymake.build_replace(target)
     pymake.build_program(target=target,
                          fflags='-ffree-line-length-512',
                          download_dir=dstpth,
                          exe_dir=dstpth,
-                         replace_function=pymake.update_mp7files)
+                         replace_function=replace_function)
     return
 
 
@@ -191,9 +192,11 @@ def test_compile_mf2005():
         shutil.rmtree(mf2005pth)
 
     # download and compile MODFLOW-2005
+    replace_function = pymake.build_replace(mf2005_target)
     pymake.build_program(target=mf2005_target,
                          download_dir=dstpth,
-                         exe_dir=dstpth)
+                         exe_dir=dstpth,
+                         replace_function=replace_function)
     return
 
 
@@ -203,9 +206,11 @@ def test_compile_mfusg():
         shutil.rmtree(mfusgpth)
 
     # download and compile MODFLOW-USG
+    replace_function = pymake.build_replace(mfusg_target)
     pymake.build_program(target=mfusg_target,
                          download_dir=dstpth,
-                         exe_dir=dstpth)
+                         exe_dir=dstpth,
+                         replace_function=replace_function)
     return
 
 
@@ -215,10 +220,12 @@ def test_compile_mf6():
         shutil.rmtree(mf6pth)
 
     # download and compile MODFLOW 6
+    replace_function = pymake.build_replace(mf6_target)
     pymake.build_program(target=mf6_target,
                          include_subdirs=True,
                          download_dir=dstpth,
-                         exe_dir=dstpth)
+                         exe_dir=dstpth,
+                         replace_function=replace_function)
     return
 
 

@@ -1006,10 +1006,10 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     success = 0
 
     # write summary information
-    print('\nsource files are in: {0}'.format(srcdir))
-    print('executable name to be created: {0}'.format(target))
+    print('\nsource files are in:\n    {0}'.format(srcdir))
+    print('executable name to be created:\n    {}'.format(target))
     if srcdir2 is not None:
-        print('additional source files are in: {}'.format(srcdir2))
+        print('additional source files are in:\n     {}'.format(srcdir2))
 
     # make sure the path for the target exists
     pth = os.path.dirname(target)

@@ -6,7 +6,7 @@ import pymake
 import flopy
 
 # define program data
-target = 'swt_v4'
+target = 'swtv4'
 prog_dict = pymake.usgs_prog_data().get_target_data(target)
 
 # set up paths
@@ -49,11 +49,12 @@ def compile_code():
         shutil.rmtree(swtpth)
 
     # compile seawat
+    replace_function = pymake.build_replace(target)
     pymake.build_program(target=target,
                          double=True,
                          download_dir=dstpth,
                          exe_dir=dstpth,
-                         replace_function=pymake.update_seawatfiles,
+                         replace_function=replace_function,
                          modify_exe_name=False)
 
     return
