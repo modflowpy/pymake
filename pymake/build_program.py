@@ -5,7 +5,10 @@ import platform
 import types
 from datetime import datetime
 
-import flopy
+if sys.version_info >= (3, 3):
+    from shutil import which
+else:
+    from distutils.spawn import find_executable as which
 
 from .pymake import main
 from .download import download_and_unzip
@@ -112,11 +115,11 @@ def set_build(exe_name):
     if keep:
         print('Determining if {} needs to be built'.format(exe_name))
 
-        exe_exists = flopy.which(exe_name)
+        exe_exists = which(exe_name)
 
         # determine if it is in the current directory
         if exe_exists is None:
-            exe_exists = flopy.which('./' + exe_name)
+            exe_exists = which('./' + exe_name)
 
         if exe_exists is not None:
             build = False
