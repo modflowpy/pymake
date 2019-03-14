@@ -30,9 +30,12 @@ def compile_code():
         shutil.rmtree(mf6pth)
 
     # compile MODFLOW 6
+    pymake.usgs_prog_data().list_targets(current=True)
+    replace_function = pymake.build_replace(target)
     pymake.build_program(target=target,
                          include_subdirs=True,
-                         download_dir=dstpth)
+                         download_dir=dstpth,
+                         replace_function=replace_function)
 
 
 def clean_up():

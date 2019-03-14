@@ -24,11 +24,13 @@ def compile_code():
         shutil.rmtree(mfnwtpth)
 
     # compile MODFLOW-NWT
+    replace_function = pymake.build_replace(target)
     pymake.build_program(target=target,
                          download_dir=dstpth,
                          makeclean=False,
                          makefile=True,
-                         target_dir=dstpth)
+                         exe_dir=dstpth,
+                         replace_function=replace_function)
 
 
 def build_with_makefile():

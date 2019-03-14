@@ -2,9 +2,9 @@
 Python package for compiling MODFLOW-based programs.
 
 
-### Version 1.1
-[![Build Status](https://travis-ci.org/modflowpy/pymake.svg?branch=master)](https://travis-ci.org/modflowpy/pymake)
-[![Coverage Status](https://coveralls.io/repos/github/modflowpy/pymake/badge.svg?branch=master)](https://coveralls.io/github/modflowpy/pymake?branch=master)
+### Version 1.1 refactor-examples &mdash; build 88
+[![Build Status](https://travis-ci.org/modflowpy/pymake.svg?branch=refactor-examples)](https://travis-ci.org/modflowpy/pymake)
+[![Coverage Status](https://coveralls.io/repos/github/modflowpy/pymake/badge.svg?branch=refactor-examples)](https://coveralls.io/github/modflowpy/pymake?branch=refactor-examples)
 
 
 This is a relatively simple python package for compiling MODFLOW-based programs.

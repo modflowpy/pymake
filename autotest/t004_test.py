@@ -29,10 +29,11 @@ def compile_code():
         shutil.rmtree(mp6pth)
 
     # download and compile MODPATH 6
+    replace_function = pymake.build_replace(target)
     pymake.build_program(target=target,
                          download_dir=dstpth,
-                         target_dir=dstpth,
-                         replace_function=pymake.update_mp6files)
+                         exe_dir=dstpth,
+                         replace_function=replace_function)
 
 
 def get_simfiles():
