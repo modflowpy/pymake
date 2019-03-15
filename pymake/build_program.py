@@ -738,6 +738,18 @@ def update_mt3dms_files(srcdir, fc, cc, arch):
     shutil.move(os.path.join(srcdir, 'mt_adv5.for.tmp'),
                 os.path.join(srcdir, 'mt_adv5.for'))
 
+    for file_list in ['mt_btn5.for', 'mt_utl5.for']:
+        fpth = os.path.join(srcdir, file_list)
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, 'w')
+        for line in lines:
+            if "'FILESPEC.INC'" in line:
+                line = line.replace("'FILESPEC.INC'",
+                                    "'filespec.inc'")
+            f.write(line)
+        f.close()
+
     return
 
 
@@ -761,7 +773,7 @@ def update_swtv4_files(srcdir, fc, cc, arch):
 
     if 'linux' in sys.platform or 'darwin' in sys.platform:
         updfile = False
-        if 'icc' in cc or 'clang' in cc:
+        if cc in ['icc', 'clang', 'gcc']:
             updfile = True
         if updfile:
             fpth = os.path.join(srcdir, 'gmg1.f')

@@ -101,6 +101,55 @@ def parser():
     return args
 
 
+def process_Popen_command(shellflg, cmdlist):
+    """
+    Generic function to write Popen command data to the screen
+
+    Parameters
+    ----------
+    shellflg : bool
+        boolean indicating if output is sent to shell by Popen
+
+    cmdlist : list
+        command list passed to Popen
+
+    Returns
+    -------
+
+    """
+    if not shellflg:
+        print(' '.join(cmdlist))
+    return
+
+
+def process_Popen_communicate(stdout, stderr):
+    """
+    Generic function to write communication information from Popen
+    to the screen
+
+    Parameters
+    ----------
+    stdout : str
+        string with standard output from Popen
+
+    stderr : str
+        string with standard error output from Popen
+
+    Returns
+    -------
+
+    """
+    if stdout:
+        if PY3:
+            stdout = stdout.decode()
+        print(stdout)
+    if stderr:
+        if PY3:
+            stderr = stderr.decode()
+        print(stderr)
+    return
+
+
 def initialize(srcdir, target, commonsrc, extrafiles):
     '''
     Remove temp source directory and target, and then copy source into
@@ -270,17 +319,17 @@ def get_ordered_srcfiles(srcdir_temp, include_subdir=False):
 
 def create_openspec(srcdir_temp):
     """
-    Create a new openspec.inc file that uses STREAM ACCESS.  This is specific
-    to MODFLOW.
+    Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
+    STREAM ACCESS.  This is specific to MODFLOW and MT3D based targets.
     """
-    files = ['openspec.inc', 'FILESPEC.INC', 'filespec.inc']
+    files = ['openspec.inc', 'filespec.inc']
     dirs = [d[0] for d in os.walk(srcdir_temp)]
     for d in dirs:
-        for f in files:
-            fname = os.path.join(d, f)
-            if os.path.isfile(fname):
-                print('replacing..."{}"'.format(fname))
-                f = open(fname, 'w')
+        for file in files:
+            fpth = os.path.join(d, file)
+            if os.path.isfile(fpth):
+                print('replacing..."{}"'.format(fpth))
+                f = open(fpth, 'w')
                 line = "c -- created by pymake.py\n" + \
                        "      CHARACTER*20 ACCESS,FORM,ACTION(2)\n" + \
                        "      DATA ACCESS/'STREAM'/\n" + \
@@ -335,18 +384,20 @@ def flag_available(flag):
     # determine the gfortran command line flags available
     cmdlist = ['gfortran', '--help', '-v']
     proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
+    process_Popen_command(False, cmdlist)
+
+    # establish communicator
     stdout, stderr = proc.communicate()
-    if PY3:
-        stdout = stdout.decode()
+    process_Popen_communicate(stdout, stderr)
+
+    # catch non-zero return code
     if proc.returncode != 0:
         msg = '{} failed, status code {}\n'\
             .format(' '.join(cmdlist), proc.returncode)
-        msg += 'stdout {}\n'.format(stdout)
-        if stderr:
-            if PY3:
-                stderr = stderr.decode()
-            msg += 'stderr {}\n'.format(stderr)
         raise RuntimeError(msg)
+
+    if PY3:
+        stdout = stdout.decode()
 
     return flag in stdout
 
@@ -434,7 +485,8 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         cflags.append('-D_UF')
 
     # build object files
-    print('\nCompiling object files...')
+    print('\nCompiling object files for ' +
+          '{}...'.format(os.path.basename(target)))
     objfiles = []
 
     # assume that header files may be in other folders, so make a list
@@ -489,20 +541,19 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
             if not dryrun:
                 #subprocess.check_call(cmdlist, shell=shellflg)
                 proc = Popen(cmdlist, shell=shellflg, stdout=PIPE, stderr=PIPE)
+                process_Popen_command(shellflg, cmdlist)
+
+                # establish communicator
                 stdout, stderr = proc.communicate()
+                process_Popen_communicate(stdout, stderr)
+
+                # catch non-zero return code
                 if proc.returncode != 0:
                     msg = '{} failed, status code {}\n'\
                         .format(' '.join(cmdlist), proc.returncode)
-                    if stdout:
-                        if PY3:
-                            stdout = stdout.decode()
-                        msg += 'stdout {}\n'.format(stdout)
-                    if stderr:
-                        if PY3:
-                            stderr = stderr.decode()
-                        msg += 'stderr {}\n'.format(stderr)
                     print(msg)
                     return proc.returncode
+
 
         # Save the name of the object file so that they can all be linked
         # at the end
@@ -530,18 +581,16 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         cmdlist.append(switch)
     if not dryrun:
         proc = Popen(cmdlist, shell=shellflg, stdout=PIPE, stderr=PIPE)
+        process_Popen_command(shellflg, cmdlist)
+
+        # establish communicator
         stdout, stderr = proc.communicate()
+        process_Popen_communicate(stdout, stderr)
+
+        # catch non-zero return code
         if proc.returncode != 0:
             msg = '{} failed, status code {}\n'\
                 .format(' '.join(cmdlist), proc.returncode)
-            if stdout:
-                if PY3:
-                    stdout = stdout.decode()
-                msg += 'stdout {}\n'.format(stdout)
-            if stderr:
-                if PY3:
-                    stderr = stderr.decode()
-                msg += 'stderr {}\n'.format(stderr)
             print(msg)
             return proc.returncode
 
@@ -620,7 +669,8 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
         cflags.append('-D_UF')
 
     # build object files
-    print('\nCompiling object files...')
+    print('\nCompiling object files for ' +
+          '{}...'.format(os.path.basename(target)))
     objfiles = []
 
     # assume that header files may be in other folders, so make a list
@@ -672,18 +722,16 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
             if not dryrun:
                 #subprocess.check_call(cmdlist)
                 proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
+                process_Popen_command(False, cmdlist)
+
+                # establish communicator
                 stdout, stderr = proc.communicate()
+                process_Popen_communicate(stdout, stderr)
+
+                # catch non-zero return code
                 if proc.returncode != 0:
                     msg = '{} failed, status code {}\n'\
                         .format(' '.join(cmdlist), proc.returncode)
-                    if stdout:
-                        if PY3:
-                            stdout = stdout.decode()
-                        msg += 'stdout {}\n'.format(stdout)
-                    if stderr:
-                        if PY3:
-                            stderr = stderr.decode()
-                        msg += 'stderr {}\n'.format(stderr)
                     print(msg)
                     return proc.returncode
 
@@ -692,7 +740,8 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
         objfiles.append(objfile)
 
     # Build the link command and then link
-    print(('\nLinking object files to make {0}...'.format(os.path.basename(target))))
+    print(('\nLinking object files to make ' +
+           '{}...'.format(os.path.basename(target))))
 
     cmdlist = []
     if fc is None:
@@ -717,18 +766,16 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     if not dryrun:
         #subprocess.check_call(cmdlist)
         proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
+        process_Popen_command(False, cmdlist)
+
+        # establish communicator
         stdout, stderr = proc.communicate()
+        process_Popen_communicate(stdout, stderr)
+
+        # catch non-zero return code
         if proc.returncode != 0:
             msg = '{} failed, status code {}\n'\
                 .format(' '.join(cmdlist), proc.returncode)
-            if stdout:
-                if PY3:
-                    stdout = stdout.decode()
-                msg += 'stdout {}\n'.format(stdout)
-            if stderr:
-                if PY3:
-                    stderr = stderr.decode()
-                msg += 'stderr {}\n'.format(stderr)
             print(msg)
             return proc.returncode
 
