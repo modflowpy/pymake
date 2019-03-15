@@ -744,7 +744,7 @@ def update_swtv4_files(srcdir, fc, cc, arch):
 
     if 'linux' in sys.platform or 'darwin' in sys.platform:
         updfile = False
-        if 'icc' in cc or 'clang' in cc:
+        if cc in ['icc', 'clang', 'gcc']:
             updfile = True
         if updfile:
             fpth = os.path.join(srcdir, 'gmg1.f')
