@@ -279,7 +279,10 @@ def set_syslibs(target, fc, cc):
                 lfc = True
             else:
                 lfc = fc.startswith('g')
-            if lfc or cc.startswith('g'):
+            lcc = False
+            if cc in ['gcc', 'g++', 'clang']:
+                lcc = True
+            if lfc and lcc:
                syslibs = '-lm'
 
     return syslibs
