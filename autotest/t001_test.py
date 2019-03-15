@@ -90,7 +90,7 @@ def test_compile_prev():
         print('Removing folder ' + testdir_previous)
         shutil.rmtree(testdir_previous)
 
-    pymake.build_program(target=key_previous, fflags='-O3',
+    pymake.build_program(target=key_previous, fflags='-O3', cflags='-O3',
                          download_dir=testdir,
                          exe_name=target_previous)
 
@@ -105,7 +105,8 @@ def test_compile_ref():
         print('Removing folder ' + testdir_release)
         shutil.rmtree(testdir_release)
 
-    pymake.build_program(target=key_release, fflags='-O3 -fbacktrace',
+    pymake.build_program(target=key_release,
+                         fflags='-O3 -fbacktrace', cflags='-O3',
                          download_dir=testdir,
                          exe_name=target_release)
 

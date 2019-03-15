@@ -87,6 +87,10 @@ def parser():
     parser.add_argument('-cf', '--cflags',
                         help='''Additional c compiler flags.''',
                         default=None)
+    parser.add_argument('-sl', '--syslibs',
+                        help='''Linker system libraries.''',
+                        default='-lc',
+                        choices=['-lc', '-lm'])
     parser.add_argument('-mf', '--makefile',
                         help='''Create a standard makefile.''',
                         action='store_true')
@@ -411,7 +415,7 @@ def flag_available(flag):
 
 
 def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
-                     expedite, dryrun, double, debug, fflags, cflags,
+                     expedite, dryrun, double, debug, fflags, cflags, syslibs,
                      srcdir, srcdir2, extrafiles, makefile):
     """
     Compile the program using the gnu compilers (gfortran and gcc)
@@ -447,7 +451,9 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
                         opt]
     else:
         compileflags = [opt]
-    if fc is not None or cc.startswith('g'):
+
+    # add gfortran specific compiler switches
+    if fc is not None:
         if debug:
             compileflags.append(['-fcheck=all',
                                  '-fbounds-check'])
@@ -462,13 +468,17 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
             lflag = flag_available('-ffpe-trap')
             if lflag:
                 compileflags.append('-ffpe-trap=overflow,zero,invalid')
+
         # add fbacktrace to debug and release versions
         compileflags.append('-fbacktrace')
 
+        # add double precision switches
+        if double:
+            compileflags.append('-fdefault-real-8')
+            compileflags.append('-fdefault-double-8')
+
     objext = '.o'
-    if double:
-        compileflags.append('-fdefault-real-8')
-        compileflags.append('-fdefault-double-8')
+
     # Split all tokens by spaces
     for fflag in ' '.join(fflags).split():
         if fflag not in compileflags:
@@ -510,9 +520,9 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
             pass
 
     # syslibs
-    syslibs = []
-    if sys.platform != 'win32':
-        syslibs.append('-lc')
+    # reset syslibs for windows
+    if sys.platform == 'win32':
+        syslibs = []
 
     # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
     # code that is linked to C/C++ code
@@ -611,10 +621,13 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         cmdlist.append(switch)
     cmdlist.append('-o')
     cmdlist.append(os.path.join('.', target))
+
     for objfile in objfiles:
         cmdlist.append(objfile)
+
     for switch in syslibs:
         cmdlist.append(switch)
+
     if not dryrun:
         proc = Popen(cmdlist, shell=shellflg, stdout=PIPE, stderr=PIPE)
         process_Popen_command(shellflg, cmdlist)
@@ -642,9 +655,9 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
 def compile_with_macnix_ifort(srcfiles, target, fc, cc,
                               objdir_temp, moddir_temp,
-                              expedite, dryrun, double, debug, fflags,
-                              cflags, srcdir, srcdir2, extrafiles,
-                              makefile):
+                              expedite, dryrun, double, debug,
+                              fflags, cflags, syslibs,
+                              srcdir, srcdir2, extrafiles, makefile):
     """
     Make target on Mac OSX
     """
@@ -658,6 +671,7 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
         fflags = []
     elif isinstance(fflags, str):
         fflags = fflags.split()
+
     # look for optimization levels in fflags
     for fflag in fflags:
         if fflag[:2] == '-O' or fflag == '-fast':
@@ -681,9 +695,12 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
             '-fpe0',
             '-traceback'
         ]
+
+    # add double precision compiler switches
     if double:
         compileflags += ['-real-size', '64']
         compileflags += ['-double-size', '64']
+
     # Split all tokens by spaces
     for fflag in ' '.join(fflags).split():
         if fflag not in compileflags:
@@ -696,7 +713,7 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
         cflags += ['-O0', '-g']
     else:
         cflags += ['-O3']
-    syslibs = ['-lc']
+
     # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
     # code that is linked to C/C++ code
     # -D_UF defines UNIX naming conventions for mixed language compilation.
@@ -827,12 +844,10 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
 
 def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
                        expedite, dryrun, double, debug, fflagsu, cflagsu,
-                       arch, srcdir, srcdir2, extrafiles, makefile):
+                       syslibs, arch, srcdir, srcdir2, extrafiles, makefile):
     """
     Make target on Windows OS
     """
-
-    syslibs = ['-lc']
 
     if fc == 'ifort':
         fc = 'ifort.exe'
@@ -1148,7 +1163,7 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
 
 def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
          expedite=False, dryrun=False, double=False, debug=False,
-         include_subdirs=False, fflags=None, cflags=None,
+         include_subdirs=False, fflags=None, cflags=None, syslibs='-lc',
          arch='intel64', makefile=False, srcdir2=None, extrafiles=None):
     """
     Main part of program
@@ -1178,6 +1193,10 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     # get ordered list of files to compile
     srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
 
+    # convert syslibs to a list
+    if isinstance(syslibs, str):
+        syslibs = [syslibs]
+
     # compile with gfortran or ifort
     winifort = False
     if fc == 'gfortran' or (fc is None and cc in ['gcc', 'g++', 'clang']):
@@ -1186,7 +1205,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
         success = compile_with_gnu(srcfiles, target, fc, cc,
                                    objdir_temp, moddir_temp,
                                    expedite, dryrun, double, debug, fflags,
-                                   cflags, srcdir, srcdir2, extrafiles,
+                                   cflags, syslibs, srcdir, srcdir2, extrafiles,
                                    makefile)
     elif fc == 'ifort' or fc == 'mpiifort' or \
             (fc is None and cc in ['icc', 'cl', 'icl']):
@@ -1197,7 +1216,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
             success = compile_with_macnix_ifort(srcfiles, target, fc, cc,
                                                 objdir_temp, moddir_temp,
                                                 expedite, dryrun, double,
-                                                debug, fflags, cflags,
+                                                debug, fflags, cflags, syslibs,
                                                 srcdir, srcdir2, extrafiles,
                                                 makefile)
         else:
@@ -1207,7 +1226,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
             success = compile_with_ifort(srcfiles, target, fc, cc,
                                          objdir_temp, moddir_temp,
                                          expedite, dryrun, double, debug,
-                                         fflags, cflags, arch,
+                                         fflags, cflags, syslibs, arch,
                                          srcdir, srcdir2, extrafiles, makefile)
     else:
         raise Exception('Unsupported compiler')

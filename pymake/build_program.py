@@ -207,6 +207,8 @@ def set_fflags(target, fc='gfortran'):
         if '--fflags' in arg.lower():
             if fflags is None:
                 fflags = ''
+            if len(fflags) > 0:
+                fflags += ' '
             fflags += sys.argv[idx + 1]
 
     return fflags
@@ -242,9 +244,45 @@ def set_cflags(target, cc='gcc'):
         if '--cflags' in arg.lower():
             if cflags is None:
                 cflags = ''
+            if len(cflags) > 0:
+                cflags += ' '
             cflags += sys.argv[idx + 1]
 
     return cflags
+
+
+def set_syslibs(target, fc, cc):
+    """
+    Set appropriate compiler liker syslib based on target.
+
+    Parameters
+    ----------
+    target : str
+        target to build
+
+    fc : str
+        fortran compiler
+
+    cc : str
+        c compiler
+
+    Returns
+    -------
+    syslibs : str
+        fortran compiler flags. Default is None
+
+    """
+    syslibs = '-lc'
+    if target == 'triangle':
+        if sys.platform in ['linux', 'darwin']:
+            if fc is None:
+                lfc = True
+            else:
+                lfc = fc.startswith('g')
+            if lfc or cc.startswith('g'):
+               syslibs = '-lm'
+
+    return syslibs
 
 
 def set_double(target):
@@ -346,8 +384,10 @@ def set_arch(target):
 
 def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                   expedite=False, dryrun=False, double=False, debug=False,
-                  include_subdirs=False, fflags=None, cflags=None, arch=
-                  'intel64', makefile=False, srcdir2=None, extrafiles=None,
+                  include_subdirs=False,
+                  fflags=None, cflags=None, syslibs='-lc',
+                  arch='intel64', makefile=False,
+                  srcdir2=None, extrafiles=None,
                   exe_name=None, exe_dir=None,
                   replace_function=None, verify=True, modify_exe_name=True,
                   download_dir=None, download=True,
@@ -367,6 +407,8 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
     debug : bool
     include_subdirs : bool
     fflags : str or list
+    cflags : str or list
+    syslibs : str or list
     arch : str
     makefile : bool
     srcdir2 : str
@@ -446,7 +488,8 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         print('compiling...{}'.format(os.path.relpath(exe_name)))
         main(srcdir, exe_name, fc=fc, cc=cc, makeclean=makeclean,
              expedite=expedite, dryrun=dryrun, double=double, debug=debug,
-             include_subdirs=include_subdirs, fflags=fflags, cflags=cflags,
+             include_subdirs=include_subdirs,
+             fflags=fflags, cflags=cflags, syslibs=syslibs,
              arch=arch, makefile=makefile, srcdir2=srcdir2,
              extrafiles=extrafiles)
 
@@ -576,6 +619,9 @@ def build_apps(targets=None):
         # set c/c++ flags
         cflags = set_cflags(target, cc)
 
+        # set linker syslibs
+        syslibs = set_syslibs(target, fc, cc)
+
         # set architecture
         arch = set_arch(target)
 
@@ -604,6 +650,7 @@ def build_apps(targets=None):
                       debug=debug,
                       fflags=fflags,
                       cflags=cflags,
+                      syslibs=syslibs,
                       arch=arch,
                       include_subdirs=include_subdirs,
                       replace_function=replace_function,
