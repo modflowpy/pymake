@@ -122,7 +122,7 @@ def getmfexes(pth='.', version='', platform=None):
 
 
 def test_download_and_unzip():
-    pth = './temp/t009'
+    pth = './temp/t999'
     getmfexes(pth, '1.0')
     for f in os.listdir(pth):
         fname = os.path.join(pth, f)
