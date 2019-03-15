@@ -511,6 +511,7 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
                    opt]
     else:
         cflags += [opt]
+
     if cc.startswith('g'):
         if debug:
             lflag = flag_available('-Wall')
@@ -679,40 +680,60 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
                 opt = fflag
             fflags.remove(fflag)
             break  # after first optimization (O) flag
-    if debug:
-        compileflags = [
-            opt,
-            '-debug', 'all',
-            '-no-heap-arrays',
-            '-fpe0',
-            '-traceback'
-        ]
-    else:
-        # production version compile flags
-        compileflags = [
-            opt,
-            '-no-heap-arrays',
-            '-fpe0',
-            '-traceback'
-        ]
 
-    # add double precision compiler switches
-    if double:
-        compileflags += ['-real-size', '64']
-        compileflags += ['-double-size', '64']
+    # add ifort specific compiler switches
+    if fc is not None:
+        if debug:
+            # Debug flags
+            compileflags = [opt,
+                            '-debug', 'all',
+                            '-no-heap-arrays',
+                            '-fpe0',
+                            '-traceback']
+        else:
+            # production version compile flags
+            compileflags = [opt,
+                            '-no-heap-arrays',
+                            '-fpe0',
+                            '-traceback']
+
+        # add double precision compiler switches
+        if double:
+            compileflags += ['-real-size', '64']
+            compileflags += ['-double-size', '64']
 
     # Split all tokens by spaces
     for fflag in ' '.join(fflags).split():
         if fflag not in compileflags:
             compileflags.append(fflag)
 
-    # C/C++ compiler switches
+    # C/C++ compiler switches -- thanks to mja
+    if debug:
+        opt = '-O0'
+    else:
+        opt = '-O2'
+
     if cflags is None:
         cflags = []
-    if debug:
-        cflags += ['-O0', '-g']
     else:
-        cflags += ['-O3']
+        if isinstance(cflags, str):
+            cflags = cflags.split()
+
+    # look for optimization levels in cflags
+    for cflag in cflags:
+        if cflag[:2] == '-O':
+            if not debug:
+                opt = cflag
+            cflags.remove(cflag)
+            break  # after first optimization (O) flag
+
+    # set additional c flags
+    if debug:
+        # Debug flags
+        cflags += ['-g',
+                   opt]
+    else:
+        cflags += [opt]
 
     # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
     # code that is linked to C/C++ code
