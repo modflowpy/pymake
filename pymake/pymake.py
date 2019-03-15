@@ -682,18 +682,17 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
             break  # after first optimization (O) flag
 
     # add ifort specific compiler switches
+    compileflags = [opt]
     if fc is not None:
         if debug:
             # Debug flags
-            compileflags = [opt,
-                            '-debug', 'all',
+            compileflags = ['-debug', 'all',
                             '-no-heap-arrays',
                             '-fpe0',
                             '-traceback']
         else:
             # production version compile flags
-            compileflags = [opt,
-                            '-no-heap-arrays',
+            compileflags = ['-no-heap-arrays',
                             '-fpe0',
                             '-traceback']
 
@@ -702,10 +701,10 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
             compileflags += ['-real-size', '64']
             compileflags += ['-double-size', '64']
 
-    # Split all tokens by spaces
-    for fflag in ' '.join(fflags).split():
-        if fflag not in compileflags:
-            compileflags.append(fflag)
+        # Split all tokens by spaces
+        for fflag in ' '.join(fflags).split():
+            if fflag not in compileflags:
+                compileflags.append(fflag)
 
     # C/C++ compiler switches -- thanks to mja
     if debug:
