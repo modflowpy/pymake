@@ -170,6 +170,8 @@ def set_compiler(target):
             cc = 'icc'
         elif arg.lower() == '--cl':
             cc = 'cl'
+        elif arg.lower() == '--icl':
+            cc = 'icl'
         elif arg.lower() == '--clang':
             cc = 'clang'
 
@@ -204,7 +206,7 @@ def set_fflags(target):
 
 def set_cflags(target):
     """
-    Set appropriate fortran compiler flags based on target.
+    Set appropriate c compiler flags based on target.
 
     Parameters
     ----------
@@ -213,13 +215,13 @@ def set_cflags(target):
 
     Returns
     -------
-    fflags : str
+    cflags : str
         fortran compiler flags. Default is None
 
     """
     cflags = None
     if target == 'triangle':
-        fflags = '-lm'
+        cflags = '-DNO_TIMER'
 
     return cflags
 
@@ -323,8 +325,8 @@ def set_arch(target):
 
 def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                   expedite=False, dryrun=False, double=False, debug=False,
-                  include_subdirs=False, fflags=None, arch='intel64',
-                  makefile=False, srcdir2=None, extrafiles=None,
+                  include_subdirs=False, fflags=None, cflags=None, arch=
+                  'intel64', makefile=False, srcdir2=None, extrafiles=None,
                   exe_name=None, exe_dir=None,
                   replace_function=None, verify=True, modify_exe_name=True,
                   download_dir=None, download=True,
@@ -423,8 +425,9 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         print('compiling...{}'.format(os.path.relpath(exe_name)))
         main(srcdir, exe_name, fc=fc, cc=cc, makeclean=makeclean,
              expedite=expedite, dryrun=dryrun, double=double, debug=debug,
-             include_subdirs=include_subdirs, fflags=fflags, arch=arch,
-             makefile=makefile, srcdir2=srcdir2, extrafiles=extrafiles)
+             include_subdirs=include_subdirs, fflags=fflags, cflags=cflags,
+             arch=arch, makefile=makefile, srcdir2=srcdir2,
+             extrafiles=extrafiles)
 
         if verify:
             app = os.path.relpath(exe_name)
@@ -579,6 +582,7 @@ def build_apps(targets=None):
                       double=double,
                       debug=debug,
                       fflags=fflags,
+                      cflags=cflags,
                       arch=arch,
                       include_subdirs=include_subdirs,
                       replace_function=replace_function,
