@@ -182,7 +182,7 @@ def set_compiler(target):
     return fc, cc
 
 
-def set_fflags(target):
+def set_fflags(target, fc='gfortran'):
     """
     Set appropriate fortran compiler flags based on target.
 
@@ -199,12 +199,20 @@ def set_fflags(target):
     """
     fflags = None
     if target == 'mp7':
-        fflags = '-ffree-line-length-512'
+        if fc == 'gfortran':
+            fflags = '-ffree-line-length-512'
+
+    # add additional fflags from the command line
+    for idx, arg in enumerate(sys.argv):
+        if '--fflags' in arg.lower():
+            if fflags is None:
+                fflags = ''
+            fflags += sys.argv[idx + 1]
 
     return fflags
 
 
-def set_cflags(target):
+def set_cflags(target, cc='gcc'):
     """
     Set appropriate c compiler flags based on target.
 
@@ -212,6 +220,8 @@ def set_cflags(target):
     ----------
     target : str
         target to build
+    cc : str
+        c compiler
 
     Returns
     -------
@@ -221,7 +231,18 @@ def set_cflags(target):
     """
     cflags = None
     if target == 'triangle':
-        cflags = '-DNO_TIMER'
+        if sys.platform in ['linux', 'darwin']:
+            if cc.startswith('g'):
+                cflags = '-lm'
+        else:
+            cflags = '-DNO_TIMER'
+
+    # add additional cflags from the command line
+    for idx, arg in enumerate(sys.argv):
+        if '--cflags' in arg.lower():
+            if cflags is None:
+                cflags = ''
+            cflags += sys.argv[idx + 1]
 
     return cflags
 
@@ -550,10 +571,10 @@ def build_apps(targets=None):
         fc, cc = set_compiler(target)
 
         # set fortran flags
-        fflags = set_fflags(target)
+        fflags = set_fflags(target, fc)
 
         # set c/c++ flags
-        cflags = set_cflags(target)
+        cflags = set_cflags(target, cc)
 
         # set architecture
         arch = set_arch(target)

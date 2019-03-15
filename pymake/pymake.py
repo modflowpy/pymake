@@ -29,6 +29,7 @@ from .dag import order_source_files, order_c_source_files
 
 try:
     from flopy import is_exe as flopy_is_exe
+
     flopy_avail = True
 except:
     flopy_avail = False
@@ -49,7 +50,8 @@ def parser():
                                      linked.''')
     parser.add_argument('srcdir', help='Location of source directory')
     parser.add_argument('target', help='Name of target to create')
-    parser.add_argument('-fc', help='Fortran compiler to use (default is gfortran)',
+    parser.add_argument('-fc',
+                        help='Fortran compiler to use (default is gfortran)',
                         default='gfortran', choices=['ifort', 'mpiifort',
                                                      'gfortran'])
     parser.add_argument('-cc', help='C compiler to use (default is gcc)',
@@ -223,6 +225,7 @@ def initialize(srcdir, target, commonsrc, extrafiles):
 
     return srcdir_temp, objdir_temp, moddir_temp
 
+
 def parse_extrafiles(extrafiles):
     if extrafiles is None:
         files = None
@@ -234,7 +237,7 @@ def parse_extrafiles(extrafiles):
             with open(extrafiles, 'r') as f:
                 files = []
                 for line in f:
-                    fname = line.strip().replace('\\','/')
+                    fname = line.strip().replace('\\', '/')
                     if len(fname) > 0:
                         fname = os.path.abspath(os.path.join(efpth, fname))
                         files.append(fname)
@@ -243,6 +246,7 @@ def parse_extrafiles(extrafiles):
                             'or the name of a text file that contains a list'
                             'of files.')
     return files
+
 
 def clean(srcdir_temp, objdir_temp, moddir_temp, objext, winifort):
     """
@@ -292,7 +296,6 @@ def get_ordered_srcfiles(srcdir_temp, include_subdir=False):
     # orderedsourcefiles = order_source_files(srcfiles) + \
     #                     order_c_source_files(cfiles)
 
-
     srcfileswithpath = []
     for srcfile in srcfiles:
         s = os.path.join(srcdir_temp, srcfile)
@@ -310,7 +313,7 @@ def get_ordered_srcfiles(srcdir_temp, include_subdir=False):
     orderedsourcefiles = []
     if len(srcfileswithpath) > 0:
         orderedsourcefiles += order_source_files(srcfileswithpath)
-        
+
     if len(cfileswithpath) > 0:
         orderedsourcefiles += order_c_source_files(cfileswithpath)
 
@@ -359,7 +362,8 @@ def get_iso_c(srcfiles):
         try:
             f = open(srcfile, 'rb')
         except:
-            print('get_f_nodelist: could not open {0}'.format(os.path.basename(srcfile)))
+            print('get_f_nodelist: could not open {0}'.format(
+                os.path.basename(srcfile)))
             continue
         lines = f.read()
         lines = lines.decode('ascii', 'replace').splitlines()
@@ -388,18 +392,22 @@ def flag_available(flag):
 
     # establish communicator
     stdout, stderr = proc.communicate()
-    process_Popen_communicate(stdout, stderr)
+    # process_Popen_communicate(stdout, stderr)
 
     # catch non-zero return code
     if proc.returncode != 0:
-        msg = '{} failed, status code {}\n'\
+        msg = '{} failed, status code {}\n' \
             .format(' '.join(cmdlist), proc.returncode)
         raise RuntimeError(msg)
 
     if PY3:
         stdout = stdout.decode()
 
-    return flag in stdout
+    avail = flag in stdout
+    msg = '  {} flag available: {}'.format(flag, avail)
+    print(msg)
+
+    return avail
 
 
 def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
@@ -431,29 +439,32 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
                 opt = fflag
             fflags.remove(fflag)
             break  # after first optimization (O) flag
+
+    # set fortran flags
     if debug:
         # Debug flags
         compileflags = ['-g',
-                        opt,
-                        '-fcheck=all',
-                        '-fbacktrace',
-                        '-fbounds-check',
-                        ]
-        lflag = flag_available('-ffpe-trap')
-        if lflag:
-            compileflags.append('-ffpe-trap=overflow,zero,invalid,denormal')
-
+                        opt]
     else:
-        # Production version with some level of optimization
-        compileflags = [opt, '-fbacktrace']
-        # add additional compile flags
-        if not sys.platform == 'win32':
+        compileflags = [opt]
+    if fc is not None or cc.startswith('g'):
+        if debug:
+            compileflags.append(['-fcheck=all',
+                                 '-fbounds-check'])
+            lflag = flag_available('-ffpe-trap')
+            if lflag:
+                compileflags.append(
+                    '-ffpe-trap=overflow,zero,invalid,denormal')
+        else:
             lflag = flag_available('-ffpe-summary')
             if lflag:
                 compileflags.append('-ffpe-summary=overflow')
             lflag = flag_available('-ffpe-trap')
             if lflag:
                 compileflags.append('-ffpe-trap=overflow,zero,invalid')
+        # add fbacktrace to debug and release versions
+        compileflags.append('-fbacktrace')
+
     objext = '.o'
     if double:
         compileflags.append('-fdefault-real-8')
@@ -463,14 +474,40 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         if fflag not in compileflags:
             compileflags.append(fflag)
 
-
     # C/C++ compiler switches -- thanks to mja
+    if debug:
+        opt = '-O0'
+    else:
+        opt = '-O2'
+
     if cflags is None:
         cflags = []
-    if debug:
-        cflags += ['-O0', '-g']
     else:
-        cflags += ['-O3']
+        if isinstance(cflags, str):
+            cflags = cflags.split()
+
+    # look for optimization levels in cflags
+    for cflag in cflags:
+        if cflag[:2] == '-O':
+            if not debug:
+                opt = cflag
+            cflags.remove(cflag)
+            break  # after first optimization (O) flag
+
+    # set additional c flags
+    if debug:
+        # Debug flags
+        cflags += ['-g',
+                   opt]
+    else:
+        cflags += [opt]
+    if cc.startswith('g'):
+        if debug:
+            lflag = flag_available('-Wall')
+            if lflag:
+                cflags += ['-Wall']
+        else:
+            pass
 
     # syslibs
     syslibs = []
@@ -539,7 +576,7 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         # Compile
         if compilefile:
             if not dryrun:
-                #subprocess.check_call(cmdlist, shell=shellflg)
+                # subprocess.check_call(cmdlist, shell=shellflg)
                 proc = Popen(cmdlist, shell=shellflg, stdout=PIPE, stderr=PIPE)
                 process_Popen_command(shellflg, cmdlist)
 
@@ -549,11 +586,10 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
                 # catch non-zero return code
                 if proc.returncode != 0:
-                    msg = '{} failed, status code {}\n'\
+                    msg = '{} failed, status code {}\n' \
                         .format(' '.join(cmdlist), proc.returncode)
                     print(msg)
                     return proc.returncode
-
 
         # Save the name of the object file so that they can all be linked
         # at the end
@@ -589,7 +625,7 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
         # catch non-zero return code
         if proc.returncode != 0:
-            msg = '{} failed, status code {}\n'\
+            msg = '{} failed, status code {}\n' \
                 .format(' '.join(cmdlist), proc.returncode)
             print(msg)
             return proc.returncode
@@ -720,7 +756,7 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
         # Compile
         if compilefile:
             if not dryrun:
-                #subprocess.check_call(cmdlist)
+                # subprocess.check_call(cmdlist)
                 proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
                 process_Popen_command(False, cmdlist)
 
@@ -730,7 +766,7 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
 
                 # catch non-zero return code
                 if proc.returncode != 0:
-                    msg = '{} failed, status code {}\n'\
+                    msg = '{} failed, status code {}\n' \
                         .format(' '.join(cmdlist), proc.returncode)
                     print(msg)
                     return proc.returncode
@@ -764,7 +800,7 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     for switch in syslibs:
         cmdlist.append(switch)
     if not dryrun:
-        #subprocess.check_call(cmdlist)
+        # subprocess.check_call(cmdlist)
         proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
         process_Popen_command(False, cmdlist)
 
@@ -774,7 +810,7 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
 
         # catch non-zero return code
         if proc.returncode != 0:
-            msg = '{} failed, status code {}\n'\
+            msg = '{} failed, status code {}\n' \
                 .format(' '.join(cmdlist), proc.returncode)
             print(msg)
             return proc.returncode
@@ -811,9 +847,9 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
     # C/C++ compiler switches
     cflags = ['/nologo', '/c']
-    #if debug:
+    # if debug:
     #    cflags += ['/O0', '/g']
-    #else:
+    # else:
     #    cflags += ['/O3']
 
     fflags = ['/heap-arrays:0', '/fpe:0', '/traceback', '/nologo']
@@ -938,7 +974,7 @@ def makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target, arch,
 
             obj = os.path.join(objdir_temp,
                                os.path.splitext(os.path.basename(srcfile))[0]
-                               + '.obj' )
+                               + '.obj')
             cmd += '/Fo' + obj + ' '
             cmd += srcfile
         else:
@@ -1003,14 +1039,14 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
                 dirs.append(rdir)
     srcdirs = []
     for idx, dir in enumerate(dirs):
-        srcdirs.append('SOURCEDIR{}'.format(idx+1))
+        srcdirs.append('SOURCEDIR{}'.format(idx + 1))
         line = '{}={}\n'.format(srcdirs[idx], dir)
         f.write(line)
     f.write('\n')
     f.write('VPATH = \\\n')
     for idx, sd in enumerate(srcdirs):
         f.write('${' + '{}'.format(sd) + '} ')
-        if idx+1 < len(srcdirs):
+        if idx + 1 < len(srcdirs):
             f.write('\\')
         f.write('\n')
     f.write('\n')
@@ -1052,7 +1088,7 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
     f.write('OBJECTS = \\\n')
     for idx, objfile in enumerate(objfiles):
         f.write('$(OBJDIR)/{} '.format(os.path.basename(objfile)))
-        if idx+1 < len(objfiles):
+        if idx + 1 < len(objfiles):
             f.write('\\')
         f.write('\n')
     f.write('\n')
@@ -1068,7 +1104,6 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
     f.write('makebin :\n')
     f.write('\tmkdir -p $(BINDIR)\n')
     f.write('\n')
-
 
     f.write('# Define the objects that make up the program\n')
     f.write('$(PROGRAM) : $(OBJECTS)\n')
@@ -1145,7 +1180,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
 
     # compile with gfortran or ifort
     winifort = False
-    if fc == 'gfortran' or (fc is None and cc.startswith('g')):
+    if fc == 'gfortran' or (fc is None and cc in ['gcc', 'g++', 'clang']):
         objext = '.o'
         create_openspec(srcdir_temp)
         success = compile_with_gnu(srcfiles, target, fc, cc,
@@ -1153,7 +1188,8 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
                                    expedite, dryrun, double, debug, fflags,
                                    cflags, srcdir, srcdir2, extrafiles,
                                    makefile)
-    elif fc == 'ifort' or fc == 'mpiifort' or (fc is None and cc in ['icc', 'cl', 'icl']):
+    elif fc == 'ifort' or fc == 'mpiifort' or \
+            (fc is None and cc in ['icc', 'cl', 'icl']):
         platform = sys.platform
         if 'darwin' in platform.lower() or 'linux' in platform.lower():
             create_openspec(srcdir_temp)
@@ -1179,14 +1215,13 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     # Clean it up
     if makeclean:
         clean(srcdir_temp, objdir_temp, moddir_temp, objext, winifort)
-        
+
     return success
 
 
 if __name__ == "__main__":
     # get the arguments
     args = parser()
-
 
     # call main -- note that this form allows main to be called
     # from python as a function.
