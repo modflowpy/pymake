@@ -850,7 +850,7 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target,
                   arch, objdir_temp, moddir_temp)
         #subprocess.check_call([batchfile, ])
-        proc = Popen([batchfile, ], stdout=STDOUT, stderr=PIPE)
+        proc = Popen([batchfile, ], stdout=PIPE, stderr=STDOUT)
         while True:
             line = proc.stdout.readline()
             c = line.decode('utf-8')

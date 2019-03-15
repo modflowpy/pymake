@@ -70,9 +70,13 @@ def set_bindir(target):
         command line argument will set bindir to user-defined path
 
     """
+    # determine if running on Travis
+    is_travis = 'TRAVIS' in os.environ
+
+    # set bindir
     bindir = None
     for idx, arg in enumerate(sys.argv):
-        if '--travis' in arg.lower():
+        if '--travis' in arg.lower() or is_travis:
             bindir = os.path.join(os.path.expanduser('~'), '.local', 'bin')
             bindir = os.path.abspath(bindir)
         elif '--appdir' in arg.lower():
@@ -105,9 +109,12 @@ def set_build(exe_name):
     build : bool
 
     """
+    # determine if running on Travis
+    is_travis = 'TRAVIS' in os.environ
+
     keep = False
     for idx, arg in enumerate(sys.argv):
-        if '--keep' in arg.lower():
+        if '--keep' in arg.lower() or is_travis:
             keep = True
 
     build = True
@@ -193,6 +200,28 @@ def set_fflags(target):
         fflags = '-ffree-line-length-512'
 
     return fflags
+
+
+def set_cflags(target):
+    """
+    Set appropriate fortran compiler flags based on target.
+
+    Parameters
+    ----------
+    target : str
+        target to build
+
+    Returns
+    -------
+    fflags : str
+        fortran compiler flags. Default is None
+
+    """
+    cflags = None
+    if target == 'triangle':
+        fflags = '-lm'
+
+    return cflags
 
 
 def set_double(target):
@@ -399,7 +428,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
 
         if verify:
             app = os.path.relpath(exe_name)
-            msg = '{} does not exist.'.format(app)
+            msg = '{} build failure.'.format(app)
             assert os.path.isfile(exe_name), msg
 
         # clean download directory if different than directory with executable
@@ -519,6 +548,9 @@ def build_apps(targets=None):
 
         # set fortran flags
         fflags = set_fflags(target)
+
+        # set c/c++ flags
+        cflags = set_cflags(target)
 
         # set architecture
         arch = set_arch(target)
