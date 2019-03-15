@@ -267,17 +267,17 @@ def get_ordered_srcfiles(srcdir_temp, include_subdir=False):
 
 def create_openspec(srcdir_temp):
     """
-    Create a new openspec.inc file that uses STREAM ACCESS.  This is specific
-    to MODFLOW.
+    Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
+    STREAM ACCESS.  This is specific to MODFLOW and MT3D based targets.
     """
-    files = ['openspec.inc', 'FILESPEC.INC', 'filespec.inc']
+    files = ['openspec.inc', 'filespec.inc']
     dirs = [d[0] for d in os.walk(srcdir_temp)]
     for d in dirs:
-        for f in files:
-            fname = os.path.join(d, f)
-            if os.path.isfile(fname):
-                print('replacing..."{}"'.format(fname))
-                f = open(fname, 'w')
+        for file in files:
+            fpth = os.path.join(d, file)
+            if os.path.isfile(fpth):
+                print('replacing..."{}"'.format(fpth))
+                f = open(fpth, 'w')
                 line = "c -- created by pymake.py\n" + \
                        "      CHARACTER*20 ACCESS,FORM,ACTION(2)\n" + \
                        "      DATA ACCESS/'STREAM'/\n" + \
