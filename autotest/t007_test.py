@@ -6,7 +6,7 @@ import flopy
 
 # define program data
 target = 'mp7'
-prog_dict = pymake.usgs_prog_data().get_target(target)
+prog_dict = pymake.usgs_program_data().get_target(target)
 
 # set up paths
 dstpth = os.path.join('temp')
@@ -17,17 +17,17 @@ mp7pth = os.path.join(dstpth, prog_dict.dirname)
 emp7 = os.path.abspath(os.path.join(dstpth, target))
 
 mf2005_target = 'mf2005'
-temp_dict = pymake.usgs_prog_data().get_target(mf2005_target)
+temp_dict = pymake.usgs_program_data().get_target(mf2005_target)
 mf2005pth = os.path.join(dstpth, temp_dict.dirname)
 emf2005 = os.path.abspath(os.path.join(dstpth, mf2005_target))
 
 mfusg_target = 'mfusg'
-temp_dict = pymake.usgs_prog_data().get_target(mfusg_target)
+temp_dict = pymake.usgs_program_data().get_target(mfusg_target)
 mfusgpth = os.path.join(dstpth, temp_dict.dirname)
 emfusg = os.path.abspath(os.path.join(dstpth, mfusg_target))
 
 mf6_target = 'mf6'
-temp_dict = pymake.usgs_prog_data().get_target(mf6_target)
+temp_dict = pymake.usgs_program_data().get_target(mf6_target)
 mf6pth = os.path.join(dstpth, temp_dict.dirname)
 emf6 = os.path.abspath(os.path.join(dstpth, mf6_target))
 

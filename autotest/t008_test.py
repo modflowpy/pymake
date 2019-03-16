@@ -6,7 +6,7 @@ import flopy
 
 # define program data
 target = 'mf6'
-prog_dict = pymake.usgs_prog_data().get_target_data(target)
+prog_dict = pymake.usgs_program_data().get_target_data(target)
 
 # set up paths
 dstpth = os.path.join('temp')
@@ -30,7 +30,7 @@ def compile_code():
         shutil.rmtree(mf6pth)
 
     # compile MODFLOW 6
-    pymake.usgs_prog_data().list_targets(current=True)
+    pymake.usgs_program_data().list_targets(current=True)
     replace_function = pymake.build_replace(target)
     pymake.build_program(target=target,
                          include_subdirs=True,

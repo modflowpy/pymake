@@ -6,7 +6,7 @@ import flopy
 
 # define program data
 target = 'mt3dusgs'
-prog_dict = pymake.usgs_prog_data().get_target_data(target)
+prog_dict = pymake.usgs_program_data().get_target_data(target)
 
 # set up paths
 dstpth = os.path.join('temp')
@@ -18,7 +18,7 @@ mtusgspth = os.path.join(dstpth, prog_dict.dirname)
 emtusgs = os.path.abspath(os.path.join(dstpth, target))
 
 mfnwt_target = 'mfnwt'
-temp_dict = pymake.usgs_prog_data().get_target(mfnwt_target)
+temp_dict = pymake.usgs_program_data().get_target(mfnwt_target)
 mfnwtpth = os.path.join(dstpth, temp_dict.dirname)
 emfnwt = os.path.abspath(os.path.join(dstpth, mfnwt_target))
 

@@ -7,7 +7,7 @@ import flopy
 
 # define program data
 target = 'swtv4'
-prog_dict = pymake.usgs_prog_data().get_target_data(target)
+prog_dict = pymake.usgs_program_data().get_target_data(target)
 
 # set up paths
 dstpth = os.path.join('temp')

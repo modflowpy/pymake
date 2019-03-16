@@ -7,7 +7,7 @@ import pymake
 
 # define program data
 target = 'gridgen'
-prog_dict = pymake.usgs_prog_data().get_target_data(target)
+prog_dict = pymake.usgs_program_data().get_target_data(target)
 
 # set up paths
 dstpth = os.path.join('temp')
@@ -31,7 +31,7 @@ def compile_code():
         shutil.rmtree(pth)
 
     # compile gridgen
-    pymake.usgs_prog_data().list_targets(current=True)
+    pymake.usgs_program_data().list_targets(current=True)
     replace_function = pymake.build_replace(target)
     pymake.build_program(target=target, fc=None, cc='g++',
                          include_subdirs=True,

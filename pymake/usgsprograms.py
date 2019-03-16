@@ -24,7 +24,7 @@ def str_to_bool(s):
         raise ValueError(msg)
 
 
-class usgs_prog_data:
+class usgs_program_data:
     def __init__(self):
         self._program_dict = self._build_urls()
 
@@ -70,15 +70,15 @@ class usgs_prog_data:
 
     @staticmethod
     def get_target(key):
-        return usgs_prog_data().get_target_data(key)
+        return usgs_program_data().get_target_data(key)
 
     @staticmethod
     def get_keys(current=False):
-        return usgs_prog_data().get_target_keys(current=current)
+        return usgs_program_data().get_target_keys(current=current)
 
     @staticmethod
     def list_targets(current=False):
-        targets = usgs_prog_data().get_target_keys(current=current)
+        targets = usgs_program_data().get_target_keys(current=current)
         targets.sort()
         msg = 'Available targets:\n'
         for idx, target in enumerate(targets):
@@ -98,7 +98,7 @@ class usgs_prog_data:
               ' in "{}".\n'.format(program_data_file))
 
         # process the program data
-        prog_data = usgs_prog_data().get_program_dict()
+        prog_data = usgs_program_data().get_program_dict()
         if current:
             tdict = {}
             for key, value in prog_data.items():

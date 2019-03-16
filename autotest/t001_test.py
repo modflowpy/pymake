@@ -1,16 +1,17 @@
 from __future__ import print_function
 import os
-import sys
 import shutil
+
 import pymake
-from pymake.autotest import get_namefiles, compare_budget, compare_heads
+from pymake.autotest import get_namefiles
+
 import flopy
 
 retain = False
 key_release = 'mf2005'
 key_previous = 'mf2005.1.11'
-pd_release = pymake.usgs_prog_data().get_target_data(key=key_release)
-pd_previous = pymake.usgs_prog_data().get_target_data(key=key_previous)
+pd_release = pymake.usgs_program_data().get_target_data(key=key_release)
+pd_previous = pymake.usgs_program_data().get_target_data(key=key_previous)
 
 testdir = 'temp'
 testdir_release = os.path.join(testdir, pd_release.dirname)

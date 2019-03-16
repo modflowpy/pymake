@@ -12,7 +12,7 @@ else:
 
 from .pymake import main
 from .download import download_and_unzip
-from .usgsprograms import usgs_prog_data
+from .usgsprograms import usgs_program_data
 
 
 def get_function_names(module, select_name=None):
@@ -240,7 +240,7 @@ def set_cflags(target, cc='gcc'):
     """
     cflags = None
     if target == 'triangle':
-        if sys.platform.lower() in ['linux', 'darwin']:
+        if 'linux' in sys.platform.lower() or 'darwin' in sys.platform.lower():
             if cc.startswith('g'):
                 cflags = '-lm'
         else:
@@ -288,7 +288,7 @@ def set_syslibs(target, fc, cc):
     """
     syslibs = '-lc'
     if target == 'triangle':
-        if sys.platform in ['linux', 'darwin']:
+        if 'linux' in sys.platform.lower() or 'darwin' in sys.platform.lower():
             if fc is None:
                 lfc = True
             else:
@@ -478,7 +478,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
             exe_name = os.path.abspath(os.path.join(exe_dir, exe_name))
 
         # extract program data for target
-        prog_dict = usgs_prog_data.get_target(target)
+        prog_dict = usgs_program_data.get_target(target)
 
         # set url
         url = prog_dict.url
@@ -554,7 +554,7 @@ def build_targets(current=True):
         list of targets
 
     """
-    return usgs_prog_data.get_keys(current=current)
+    return usgs_program_data.get_keys(current=current)
 
 
 def build_replace(targets):
@@ -697,16 +697,17 @@ def build_apps(targets=None):
         end_downcomp = datetime.now()
         elapsed = end_downcomp - start_downcomp
         print('elapsed download and compile time (hh:mm:ss.ms): ' +
-              '{}'.format(elapsed))
+              '{}\n'.format(elapsed))
 
     end_time = datetime.now()
     elapsed = end_time - start_time
-    print('elapsed time (hh:mm:ss.ms): {}'.format(elapsed))
+    print('elapsed time (hh:mm:ss.ms): {}\n'.format(elapsed))
 
     return returncode
 
 
-# routines for updating source files to compile with gfortran
+# routines for updating source files locations and to compile
+# with gfortran, gcc, and g++
 def update_triangle_files(srcdir, fc, cc, arch):
     """
     Update the triangle source files
@@ -724,7 +725,7 @@ def update_triangle_files(srcdir, fc, cc, arch):
     """
     # move the downloaded files
     rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))
-    prog_dict = usgs_prog_data().get_target('triangle')
+    prog_dict = usgs_program_data().get_target('triangle')
     dirname = prog_dict.dirname
     dstpth = os.path.join(rootdir, dirname)
 
@@ -764,7 +765,7 @@ def update_mt3dms_files(srcdir, fc, cc, arch):
     """
     # move the downloaded files
     rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))
-    prog_dict = usgs_prog_data().get_target('mt3dms')
+    prog_dict = usgs_program_data().get_target('mt3dms')
     dirname = prog_dict.dirname
     dstpth = os.path.join(rootdir, dirname)
 
@@ -875,10 +876,10 @@ def update_swtv4_files(srcdir, fc, cc, arch):
     for filename in srcfiles:
         src = os.path.join(srcdir, filename)
         dst = os.path.join(srcdir, filename.lower())
-        if 'linux' in sys.platform or 'darwin' in sys.platform:
+        if 'linux' in sys.platform.lower() or 'darwin' in sys.platform.lower():
             os.rename(src, dst)
 
-    if 'linux' in sys.platform or 'darwin' in sys.platform:
+    if 'linux' in sys.platform.lower() or 'darwin' in sys.platform.lower():
         updfile = False
         if cc in ['icc', 'clang', 'gcc']:
             updfile = True
