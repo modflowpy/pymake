@@ -12,7 +12,7 @@ else:
 
 from .pymake import main
 from .download import download_and_unzip
-from .usgsurls import usgs_prog_data
+from .usgsprograms import usgs_prog_data
 
 
 def get_function_names(module, select_name=None):
@@ -175,8 +175,8 @@ def set_compiler(target):
         elif arg.lower() == '--clang':
             cc = 'clang'
 
-    msg = '{} fortran code will be built with {}.\n'.format(target, fc)
-    msg += '{} c/c++ code will be built with {}.\n'.format(target, cc)
+    msg = '{} fortran code will be built with "{}".\n'.format(target, fc)
+    msg += '{} c/c++ code will be built with "{}".\n'.format(target, cc)
     print(msg)
 
     return fc, cc
@@ -211,6 +211,13 @@ def set_fflags(target, fc='gfortran'):
                 fflags += ' '
             fflags += sys.argv[idx + 1]
 
+    # write fortran flags
+    if fflags is not None:
+        msg = '{} fortran code '.format(target) + \
+              'will be built with the following predefined flags:\n'
+        msg += '    {}\n'.format(fflags)
+        print(msg)
+
     return fflags
 
 
@@ -228,12 +235,12 @@ def set_cflags(target, cc='gcc'):
     Returns
     -------
     cflags : str
-        fortran compiler flags. Default is None
+        c compiler flags. Default is None
 
     """
     cflags = None
     if target == 'triangle':
-        if sys.platform in ['linux', 'darwin']:
+        if sys.platform.lower() in ['linux', 'darwin']:
             if cc.startswith('g'):
                 cflags = '-lm'
         else:
@@ -247,6 +254,13 @@ def set_cflags(target, cc='gcc'):
             if len(cflags) > 0:
                 cflags += ' '
             cflags += sys.argv[idx + 1]
+
+    # write c/c++ flags
+    if cflags is not None:
+        msg = '{} c/c++ code '.format(target) + \
+              'will be built with the following predefined flags:\n'
+        msg += '    {}\n'.format(cflags)
+        print(msg)
 
     return cflags
 
@@ -283,7 +297,12 @@ def set_syslibs(target, fc, cc):
             if cc in ['gcc', 'g++', 'clang']:
                 lcc = True
             if lfc and lcc:
-               syslibs = '-lm'
+                syslibs = '-lm'
+
+    # write syslibs
+    msg = '{} will use the following predefined syslibs:\n'.format(target)
+    msg += '    {}\n'.format(syslibs)
+    print(msg)
 
     return syslibs
 
@@ -314,9 +333,10 @@ def set_double(target):
 
     # write a message
     if double:
-        msg = '{} will be built using double precision floats.'.format(target)
+        prec = 'double'
     else:
-        msg = '{} will be built using single precision floats.'.format(target)
+        prec = 'single'
+    msg = '{} will be built using "{}" precision floats.\n'.format(target, prec)
     print(msg)
 
     return double
@@ -345,9 +365,10 @@ def set_debug(target):
 
     # write a message
     if debug:
-        msg = '{} will be built with debug flags.'.format(target)
+        comptype = 'debug'
     else:
-        msg = '{} will be built as a release application.'.format(target)
+        comptype = 'release'
+    msg = '{} will be built as a "{}" application.\n'.format(target, comptype)
     print(msg)
 
     return debug
@@ -379,7 +400,7 @@ def set_arch(target):
             arch = 'ia32'
 
     # write a message
-    msg = '{} will be built for {} architecture.'.format(target, arch)
+    msg = '{} will be built for "{}" architecture.\n'.format(target, arch)
     print(msg)
 
     return arch
@@ -484,20 +505,24 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                                timeout=timeout)
 
         if replace_function is not None:
-            print('replacing select source files for {}'.format(target))
+            print('replacing select source files for {}\n'.format(target))
             replace_function(srcdir, fc, cc, arch)
 
         # compile code
         print('compiling...{}'.format(os.path.relpath(exe_name)))
-        main(srcdir, exe_name, fc=fc, cc=cc, makeclean=makeclean,
-             expedite=expedite, dryrun=dryrun, double=double, debug=debug,
-             include_subdirs=include_subdirs,
-             fflags=fflags, cflags=cflags, syslibs=syslibs,
-             arch=arch, makefile=makefile, srcdir2=srcdir2,
-             extrafiles=extrafiles)
+        returncode = main(srcdir, exe_name, fc=fc, cc=cc, makeclean=makeclean,
+                          expedite=expedite, dryrun=dryrun,
+                          double=double, debug=debug,
+                          include_subdirs=include_subdirs,
+                          fflags=fflags, cflags=cflags, syslibs=syslibs,
+                          arch=arch, makefile=makefile, srcdir2=srcdir2,
+                          extrafiles=extrafiles)
+
+        app = os.path.relpath(exe_name)
+        msg = 'failure to build {}.'.format(app)
+        assert returncode == 0, msg
 
         if verify:
-            app = os.path.relpath(exe_name)
             msg = '{} build failure.'.format(app)
             assert os.path.isfile(exe_name), msg
 
@@ -509,7 +534,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                 if os.path.isdir(ddir):
                     shutil.rmtree(ddir)
 
-    return
+    return returncode
 
 
 def build_targets(current=True):
@@ -595,6 +620,10 @@ def build_apps(targets=None):
     for target in targets:
         start_downcomp = datetime.now()
 
+        # write system information
+        print('{} will be built '.format(target) +
+              'for the "{}" operating system\n'.format(sys.platform))
+
         # set bindir
         bindir = set_bindir(target)
 
@@ -646,23 +675,23 @@ def build_apps(targets=None):
             timeout = 30
 
         # build the code
-        build_program(target=target,
-                      fc=fc,
-                      cc=cc,
-                      double=double,
-                      debug=debug,
-                      fflags=fflags,
-                      cflags=cflags,
-                      syslibs=syslibs,
-                      arch=arch,
-                      include_subdirs=include_subdirs,
-                      replace_function=replace_function,
-                      modify_exe_name=modify_exe_name,
-                      exe_dir=bindir,
-                      download_dir='temp',
-                      download_clean=True,
-                      download_verify=download_verify,
-                      timeout=timeout)
+        returncode = build_program(target=target,
+                                   fc=fc,
+                                   cc=cc,
+                                   double=double,
+                                   debug=debug,
+                                   fflags=fflags,
+                                   cflags=cflags,
+                                   syslibs=syslibs,
+                                   arch=arch,
+                                   include_subdirs=include_subdirs,
+                                   replace_function=replace_function,
+                                   modify_exe_name=modify_exe_name,
+                                   exe_dir=bindir,
+                                   download_dir='temp',
+                                   download_clean=True,
+                                   download_verify=download_verify,
+                                   timeout=timeout)
 
         # calculate download and compile time
         end_downcomp = datetime.now()
@@ -674,7 +703,7 @@ def build_apps(targets=None):
     elapsed = end_time - start_time
     print('elapsed time (hh:mm:ss.ms): {}'.format(elapsed))
 
-    return
+    return returncode
 
 
 # routines for updating source files to compile with gfortran

@@ -100,7 +100,9 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         ar = tarfile.open(file_name)
         ar.extractall(path=pth)
         ar.close()
+
+    # delete the zipfile
     if delete_zip:
         print('Deleting the zipfile...')
         os.remove(file_name)
-    print('Done downloading and extracting...')
+    print('Done downloading and extracting...\n')

@@ -6,7 +6,7 @@ from .dag import get_f_nodelist
 try:
     import pydotplus.graphviz as pydot
 except:
-    print('pymake graphing capabilities not available.')
+    print('pymake graphing capabilities not available.\n')
 
 
 def to_pydot(dag, filename='mygraph.png'):

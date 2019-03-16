@@ -1,4 +1,5 @@
 import os
+import json
 import pymake
 
 
@@ -7,6 +8,11 @@ class dotdict(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
+
+
+# data file containing the USGS program data
+program_data_file = 'usgsurls.txt'
+
 
 def str_to_bool(s):
     if s == 'True':
@@ -17,13 +23,14 @@ def str_to_bool(s):
         msg = 'Invalid string passed - "{}"'.format(s)
         raise ValueError(msg)
 
+
 class usgs_prog_data:
     def __init__(self):
-        self._url_dict = self._build_urls()
+        self._program_dict = self._build_urls()
 
     def _build_urls(self):
         pth = os.path.dirname(os.path.abspath(pymake.__file__))
-        fpth = os.path.join(pth, 'usgsurls.txt')
+        fpth = os.path.join(pth, program_data_file)
         url_in = open(fpth, 'r').read().split('\n')
 
         urls = {}
@@ -41,22 +48,25 @@ class usgs_prog_data:
         return dotdict(urls)
 
     def get_target_data(self, key):
-        if key not in self._url_dict:
+        if key not in self._program_dict:
             msg = '"{}" key does not exist. Available keys: '.format(key)
-            for idx, k in enumerate(self._url_dict.keys()):
+            for idx, k in enumerate(self._program_dict.keys()):
                 if idx > 0:
                     msg += ', '
                 msg += '"{}"'.format(k)
             raise KeyError(msg)
-        return self._url_dict[key]
+        return self._program_dict[key]
 
     def get_target_keys(self, current=False):
         if current:
-            keys = [key for key in self._url_dict.keys()
-                    if self._url_dict[key].current]
+            keys = [key for key in self._program_dict.keys()
+                    if self._program_dict[key].current]
         else:
-            keys = list(self._url_dict.keys())
+            keys = list(self._program_dict.keys())
         return keys
+
+    def get_program_dict(self):
+        return self._program_dict
 
     @staticmethod
     def get_target(key):
@@ -72,7 +82,28 @@ class usgs_prog_data:
         targets.sort()
         msg = 'Available targets:\n'
         for idx, target in enumerate(targets):
-            msg += '    {:02d} {}\n'.format(idx+1, target)
+            msg += '    {:02d} {}\n'.format(idx + 1, target)
         print(msg)
 
         return
+
+    @staticmethod
+    def export_json(fpth='code.json', current=False):
+        # print a message
+        sel = 'all of the'
+        if current:
+            sel = 'the current'
+        print('writing a json file ("{}") '.format(fpth) +
+              'of {} USGS program\ndatabase'.format(sel) +
+              ' in "{}".\n'.format(program_data_file))
+
+        # process the program data
+        prog_data = usgs_prog_data().get_program_dict()
+        if current:
+            tdict = {}
+            for key, value in prog_data.items():
+                if value.current:
+                    tdict[key] = value
+            prog_data = tdict
+        with open(fpth, 'w') as f:
+            json.dump(prog_data, f, indent=4)

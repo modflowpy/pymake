@@ -398,11 +398,11 @@ def flag_available(flag):
     stdout, stderr = proc.communicate()
     # process_Popen_communicate(stdout, stderr)
 
-    # catch non-zero return code
-    if proc.returncode != 0:
-        msg = '{} failed, status code {}\n' \
-            .format(' '.join(cmdlist), proc.returncode)
-        raise RuntimeError(msg)
+    # # catch non-zero return code
+    # if proc.returncode != 0:
+    #     msg = '{} failed, status code {}\n' \
+    #         .format(' '.join(cmdlist), proc.returncode)
+    #     raise RuntimeError(msg)
 
     if PY3:
         stdout = stdout.decode()
@@ -1193,17 +1193,17 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     success = 0
 
     # write summary information
-    print('\nsource files are in:\n    {0}'.format(srcdir))
-    print('executable name to be created:\n    {}'.format(target))
+    print('\nsource files are in:\n    {}\n'.format(srcdir))
+    print('executable name to be created:\n    {}\n'.format(target))
     if srcdir2 is not None:
-        print('additional source files are in:\n     {}'.format(srcdir2))
+        print('additional source files are in:\n     {}\n'.format(srcdir2))
 
     # make sure the path for the target exists
     pth = os.path.dirname(target)
     if pth == '':
         pth = '.'
     if not os.path.exists(pth):
-        print('creating target path - {}'.format(pth))
+        print('creating target path - {}\n'.format(pth))
         os.makedirs(pth)
 
     # initialize

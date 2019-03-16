@@ -3,7 +3,7 @@ __name__ = 'pymake'
 __author__ = 'Christian D. Langevin, Joseph Hughes'
 from .version import __version__, __build__, __git_commit__
 
-from .usgsurls import usgs_prog_data
+from .usgsprograms import usgs_prog_data
 from .pymake import main, parser, get_ordered_srcfiles
 from .dag import order_source_files, order_c_source_files, get_f_nodelist
 from .download import download_and_unzip
