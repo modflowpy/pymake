@@ -6,7 +6,7 @@ import flopy
 
 # define program data
 target = 'mt3dusgs'
-prog_dict = pymake.usgs_program_data().get_target_data(target)
+prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
 dstpth = os.path.join('temp')

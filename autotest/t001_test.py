@@ -10,8 +10,8 @@ import flopy
 retain = False
 key_release = 'mf2005'
 key_previous = 'mf2005.1.11'
-pd_release = pymake.usgs_program_data().get_target_data(key=key_release)
-pd_previous = pymake.usgs_program_data().get_target_data(key=key_previous)
+pd_release = pymake.usgs_program_data.get_target(key=key_release)
+pd_previous = pymake.usgs_program_data.get_target(key=key_previous)
 
 testdir = 'temp'
 testdir_release = os.path.join(testdir, pd_release.dirname)

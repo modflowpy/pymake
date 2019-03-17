@@ -464,35 +464,96 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
     Parameters
     ----------
     target : str
+        Target USGS program
 
     fc : str
+        fortran compiler
+
     cc : str
+        c/c++ compiler
+
     makeclean : bool
+        Temporary source, object, and module directories will be
+        removed after compilation
+
     expedite : bool
+        boolean indicating if only out of date source files will be compiled.
+        makeclean must not have been set to True on previous build
+
     dryrun : bool
+        boolean indicating if source files should actually be compiled. Files
+        will be deleted, if makeclean is True.
+
     double : bool
+        Create a double precision application
+
     debug : bool
+        Create a double precision application
+
     include_subdirs : bool
+        boolean indicating if subdirectories in srcdir also include
+        source files
+
     fflags : str or list
+        user-specified flags for the fortran compiler
+
     cflags : str or list
+        user-specified flags for the c/c++ compiler
+
     syslibs : str or list
+        user-specified syslibs for linking object files
+
     arch : str
+        architecture for windows builds
+
     makefile : bool
+        boolean indicating if a makefile should be created
+
     srcdir2 : str
+        path to a second directory with source code files. Default is None.
+
     extrafiles : str
+        path to a file with defined additional source code files. Default
+        is None
+
     exe_name : str
+        user-specified executable file name. If None, target name will
+        be used.
+
     exe_dir : str
-    replace_function : str
+        directory where executable should be written
+
+    replace_function : pointer
+        pointer to function used to revise source files to compile with
+        gfortran, gcc, or g++. If None, source files are not altered.
+
     verify : bool
+        boolean indicating if the existence of the compiled executable
+        should be verified after compilation
+
     modify_exe_name : bool
+        boolean indicating if executable name can be altered to include
+        identifiers for double and/or debug versions.
+
     download_dir : str
+        directory downloaded files are extracted in
+
     download : bool
+        boolean indicating if the download files should be downloaded
+
     download_clean : bool
+        boolean indicating if the downloaded files should be removed
+        after the target is built
+
     download_verify : bool
+        boolean indicating if a verified download will be executed
+
     timeout : int
+        time until the download is considered to timeout
 
     Returns
     -------
+    returncode : int
 
     """
     # set exe_name
@@ -653,6 +714,7 @@ def build_apps(targets=None):
 
     Returns
     -------
+    returncode : int
 
     """
     start_time = datetime.now()

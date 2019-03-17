@@ -5,7 +5,7 @@ import pymake
 
 # define program data
 target = 'mfnwt'
-prog_dict = pymake.usgs_program_data().get_target(target)
+prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
 dstpth = os.path.join('temp')

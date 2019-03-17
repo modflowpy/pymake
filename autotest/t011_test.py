@@ -78,7 +78,8 @@ def test_usgsprograms_load_json_error():
     my_dict = {'mf2005': {'bad': 12, 'key': True}}
 
     fpth = os.path.join(cpth, 'code.test.error.json')
-    pymake.usgs_program_data.export_json(fpth=fpth, prog_data=my_dict)
+    pymake.usgs_program_data.export_json(fpth=fpth, prog_data=my_dict,
+                                         update=False)
 
     pymake.usgs_program_data.load_json(fpth=fpth)
 
