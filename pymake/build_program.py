@@ -751,6 +751,13 @@ def build_apps(targets=None):
     # write code.json
     if len(code_dict) > 0:
         fpth = os.path.join(bindir, 'code.json')
+        if os.path.isfile(fpth):
+            json_dict = usgs_program_data.load_json(fpth=fpth)
+            if json_dict is not None:
+                for key, value in code_dict.items():
+                    if key not in list(json_dict.keys()):
+                        json_dict[key] = value
+                code_dict = json_dict
         usgs_program_data.export_json(fpth, prog_data=code_dict)
 
 
