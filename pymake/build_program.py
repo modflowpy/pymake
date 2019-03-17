@@ -93,7 +93,7 @@ def set_bindir(target):
     return bindir
 
 
-def set_build(exe_name):
+def set_build(target, exe_name):
     """
     Set boolean that defines whether the target should be built if it
     already exists based on --keep command line argument
@@ -103,6 +103,9 @@ def set_build(exe_name):
     exe_name : str
         executable name that includes double ("dbl"), debug ("d"), and/or
         extension (".exe") based on command line arguments and OS.
+
+    target : str
+        target to build
 
     Returns
     -------
@@ -128,11 +131,51 @@ def set_build(exe_name):
         if exe_exists is None:
             exe_exists = which('./' + exe_name)
 
+        # evaluate if the available version is the same as the
+        # source code version
+        if exe_exists is not None:
+            # check for code.json in exe_pth
+            exe_pth = os.path.dirname(exe_exists)
+
+            jpth = 'code.json'
+            if jpth in os.listdir(exe_pth):
+                fpth = os.path.join(exe_pth, jpth)
+                json_dict = usgs_program_data.load_json(fpth=fpth)
+
+                if json_dict is not None:
+                    # get current modflow program dictionary
+                    prog_dict = usgs_program_data().get_program_dict()
+
+                    # extract the json keys
+                    json_keys = list(json_dict.keys())
+
+                    # evaluate if the target is in the json keys
+                    if target in json_keys:
+                        source_version = prog_dict[target].version
+                        existing_version = json_dict[target].version
+
+                        # write a message
+                        msg = 'Source code version of {} '.format(target) + \
+                              'is "{}"'.format(source_version)
+                        print(4*' ' + msg)
+                        msg = 'Current code version of {} '.format(target) + \
+                              'is "{}"\n'.format(existing_version)
+                        print(4*' ' + msg)
+
+                        prog_version = source_version.split('.')
+                        json_version = existing_version.split('.')
+
+                        # evaluate major, minor, etc. version numbers
+                        for sp, sj in zip(prog_version, json_version):
+                            if int(sp) > int(sj):
+                                exe_exists = None
+                                break
+
         if exe_exists is not None:
             build = False
             print('No need to build {}'.format(exe_name) +
                   ' since it exists in the current path')
-            print('    "{}"'.format(os.path.abspath(exe_exists)))
+            print('    "{}"\n'.format(os.path.abspath(exe_exists)))
 
     return build
 
@@ -472,7 +515,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
             exe_name += '.exe'
 
     # determine if the target should be built
-    build = set_build(exe_name)
+    build = set_build(target, exe_name)
 
     returncode = 0
     if build:
@@ -547,7 +590,7 @@ def build_targets(current=True):
     ----------
     current : bool
         return list of current targets. If current is False, returned list
-        will include all available USGS applications included in usgsurls.txt.
+        will include all available USGS applications included in usgsprograms.txt.
         Default is True
 
     Returns
@@ -619,8 +662,12 @@ def build_apps(targets=None):
         if isinstance(targets, str):
             targets = [targets]
 
+    code_dict = {}
+
     for target in targets:
         start_downcomp = datetime.now()
+
+        code_dict[target] = usgs_program_data.get_target(target)
 
         # write system information
         print('{} will be built '.format(target) +
@@ -700,6 +747,12 @@ def build_apps(targets=None):
         elapsed = end_downcomp - start_downcomp
         print('elapsed download and compile time (hh:mm:ss.ms): ' +
               '{}\n'.format(elapsed))
+
+    # write code.json
+    if len(code_dict) > 0:
+        fpth = os.path.join(bindir, 'code.json')
+        usgs_program_data.export_json(fpth, prog_data=code_dict)
+
 
     end_time = datetime.now()
     elapsed = end_time - start_time

@@ -11,8 +11,10 @@ class dotdict(dict):
 
 
 # data file containing the USGS program data
-program_data_file = 'usgsurls.txt'
+program_data_file = 'usgsprograms.txt'
 
+# keys to create for each target
+target_keys = ['version', 'current', 'url', 'dirname', 'srcdir']
 
 def str_to_bool(s):
     if s == 'True':
@@ -38,11 +40,15 @@ class usgs_program_data:
             t = line.split()
             if len(t) < 1:
                 continue
-            d = {'version': t[1],
-                 'current': str_to_bool(t[2]),
-                 'url': t[3],
-                 'dirname': t[4],
-                 'srcdir': t[5]}
+            # programatically build a dictionary for each target
+            d = {}
+            for idx, key in enumerate(target_keys):
+                v = t[idx+1]
+                if key == 'current':
+                    v = str_to_bool(v)
+                d[key] = v
+
+            # make it possible to access each key with a dot (.)
             d = dotdict(d)
             urls[t[0]] = d
         return dotdict(urls)
@@ -88,22 +94,54 @@ class usgs_program_data:
         return
 
     @staticmethod
-    def export_json(fpth='code.json', current=False):
+    def export_json(fpth='code.json', prog_data=None, current=False):
         # print a message
         sel = 'all of the'
-        if current:
+        if prog_data is not None:
+            sel = 'select'
+        elif current:
             sel = 'the current'
         print('writing a json file ("{}") '.format(fpth) +
-              'of {} USGS program\ndatabase'.format(sel) +
-              ' in "{}".\n'.format(program_data_file))
+              'of {} USGS programs\n'.format(sel) +
+              'in the "{}" database.'.format(program_data_file))
+        if prog_data is not None:
+            for idx, key in enumerate(prog_data.keys()):
+                print('    {:>2d}: {}'.format(idx + 1, key))
+        print('\n')
 
         # process the program data
-        prog_data = usgs_program_data().get_program_dict()
-        if current:
-            tdict = {}
-            for key, value in prog_data.items():
-                if value.current:
-                    tdict[key] = value
-            prog_data = tdict
+        if prog_data is None:
+            prog_data = usgs_program_data().get_program_dict()
+            if current:
+                tdict = {}
+                for key, value in prog_data.items():
+                    if value.current:
+                        tdict[key] = value
+                prog_data = tdict
+
+        # export file
         with open(fpth, 'w') as f:
             json.dump(prog_data, f, indent=4)
+
+    @staticmethod
+    def load_json(fpth='code.json'):
+        try:
+            with open(fpth, 'r') as f:
+                json_dict = json.load(f)
+                for key, value in json_dict.items():
+                    json_dict[key] = dotdict(value)
+        except:
+            json_dict = None
+
+        # check that the json file has valid keys
+        msg = 'invalid json format in "{}"'.format(fpth)
+        if json_dict is not None:
+            for key, value in json_dict.items():
+                try:
+                    for kk in value.keys():
+                        if kk not in target_keys:
+                            raise KeyError(msg)
+                except:
+                    raise KeyError(msg)
+
+        return json_dict

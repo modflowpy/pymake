@@ -45,7 +45,7 @@ def test_target_keys():
     return
 
 
-def test_usgsprograms_json():
+def test_usgsprograms_export_json():
     fpth = os.path.join(cpth, 'code.test.json')
     pymake.usgs_program_data.export_json(fpth=fpth, current=True)
 
@@ -73,6 +73,26 @@ def test_usgsprograms_json():
     return
 
 
+@raises(KeyError)
+def test_usgsprograms_load_json_error():
+    my_dict = {'mf2005': {'bad': 12, 'key': True}}
+
+    fpth = os.path.join(cpth, 'code.test.error.json')
+    pymake.usgs_program_data.export_json(fpth=fpth, prog_data=my_dict)
+
+    pymake.usgs_program_data.load_json(fpth=fpth)
+
+
+def test_usgsprograms_load_json():
+    fpth = os.path.join(cpth, 'code.test.json')
+    json_dict = pymake.usgs_program_data.load_json(fpth)
+
+    msg = 'could not load {}'.format(fpth)
+    assert json_dict is not None, msg
+
+    return
+
+
 def test_clean_up():
     shutil.rmtree(cpth)
 
@@ -81,5 +101,6 @@ if __name__ == "__main__":
     test_usgsprograms()
     test_target_key_error()
     test_target_keys()
-    test_usgsprograms_json()
+    test_usgsprograms_export_json()
+    test_usgsprograms_load_json_error()
     test_clean_up()
