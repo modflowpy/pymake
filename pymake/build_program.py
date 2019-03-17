@@ -471,8 +471,10 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         if file_extension.lower() is not '.exe':
             exe_name += '.exe'
 
+    # determine if the target should be built
     build = set_build(exe_name)
 
+    returncode = 0
     if build:
         if exe_dir is not None:
             exe_name = os.path.abspath(os.path.join(exe_dir, exe_name))
