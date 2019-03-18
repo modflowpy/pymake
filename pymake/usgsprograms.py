@@ -1,5 +1,7 @@
 import os
 import json
+from collections import OrderedDict
+
 import pymake
 
 
@@ -63,13 +65,13 @@ class usgs_program_data:
         fpth = os.path.join(pth, program_data_file)
         url_in = open(fpth, 'r').read().split('\n')
 
-        program_data = {}
+        program_data = OrderedDict()
         for line in url_in[1:]:
             t = line.split()
             if len(t) < 1:
                 continue
             # programmatically build a dictionary for each target
-            d = {}
+            d = OrderedDict()
             for idx, key in enumerate(target_keys):
                 v = t[idx + 1]
                 if key == 'current':
@@ -234,7 +236,7 @@ class usgs_program_data:
         # process the program data
         if prog_data is None:
             if current:
-                tdict = {}
+                tdict = OrderedDict()
                 for key, value in udata.items():
                     if value.current:
                         tdict[key] = value

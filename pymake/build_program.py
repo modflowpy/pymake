@@ -157,10 +157,10 @@ def set_build(target, exe_name):
                         # write a message
                         msg = 'Source code version of {} '.format(target) + \
                               'is "{}"'.format(source_version)
-                        print(4*' ' + msg)
+                        print(4 * ' ' + msg)
                         msg = 'Current code version of {} '.format(target) + \
                               'is "{}"\n'.format(existing_version)
-                        print(4*' ' + msg)
+                        print(4 * ' ' + msg)
 
                         prog_version = source_version.split('.')
                         json_version = existing_version.split('.')
@@ -183,7 +183,7 @@ def set_build(target, exe_name):
 def set_compiler(target):
     """
     Set fortran and c compilers based on --ifort, --mpiifort, --icc, --cl,
-    and --clang command line arguments
+    clang++, and --clang command line arguments
 
     Parameters
     ----------
@@ -201,9 +201,11 @@ def set_compiler(target):
     fc = 'gfortran'
     if target in ['triangle', 'gridgen']:
         fc = None
+
     cc = 'gcc'
     if target in ['gridgen']:
         cc = 'g++'
+
     # parse command line arguments to see if user specified options
     # relative to building the target
     for idx, arg in enumerate(sys.argv):
@@ -217,6 +219,13 @@ def set_compiler(target):
             cc = 'icl'
         elif arg.lower() == '--clang':
             cc = 'clang'
+        elif arg.lower() == '--clang++':
+            cc = 'clang++'
+
+    # reset cc for gridgen if it is specified as 'clang'
+    if target == 'gridgen':
+        if cc == 'clang':
+            cc = 'clang++'
 
     msg = '{} fortran code will be built with "{}".\n'.format(target, fc)
     msg += '{} c/c++ code will be built with "{}".\n'.format(target, cc)
@@ -337,7 +346,7 @@ def set_syslibs(target, fc, cc):
             else:
                 lfc = fc.startswith('g')
             lcc = False
-            if cc in ['gcc', 'g++', 'clang']:
+            if cc in ['gcc', 'g++', 'clang', 'clang++']:
                 lcc = True
             if lfc and lcc:
                 syslibs = '-lm'
@@ -379,7 +388,8 @@ def set_double(target):
         prec = 'double'
     else:
         prec = 'single'
-    msg = '{} will be built using "{}" precision floats.\n'.format(target, prec)
+    msg = '{} will be built using "{}" precision floats.\n'.format(target,
+                                                                   prec)
     print(msg)
 
     return double
@@ -447,6 +457,72 @@ def set_arch(target):
     print(msg)
 
     return arch
+
+
+def set_extrafiles(target, download_dir):
+    """
+    Set extrafiles to compile target. Default is None.
+
+    Parameters
+    ----------
+    target : str
+        target to build
+
+    download_dir : str
+        path downloaded files will be placed in
+
+    Returns
+    -------
+    extra_files : str
+
+    """
+    extrafiles = None
+    if target in ['zbud6']:
+        extrafiles = ['../../../src/Utilities/ArrayHandlers.f90',
+                      '../../../src/Utilities/ArrayReaders.f90',
+                      '../../../src/Utilities/BlockParser.f90',
+                      '../../../src/Utilities/Budget.f90',
+                      '../../../src/Utilities/Constants.f90',
+                      '../../../src/Utilities/genericutils.f90',
+                      '../../../src/Utilities/InputOutput.f90',
+                      '../../../src/Utilities/kind.f90',
+                      '../../../src/Utilities/OpenSpec.f90',
+                      '../../../src/Utilities/sort.f90',
+                      '../../../src/Utilities/Sim.f90',
+                      '../../../src/Utilities/SimVariables.f90',
+                      '../../../src/Utilities/version.f90']
+
+    # process extrafiles
+    if extrafiles:
+        prog_dict = usgs_program_data.get_target(target)
+        srcdir = os.path.abspath(os.path.join(download_dir,
+                                              prog_dict.dirname,
+                                              prog_dict.srcdir))
+        if isinstance(extrafiles, list):
+            for idx, value in enumerate(extrafiles):
+                fpth = os.path.join(srcdir, value)
+                extrafiles[idx] = os.path.normpath(fpth)
+        elif isinstance(extrafiles, str):
+            fpth = os.path.join(srcdir, extrafiles)
+            extrafiles = os.path.normpath(fpth)
+        else:
+            msg = 'invalid extrafiles format - must be a list or string'
+            raise ValueError(msg)
+
+        # write a message
+        msg = 'extra files are being read '
+        if isinstance(extrafiles, list):
+            msg += 'from a list:\n'
+            for value in extrafiles:
+                msg += '  {}\n'.format(os.path.relpath(value, download_dir))
+        elif isinstance(extrafiles, str):
+            msg += 'from a file "{}"\n'.format(os.path.relpath(extrafiles,
+                                                               download_dir))
+    else:
+        msg = 'extra files are not being read'
+    print('{}\n'.format(msg))
+
+    return extrafiles
 
 
 def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
@@ -638,7 +714,10 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
             ddir = os.path.abspath(download_dir)
             if edir != ddir:
                 if os.path.isdir(ddir):
+                    msg = 'deleting {}'.format(ddir)
+                    print(msg)
                     shutil.rmtree(ddir)
+            print('\n')
 
     return returncode
 
@@ -726,7 +805,7 @@ def build_apps(targets=None):
 
     code_dict = {}
 
-    for target in targets:
+    for idt, target in enumerate(targets):
         start_downcomp = datetime.now()
 
         code_dict[target] = usgs_program_data.get_target(target)
@@ -778,12 +857,46 @@ def build_apps(targets=None):
         replace_function = build_replace(target)
 
         # set download information
+        download = True
+        download_clean = True
+        download_dir = 'temp'
+
+        # modify download if mf6 and also building zonbud6
+        if target == 'mf6':
+            if idt + 1 <= len(targets):
+                if targets[idt + 1] == 'zbud6':
+                    download_clean = False
+        elif target == 'zbud6':
+            if idt > 0:
+                if targets[idt - 1] == 'mf6':
+                    download = False
+
+        # modify download if mfusg and also building zonbudusg
+        if target == 'mfusg':
+            if idt + 1 <= len(targets):
+                if targets[idt + 1] == 'zonbudusg':
+                    download_clean = False
+        elif target == 'zonbudusg':
+            if idt > 0:
+                if targets[idt - 1] == 'mfusg':
+                    download = False
+
         if target in ['mt3dms']:
             download_verify = False
             timeout = 10
         else:
             download_verify = True
             timeout = 30
+
+        # print download information
+        msg = 'downloading file:         {}\n'.format(download)
+        msg += 'verified download:        {}\n'.format(download_verify)
+        msg += 'download timeout:         {} sec.\n'.format(timeout)
+        msg += 'cleaning extracted files: {}\n'.format(download_clean)
+        print(msg)
+
+        # set extrafiles
+        extrafiles = set_extrafiles(target, download_dir)
 
         # build the code
         returncode = build_program(target=target,
@@ -796,11 +909,13 @@ def build_apps(targets=None):
                                    syslibs=syslibs,
                                    arch=arch,
                                    include_subdirs=include_subdirs,
+                                   extrafiles=extrafiles,
                                    replace_function=replace_function,
                                    modify_exe_name=modify_exe_name,
                                    exe_dir=bindir,
-                                   download_dir='temp',
-                                   download_clean=True,
+                                   download=download,
+                                   download_dir=download_dir,
+                                   download_clean=download_clean,
                                    download_verify=download_verify,
                                    timeout=timeout)
 
@@ -821,7 +936,6 @@ def build_apps(targets=None):
                         json_dict[key] = value
                 code_dict = json_dict
         usgs_program_data.export_json(fpth, prog_data=code_dict)
-
 
     end_time = datetime.now()
     elapsed = end_time - start_time

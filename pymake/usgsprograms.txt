@@ -4,7 +4,9 @@ mf2005       1.12.00  True    https://water.usgs.gov/water-resources/software/MO
 mf2005.1.11  1.11.00  False   https://water.usgs.gov/ogw/modflow/archive-mf2005/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip Unix              src
 mfnwt        1.1.4    True    https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.1.4.zip               MODFLOW-NWT_1.1.4 src
 mfusg        1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src
+zonbudusg    1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src/zonebudusg
 mf6          6.0.4    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.0.4.zip                           mf6.0.4           src
+zbud6        6.0.4    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.0.4.zip                           mf6.0.4           utils/zonebudget/src
 swtv4        4.00.05  True    https://water.usgs.gov/water-resources/software/SEAWAT/swt_v4_00_05.zip                         swt_v4_00_05      source
 mp6          6.0.1    True    https://water.usgs.gov/water-resources/software/MODPATH/modpath.6_0_01.zip                      modpath.6_0       src
 mp7          7.2.001  True    https://water.usgs.gov/water-resources/software/MODPATH/modpath_7_2_001.zip                     modpath_7_2_001   source
@@ -14,4 +16,4 @@ mt3dusgs     1.0.1    True    https://water.usgs.gov/water-resources/software/MT
 vs2dt        3.3      True    https://water.usgs.gov/water-resources/software/VS2DI/vs2dt3_3.zip                              vs2dt3_3          include
 triangle     1.6      True    https://www.netlib.org/voronoi/triangle.zip                                                     triangle1.6       src
 gridgen      1.0.02   True    https://water.usgs.gov/water-resources/software/GRIDGEN/gridgen.1.0.02.zip                      gridgen.1.0.02    src
-
+zonbud3      3.01     True    https://water.usgs.gov/water-resources/software/ZONEBUDGET/zonbud3_01.exe                       Zonbud.3_01       Src

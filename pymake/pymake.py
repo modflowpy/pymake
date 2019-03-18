@@ -1224,7 +1224,8 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
 
     # compile with gfortran or ifort
     winifort = False
-    if fc == 'gfortran' or (fc is None and cc in ['gcc', 'g++', 'clang']):
+    if fc == 'gfortran' or (fc is None and cc in ['gcc', 'g++',
+                                                  'clang', 'clang++']):
         objext = '.o'
         create_openspec(srcdir_temp)
         success = compile_with_gnu(srcfiles, target, fc, cc,
