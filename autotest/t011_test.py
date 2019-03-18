@@ -94,6 +94,19 @@ def test_usgsprograms_load_json():
     return
 
 
+@raises(IOError)
+def test_usgsprograms_list_json_error():
+    fpth = os.path.join(cpth, 'does.not.exist.json')
+    pymake.usgs_program_data.list_json(fpth=fpth)
+
+
+def test_usgsprograms_list_json():
+    fpth = os.path.join(cpth, 'code.test.json')
+    pymake.usgs_program_data.list_json(fpth=fpth)
+
+    return
+
+
 def test_clean_up():
     shutil.rmtree(cpth)
 
@@ -104,4 +117,7 @@ if __name__ == "__main__":
     test_target_keys()
     test_usgsprograms_export_json()
     test_usgsprograms_load_json_error()
+    test_usgsprograms_load_json()
+    test_usgsprograms_list_json_error()
+    test_usgsprograms_list_json()
     test_clean_up()

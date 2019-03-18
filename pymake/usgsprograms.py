@@ -296,3 +296,34 @@ class usgs_program_data:
                     raise KeyError(msg)
 
         return json_dict
+
+    @staticmethod
+    def list_json(fpth='code.json'):
+        """
+        List an existing code json file.
+
+        Parameters
+        ----------
+        fpth : str
+            Path for the json file to be listed. Default is "code.json"
+
+        Returns
+        -------
+
+        """
+        json_dict = usgs_program_data.load_json(fpth)
+
+        if json_dict is not None:
+            print('Data in "{}"'.format(fpth))
+            for key, value in json_dict.items():
+                print('  target: {}'.format(key))
+                for kkey, vvalue in value.items():
+                    print('    {}: {}'.format(kkey, vvalue))
+        else:
+            msg = 'could not load json file "{}".'.format(fpth)
+            raise IOError(msg)
+
+        # print continuation line
+        print('\n')
+
+        return
