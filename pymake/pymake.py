@@ -610,6 +610,7 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     msg = '\nLinking object files ' + \
           'to make {}...'.format(os.path.basename(target))
     print(msg)
+    
     cmdlist = []
     if fc is None:
         cmd = cc + ' '
