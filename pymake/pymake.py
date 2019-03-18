@@ -614,12 +614,16 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     if fc is None:
         cmd = cc + ' '
         cmdlist.append(cc)
+        for switch in cflags:
+            cmd += switch + ' '
+            cmdlist.append(switch)
     else:
         cmd = fc + ' '
         cmdlist.append(fc)
-    for switch in compileflags:
-        cmd += switch + ' '
-        cmdlist.append(switch)
+        for switch in compileflags:
+            cmd += switch + ' '
+            cmdlist.append(switch)
+
     cmdlist.append('-o')
     cmdlist.append(os.path.join('.', target))
 
@@ -682,19 +686,20 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
             break  # after first optimization (O) flag
 
     # add ifort specific compiler switches
-    compileflags = [opt]
+    compileflags = []
     if fc is not None:
+        compileflags.append(opt)
         if debug:
             # Debug flags
-            compileflags = ['-debug', 'all',
-                            '-no-heap-arrays',
-                            '-fpe0',
-                            '-traceback']
+            compileflags += ['-debug', 'all',
+                             '-no-heap-arrays',
+                             '-fpe0',
+                             '-traceback']
         else:
             # production version compile flags
-            compileflags = ['-no-heap-arrays',
-                            '-fpe0',
-                            '-traceback']
+            compileflags += ['-no-heap-arrays',
+                             '-fpe0',
+                             '-traceback']
 
         # add double precision compiler switches
         if double:
@@ -761,13 +766,12 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
                 cmdlist.append(switch)  # mja
         else:  # mja
             cmdlist.append(fc)
+            for switch in compileflags:
+                cmdlist.append(switch)
 
             # put module files in moddir_temp
             cmdlist.append('-module')
             cmdlist.append('./' + moddir_temp + '/')
-
-            for switch in compileflags:
-                cmdlist.append(switch)
 
         # add search path for any header files
         for sd in searchdir:
@@ -820,16 +824,16 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     if fc is None:
         cmd = cc + ' '
         cmdlist.append(cc)
+        for switch in cflags:
+            cmd += switch + ' '
+            cmdlist.append(switch)
     else:
         cmd = fc + ' '
         cmdlist.append(fc)
-    for switch in compileflags:
-        cmd += switch + ' '
-        cmdlist.append(switch)
+        for switch in compileflags:
+            cmd += switch + ' '
+            cmdlist.append(switch)
 
-    for switch in compileflags:
-        cmd += switch + ' '
-        cmdlist.append(switch)
     cmdlist.append('-o')
     cmdlist.append(os.path.join('.', target))
     for objfile in objfiles:
@@ -971,7 +975,7 @@ def makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target, arch,
               objdir_temp, moddir_temp):
     """
     Make an ifort batch file
-    
+
     """
     iflist = ['IFORT_COMPILER{}'.format(i) for i in range(30, 12, -1)]
     found = False
