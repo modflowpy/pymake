@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import shutil
 import platform
 import types
@@ -716,8 +717,28 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                 if os.path.isdir(ddir):
                     msg = 'deleting {}'.format(ddir)
                     print(msg)
-                    shutil.rmtree(ddir)
-            print('\n')
+                    ntries = 10
+                    for itries in range(ntries):
+                        msg = '    removal attempt {:>2d} '.format(itries + 1)
+                        msg += 'of {:>2d}'.format(ntries)
+                        print(msg)
+                        
+                        # wait to delete on windows
+                        if platform.system().lower() == 'windows':
+                            time.sleep(3)
+
+                        # remove the directory
+                        try:
+                            shutil.rmtree(ddir)
+                            break
+                        except:
+                            pass
+                            
+                    print('\n')
+
+                    # wait prior to returning on windows
+                    if platform.system().lower() == 'windows':
+                        time.sleep(6)
 
     return returncode
 
