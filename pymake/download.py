@@ -59,11 +59,17 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     for idx in range(nattempts):
         print(' download attempt: {}'.format(idx + 1))
         #
-        fs = requests.get(url, stream=True,
-                          verify=verify).headers['Content-length']
-        bfmt = '{:' + '{}'.format(len(fs)) + ',d}'
-        sbfmt = '{:>' + '{}'.format(len(bfmt.format(int(fs)))) + 's} bytes'
-        print('   file size: {}'.format(sbfmt.format(bfmt.format(int(fs)))))
+        req = requests.get(url, stream=True, verify=verify)
+        fs = 0
+        lenfs = 0
+        if 'Content-length' in req.headers:
+            fs = req.headers['Content-length']
+            lenfs = len(fs)
+            fs = int(fs)
+        if fs > 0:
+            bfmt = '{:' + '{}'.format(lenfs) + ',d}'
+            sbfmt = '{:>' + '{}'.format(len(bfmt.format(int(fs)))) + 's} bytes'
+            print('   file size: {}'.format(sbfmt.format(bfmt.format(int(fs)))))
         ds = 0
         try:
             req = requests.get(url, verify=verify, timeout=timeout)
