@@ -610,7 +610,7 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     msg = '\nLinking object files ' + \
           'to make {}...'.format(os.path.basename(target))
     print(msg)
-    
+
     cmdlist = []
     if fc is None:
         cmd = cc + ' '
@@ -1228,37 +1228,41 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
                                                   'clang', 'clang++']):
         objext = '.o'
         create_openspec(srcdir_temp)
-        success = compile_with_gnu(srcfiles, target, fc, cc,
-                                   objdir_temp, moddir_temp,
-                                   expedite, dryrun, double, debug, fflags,
-                                   cflags, syslibs, srcdir, srcdir2, extrafiles,
-                                   makefile)
+        returncode = compile_with_gnu(srcfiles, target, fc, cc,
+                                      objdir_temp, moddir_temp,
+                                      expedite, dryrun,
+                                      double, debug,
+                                      fflags, cflags, syslibs,
+                                      srcdir, srcdir2,
+                                      extrafiles, makefile)
     elif fc == 'ifort' or fc == 'mpiifort' or \
             (fc is None and cc in ['icc', 'cl', 'icl']):
         platform = sys.platform
         if 'darwin' in platform.lower() or 'linux' in platform.lower():
-            create_openspec(srcdir_temp)
             objext = '.o'
-            success = compile_with_macnix_ifort(srcfiles, target, fc, cc,
-                                                objdir_temp, moddir_temp,
-                                                expedite, dryrun, double,
-                                                debug, fflags, cflags, syslibs,
-                                                srcdir, srcdir2, extrafiles,
-                                                makefile)
+            create_openspec(srcdir_temp)
+            returncode = compile_with_macnix_ifort(srcfiles, target, fc, cc,
+                                                   objdir_temp, moddir_temp,
+                                                   expedite, dryrun,
+                                                   double, debug,
+                                                   fflags, cflags, syslibs,
+                                                   srcdir, srcdir2,
+                                                   extrafiles, makefile)
         else:
             winifort = True
             objext = '.obj'
             # cc = 'cl.exe'
-            success = compile_with_ifort(srcfiles, target, fc, cc,
-                                         objdir_temp, moddir_temp,
-                                         expedite, dryrun, double, debug,
-                                         fflags, cflags, syslibs, arch,
-                                         srcdir, srcdir2, extrafiles, makefile)
+            returncode = compile_with_ifort(srcfiles, target, fc, cc,
+                                            objdir_temp, moddir_temp,
+                                            expedite, dryrun, double, debug,
+                                            fflags, cflags, syslibs, arch,
+                                            srcdir, srcdir2,
+                                            extrafiles, makefile)
     else:
         raise Exception('Unsupported compiler')
 
     # Clean it up
-    if makeclean:
+    if makeclean and returncode == 0:
         clean(srcdir_temp, objdir_temp, moddir_temp, objext, winifort)
 
     return success

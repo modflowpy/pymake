@@ -689,7 +689,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
 
         if replace_function is not None:
             print('replacing select source files for {}\n'.format(target))
-            replace_function(srcdir, fc, cc, arch)
+            replace_function(srcdir, fc, cc, arch, double)
 
         # compile code
         print('compiling...{}'.format(os.path.relpath(exe_name)))
@@ -949,14 +949,6 @@ def build_apps(targets=None):
     # write code.json
     if len(code_dict) > 0:
         fpth = os.path.join(bindir, 'code.json')
-        if os.path.isfile(fpth):
-            json_dict = usgs_program_data.load_json(fpth=fpth)
-            if json_dict is not None:
-                for key, value in code_dict.items():
-                    if key not in list(json_dict.keys()):
-                        json_dict[key] = value
-                code_dict = json_dict
-        usgs_program_data.export_json(fpth, prog_data=code_dict)
 
     end_time = datetime.now()
     elapsed = end_time - start_time
@@ -967,7 +959,7 @@ def build_apps(targets=None):
 
 # routines for updating source files locations and to compile
 # with gfortran, gcc, and g++
-def update_triangle_files(srcdir, fc, cc, arch):
+def update_triangle_files(srcdir, fc, cc, arch, double):
     """
     Update the triangle source files
 
@@ -1007,7 +999,7 @@ def update_triangle_files(srcdir, fc, cc, arch):
     return
 
 
-def update_mt3dms_files(srcdir, fc, cc, arch):
+def update_mt3dms_files(srcdir, fc, cc, arch, double):
     """
     Update the MT3D source files
 
@@ -1120,7 +1112,7 @@ def update_mt3dms_files(srcdir, fc, cc, arch):
     return
 
 
-def update_swtv4_files(srcdir, fc, cc, arch):
+def update_swtv4_files(srcdir, fc, cc, arch, double):
     # Remove the parallel and serial folders from the source directory
     dlist = ['parallel', 'serial']
     for d in dlist:
@@ -1169,7 +1161,54 @@ def update_swtv4_files(srcdir, fc, cc, arch):
     return
 
 
-def update_mf2000_files(srcdir, fc, cc, arch):
+def update_mf2005_files(srcdir, fc, cc, arch, double):
+    # update utl7.f
+    tag = 'IBINARY=0'
+    fpth = os.path.join(srcdir, 'utl7.f')
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if tag in line:
+            indent = len(line) - len(line.lstrip())
+            line += indent * ' ' + 'JAUX=0\n'
+        f.write(line)
+    f.close()
+
+    # update gwf2swi27.f
+    tag = 'INTEGER, PARAMETER :: VERSIZE ='
+    prec = 4
+    if double:
+        prec = 8
+    fpth = os.path.join(srcdir, 'gwf2swi27.f')
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if line.lower()[0] not in ['!', 'c']:
+            if tag in line:
+                indent = len(line) - len(line.lstrip())
+                line = indent * ' ' + tag + ' {}\n'.format(prec)
+        f.write(line)
+    f.close()
+
+
+def update_mfnwt_files(srcdir, fc, cc, arch, double):
+    # update utl7.f
+    fpth = os.path.join(srcdir, 'utl7.f')
+    tag = 'IBINARY=0'
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if tag in line:
+            indent = len(line) - len(line.lstrip())
+            line += indent * ' ' + 'JAUX=0\n'
+        f.write(line)
+    f.close()
+
+
+def update_mf2000_files(srcdir, fc, cc, arch, double):
     # Remove six src folders
     dlist = ['beale2k', 'hydprgm', 'mf96to2k', 'mfpto2k', 'resan2k', 'ycint2k']
     for d in dlist:
@@ -1195,7 +1234,7 @@ def update_mf2000_files(srcdir, fc, cc, arch):
     shutil.rmtree(tpth)
 
 
-def update_mp6_files(srcdir, fc, cc, arch):
+def update_mp6_files(srcdir, fc, cc, arch, double):
     fname1 = os.path.join(srcdir, 'MP6Flowdata.for')
     f = open(fname1, 'r')
 
@@ -1222,7 +1261,7 @@ def update_mp6_files(srcdir, fc, cc, arch):
     os.remove(fname1)
 
 
-def update_mp7_files(srcdir, fc, cc, arch):
+def update_mp7_files(srcdir, fc, cc, arch, double):
     fpth = os.path.join(srcdir, 'StartingLocationReader.f90')
     with open(fpth) as f:
         lines = f.readlines()
@@ -1234,7 +1273,7 @@ def update_mp7_files(srcdir, fc, cc, arch):
     f.close()
 
 
-def update_vs2dt_files(srcdir, fc, cc, arch):
+def update_vs2dt_files(srcdir, fc, cc, arch, double):
     # move the main source into the source directory
     f1 = os.path.join(srcdir, '..', 'vs2dt3_3.f')
     f1 = os.path.abspath(f1)

@@ -329,3 +329,32 @@ class usgs_program_data:
         print('\n')
 
         return
+
+    @staticmethod
+    def update_json(fpth='code.json', temp_dict=None):
+        """
+        UPDATE an existing code json file.
+
+        Parameters
+        ----------
+        fpth : str
+            Path for the json file to be listed. Default is "code.json"
+
+        temp_dict : dict
+            Dictionary with USGS program data for a target
+
+        Returns
+        -------
+
+        """
+        if temp_dict is not None:
+            if os.path.isfile(fpth):
+                json_dict = usgs_program_data.load_json(fpth=fpth)
+                if json_dict is not None:
+                    for key, value in temp_dict.items():
+                        if key not in list(json_dict.keys()):
+                            json_dict[key] = value
+                    temp_dict = json_dict
+            usgs_program_data.export_json(fpth, prog_data=temp_dict)
+
+        return
