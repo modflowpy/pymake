@@ -884,7 +884,7 @@ def build_apps(targets=None):
 
         # modify download if mf6 and also building zonbud6
         if target == 'mf6':
-            if idt + 1 <= len(targets):
+            if idt + 1 < len(targets):
                 if targets[idt + 1] == 'zbud6':
                     download_clean = False
         elif target == 'zbud6':
@@ -894,7 +894,7 @@ def build_apps(targets=None):
 
         # modify download if mfusg and also building zonbudusg
         if target == 'mfusg':
-            if idt + 1 <= len(targets):
+            if idt + 1 < len(targets):
                 if targets[idt + 1] == 'zonbudusg':
                     download_clean = False
         elif target == 'zonbudusg':
