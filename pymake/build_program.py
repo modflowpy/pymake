@@ -376,6 +376,9 @@ def set_double(target):
 
     """
     double = False
+    if 'PYMAKE_DOUBLE' in os.environ:
+        double = True
+
     for idx, arg in enumerate(sys.argv):
         if arg.lower() == '-dbl' or arg.lower() == '--double':
             double = True
