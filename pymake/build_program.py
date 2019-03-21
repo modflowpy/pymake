@@ -725,7 +725,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                         msg = '    removal attempt {:>2d} '.format(itries + 1)
                         msg += 'of {:>2d}'.format(ntries)
                         print(msg)
-                        
+
                         # wait to delete on windows
                         if platform.system().lower() == 'windows':
                             time.sleep(3)
@@ -736,7 +736,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                             break
                         except:
                             pass
-                            
+
                     print('\n')
 
                     # wait prior to returning on windows
@@ -1195,6 +1195,19 @@ def update_mf2005_files(srcdir, fc, cc, arch, double):
         f.write(line)
     f.close()
 
+    # update gwf2swt7.f
+    tag = 'EST(J,I,N)=0.0'
+    fpth = os.path.join(srcdir, 'gwf2swt7.f')
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if tag in line:
+            indent = len(line) - len(line.lstrip())
+            line += indent * ' ' + 'PCS(J,I,N)=0.0\n'
+        f.write(line)
+    f.close()
+
 
 def update_mfnwt_files(srcdir, fc, cc, arch, double):
     # update utl7.f
@@ -1207,6 +1220,19 @@ def update_mfnwt_files(srcdir, fc, cc, arch, double):
         if tag in line:
             indent = len(line) - len(line.lstrip())
             line += indent * ' ' + 'JAUX=0\n'
+        f.write(line)
+    f.close()
+
+    # update gwf2swt7.f
+    tag = 'EST(J,I,N)=0.0'
+    fpth = os.path.join(srcdir, 'gwf2swt7.f')
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if tag in line:
+            indent = len(line) - len(line.lstrip())
+            line += indent * ' ' + 'PCS(J,I,N)=0.0\n'
         f.write(line)
     f.close()
 
@@ -1235,6 +1261,21 @@ def update_mf2000_files(srcdir, fc, cc, arch, double):
     # Remove mf2k directory in source directory
     tpth = os.path.join(srcdir, 'mf2k')
     shutil.rmtree(tpth)
+
+
+def update_mflgr_files(srcdir, fc, cc, arch, double):
+    # update gwf2swt7.f
+    tag = 'EST(J,I,N)=0.0'
+    fpth = os.path.join(srcdir, 'gwf2swt7.f')
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if tag in line:
+            indent = len(line) - len(line.lstrip())
+            line += indent * ' ' + 'PCS(J,I,N)=0.0\n'
+        f.write(line)
+    f.close()
 
 
 def update_mp6_files(srcdir, fc, cc, arch, double):
