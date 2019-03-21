@@ -872,7 +872,7 @@ def build_apps(targets=None):
         arch = set_arch(target)
 
         # set include_subdirs
-        if target in ['mf6', 'gridgen']:
+        if target in ['mf6', 'gridgen', 'mf6beta']:
             include_subdirs = True
         else:
             include_subdirs = False
