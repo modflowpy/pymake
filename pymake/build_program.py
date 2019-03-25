@@ -872,7 +872,7 @@ def build_apps(targets=None):
         arch = set_arch(target)
 
         # set include_subdirs
-        if target in ['mf6', 'gridgen', 'mf6beta']:
+        if target in ['mf6', 'gridgen', 'mf6beta', 'gsflow']:
             include_subdirs = True
         else:
             include_subdirs = False
@@ -1226,6 +1226,21 @@ def update_mfnwt_files(srcdir, fc, cc, arch, double):
     # update gwf2swt7.f
     tag = 'EST(J,I,N)=0.0'
     fpth = os.path.join(srcdir, 'gwf2swt7.f')
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if tag in line:
+            indent = len(line) - len(line.lstrip())
+            line += indent * ' ' + 'PCS(J,I,N)=0.0\n'
+        f.write(line)
+    f.close()
+
+
+def update_gsflow_files(srcdir, fc, cc, arch, double):
+    # update gwf2swt7.f
+    tag = 'EST(J,I,N)=0.0'
+    fpth = os.path.join(srcdir, 'modflow', 'gwf2swt7.f')
     with open(fpth) as f:
         lines = f.readlines()
     f = open(fpth, 'w')
