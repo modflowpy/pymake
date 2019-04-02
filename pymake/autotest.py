@@ -296,7 +296,7 @@ def get_sim_name(namefiles, rootpth=None):
 
 
 # modflow 6 readers and copiers
-def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
+def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None, remove_existing=True):
     """
 
     Copy all of the MODFLOW 6 input files from the src directory to
@@ -316,10 +316,16 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
     import shutil
 
     # Create the destination folder
+    create_dir = False
     if os.path.exists(dst):
-        print('Removing folder ' + dst)
-        shutil.rmtree(dst)
-    os.mkdir(dst)
+        if remove_existing:
+            print('Removing folder ' + dst)
+            shutil.rmtree(dst)
+            create_dir = True
+    else:
+        create_dir = True
+    if create_dir:
+        os.mkdir(dst)
 
     # Make list of files to copy
     fname = os.path.join(src, mfnamefile)
