@@ -8,7 +8,7 @@ ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
               '.gwv', '.mv', '.out']
 
 
-def setup(namefile, dst, remove_existing=True):
+def setup(namefile, dst, remove_existing=True, extrafiles=None):
     # Construct src pth from namefile or lgr file
     src = os.path.dirname(namefile)
 
@@ -50,6 +50,12 @@ def setup(namefile, dst, remove_existing=True):
         if ext.lower() == '.nam':
             fname = os.path.abspath(fpth)
             files2copy = files2copy + get_input_files(fname)
+
+    if extrafiles is not None:
+        if isinstance(extrafiles, str):
+            extrafiles = [extrafiles]
+        for fl in extrafiles:
+            files2copy.append(os.path.basename(fl))
 
     # Copy the files
     for f in files2copy:
@@ -296,7 +302,7 @@ def get_sim_name(namefiles, rootpth=None):
 
 
 # modflow 6 readers and copiers
-def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
+def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None, remove_existing=True):
     """
 
     Copy all of the MODFLOW 6 input files from the src directory to
@@ -316,10 +322,16 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None):
     import shutil
 
     # Create the destination folder
+    create_dir = False
     if os.path.exists(dst):
-        print('Removing folder ' + dst)
-        shutil.rmtree(dst)
-    os.mkdir(dst)
+        if remove_existing:
+            print('Removing folder ' + dst)
+            shutil.rmtree(dst)
+            create_dir = True
+    else:
+        create_dir = True
+    if create_dir:
+        os.mkdir(dst)
 
     # Make list of files to copy
     fname = os.path.join(src, mfnamefile)
