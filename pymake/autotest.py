@@ -1239,10 +1239,13 @@ def compare_heads(namefile1, namefile2, precision='auto',
 
     kstpkper = headobj1.get_kstpkper()
 
-    header = '{:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', 'MAXIMUM') + \
-             '{:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD', 'TIME STEP',
-                                                'HEAD DIFFERENCE') + \
-             '{0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
+    header = '{:>15s} {:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', 'MAXIMUM',
+                                                        'EXCEEDS') + \
+             '{:>15s} {:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD',
+                                                        'TIME STEP',
+                                                        'HEAD DIFFERENCE',
+                                                        'CRITERIA') + \
+             '{0:>15s} {0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
 
     if verbose:
         print('Comparing results for {} times'.format(len(times1)))
@@ -1285,9 +1288,15 @@ def compare_heads(namefile1, namefile2, precision='auto',
         if outfile is not None:
             if idx < 1:
                 f.write(header)
-            f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1,
-                                                      kstpkper[idx][0] + 1,
-                                                      diffmax))
+            if diffmax > htol:
+                sexceed = '*'
+            else:
+                sexceed = ''
+            kk1 = kstpkper[idx][1] + 1
+            kk0 = kstpkper[idx][0] + 1
+            f.write('{:15d} {:15d} {:15.6g} {:15s}\n'.format(kk1, kk0,
+                                                             diffmax,
+                                                             sexceed))
 
         if diffmax >= htol:
             icnt += 1
@@ -1303,9 +1312,11 @@ def compare_heads(namefile1, namefile2, precision='auto',
                          'at {} node location(s)'.format(indices[0].shape[0])
                 e = textwrap.fill(ee + ':', width=70, initial_indent='  ',
                                   subsequent_indent='  ')
-                f.write('{}\n'.format(ee))
+                
                 if verbose:
+                    f.write('{}\n'.format(ee))
                     print(ee + ' at time {}'.format(times1[idx]))
+
                 e = ''
                 ncells = h1.flatten().shape[0]
                 fmtn = '{:' + '{}'.format(len(str(ncells))) + 'd}'
@@ -1327,10 +1338,12 @@ def compare_heads(namefile1, namefile2, precision='auto',
                         if isinstance(maxerr, int):
                             if jdx + 1 >= maxerr:
                                 break
-                f.write('{}\n'.format(e))
+                    if verbose:
+                        f.write('{}\n'.format(e))
                 # Write header again, unless it is the last record
-                if idx + 1 < len(times1):
-                    f.write('\n{}'.format(header))
+                if verbose:
+                    if idx + 1 < len(times1):
+                        f.write('\n{}'.format(header))
 
     # Close output file
     if outfile is not None:
