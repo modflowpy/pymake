@@ -389,10 +389,16 @@ def flag_available(flag):
 
     Not all flags will be detected, for example -O2 -fbounds-check=on
     """
+
+    # set shell flag based on os
+    shellflg = False
+    if sys.platform == 'win32':
+        shellflg = True
+
     # determine the gfortran command line flags available
     cmdlist = ['gfortran', '--help', '-v']
-    proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
-    process_Popen_command(False, cmdlist)
+    proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE, shell=shellflg)
+    process_Popen_command(shellflg, cmdlist)
 
     # establish communicator
     stdout, stderr = proc.communicate()
