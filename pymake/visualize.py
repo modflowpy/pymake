@@ -60,7 +60,7 @@ def add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
                 add_pydot_edges(graph, node_dict, edge_set, m, ilev + 1, level)
     return
 
-def make_plots(srcdir, outdir, include_subdir=False, level=3):
+def make_plots(srcdir, outdir, include_subdir=False, level=3, extension='.png'):
     """
     Create plots of module dependencies.
 
@@ -77,7 +77,7 @@ def make_plots(srcdir, outdir, include_subdir=False, level=3):
         raise Exception('output directory does not exist')
 
     for n in nodelist:
-        filename = os.path.join(outdir, os.path.basename(n.name) + '.png')
+        filename = os.path.join(outdir, os.path.basename(n.name) + extension)
         print('Creating ' + filename)
         graph = pydot.Dot(graph_type='digraph')
         node_dict = {}
@@ -86,7 +86,12 @@ def make_plots(srcdir, outdir, include_subdir=False, level=3):
         edge_set = set()
         ilev = 1
         add_pydot_edges(graph, node_dict, edge_set, n, ilev, level)
-        graph.write_png(filename)
+        if extension == '.png':
+            graph.write_png(filename)
+        elif extension == '.pdf':
+            graph.write_pdf(filename)
+        else:
+            raise Exception('unknown file extension: {}'.format(extension))
 
     return
 

@@ -101,7 +101,7 @@ def get_f_nodelist(srcfiles):
             linelist = line.strip().split()
             if len(linelist) == 0:
                 continue
-            if linelist[0].upper() == 'MODULE':
+            if linelist[0].upper() in ['MODULE', 'SUBMODULE']:
                 modulename = linelist[1].upper()
                 module_dict[modulename] = srcfile
             if linelist[0].upper() == 'USE':
