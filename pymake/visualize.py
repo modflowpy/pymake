@@ -37,7 +37,7 @@ def add_pydot_nodes(graph, node_dict, n, ilev, level):
     if n in node_dict:
         return
     ttl = os.path.basename(n.name)
-    pydotnode = pydot.Node(ttl, style="filled", fillcolor="red")
+    pydotnode = pydot.Node(ttl, style="filled", fillcolor="red", label=ttl)
     node_dict[n] = pydotnode
     graph.add_node(pydotnode)
     if len(n.dependencies) > 0:
@@ -90,6 +90,8 @@ def make_plots(srcdir, outdir, include_subdir=False, level=3, extension='.png'):
             graph.write_png(filename)
         elif extension == '.pdf':
             graph.write_pdf(filename)
+        elif extension == '.dot':
+            graph.write_dot(filename)
         else:
             raise Exception('unknown file extension: {}'.format(extension))
 
