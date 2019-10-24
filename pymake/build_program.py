@@ -1277,6 +1277,19 @@ def update_mf2000_files(srcdir, fc, cc, arch, double):
     tpth = os.path.join(srcdir, 'mf2k')
     shutil.rmtree(tpth)
 
+    # modify the openspec.inc file to use binary instead of unformatted
+    fname = os.path.join(srcdir, 'openspec.inc')
+    with open(fname) as f:
+        lines = f.readlines()
+    with open(fname, 'w') as f:
+        for line in lines:
+            if "      DATA FORM/'UNFORMATTED'/" in line:
+                line = "C     DATA FORM/'UNFORMATTED'/\n"
+            if "C      DATA FORM/'BINARY'/" in line:
+                line = "       DATA FORM/'BINARY'/\n"
+            f.write(line)
+    return
+
 
 def update_mflgr_files(srcdir, fc, cc, arch, double):
     # update gwf2swt7.f
