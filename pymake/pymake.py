@@ -461,8 +461,7 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     # add gfortran specific compiler switches
     if fc is not None:
         if debug:
-            compileflags.append(['-fcheck=all',
-                                 '-fbounds-check'])
+            compileflags += ['-fcheck=all', '-fbounds-check']
             lflag = flag_available('-ffpe-trap')
             if lflag:
                 compileflags.append(
