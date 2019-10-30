@@ -98,10 +98,16 @@ def parser():
                         help='''Additional directory with common source files.''',
                         default=None)
     parser.add_argument('-ef', '--extrafiles',
-                        help='''List of extra source files to in the
+                        help='''List of extra source files to include in the
                         compilation.  extrafiles can be either a list of files
                         or the name of a text file that contains a list of
                         files.''',
+                        default=None)
+    parser.add_argument('-exf', '--excludefiles',
+                        help='''List of extra source files to exclude from the
+                        compilation.  excludefiles can be either a list of 
+                        files or the name of a text file that contains a list
+                        of files.''',
                         default=None)
     args = parser.parse_args()
     return args
@@ -156,7 +162,7 @@ def process_Popen_communicate(stdout, stderr):
     return
 
 
-def initialize(srcdir, target, commonsrc, extrafiles):
+def initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
     '''
     Remove temp source directory and target, and then copy source into
     source temp directory.  Return temp directory path.
@@ -190,22 +196,6 @@ def initialize(srcdir, target, commonsrc, extrafiles):
     files = parse_extrafiles(extrafiles)
     if files is None:
         files = []
-    # if extrafiles is not None:
-    #     if isinstance(extrafiles, list):
-    #         files = extrafiles
-    #     elif os.path.isfile(extrafiles):
-    #         efpth = os.path.dirname(extrafiles)
-    #         with open(extrafiles, 'r') as f:
-    #             files = []
-    #             for line in f:
-    #                 fname = line.strip().replace('\\','/')
-    #                 if len(fname) > 0:
-    #                     fname = os.path.abspath(os.path.join(efpth, fname))
-    #                     files.append(fname)
-    #     else:
-    #         raise Exception('extrafiles must be either a list of files '
-    #                         'or the name of a text file that contains a list'
-    #                         'of files.')
     for fname in files:
         if not os.path.isfile(fname):
             print('Current working directory: {}'.format(os.getcwd()))
@@ -217,6 +207,21 @@ def initialize(srcdir, target, commonsrc, extrafiles):
             raise Exception('Error with extrafile.  Name conflicts with '
                             'an existing source file: {}'.format(dst))
         shutil.copy(fname, dst)
+
+    # if exclude is not None, then it is a text file with a list of
+    # source files that need to be excluded from srctemp.
+    files = parse_extrafiles(excludefiles)
+    if files is None:
+        files = []
+    for fname in files:
+        if not os.path.isfile(fname):
+            print('Current working directory: {}'.format(os.getcwd()))
+            print('Error in excludefiles: {}'.format(excludefiles))
+            print('Could not find file: {}'.format(fname))
+        else:
+            dst = os.path.join(srcdir_temp, os.path.basename(fname))
+            if os.path.isfile(dst):
+                os.remove(dst)
 
     # set srcdir_temp
     srcdir_temp = os.path.join(srcdir_temp)
@@ -864,8 +869,8 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
 
     # create makefile
     if makefile:
-        create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
-                        fc, compileflags, cc, cflags, syslibs,
+        create_makefile(target, srcdir, srcdir2, extrafiles,
+                        objfiles, fc, compileflags, cc, cflags, syslibs,
                         modules=['-module '])
 
     # return
@@ -1046,8 +1051,8 @@ def makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target, arch,
     return
 
 
-def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
-                    fc, fflags, cc, cflags, syslibs,
+def create_makefile(target, srcdir, srcdir2, extrafiles,
+                    objfiles, fc, fflags, cc, cflags, syslibs,
                     objext='.o', modules=['-I', '-J']):
     # open makefile
     f = open('makefile', 'w')
@@ -1074,6 +1079,7 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
     if srcdir2 is not None:
         dirs2 = [d[0].replace('\\', '/') for d in os.walk(srcdir2)]
         dirs = dirs + dirs2
+    # add extrafiles
     files = parse_extrafiles(extrafiles)
     if files is not None:
         for ef in files:
@@ -1194,7 +1200,8 @@ def create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
 def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
          expedite=False, dryrun=False, double=False, debug=False,
          include_subdirs=False, fflags=None, cflags=None, syslibs='-lc',
-         arch='intel64', makefile=False, srcdir2=None, extrafiles=None):
+         arch='intel64', makefile=False, srcdir2=None, extrafiles=None,
+         excludefiles=None):
     """
     Main part of program
 
@@ -1218,7 +1225,8 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
 
     # initialize
     srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target,
-                                                       srcdir2, extrafiles)
+                                                       srcdir2, extrafiles,
+                                                       excludefiles)
 
     # get ordered list of files to compile
     srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
