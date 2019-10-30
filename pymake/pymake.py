@@ -216,7 +216,7 @@ def initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
     for fname in files:
         if not os.path.isfile(fname):
             print('Current working directory: {}'.format(os.getcwd()))
-            print('Error in excludefiles: {}'.format(excludefiles))
+            print('Warning in excludefiles: {}'.format(excludefiles))
             print('Could not find file: {}'.format(fname))
         else:
             dst = os.path.join(srcdir_temp, os.path.basename(fname))
