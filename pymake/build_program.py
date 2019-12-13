@@ -905,7 +905,7 @@ def build_apps(targets=None):
                 if targets[idt - 1] == 'mfusg':
                     download = False
 
-        if target in ['mt3dms', 'triangle']:
+        if target in ['mt3dms', 'triangle', 'mf6beta']:
             download_verify = False
             timeout = 10
         else:
