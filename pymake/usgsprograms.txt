@@ -18,5 +18,5 @@ triangle     1.6      True    https://www.netlib.org/voronoi/triangle.zip       
 gridgen      1.0.02   True    https://water.usgs.gov/water-resources/software/GRIDGEN/gridgen.1.0.02.zip                      gridgen.1.0.02    src
 zonbud3      3.01     True    https://water.usgs.gov/water-resources/software/ZONEBUDGET/zonbud3_01.exe                       Zonbud.3_01       Src
 crt          1.3.1    True    https://water.usgs.gov/ogw/CRT/CRT_1.3.1.zip                                                    CRT_1.3.1         SOURCE
-gsflow       1.2.2    True    https://water.usgs.gov/water-resources/software/gsflow/gsflowv_1_2_2linux.zip                   GSFLOW_1.2.2      src
-mf6beta      6.x.x    True    https://github.com/MODFLOW-USGS/modflow6/archive/mf6beta.zip                                    modflow6-mf6beta  src
+gsflow       2.0.0    False   https://water.usgs.gov/water-resources/software/gsflow/gsflow_2.0.0_linux.zip                   GSFLOW_2.0.0      src
+mf6beta      6.3.0    False   https://github.com/MODFLOW-USGS/modflow6/archive/mf6beta.zip                                    modflow6-mf6beta  src
