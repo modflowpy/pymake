@@ -94,6 +94,9 @@ def parser():
     parser.add_argument('-mf', '--makefile',
                         help='''Create a standard makefile.''',
                         action='store_true')
+    parser.add_argument('-cm', '--cmake',
+                        help='''File with DAG sorted source files for CMAKE.''',
+                        default=None)
     parser.add_argument('-cs', '--commonsrc',
                         help='''Additional directory with common source files.''',
                         default=None)
@@ -661,7 +664,8 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
     # create makefile
     if makefile:
-        create_makefile(target, srcdir, srcdir2, extrafiles, objfiles,
+        create_makefile(target, srcdir, srcdir2, extrafiles,
+                        srcfiles, objfiles,
                         fc, compileflags, cc, cflags, syslibs,
                         modules=['-I', '-J'])
 
@@ -870,7 +874,8 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     # create makefile
     if makefile:
         create_makefile(target, srcdir, srcdir2, extrafiles,
-                        objfiles, fc, compileflags, cc, cflags, syslibs,
+                        srcfiles, objfiles,
+                        fc, compileflags, cc, cflags, syslibs,
                         modules=['-module '])
 
     # return
@@ -1052,7 +1057,8 @@ def makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target, arch,
 
 
 def create_makefile(target, srcdir, srcdir2, extrafiles,
-                    objfiles, fc, fflags, cc, cflags, syslibs,
+                    srcfiles, objfiles,
+                    fc, fflags, cc, cflags, syslibs,
                     objext='.o', modules=['-I', '-J']):
     # open makefile
     f = open('makefile', 'w')
@@ -1066,8 +1072,8 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
     # specify directory for the executable
     f.write('# Define the directories for the object and module files,\n' +
             '# the executable, and the executable name and path.\n')
-    pth = os.path.dirname(objfiles[0]).replace('\\', '/')
-    f.write('OBJDIR = {}\n'.format(pth))
+    opth = os.path.dirname(objfiles[0]).replace('\\', '/')
+    f.write('OBJDIR = {}\n'.format(opth))
     pth = os.path.dirname(target).replace('\\', '/')
     if len(pth) < 1:
         pth = '.'
@@ -1088,6 +1094,7 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
             rdir = rdir.replace('\\', '/')
             if rdir not in dirs:
                 dirs.append(rdir)
+
     srcdirs = []
     for idx, dir in enumerate(dirs):
         srcdirs.append('SOURCEDIR{}'.format(idx + 1))
@@ -1102,8 +1109,42 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
         f.write('\n')
     f.write('\n')
 
+    odirs = []
+    for idx, objfile in enumerate(srcfiles):
+        odir = os.path.dirname(objfile)
+        if odir not in odirs:
+            odirs.append(odir)
+
+    # line = 'VPATH = '
+    # for idx, dir in enumerate(odirs):
+    #     #srcdirs.append('SOURCEDIR{}'.format(idx + 1))
+    #     #line = '{}={}\n'.format(srcdirs[idx], dir)
+    #     #f.write(line)
+    #     line += '{} '.format(dir)
+    # line += '\n'
+    # f.write('{}\n'.format(line))
+    # # f.write('\n')
+    # f.write('VPATH = \\\n')
+    # for idx, sd in enumerate(srcdirs):
+    #     f.write('${' + '{}'.format(sd) + '} ')
+    #     if idx + 1 < len(srcdirs):
+    #         f.write('\\')
+    #     f.write('\n')
+    # f.write('\n')
+
+    #'SRCS =$(wildcard $(addsuffix / *.f90, $(SUBDIRS)))
+    #OBJS =$(filter - out cusg_wrap.o, ${SRCS:.cpp=.o})
+
     ffiles = ['.f', '.f90', '.F90', '.fpp']
     cfiles = ['.c', '.cpp']
+
+    # for tf in ffiles + cfiles:
+    #     line = 'SRCS =$(wildcard $(addsuffix / *{}, $(SUBDIRS))'.format(tf)
+    #     f.write('{}\n'.format(line))
+    # for tf in ffiles + cfiles:
+    #     line = 'OBJS =$(${{SRCS:{}=.o}})'.format(tf)
+    #     f.write('{}\n'.format(line))
+
     line = '.SUFFIXES: '
     for tc in cfiles:
         line += '{} '.format(tc)
@@ -1116,6 +1157,8 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
     f.write('# Define the Fortran compile flags\n')
     f.write('FC = {}\n'.format(fc))
     line = 'FFLAGS = '
+    if '-MMD' not in fflags:
+        fflags += ['-MMD', '-cpp']
     for ff in fflags:
         line += '{} '.format(ff)
     f.write('{}\n'.format(line))
@@ -1124,6 +1167,10 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
     f.write('# Define the C compile flags\n')
     f.write('CC = {}\n'.format(cc))
     line = 'CFLAGS = '
+    if '-MMD' not in cflags:
+        cflags += ['-MMD']
+        if cc not in ['g++']:
+            cflags += ['-cpp']
     for cf in cflags:
         line += '{} '.format(cf)
     f.write('{}\n'.format(line))
@@ -1171,6 +1218,7 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
         for m in modules:
             line += '{}$(OBJDIR) '.format(m)
         f.write('{}\n'.format(line))
+        f.write('\tcat {}/$*.d >> Dependencies\n\trm -f $*.d\n'.format(opth))
         f.write('\n')
 
     for tc in cfiles:
@@ -1178,11 +1226,13 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
         f.write('\t@mkdir -p $(@D)\n')
         line = '\t$(CC) $(CFLAGS) -c $< -o $@'
         f.write('{}\n'.format(line))
+        f.write('\tcat {}/$*.d >> Dependencies\n\trm -f $*.d\n'.format(opth))
         f.write('\n')
 
     f.write('# Clean the object and module files and the executable\n')
     f.write('.PHONY : clean\n' +
             'clean : \n' +
+            '\t-rm -r Dependencies\n' +
             '\t-rm -rf $(OBJDIR)\n' +
             '\t-rm -rf $(PROGRAM)\n')
     f.write('\n')
@@ -1193,6 +1243,11 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
             '\t-rm -rf $(OBJDIR)\n')
     f.write('\n')
 
+    f.write('# Touch dependencies\n')
+    f.write('Dependencies : \n' +
+            '\ttouch Dependencies\n')
+    f.write('\n')
+
     # close the make file
     f.close()
 
@@ -1201,7 +1256,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
          expedite=False, dryrun=False, double=False, debug=False,
          include_subdirs=False, fflags=None, cflags=None, syslibs='-lc',
          arch='intel64', makefile=False, srcdir2=None, extrafiles=None,
-         excludefiles=None):
+         excludefiles=None, cmake=None):
     """
     Main part of program
 
@@ -1227,6 +1282,21 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target,
                                                        srcdir2, extrafiles,
                                                        excludefiles)
+    if cmake is not None:
+        if excludefiles is not None:
+            efiles = [os.path.basename(fpth) for fpth in
+                      parse_extrafiles(excludefiles)]
+        else:
+            efiles = []
+        csrcfiles = get_ordered_srcfiles(srcdir, include_subdirs)
+        f = open(cmake, 'w')
+        fstart = os.path.dirname(cmake)
+        for fpth in csrcfiles:
+            fname = os.path.basename(fpth)
+            if fname not in efiles:
+                fpthr = os.path.relpath(fpth, fstart)
+                f.write('{}\n'.format(os.path.join(fpthr)))
+        f.close()
 
     # get ordered list of files to compile
     srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
@@ -1292,4 +1362,5 @@ if __name__ == "__main__":
          dryrun=args.dryrun, double=args.double, debug=args.debug,
          include_subdirs=args.subdirs, fflags=args.fflags,
          cflags=args.cflags, arch=args.arch, makefile=args.makefile,
-         srcdir2=args.commonsrc, extrafiles=args.extrafiles)
+         srcdir2=args.commonsrc, extrafiles=args.extrafiles,
+         cmake=args.cmake)
