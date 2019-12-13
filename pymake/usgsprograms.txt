@@ -5,8 +5,8 @@ mf2005.1.11  1.11.00  False   https://water.usgs.gov/ogw/modflow/archive-mf2005/
 mfnwt        1.1.4    True    https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.1.4.zip               MODFLOW-NWT_1.1.4 src
 mfusg        1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src
 zonbudusg    1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src/zonebudusg
-mf6          6.0.4    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.0.4.zip                           mf6.0.4           src
-zbud6        6.0.4    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.0.4.zip                           mf6.0.4           utils/zonebudget/src
+mf6          6.1.0    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.1.0.zip                           mf6.1.0           src
+zbud6        6.1.0    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.1.0.zip                           mf6.1.0           utils/zonebudget/src
 swtv4        4.00.05  True    https://water.usgs.gov/water-resources/software/SEAWAT/swt_v4_00_05.zip                         swt_v4_00_05      source
 mp6          6.0.1    True    https://water.usgs.gov/water-resources/software/MODPATH/modpath.6_0_01.zip                      modpath.6_0       src
 mp7          7.2.001  True    https://water.usgs.gov/water-resources/software/MODPATH/modpath_7_2_001.zip                     modpath_7_2_001   source
