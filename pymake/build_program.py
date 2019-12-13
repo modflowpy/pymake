@@ -94,6 +94,20 @@ def set_bindir(target):
     return bindir
 
 
+def set_download(download):
+    for idx, arg in enumerate(sys.argv):
+        if '--nodownload' in arg.lower():
+            download = False
+    return download
+
+
+def set_download_clean(download_clean):
+    for idx, arg in enumerate(sys.argv):
+        if '--nodownload_clean' in arg.lower():
+            download_clean = False
+    return download_clean
+
+
 def set_build(target, exe_name):
     """
     Set boolean that defines whether the target should be built if it
@@ -619,11 +633,13 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         directory downloaded files are extracted in
 
     download : bool
-        boolean indicating if the download files should be downloaded
+        boolean indicating if the download files should be downloaded.
+        Can be overwridden with --nodownload from command line.
 
     download_clean : bool
         boolean indicating if the downloaded files should be removed
-        after the target is built
+        after the target is built. Can be overwridden with --nodownload_clean
+        from command line
 
     download_verify : bool
         boolean indicating if a verified download will be executed
@@ -685,7 +701,8 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         srcdir = prog_dict.srcdir
         srcdir = os.path.join(dirname, srcdir)
 
-        # Download the distribution
+        # Download the distribution (can be overridden with --nodownload)
+        download = set_download(download)
         if download:
             download_and_unzip(url, pth=download_dir, verify=download_verify,
                                timeout=timeout)
@@ -713,6 +730,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
             assert os.path.isfile(exe_name), msg
 
         # clean download directory if different than directory with executable
+        download_clean = set_download_clean(download_clean)
         if download_clean:
             edir = os.path.abspath(os.path.dirname(exe_name))
             ddir = os.path.abspath(download_dir)
