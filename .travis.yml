@@ -4,14 +4,14 @@ dist: xenial
 
 matrix:
   include:
-    - python: 2.7
     - python: 3.5
     - python: 3.6
     - python: 3.7
-    - python: "3.7-dev"
+    - python: 3.8
+    - python: "3.8-dev"
 
   allow_failures:
-    - python: "3.7-dev"
+    - python: "3.8-dev"
 
 cache:
   apt: true
@@ -33,11 +33,7 @@ addons:
 # command to install dependencies
 install:
     - export FC=/usr/bin/gfortran
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
-        pip install -r requirements27.travis.txt;
-      else
-        pip install -r requirements.travis.txt;
-      fi
+    - pip install -r requirements.travis.txt
     - pip install https://github.com/modflowpy/flopy/zipball/develop
     - pip install nose-timer
     - pip install coveralls
