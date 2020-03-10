@@ -101,6 +101,8 @@ def setup_comparison(namefile, dst, remove_existing=True):
                     action = dirs[idx]
                 elif 'mf6.cmp' in dl[idx] or 'mf6' in dl[idx]:
                     action = dirs[idx]
+                elif 'libmf6.cmp' in dl[idx] or 'libmf6' in dl[idx]:
+                    action = dirs[idx]
                 else:
                     action = dirs[idx]
                 pth = root
@@ -387,6 +389,7 @@ def get_mf6_comparison(src):
                'mfnwt', 'mfnwt.cmp',
                'mfusg', 'mfusg.cmp',
                'mflgr', 'mflgr.cmp',
+               'libmf6', 'libmf6.cmp',
                'mf6', 'mf6.cmp']
     # Construct src pth from namefile
     action = None
@@ -1324,7 +1327,7 @@ def compare_heads(namefile1, namefile2, precision='auto',
                          'at {} node location(s)'.format(indices[0].shape[0])
                 e = textwrap.fill(ee + ':', width=70, initial_indent='  ',
                                   subsequent_indent='  ')
-                
+
                 if verbose:
                     f.write('{}\n'.format(ee))
                     print(ee + ' at time {}'.format(times1[idx]))

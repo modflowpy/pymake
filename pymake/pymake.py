@@ -112,6 +112,8 @@ def parser():
                         files or the name of a text file that contains a list
                         of files.''',
                         default=None)
+    parser.add_argument('-so', '--sharedobject', help='Create shared object',
+                        action='store_false')
     args = parser.parse_args()
     return args
 
@@ -430,7 +432,7 @@ def flag_available(flag):
 
 def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
                      expedite, dryrun, double, debug, fflags, cflags, syslibs,
-                     srcdir, srcdir2, extrafiles, makefile):
+                     srcdir, srcdir2, extrafiles, makefile, sharedobject):
     """
     Compile the program using the gnu compilers (gfortran and gcc)
 
@@ -468,6 +470,10 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
     # add gfortran specific compiler switches
     if fc is not None:
+        # add shared object switches
+        if sharedobject:
+            compileflags.append('-fPIC')
+
         if debug:
             compileflags += ['-fcheck=all', '-fbounds-check']
             lflag = flag_available('-ffpe-trap')
@@ -634,6 +640,11 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     else:
         cmd = fc + ' '
         cmdlist.append(fc)
+
+        if sharedobject:
+            ipos = compileflags.index('-fPIC')
+            compileflags.insert(ipos, '-shared')
+
         for switch in compileflags:
             cmd += switch + ' '
             cmdlist.append(switch)
@@ -677,7 +688,8 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
                               objdir_temp, moddir_temp,
                               expedite, dryrun, double, debug,
                               fflags, cflags, syslibs,
-                              srcdir, srcdir2, extrafiles, makefile):
+                              srcdir, srcdir2, extrafiles, makefile,
+                              sharedobject):
     """
     Make target on Mac OSX
     """
@@ -704,6 +716,11 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     compileflags = []
     if fc is not None:
         compileflags.append(opt)
+
+        # add shared object switches
+        if sharedobject:
+            compileflags.append('-fpic')
+
         if debug:
             # Debug flags
             compileflags += ['-debug', 'all',
@@ -845,6 +862,16 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     else:
         cmd = fc + ' '
         cmdlist.append(fc)
+
+        if sharedobject:
+            ipos = compileflags.index('-fpic')
+            if 'darwin' in sys.platform.lower():
+                copt = '-dynamiclib'
+            else:
+                copt = '-shared'
+            compileflags.insert(ipos, copt)
+
+
         for switch in compileflags:
             cmd += switch + ' '
             cmdlist.append(switch)
@@ -1256,7 +1283,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
          expedite=False, dryrun=False, double=False, debug=False,
          include_subdirs=False, fflags=None, cflags=None, syslibs='-lc',
          arch='intel64', makefile=False, srcdir2=None, extrafiles=None,
-         excludefiles=None, cmake=None):
+         excludefiles=None, cmake=None, sharedobject=False):
     """
     Main part of program
 
@@ -1310,6 +1337,10 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     if fc == 'gfortran' or (fc is None and cc in ['gcc', 'g++',
                                                   'clang', 'clang++']):
         objext = '.o'
+        if sharedobject:
+            ext = os.path.splitext(target)[-1].lower()
+            if ext != '.so':
+                target += '.so'
         create_openspec(srcdir_temp)
         returncode = compile_with_gnu(srcfiles, target, fc, cc,
                                       objdir_temp, moddir_temp,
@@ -1317,7 +1348,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
                                       double, debug,
                                       fflags, cflags, syslibs,
                                       srcdir, srcdir2,
-                                      extrafiles, makefile)
+                                      extrafiles, makefile, sharedobject)
     elif fc == 'ifort' or fc == 'mpiifort' or \
             (fc is None and cc in ['icc', 'cl', 'icl']):
         platform = sys.platform
@@ -1330,7 +1361,8 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
                                                    double, debug,
                                                    fflags, cflags, syslibs,
                                                    srcdir, srcdir2,
-                                                   extrafiles, makefile)
+                                                   extrafiles, makefile,
+                                                   sharedobject)
         else:
             winifort = True
             objext = '.obj'
