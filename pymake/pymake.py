@@ -438,10 +438,25 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
     """
 
+    # define the platform
+    platform = sys.platform
+
     # For horrible windows issue
     shellflg = False
-    if sys.platform == 'win32':
+    if platform == 'win32':
         shellflg = True
+
+    # define the OS macro for gfortran
+    if platform == 'win32':
+        os_macro = '-D_WIN32'
+    elif platform == 'darwin':
+        os_macro = '-D__APPLE__'
+    elif platform == 'linux' or platform == 'linux2':
+        os_macro = '-D__linux__'
+    elif 'bsd' in platform:
+        os_macro = '-D__unix__'
+    else:
+        os_macro = None
 
     # fortran compiler switches
     if debug:
@@ -495,6 +510,10 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         if double:
             compileflags.append('-fdefault-real-8')
             compileflags.append('-fdefault-double-8')
+
+        # add defined OS macro
+        if os_macro is not None:
+            compileflags.append(os_macro)
 
     objext = '.o'
 
@@ -871,7 +890,6 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
                 copt = '-shared'
             compileflags.insert(ipos, copt)
 
-
         for switch in compileflags:
             cmd += switch + ' '
             cmdlist.append(switch)
@@ -1159,8 +1177,8 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
     #     f.write('\n')
     # f.write('\n')
 
-    #'SRCS =$(wildcard $(addsuffix / *.f90, $(SUBDIRS)))
-    #OBJS =$(filter - out cusg_wrap.o, ${SRCS:.cpp=.o})
+    # 'SRCS =$(wildcard $(addsuffix / *.f90, $(SUBDIRS)))
+    # OBJS =$(filter - out cusg_wrap.o, ${SRCS:.cpp=.o})
 
     ffiles = ['.f', '.f90', '.F90', '.fpp']
     cfiles = ['.c', '.cpp']
