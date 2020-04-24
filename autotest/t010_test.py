@@ -4,7 +4,6 @@ import shutil
 import subprocess
 import pymake
 
-
 # define program data
 target = 'gridgen'
 prog_dict = pymake.usgs_program_data.get_target(target)
@@ -47,6 +46,7 @@ def clean_up():
     os.remove(target)
     return
 
+
 def run_command(cmdlist, cwd):
     p = subprocess.Popen(cmdlist, shell=False, stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, cwd=cwd)
@@ -70,8 +70,7 @@ def run_gridgen(d):
         'chd_grid02qtg_lay1_intersect action04_intersect.dfn',
         'grid01mfg-to-vtkfile action05_vtkfile.dfn',
         'grid02qtg-to-vtkfile action05_vtkfile.dfn',
-        'grid02qtg-to-vtkfilesv action05_vtkfile.dfn',]
-
+        'grid02qtg-to-vtkfilesv action05_vtkfile.dfn', ]
 
     testpth = os.path.join(expth, d)
     testpth = os.path.abspath(testpth)

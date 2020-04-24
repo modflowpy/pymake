@@ -44,34 +44,34 @@ class DirectedAcyclicGraph(object):
         """
         Perform topological sort
         """
-        l = []  # empty list that will contain sorted elements
+        sort_list = []  # empty list that will contain sorted elements
 
         # build a list of nodes with no dependencies
-        s = set([])
-        for n in self.nodelist:
-            if len(n.dependencies) == 0:
-                s.add(n)
-        if len(s) == 0:
-            for n in self.nodelist:
-                print(n.name, [nn.name for nn in n.dependencies])
+        tset = set([])
+        for node in self.nodelist:
+            if len(node.dependencies) == 0:
+                tset.add(node)
+        if len(tset) == 0:
+            for node in self.nodelist:
+                print(node.name, [nn.name for nn in node.dependencies])
             raise Exception('All nodes have dependencies')
 
         # build up the list
-        while len(s) > 0:
-            n = s.pop()
-            l.append(n)
-            for m in self.nodelist:
-                if n in m.dependencies:
-                    m.dependencies.remove(n)
-                    if len(m.dependencies) == 0:
-                        s.add(m)
+        while len(tset) > 0:
+            node = tset.pop()
+            sort_list.append(node)
+            for mnode in self.nodelist:
+                if node in mnode.dependencies:
+                    mnode.dependencies.remove(node)
+                    if len(mnode.dependencies) == 0:
+                        tset.add(mnode)
 
         # check to make sure no remaining dependencies
-        for n in l:
-            if len(n.dependencies) > 0:
+        for node in sort_list:
+            if len(node.dependencies) > 0:
                 raise Exception('Graph has at least one cycle')
 
-        return l
+        return sort_list
 
 
 def get_f_nodelist(srcfiles):
@@ -90,7 +90,8 @@ def get_f_nodelist(srcfiles):
         try:
             f = open(srcfile, 'rb')
         except:
-            print('get_f_nodelist: could not open {}'.format(os.path.basename(srcfile)))
+            print('get_f_nodelist: could not open {}'.format(
+                os.path.basename(srcfile)))
             sourcefile_module_dict[srcfile] = []
             continue
         lines = f.read()
@@ -112,7 +113,6 @@ def get_f_nodelist(srcfiles):
         sourcefile_module_dict[srcfile] = modulelist
         # close the src file
         f.close()
-
 
     # go through and add the dependencies to each node
     for node in nodelist:
@@ -168,7 +168,8 @@ def order_c_source_files(srcfiles):
         try:
             f = open(srcfile, 'rb')
         except:
-            print('order_c_source_files: could not open {}'.format(os.path.basename(srcfile)))
+            print('order_c_source_files: could not open {}'.format(
+                os.path.basename(srcfile)))
             sourcefile_module_dict[srcfile] = []
             continue
         lines = f.read()
@@ -180,11 +181,14 @@ def order_c_source_files(srcfiles):
             if len(linelist) == 0:
                 continue
             if linelist[0].upper() == '#INCLUDE':
-                modulename = linelist[1].replace('"', '').replace("'", "").replace('<', '').replace('>', '').upper()
+                modulename = linelist[1].replace('"', '').replace("'",
+                                                                  "").replace(
+                    '<', '').replace('>', '').upper()
                 # add source file for this c(pp) file if it is the same
                 # as the include file without the extension
                 bn = os.path.basename(srcfile)
-                if os.path.splitext(modulename)[0] == os.path.splitext(bn)[0].upper():
+                if os.path.splitext(modulename)[0] == os.path.splitext(bn)[
+                    0].upper():
                     module_dict[modulename] = srcfile
                 # add include file name
                 if modulename not in modulelist:
@@ -193,7 +197,6 @@ def order_c_source_files(srcfiles):
         sourcefile_module_dict[srcfile] = modulelist
         # close the src file
         f.close()
-
 
     # go through and add the dependencies to each node
     for node in nodelist:
@@ -207,7 +210,8 @@ def order_c_source_files(srcfiles):
                         # print 'adding dependency: ', srcfile, mlocation
                         node.add_dependency(nodedict[mlocation])
         except:
-            print('order_c_source_files: {} key does not exist'.format(srcfile))
+            print(
+                'order_c_source_files: {} key does not exist'.format(srcfile))
 
     dag = get_dag(nodelist)
     orderednodes = dag.toposort()

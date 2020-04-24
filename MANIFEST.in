@@ -1,0 +1,6 @@
+# Exclude files
+global-exclude .DS_Store *.pyc *.pyo *.pyd *.swp *.bak *~ .* *.sh *.yml
+prune */__pycache__
+# include specific files
+include pymake/usgsprograms.txt
+recursive-include example *.py *.bat

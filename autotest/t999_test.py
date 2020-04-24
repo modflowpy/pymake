@@ -107,7 +107,7 @@ def getmfexes(pth='.', version='', platform=None):
     zipname = '{}.zip'.format(platform)
 
     # Wanted to use github api, but this is timing out on travis too often
-    #mfexes_repo_name = 'MODFLOW-USGS/executables'
+    # mfexes_repo_name = 'MODFLOW-USGS/executables'
     # assets = repo_latest_assets(mfexes_repo_name)
 
     # Determine path for file download and then download and unzip
@@ -129,6 +129,7 @@ def test_download_and_unzip():
         errmsg = '{} not executable'.format(fname)
         assert which(fname) is not None, errmsg
     return
+
 
 if __name__ == '__main__':
     test_download_and_unzip()

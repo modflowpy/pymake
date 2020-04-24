@@ -10,7 +10,6 @@ except:
 
 
 def to_pydot(dag, filename='mygraph.png'):
-
     # Create the graph
     graph = pydot.Dot(graph_type='digraph')
 
@@ -29,8 +28,8 @@ def to_pydot(dag, filename='mygraph.png'):
     graph.write_png(filename)
     return
 
-def add_pydot_nodes(graph, node_dict, n, ilev, level):
 
+def add_pydot_nodes(graph, node_dict, n, ilev, level):
     if ilev == level:
         return
 
@@ -44,6 +43,7 @@ def add_pydot_nodes(graph, node_dict, n, ilev, level):
         for m in n.dependencies:
             add_pydot_nodes(graph, node_dict, m, ilev + 1, level)
     return
+
 
 def add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
     if ilev == level:
@@ -60,7 +60,9 @@ def add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
                 add_pydot_edges(graph, node_dict, edge_set, m, ilev + 1, level)
     return
 
-def make_plots(srcdir, outdir, include_subdir=False, level=3, extension='.png'):
+
+def make_plots(srcdir, outdir, include_subdir=False, level=3,
+               extension='.png'):
     """
     Create plots of module dependencies.
 
@@ -97,8 +99,8 @@ def make_plots(srcdir, outdir, include_subdir=False, level=3, extension='.png'):
 
     return
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     srcdir = 'src'
     outdir = 'img'
     make_plots(srcdir, outdir)

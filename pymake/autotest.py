@@ -304,7 +304,8 @@ def get_sim_name(namefiles, rootpth=None):
 
 
 # modflow 6 readers and copiers
-def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None, remove_existing=True):
+def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None,
+              remove_existing=True):
     """
 
     Copy all of the MODFLOW 6 input files from the src directory to
@@ -1088,7 +1089,7 @@ def compare_heads(namefile1, namefile2, precision='auto',
         for file in files1:
             if text.lower() == 'head':
                 if 'hds' in os.path.basename(file).lower() or \
-                                'hed' in os.path.basename(file).lower():
+                        'hed' in os.path.basename(file).lower():
                     hfpth1 = file
                     break
             elif text.lower() == 'drawdown':
@@ -1127,7 +1128,7 @@ def compare_heads(namefile1, namefile2, precision='auto',
         for file in files2:
             if text2.lower() == 'head':
                 if 'hds' in os.path.basename(file).lower() or \
-                                'hed' in os.path.basename(file).lower():
+                        'hed' in os.path.basename(file).lower():
                     hfpth2 = file
                     break
             elif text2.lower() == 'drawdown':
@@ -1342,8 +1343,8 @@ def compare_heads(namefile1, namefile2, precision='auto',
                         v1 = h1.flatten()[ind]
                         v2 = h2.flatten()[ind]
                         d12 = v1 - v2
-                        #e += '    ' + fmtn.format(jdx + 1) + ' node: '
-                        #e += fmtn.format(ind + 1)  # convert to one-based
+                        # e += '    ' + fmtn.format(jdx + 1) + ' node: '
+                        # e += fmtn.format(ind + 1)  # convert to one-based
                         e += '    ' + fmtn.format(jdx + 1)
                         e += ' {}'.format(iv)
                         e += ' -- '
