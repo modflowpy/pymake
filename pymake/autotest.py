@@ -1286,7 +1286,7 @@ def compare_heads(namefile1, namefile2, precision='auto',
             if idx == 0:
                 e = 'shape of exclusion data ({})'.format(exd.shape) + \
                     'can not be reshaped to the size of the ' + \
-                    'head arrays ()'.format(h1.shape)
+                    'head arrays ({})'.format(h1.shape)
                 assert h1.flatten().shape == exd.shape, e
                 exd = exd.reshape(h1.shape)
                 iexd = exd > 0
