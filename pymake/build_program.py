@@ -663,12 +663,12 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                 exe_name = filename + 'dbl' + file_extension
         if debug:
             filename, file_extension = os.path.splitext(exe_name)
-            if filename.lower()[-1] is not 'd':
+            if filename.lower()[-1] != 'd':
                 exe_name = filename + 'd' + file_extension
 
-    if platform.system().lower() is 'windows':
+    if platform.system().lower() == 'windows':
         filename, file_extension = os.path.splitext(exe_name)
-        if file_extension.lower() is not '.exe':
+        if file_extension.lower() != '.exe':
             exe_name += '.exe'
 
     # determine if the target should be built
@@ -966,10 +966,6 @@ def build_apps(targets=None):
         elapsed = end_downcomp - start_downcomp
         print('elapsed download and compile time (hh:mm:ss.ms): ' +
               '{}\n'.format(elapsed))
-
-    # write code.json
-    if len(code_dict) > 0:
-        fpth = os.path.join(bindir, 'code.json')
 
     end_time = datetime.now()
     elapsed = end_time - start_time
