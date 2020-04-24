@@ -10,9 +10,6 @@ if [ "${RUN_TYPE}" = "flake" ]; then
     echo "An error occurred while running pylint." >&2
     exit 1
   fi
-  echo "Running flopy autotest suite..."
-  nosetests -v --with-id --with-timer -w ./autotest \
-    --with-coverage --cover-package=pymake
 fi
 
 echo "Running flopy autotest suite..."
