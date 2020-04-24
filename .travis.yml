@@ -37,6 +37,7 @@ addons:
     - libnetcdf-dev
     - gdal-bin
     - libgdal-dev
+    - graphviz
 env:
   global:
   - PYTHONPATH=$PYTHONPATH:.
