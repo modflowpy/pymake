@@ -4,6 +4,11 @@ from collections import OrderedDict
 
 import pymake
 
+# write installation location for pymake
+thisfilepath = os.path.dirname(os.path.abspath(__file__))
+pymakepth = os.path.abspath(os.path.join(thisfilepath))
+print('pymake is installed in {}'.format(pymakepth))
+
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""

@@ -40,8 +40,7 @@ def get_function_names(module, select_name=None):
     func = {}
     for key, value in module.__dict__.items():
         ladd = False
-        # if type(value) is types.FunctionType:
-        if isinstance(types.FunctionType, type(value)):
+        if isinstance(value, types.FunctionType):
             if select_name is None:
                 ladd = True
             else:
