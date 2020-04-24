@@ -1,5 +1,0 @@
-requests
-pydotplus
-matplotlib
-pyshp
-enum34
