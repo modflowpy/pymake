@@ -181,14 +181,14 @@ def order_c_source_files(srcfiles):
             if len(linelist) == 0:
                 continue
             if linelist[0].upper() == '#INCLUDE':
-                modulename = linelist[1].replace('"', '').replace("'",
-                                                                  "").replace(
-                    '<', '').replace('>', '').upper()
+                modulename = linelist[1].upper()
+                for cval in ['"', "'", '<', '>']:
+                    modulename = modulename.replace(cval, '')
                 # add source file for this c(pp) file if it is the same
                 # as the include file without the extension
                 bn = os.path.basename(srcfile)
-                if os.path.splitext(modulename)[0] == os.path.splitext(bn)[
-                    0].upper():
+                if os.path.splitext(modulename)[0] == \
+                        os.path.splitext(bn)[0].upper():
                     module_dict[modulename] = srcfile
                 # add include file name
                 if modulename not in modulelist:

@@ -105,7 +105,6 @@ def setup_comparison(namefile, dst, remove_existing=True):
                     action = dirs[idx]
                 else:
                     action = dirs[idx]
-                pth = root
                 break
     if action is not None:
         dst = os.path.join(dst, '{}'.format(action))
@@ -1287,7 +1286,7 @@ def compare_heads(namefile1, namefile2, precision='auto',
             if idx == 0:
                 e = 'shape of exclusion data ({})'.format(exd.shape) + \
                     'can not be reshaped to the size of the ' + \
-                    'head arrays ()'.format(h1.shape)
+                    'head arrays ({})'.format(h1.shape)
                 assert h1.flatten().shape == exd.shape, e
                 exd = exd.reshape(h1.shape)
                 iexd = exd > 0
@@ -1502,7 +1501,7 @@ def compare_concs(namefile1, namefile2, precision='auto',
                     if difftol:
                         ee = 'Maximum concentration difference ({})'.format(
                             diffmax) + \
-                             ' -- {} tolerance exceeded at '.format(htol) + \
+                             ' -- {} tolerance exceeded at '.format(ctol) + \
                              '{} node location(s)'.format(indices[0].shape[0])
                     else:
                         ee = 'Maximum concentration difference ' + \
@@ -1594,8 +1593,8 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
     # confirm that there are two files to compare
     if sfpth1 is None or sfpth2 is None:
         print('spth1 or spth2 is None')
-        print('spth1: {}'.format(spth1))
-        print('spth2: {}'.format(spth2))
+        print('spth1: {}'.format(sfpth1))
+        print('spth2: {}'.format(sfpth2))
         return False
 
     if not os.path.isfile(sfpth1) or not os.path.isfile(sfpth2):

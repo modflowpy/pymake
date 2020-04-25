@@ -1,5 +1,5 @@
-
 import pymake
+
 
 def make_triangle():
     pymake.build_apps('triangle')

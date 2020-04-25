@@ -371,7 +371,6 @@ def out_of_date(srcfile, objfile):
 # determine if iso_c_binding is used so that correct
 # gcc and clang compiler flags can be set
 def get_iso_c(srcfiles):
-    use_iso_c = False
     for srcfile in srcfiles:
         try:
             f = open(srcfile, 'rb')
@@ -514,8 +513,6 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         # add defined OS macro
         if os_macro is not None:
             compileflags.append(os_macro)
-
-    objext = '.o'
 
     # Split all tokens by spaces
     for fflag in ' '.join(fflags).split():
@@ -989,7 +986,6 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     for cflag in ' '.join(cflagsu).split():
         if cflag not in cflags:
             cflags.append(cflag)
-    objext = '.obj'
     batchfile = 'compile.bat'
     if os.path.isfile(batchfile):
         try:
@@ -1082,8 +1078,8 @@ def makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target, arch,
             for switch in fflags:
                 cmd += switch + ' '
             cmd += '-c' + ' '
-            cmd += '/module:{0}\ '.format(moddir_temp)
-            cmd += '/object:{0}\ '.format(objdir_temp)
+            cmd += '/module:{0}\\ '.format(moddir_temp)
+            cmd += '/object:{0}\\ '.format(objdir_temp)
             cmd += srcfile
             f.write('echo ' + os.path.basename(srcfile) + '\n')
         f.write(cmd + '\n')
@@ -1095,7 +1091,7 @@ def makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target, arch,
         cmd = fc + ' '
         for switch in fflags:
             cmd += switch + ' '
-    cmd += '-o' + ' ' + target + ' ' + objdir_temp + '\*.obj' + '\n'
+    cmd += '-o' + ' ' + target + ' ' + objdir_temp + '\\*.obj' + '\n'
     f.write(cmd)
     f.close()
     return

@@ -69,7 +69,8 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         if fs > 0:
             bfmt = '{:' + '{}'.format(lenfs) + ',d}'
             sbfmt = '{:>' + '{}'.format(len(bfmt.format(int(fs)))) + 's} bytes'
-            print('   file size: {}'.format(sbfmt.format(bfmt.format(int(fs)))))
+            print(
+                '   file size: {}'.format(sbfmt.format(bfmt.format(int(fs)))))
         ds = 0
         try:
             req = requests.get(url, verify=verify, timeout=timeout)
@@ -79,8 +80,8 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
                         ds += len(chunk)
                         msg = '     downloaded ' + \
                               sbfmt.format(bfmt.format(ds)) + \
-                              ' of ' + bfmt.format(int(fs)) + ' bytes'+ \
-                              ' ({:10.4%})'.format(float(ds)/float(fs))
+                              ' of ' + bfmt.format(int(fs)) + ' bytes' + \
+                              ' ({:10.4%})'.format(float(ds) / float(fs))
                         print(msg)
                         f.write(chunk)
             success = True
@@ -93,7 +94,7 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
 
     # Unzip the file, and delete zip file if successful.
     if 'zip' in os.path.basename(file_name) or \
-                    'exe' in os.path.basename(file_name):
+            'exe' in os.path.basename(file_name):
         z = MyZipFile(file_name)
         try:
             print('Extracting the zipfile...')
