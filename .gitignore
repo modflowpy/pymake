@@ -60,4 +60,10 @@ target/
 # PyCharm
 .idea/
 
+# files in the autotest directory
 autotest/temp/
+mod_temp/
+obj_temp/
+src_temp/
+*.exe
+Dependencies

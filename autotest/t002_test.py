@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import shutil
 
 import pymake
@@ -20,6 +21,10 @@ deppth = os.path.join(swtpth, 'dependencies')
 
 srcpth = os.path.join(swtpth, prog_dict.srcdir)
 epth = os.path.abspath(os.path.join(dstpth, target))
+
+# add exe for windows
+if sys.platform == 'win32':
+    epth += '.exe'
 
 
 def edit_namefile(namefile):

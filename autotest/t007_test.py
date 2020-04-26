@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import shutil
 import pymake
 import flopy
@@ -164,10 +165,18 @@ def clean_up(pth, exe):
         print('Removing folder ' + pth)
         shutil.rmtree(pth)
 
+    if sys.platform == 'win32':
+        exe += '.exe'
+
     # clean up compiled executables
     if os.path.isfile(exe):
         print('Removing ' + exe)
         os.remove(exe)
+    return
+
+
+def test_download_exes():
+    pymake.getmfexes(dstpth, version='3.0', exes=('mf2005', 'mfusg', 'mf6'))
     return
 
 
@@ -180,49 +189,6 @@ def test_compile_mp7():
     replace_function = pymake.build_replace(target)
     pymake.build_program(target=target,
                          fflags='-ffree-line-length-512',
-                         download_dir=dstpth,
-                         exe_dir=dstpth,
-                         replace_function=replace_function)
-    return
-
-
-def test_compile_mf2005():
-    # Remove the existing MODFLOW-2005 directory if it exists
-    if os.path.isdir(mf2005pth):
-        shutil.rmtree(mf2005pth)
-
-    # download and compile MODFLOW-2005
-    replace_function = pymake.build_replace(mf2005_target)
-    pymake.build_program(target=mf2005_target,
-                         download_dir=dstpth,
-                         exe_dir=dstpth,
-                         replace_function=replace_function)
-    return
-
-
-def test_compile_mfusg():
-    # Remove the existing MODFLOW-USG directory if it exists
-    if os.path.isdir(mfusgpth):
-        shutil.rmtree(mfusgpth)
-
-    # download and compile MODFLOW-USG
-    replace_function = pymake.build_replace(mfusg_target)
-    pymake.build_program(target=mfusg_target,
-                         download_dir=dstpth,
-                         exe_dir=dstpth,
-                         replace_function=replace_function)
-    return
-
-
-def test_compile_mf6():
-    # Remove the existing MODFLOW 6 directory if it exists
-    if os.path.isdir(mf6pth):
-        shutil.rmtree(mf6pth)
-
-    # download and compile MODFLOW 6
-    replace_function = pymake.build_replace(mf6_target)
-    pymake.build_program(target=mf6_target,
-                         include_subdirs=True,
                          download_dir=dstpth,
                          exe_dir=dstpth,
                          replace_function=replace_function)
@@ -242,18 +208,12 @@ def test_clean_up():
 
 
 if __name__ == "__main__":
+    # download codes
+    test_download_exes()
+
     # compile codes
     # mp7
     test_compile_mp7()
-
-    # mf2005
-    test_compile_mf2005()
-
-    # mfusg
-    test_compile_mfusg()
-
-    # mf6
-    test_compile_mf6()
 
     # test executables
     simfiles = get_simfiles()

@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import shutil
 
 import pymake
@@ -122,13 +123,20 @@ def test_mf2005():
 
 
 def test_teardown():
-    if os.path.isfile(target_previous):
-        print('Removing ' + target_previous)
-        os.remove(target_previous)
+    ext = ''
+    if sys.platform == 'win32':
+        ext = '.exe'
 
-    if os.path.isfile(target_release):
+    # clean up targets
+    ttarget = target_previous + ext
+    if os.path.isfile(ttarget):
+        print('Removing ' + target_previous)
+        os.remove(ttarget)
+
+    ttarget = target_release + ext
+    if os.path.isfile(ttarget):
         print('Removing ' + target_release)
-        os.remove(target_release)
+        os.remove(ttarget)
 
     # remove release source files if target was built
     if os.path.isdir(testdir_release):
