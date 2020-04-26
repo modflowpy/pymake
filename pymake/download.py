@@ -99,7 +99,7 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
 
     # write the total download time
     toc = timeit.default_timer()
-    tsec = toc-tic
+    tsec = toc - tic
     print('\ntotal download time: {} seconds'.format(tsec))
     if fs > 0:
         print('download speed:      {} MB/s'.format(fs / (1e6 * tsec)))
@@ -156,7 +156,7 @@ def repo_json_assets(github_repo):
         assets = jsonobj['assets']
     else:
         msg = 'Could not find latest executables from ' + request_url
-        assert assets is not None, msg
+        raise ValueError(msg)
 
     return assets
 
@@ -265,6 +265,9 @@ def getmfexes(pth='.', version=3.0, platform=None, exes=None):
     else:
         msg = 'unknown platform detected ({})'.format(platform)
         success = platform in ['mac', 'linux', 'win32', 'win64']
+        if not success:
+            raise ValueError(msg)
+
         assert success, msg
     zipname = '{}.zip'.format(platform)
 
