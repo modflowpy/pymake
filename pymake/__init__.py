@@ -6,7 +6,8 @@ from .version import __version__, __build__, __git_commit__
 from .usgsprograms import usgs_program_data
 from .pymake import main, parser, get_ordered_srcfiles
 from .dag import order_source_files, order_c_source_files, get_f_nodelist
-from .download import download_and_unzip, getmfexes
+from .download import download_and_unzip, getmfexes, \
+    repo_latest_version, repo_latest_assets
 from .visualize import make_plots
 from .autotest import setup, setup_comparison, teardown, \
     get_namefiles, get_entries_from_namefile, \

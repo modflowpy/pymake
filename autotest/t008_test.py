@@ -22,7 +22,7 @@ expth = os.path.join(mf6pth, 'examples')
 def get_example_dirs():
     exdirs = [o for o in os.listdir(expth)
               if os.path.isdir(os.path.join(expth, o))]
-    return exdirs
+    return sorted(exdirs)
 
 
 def compile_code():

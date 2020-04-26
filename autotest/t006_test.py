@@ -37,9 +37,13 @@ def compile_code():
 def build_with_makefile():
     if os.path.isfile('makefile'):
 
+        tepth = epth
+        if sys.platform == 'win32':
+            tepth += '.exe'
+
         # remove existing target
         print('Removing ' + target)
-        os.remove(epth)
+        os.remove(tepth)
 
         print('Removing temporary build directories')
         shutil.rmtree(os.path.join('src_temp'))
@@ -49,7 +53,7 @@ def build_with_makefile():
         # build MODFLOW-NWT with makefile
         print('build {} with makefile'.format(target))
         os.system('make')
-        assert os.path.isfile(epth), \
+        assert os.path.isfile(tepth), \
             '{} created by makefile does not exist.'.format(target)
     else:
         print('makefile does not exist...skipping build_with_make()')
@@ -68,14 +72,14 @@ def clean_up():
         print('Removing folder ' + mfnwtpth)
         shutil.rmtree(mfnwtpth)
 
-    ext = ''
+    tepth = epth
     if sys.platform == 'win32':
-        ext = '.exe'
+        tepth += '.exe'
 
     # clean up MODFLOW-NWT
-    if os.path.isfile(epth):
+    if os.path.isfile(tepth):
         print('Removing ' + target)
-        os.remove(epth + ext)
+        os.remove(tepth)
 
     return
 

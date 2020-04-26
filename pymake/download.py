@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import sys
 import shutil
+import timeit
 from zipfile import ZipFile, ZipInfo
 import tarfile
 
@@ -44,7 +45,7 @@ class MyZipFile(ZipFile):
 
 
 def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
-                       timeout=30, nattempts=10, chunk_size=204800):
+                       timeout=30, nattempts=10, chunk_size=2048000):
     try:
         import requests
     except Exception as e:
@@ -58,6 +59,7 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     file_name = os.path.join(pth, url.split('/')[-1])
     # download the file
     success = False
+    tic = timeit.default_timer()
     for idx in range(nattempts):
         print(' download attempt: {}'.format(idx + 1))
         #
@@ -75,7 +77,8 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
                 '   file size: {}'.format(sbfmt.format(bfmt.format(int(fs)))))
         ds = 0
         try:
-            req = requests.get(url, verify=verify, timeout=timeout)
+            req = requests.get(url, verify=verify, timeout=timeout,
+                               stream=True)
             with open(file_name, 'wb') as f:
                 for chunk in req.iter_content(chunk_size=chunk_size):
                     if chunk:
@@ -93,6 +96,13 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
                 raise Exception(msg)
         if success:
             break
+
+    # write the total download time
+    toc = timeit.default_timer()
+    tsec = toc-tic
+    print('\ntotal download time: {} seconds'.format(tsec))
+    if fs > 0:
+        print('download speed:      {} MB/s'.format(fs / (1e6 * tsec)))
 
     # Unzip the file, and delete zip file if successful.
     if 'zip' in os.path.basename(file_name) or \
@@ -115,6 +125,99 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         print('Deleting the zipfile...')
         os.remove(file_name)
     print('Done downloading and extracting...\n')
+
+
+def repo_json_assets(github_repo):
+    """
+    Return a list of dictionaries with attributes for the latest github
+    release in a github repository.
+
+    Parameters
+    ----------
+    github_repo : str
+        Repository name, such as MODFLOW-USGS/modflow6
+
+    Returns
+    -------
+    assets : list
+        dictionary of file names and links
+
+    """
+    import requests
+    import json
+    repo_url = 'https://api.github.com/repos/{}'.format(github_repo)
+
+    assets = None
+    request_url = '{}/releases/latest'.format(repo_url)
+    print('Requesting from: {}'.format(request_url))
+    r = requests.get(request_url)
+    if r.ok:
+        jsonobj = json.loads(r.text or r.content)
+        assets = jsonobj['assets']
+    else:
+        assert assets, 'Could not find latest executables from ' + request_url
+
+    return assets
+
+
+def repo_latest_assets(github_repo):
+    """
+    Return a dictionary containing the file name and the link to the asset
+    contained in a github repository.
+
+    Parameters
+    ----------
+    github_repo : str
+        Repository name, such as MODFLOW-USGS/modflow6
+
+    Returns
+    -------
+    result_dict : dict
+        dictionary of file names and links
+
+    """
+    assets = repo_json_assets(github_repo)
+    result_dict = {}
+    for asset in assets:
+        k = asset['name']
+        v = asset['browser_download_url']
+        result_dict[k] = v
+
+    return result_dict
+
+
+def repo_latest_version(github_repo):
+    """
+    Return a string of the latest version number (tag) contained in a
+    github repository release.
+
+    Parameters
+    ----------
+    github_repo : str
+        Repository name, such as MODFLOW-USGS/modflow6
+
+    Returns
+    -------
+    version : str
+        string with the latest version/tag number
+
+    """
+    version = None
+    assets = repo_json_assets(github_repo)
+
+    for asset in assets:
+        v = asset['browser_download_url']
+        if version is None:
+            pths = v.split('/')
+            try:
+                idx = pths.index('download')
+                version = pths[idx + 1]
+            except:
+                msg = 'could not determine the latest version number'
+                raise ValueError(msg)
+            break
+
+    return version
 
 
 def getmfexes(pth='.', version=3.0, platform=None, exes=None):
@@ -164,7 +267,7 @@ def getmfexes(pth='.', version=3.0, platform=None, exes=None):
 
     # Evaluate exes keyword
     if exes is not None:
-        download_dir = './download_dir/'
+        download_dir = os.path.join('.', 'download_dir')
         if isinstance(exes, str):
             exes = tuple(exes)
         elif isinstance(exes, (int, float)):
@@ -193,8 +296,10 @@ def getmfexes(pth='.', version=3.0, platform=None, exes=None):
         for f in os.listdir(download_dir):
             src = os.path.join(download_dir, f)
             dst = os.path.join(pth, f)
-            if f in exes:
-                shutil.move(src, dst)
+            for exe in exes:
+                if exe in f:
+                    shutil.move(src, dst)
+                    break
 
         # remove the download directory
         if os.path.isdir(download_dir):

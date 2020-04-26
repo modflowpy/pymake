@@ -101,14 +101,13 @@ def clean_up(pth, exe):
         print('Removing folder ' + pth)
         shutil.rmtree(pth)
 
-    ext = ''
     if sys.platform == 'win32':
-        ext = '.exe'
+        exe += '.exe'
 
     # clean up compiled executables
     if os.path.isfile(exe):
         print('Removing ' + exe)
-        os.remove(exe + ext)
+        os.remove(exe)
     return
 
 
@@ -129,29 +128,6 @@ def test_compile_mt3dusgs():
     return
 
 
-# def test_compile_mfnwt():
-#     # Remove the existing MODFLOW-NWT directory if it exists
-#     if os.path.isdir(mfnwtpth):
-#         shutil.rmtree(mfnwtpth)
-#
-#     # compile MODFLOW-NWT
-#     pymake.build_program(target=mfnwt_target,
-#                          download_dir=dstpth,
-#                          exe_dir=dstpth)
-#
-#
-# def test_compile_mf6():
-#     # Remove the existing MODFLOW-6 directory if it exists
-#     if os.path.isdir(mf6pth):
-#         shutil.rmtree(mf6pth)
-#
-#     # compile MODFLOW-6
-#     pymake.build_program(target=mf6_target,
-#                          include_subdirs=True,
-#                          download_dir=dstpth,
-#                          exe_dir=dstpth)
-
-
 def test_mt3dusgs():
     example_dirs = get_example_dirs()
     for dn in example_dirs:
@@ -170,12 +146,6 @@ if __name__ == "__main__":
 
     # compile MT3D-USGS
     test_compile_mt3dusgs()
-
-    # # compile MODFLOW-NWT
-    # test_compile_mfnwt()
-    #
-    # # compile MODFLOW 6
-    # test_compile_mf6()
 
     # get name files and simulation name
     example_dirs = get_example_dirs()
