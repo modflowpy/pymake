@@ -155,7 +155,8 @@ def repo_json_assets(github_repo):
         jsonobj = json.loads(r.text or r.content)
         assets = jsonobj['assets']
     else:
-        assert assets, 'Could not find latest executables from ' + request_url
+        msg = 'Could not find latest executables from ' + request_url
+        assert assets is not None, msg
 
     return assets
 
@@ -262,7 +263,9 @@ def getmfexes(pth='.', version=3.0, platform=None, exes=None):
                       '.  sys.platform is {}'.format(sys.platform))
             raise Exception(errmsg)
     else:
-        assert platform in ['mac', 'linux', 'win32', 'win64']
+        msg = 'unknown platform detected ({})'.format(platform)
+        success = platform in ['mac', 'linux', 'win32', 'win64']
+        assert success, msg
     zipname = '{}.zip'.format(platform)
 
     # Evaluate exes keyword
