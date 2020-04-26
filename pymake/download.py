@@ -267,8 +267,6 @@ def getmfexes(pth='.', version=3.0, platform=None, exes=None):
         success = platform in ['mac', 'linux', 'win32', 'win64']
         if not success:
             raise ValueError(msg)
-
-        assert success, msg
     zipname = '{}.zip'.format(platform)
 
     # Evaluate exes keyword
