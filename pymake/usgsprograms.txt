@@ -3,6 +3,7 @@ mf2000       1.19.01  True    https://water.usgs.gov/nrp/gwsoftware/modflow2000/
 mf2005       1.12.00  True    https://water.usgs.gov/water-resources/software/MODFLOW-2005/MF2005.1_12u.zip                   MF2005.1_12u      src
 mf2005.1.11  1.11.00  False   https://water.usgs.gov/ogw/modflow/archive-mf2005/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip Unix              src
 mfnwt        1.1.4    True    https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.1.4.zip               MODFLOW-NWT_1.1.4 src
+mfnwt1.2.0   1.2.0    False   https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.2.0.zip               MODFLOW-NWT_1.2.0 src
 mfusg        1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src
 zonbudusg    1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src/zonebudusg
 mf6          6.1.0    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.1.0.zip                           mf6.1.0           src

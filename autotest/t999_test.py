@@ -49,11 +49,12 @@ def test_assets():
 
 
 def test_download_and_unzip():
+    exclude_files = ['code.json']
     pth = './temp/t999'
     pymake.getmfexes(pth, '3.0')
     for f in os.listdir(pth):
         fpth = os.path.join(pth, f)
-        if not os.path.isdir(fpth):
+        if not os.path.isdir(fpth) and f not in exclude_files:
             errmsg = '{} not executable'.format(fpth)
             assert which(fpth) is not None, errmsg
 
