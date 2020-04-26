@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import shutil
 import pymake
 
@@ -62,15 +63,19 @@ def clean_up():
         shutil.rmtree(os.path.join('obj_temp'))
         os.remove('makefile')
 
-    # clean up MODFLOW-NWT
-    if os.path.isfile(epth):
-        print('Removing ' + target)
-        os.remove(epth)
-
     # clean up MODFLOW-NWT download
     if os.path.isdir(mfnwtpth):
         print('Removing folder ' + mfnwtpth)
         shutil.rmtree(mfnwtpth)
+
+    ext = ''
+    if sys.platform == 'win32':
+        ext = '.exe'
+
+    # clean up MODFLOW-NWT
+    if os.path.isfile(epth):
+        print('Removing ' + target)
+        os.remove(epth + ext)
 
     return
 

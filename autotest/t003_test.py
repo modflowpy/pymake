@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import shutil
 import pymake
 import flopy
@@ -63,9 +64,13 @@ def clean_up():
     print('Removing folder ' + mfusgpth)
     shutil.rmtree(mfusgpth)
 
+    ext = ''
+    if sys.platform == 'win32':
+        ext = '.exe'
+
     # clean up executable
     print('Removing ' + target)
-    os.remove(epth)
+    os.remove(epth + ext)
     return
 
 

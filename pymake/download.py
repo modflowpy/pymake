@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 import os
+import sys
+import shutil
 from zipfile import ZipFile, ZipInfo
 import tarfile
 
@@ -113,3 +115,90 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         print('Deleting the zipfile...')
         os.remove(file_name)
     print('Done downloading and extracting...\n')
+
+
+def getmfexes(pth='.', version=3.0, platform=None, exes=None):
+    """
+    Get the latest MODFLOW binary executables from a github site
+    (https://github.com/MODFLOW-USGS/executables) for the specified
+    operating system and put them in the specified path.
+
+    Parameters
+    ----------
+    pth : str
+        Location to put the executables (default is current working directory)
+
+    version : str
+        Version of the MODFLOW-USGS/executables release to use.
+
+    platform : str
+        Platform that will run the executables.  Valid values include mac,
+        linux, win32 and win64.  If platform is None, then routine will
+        download the latest asset from the github reposity.
+
+    exes : str or list of strings
+        executable or list of executables to retain
+
+    """
+    download_dir = pth
+
+    # Determine the platform in order to construct the zip file name
+    if platform is None:
+        if sys.platform.lower() == 'darwin':
+            platform = 'mac'
+        elif sys.platform.lower().startswith('linux'):
+            platform = 'linux'
+        elif 'win' in sys.platform.lower():
+            is_64bits = sys.maxsize > 2 ** 32
+            if is_64bits:
+                platform = 'win64'
+            else:
+                platform = 'win32'
+        else:
+            errmsg = ('Could not determine platform'
+                      '.  sys.platform is {}'.format(sys.platform))
+            raise Exception(errmsg)
+    else:
+        assert platform in ['mac', 'linux', 'win32', 'win64']
+    zipname = '{}.zip'.format(platform)
+
+    # Evaluate exes keyword
+    if exes is not None:
+        download_dir = './download_dir/'
+        if isinstance(exes, str):
+            exes = tuple(exes)
+        elif isinstance(exes, (int, float)):
+            msg = 'exes keyword must be a string or a list/tuple of strings'
+            raise TypeError(msg)
+
+    # Wanted to use github api, but this is timing out on travis too often
+    # mfexes_repo_name = 'MODFLOW-USGS/executables'
+    # assets = repo_latest_assets(mfexes_repo_name)
+
+    # Determine path for file download and then download and unzip
+    url = ('https://github.com/MODFLOW-USGS/executables/'
+           'releases/download/{}/'.format(version))
+    assets = {p: url + p for p in ['mac.zip', 'linux.zip',
+                                   'win32.zip', 'win64.zip']}
+    download_url = assets[zipname]
+    download_and_unzip(download_url, download_dir)
+
+    if exes is not None:
+        # make sure pth exists
+        if not os.path.exists(pth):
+            print('Creating the directory:\n    {}'.format(pth))
+            os.makedirs(pth)
+
+        # move select files to pth
+        for f in os.listdir(download_dir):
+            src = os.path.join(download_dir, f)
+            dst = os.path.join(pth, f)
+            if f in exes:
+                shutil.move(src, dst)
+
+        # remove the download directory
+        if os.path.isdir(download_dir):
+            print('Removing folder ' + download_dir)
+            shutil.rmtree(download_dir)
+
+    return

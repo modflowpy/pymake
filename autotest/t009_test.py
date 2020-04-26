@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import shutil
 import pymake
 import flopy
@@ -22,12 +23,17 @@ temp_dict = pymake.usgs_program_data().get_target(mfnwt_target)
 mfnwtpth = os.path.join(dstpth, temp_dict.dirname)
 emfnwt = os.path.abspath(os.path.join(dstpth, mfnwt_target))
 
+mf6_target = 'mf6'
+temp_dict = pymake.usgs_program_data().get_target(mf6_target)
+mf6pth = os.path.join(dstpth, temp_dict.dirname)
+emf6 = os.path.abspath(os.path.join(dstpth, mf6_target))
+
 # example path
 expth = os.path.join(mtusgspth, 'data')
 
 # set up pths and exes
-pths = [mtusgspth, mfnwtpth]
-exes = [emtusgs, emfnwt]
+pths = [mtusgspth, mfnwtpth, mf6pth]
+exes = [emtusgs, emfnwt, emf6]
 
 
 def get_example_dirs():
@@ -46,11 +52,16 @@ def run_mt3dusgs(temp_dir):
 
     mf_nam = None
     mt_nam = None
+    flow_model = None
     for f in files:
         if '_mf.nam' in f.lower():
             mf_nam = f
+            flow_model = 'mfnwt'
         if '_mt.nam' in f.lower():
             mt_nam = f
+        if f == 'mfsim.nam':
+            mf_nam = f
+            flow_model = 'mf6'
 
     msg = 'A MODFLOW name file not present in {}'.format(model_ws)
     assert mf_nam is not None, msg
@@ -62,8 +73,15 @@ def run_mt3dusgs(temp_dir):
     msg = '{}'.format(emfnwt)
     if mf_nam is not None:
         msg += ' {}'.format(os.path.basename(mf_nam))
-    success, buff = flopy.run_model(emfnwt, mf_nam, model_ws=model_ws,
+    if flow_model == 'mfnwt':
+        nam = mf_nam
+        eapp = emfnwt
+    elif flow_model == 'mf6':
+        nam = None
+        eapp = emf6
+    success, buff = flopy.run_model(eapp, nam, model_ws=model_ws,
                                     silent=False)
+
     assert success, 'could not run...{}'.format(msg)
 
     # run the MT3D-USGS model
@@ -83,10 +101,19 @@ def clean_up(pth, exe):
         print('Removing folder ' + pth)
         shutil.rmtree(pth)
 
+    ext = ''
+    if sys.platform == 'win32':
+        ext = '.exe'
+
     # clean up compiled executables
     if os.path.isfile(exe):
         print('Removing ' + exe)
-        os.remove(exe)
+        os.remove(exe + ext)
+    return
+
+
+def test_download_exes():
+    pymake.getmfexes(dstpth, version='3.0', exes=('mfnwt', 'mf6'))
     return
 
 
@@ -102,15 +129,27 @@ def test_compile_mt3dusgs():
     return
 
 
-def test_compile_mfnwt():
-    # Remove the existing MODFLOW-NWT directory if it exists
-    if os.path.isdir(mfnwtpth):
-        shutil.rmtree(mfnwtpth)
-
-    # compile MODFLOW-NWT
-    pymake.build_program(target=mfnwt_target,
-                         download_dir=dstpth,
-                         exe_dir=dstpth)
+# def test_compile_mfnwt():
+#     # Remove the existing MODFLOW-NWT directory if it exists
+#     if os.path.isdir(mfnwtpth):
+#         shutil.rmtree(mfnwtpth)
+#
+#     # compile MODFLOW-NWT
+#     pymake.build_program(target=mfnwt_target,
+#                          download_dir=dstpth,
+#                          exe_dir=dstpth)
+#
+#
+# def test_compile_mf6():
+#     # Remove the existing MODFLOW-6 directory if it exists
+#     if os.path.isdir(mf6pth):
+#         shutil.rmtree(mf6pth)
+#
+#     # compile MODFLOW-6
+#     pymake.build_program(target=mf6_target,
+#                          include_subdirs=True,
+#                          download_dir=dstpth,
+#                          exe_dir=dstpth)
 
 
 def test_mt3dusgs():
@@ -126,11 +165,17 @@ def test_clean_up():
 
 
 if __name__ == "__main__":
+    # download mfnwt and mf6
+    test_download_exes()
+
     # compile MT3D-USGS
     test_compile_mt3dusgs()
 
-    # compile MODFLOW-NWT
-    test_compile_mfnwt()
+    # # compile MODFLOW-NWT
+    # test_compile_mfnwt()
+    #
+    # # compile MODFLOW 6
+    # test_compile_mf6()
 
     # get name files and simulation name
     example_dirs = get_example_dirs()

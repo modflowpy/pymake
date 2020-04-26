@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import shutil
 
 import pymake
@@ -139,6 +140,19 @@ def test_teardown():
     if os.path.isdir(testdir_previous):
         print('Removing folder ' + testdir_previous)
         shutil.rmtree(testdir_previous)
+
+    ext = ''
+    if sys.platform == 'win32':
+        ext = '.exe'
+
+    # clean up targets
+    ttarget = target_release + ext
+    print('Removing ' + key_release)
+    os.remove(ttarget)
+
+    ttarget = target_previous + ext
+    print('Removing ' + key_previous)
+    os.remove(ttarget)
 
     return
 
