@@ -1250,6 +1250,11 @@ def update_mfnwt_files(srcdir, fc, cc, arch, double):
         f.write(line)
     f.close()
 
+    # remove lrestart.f
+    fpth = os.path.join(srcdir, 'Irestart.f')
+    if os.path.exists(fpth):
+        os.remove(fpth)
+
 
 def update_gsflow_files(srcdir, fc, cc, arch, double):
     # update gwf2swt7.f

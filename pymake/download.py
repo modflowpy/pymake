@@ -161,7 +161,7 @@ def repo_json_assets(github_repo):
     return assets
 
 
-def repo_latest_assets(github_repo):
+def repo_latest_assets(github_repo=None):
     """
     Return a dictionary containing the file name and the link to the asset
     contained in a github repository.
@@ -169,7 +169,8 @@ def repo_latest_assets(github_repo):
     Parameters
     ----------
     github_repo : str
-        Repository name, such as MODFLOW-USGS/modflow6
+        Repository name, such as MODFLOW-USGS/modflow6. If github_repo is
+        None set to 'MODFLOW-USGS/executables'
 
     Returns
     -------
@@ -177,6 +178,9 @@ def repo_latest_assets(github_repo):
         dictionary of file names and links
 
     """
+    if github_repo is None:
+        github_repo = 'MODFLOW-USGS/executables'
+
     assets = repo_json_assets(github_repo)
     result_dict = {}
     for asset in assets:
@@ -187,7 +191,7 @@ def repo_latest_assets(github_repo):
     return result_dict
 
 
-def repo_latest_version(github_repo):
+def repo_latest_version(github_repo=None):
     """
     Return a string of the latest version number (tag) contained in a
     github repository release.
@@ -195,7 +199,8 @@ def repo_latest_version(github_repo):
     Parameters
     ----------
     github_repo : str
-        Repository name, such as MODFLOW-USGS/modflow6
+        Repository name, such as MODFLOW-USGS/modflow6. If github_repo is
+        None set to 'MODFLOW-USGS/executables'
 
     Returns
     -------
@@ -203,6 +208,9 @@ def repo_latest_version(github_repo):
         string with the latest version/tag number
 
     """
+    if github_repo is None:
+        github_repo = 'MODFLOW-USGS/executables'
+
     version = None
     assets = repo_json_assets(github_repo)
 
@@ -221,7 +229,7 @@ def repo_latest_version(github_repo):
     return version
 
 
-def getmfexes(pth='.', version=3.0, platform=None, exes=None):
+def getmfexes(pth='.', version=None, platform=None, exes=None):
     """
     Get the latest MODFLOW binary executables from a github site
     (https://github.com/MODFLOW-USGS/executables) for the specified
@@ -233,7 +241,8 @@ def getmfexes(pth='.', version=3.0, platform=None, exes=None):
         Location to put the executables (default is current working directory)
 
     version : str
-        Version of the MODFLOW-USGS/executables release to use.
+        Version of the MODFLOW-USGS/executables release to use. If version is
+        None the github repo will be queried for the version number.
 
     platform : str
         Platform that will run the executables.  Valid values include mac,
@@ -244,6 +253,11 @@ def getmfexes(pth='.', version=3.0, platform=None, exes=None):
         executable or list of executables to retain
 
     """
+    # determine latest version number if not passed
+    if version is None:
+        version = repo_latest_version('MODFLOW-USGS/executables')
+
+    # set download directory to path in case a selection of files
     download_dir = pth
 
     # Determine the platform in order to construct the zip file name
