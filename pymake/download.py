@@ -62,8 +62,19 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     tic = timeit.default_timer()
     for idx in range(nattempts):
         print(' download attempt: {}'.format(idx + 1))
-        #
-        req = requests.get(url, stream=True, verify=verify)
+
+        # open request
+        try:
+            req = requests.get(url, stream=True, verify=verify)
+        except TimeoutError:
+            continue
+        except requests.ConnectionError:
+            continue
+        except:
+            e = sys.exc_info()[0]
+            raise Exception(e)
+
+        # connection established - download the file
         fs = 0
         lenfs = 0
         if 'Content-length' in req.headers:

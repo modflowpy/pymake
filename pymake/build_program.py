@@ -1301,13 +1301,13 @@ def update_gsflow_files(srcdir, fc, cc, arch, double):
             shutil.rmtree(pth)
 
     # remove existing *.mod, *.o, and *.a (if any are left) files
-    dirs = [os.path.join(srcdir, o) for o in os.listdir(srcdir)
-            if os.path.isdir(os.path.join(srcdir, o))]
+    dpths = [os.path.join(srcdir, o) for o in os.listdir(srcdir)
+             if os.path.isdir(os.path.join(srcdir, o))]
 
-    for dir in dirs:
-        for f in os.listdir(dir):
+    for dpth in dpths:
+        for f in os.listdpth(dpth):
             ext = os.path.splitext(f)[1]
-            fpth = os.path.join(dir, f)
+            fpth = os.path.join(dpth, f)
             if ext in ['.mod', '.o', '.a']:
                 os.remove(fpth)
 
