@@ -28,8 +28,7 @@ def which(program):
 
 
 def test_latest_version():
-    mfexes_repo_name = 'MODFLOW-USGS/executables'
-    version = pymake.repo_latest_version(mfexes_repo_name)
+    version = pymake.repo_latest_version()
     test_version = '3.0'
     msg = 'returned version ({}) '.format(version) + \
           'is not equal to defined version ({})'.format(test_version)

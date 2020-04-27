@@ -176,7 +176,8 @@ def clean_up(pth, exe):
 
 
 def test_download_exes():
-    pymake.getmfexes(dstpth, version='3.0', exes=('mf2005', 'mfusg', 'mf6'))
+    version = pymake.repo_latest_version()
+    pymake.getmfexes(dstpth, version=version, exes=('mf2005', 'mfusg', 'mf6'))
     return
 
 
