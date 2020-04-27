@@ -290,11 +290,12 @@ class usgs_program_data:
             msg = 'could not export json file "{}"'.format(fpth)
             raise IOError(msg)
 
-        # export code.json to --appdir directory, if it exists
+        # export code.json to --appdir directory, if the
+        # command line argument was specified
         bindir = pymake.set_bindir()
         if bindir != '.':
             dst = os.path.join(bindir, fpth)
-            with open(fpth, 'w') as f:
+            with open(dst, 'w') as f:
                 json.dump(prog_data, f, indent=4)
 
         return
