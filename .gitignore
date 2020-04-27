@@ -67,3 +67,11 @@ obj_temp/
 src_temp/
 *.exe
 Dependencies
+
+# files in the examples directory
+examples/win32/
+examples/win64/
+examples/mac/
+examples/linux/
+examples/temp/
+

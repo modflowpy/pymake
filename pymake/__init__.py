@@ -16,5 +16,4 @@ from .autotest import setup, setup_comparison, teardown, \
     compare_stages, compare, \
     setup_mf6, setup_mf6_comparison, get_mf6_comparison, get_mf6_files
 from .build_program import build_program, build_apps, build_replace, \
-    set_compiler
-
+    set_compiler, set_bindir
