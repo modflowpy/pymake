@@ -224,9 +224,18 @@ def initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
             print('Warning in excludefiles: {}'.format(excludefiles))
             print('Could not find file: {}'.format(fname))
         else:
-            dst = os.path.join(srcdir_temp, os.path.basename(fname))
-            if os.path.isfile(dst):
-                os.remove(dst)
+            base = None
+            tail = True
+            while tail:
+                fname, tail = os.path.split(fname)
+                if base is None:
+                    base = tail
+                else:
+                    base = os.path.join(tail, base)
+                dst = os.path.join(srcdir_temp, base)
+                if os.path.isfile(dst):
+                    os.remove(dst)
+                    tail = False
 
     # set srcdir_temp
     srcdir_temp = os.path.join(srcdir_temp)
