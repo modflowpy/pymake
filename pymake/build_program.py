@@ -1231,33 +1231,37 @@ def update_mfnwt_files(srcdir, fc, cc, arch, double):
     # update gwf2swt7.f
     tag = 'EST(J,I,N)=0.0'
     fpth = os.path.join(srcdir, 'gwf2swt7.f')
-    with open(fpth) as f:
-        lines = f.readlines()
-    f = open(fpth, 'w')
-    for line in lines:
-        if tag in line:
-            indent = len(line) - len(line.lstrip())
-            line += indent * ' ' + 'PCS(J,I,N)=0.0\n'
-        f.write(line)
-    f.close()
+    if os.path.exists(fpth):
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, 'w')
+        for line in lines:
+            if tag in line:
+                indent = len(line) - len(line.lstrip())
+                line += indent * ' ' + 'PCS(J,I,N)=0.0\n'
+            f.write(line)
+        f.close()
 
     # remove lrestart.f
     fpth = os.path.join(srcdir, 'Irestart.f')
     if os.path.exists(fpth):
         os.remove(fpth)
 
-    # update gwf2swi27.f
+    # update gwf2swi27.f or gwf2swi27.f
     fpth = os.path.join(srcdir, 'gwf2swi27.f')
-    tag = '(i,csolver(i),i=1,3)'
-    new_tag = '(i,csolver(i),i=1,2)'
-    with open(fpth) as f:
-        lines = f.readlines()
-    f = open(fpth, 'w')
-    for line in lines:
-        if tag in line:
-            line = line.replace(tag, new_tag)
-        f.write(line)
-    f.close()
+    if not os.path.exists(fpth):
+        fpth = os.path.join(srcdir, 'gwf2swi27.fpp')
+    if os.path.exists(fpth):
+        tag = '(i,csolver(i),i=1,3)'
+        new_tag = '(i,csolver(i),i=1,2)'
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, 'w')
+        for line in lines:
+            if tag in line:
+                line = line.replace(tag, new_tag)
+            f.write(line)
+        f.close()
 
 
 def update_gsflow_files(srcdir, fc, cc, arch, double):
@@ -1274,18 +1278,21 @@ def update_gsflow_files(srcdir, fc, cc, arch, double):
         f.write(line)
     f.close()
 
-    # update gwf2swi27.f
+    # update gwf2swi27.f or gwf2swi27.fpp
     fpth = os.path.join(srcdir, 'modflow', 'gwf2swi27.f')
-    tag = '(i,csolver(i),i=1,3)'
-    new_tag = '(i,csolver(i),i=1,2)'
-    with open(fpth) as f:
-        lines = f.readlines()
-    f = open(fpth, 'w')
-    for line in lines:
-        if tag in line:
-            line = line.replace(tag, new_tag)
-        f.write(line)
-    f.close()
+    if not os.path.exists(fpth):
+        fpth = os.path.join(srcdir, 'modflow', 'gwf2swi27.fpp')
+    if os.path.exists(fpth):
+        tag = '(i,csolver(i),i=1,3)'
+        new_tag = '(i,csolver(i),i=1,2)'
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, 'w')
+        for line in lines:
+            if tag in line:
+                line = line.replace(tag, new_tag)
+            f.write(line)
+        f.close()
 
     # remove merge and lib directories
     pths = [os.path.join(srcdir, 'merge'), os.path.join(srcdir, 'lib')]
@@ -1306,17 +1313,18 @@ def update_gsflow_files(srcdir, fc, cc, arch, double):
 
     # edit and remove os specific files
     if sys.platform.lower() == 'win32':
-        tag = "FORM='BINARY'"
-        new_tag = "FORM='UNFORMATTED', ACCESS='STREAM'"
-        fpth = os.path.join(srcdir, 'prms', 'utils_prms_windows.f90')
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, 'w')
-        for line in lines:
-            if tag in line:
-                line = line.replace(tag, new_tag)
-            f.write(line)
-        f.close()
+        if 'ifort' not in fc:
+            tag = "FORM='BINARY'"
+            new_tag = "FORM='UNFORMATTED', ACCESS='STREAM'"
+            fpth = os.path.join(srcdir, 'prms', 'utils_prms_windows.f90')
+            with open(fpth) as f:
+                lines = f.readlines()
+            f = open(fpth, 'w')
+            for line in lines:
+                if tag in line:
+                    line = line.replace(tag, new_tag)
+                f.write(line)
+            f.close()
 
         fpths = [os.path.join(srcdir, 'prms', 'utils_prms_linux.f90'),
                  os.path.join(srcdir, 'prms', 'utils_prms.f90')]
