@@ -84,13 +84,15 @@ def set_bindir(target=None):
             bindir = sys.argv[idx + 1]
             if not os.path.isdir(bindir):
                 os.mkdir(bindir)
+
+    # set default directory to current directory
     if bindir is None:
         bindir = '.'
-    if not os.path.isdir(bindir):
-        bindir = '.'
-        if target is not None:
-            print('{} will be placed in the directory:\n'.format(target) +
-                  '    "{}"\n'.format(bindir))
+
+    # write message
+    if target is not None:
+        print('{} will be placed in the directory:\n'.format(target) +
+              '    "{}"\n'.format(bindir))
 
     return bindir
 
@@ -141,7 +143,12 @@ def set_build(target, exe_name):
     if keep:
         print('Determining if {} needs to be built'.format(exe_name))
 
-        exe_exists = which(exe_name)
+        bindir = set_bindir()
+        if bindir != '.':
+            fpth = os.path.join(bindir, exe_name)
+            exe_exists = which(fpth)
+        else:
+            exe_exists = which(exe_name)
 
         # determine if it is in the current directory
         if exe_exists is None:
@@ -1305,7 +1312,7 @@ def update_gsflow_files(srcdir, fc, cc, arch, double):
              if os.path.isdir(os.path.join(srcdir, o))]
 
     for dpth in dpths:
-        for f in os.listdpth(dpth):
+        for f in os.listdir(dpth):
             ext = os.path.splitext(f)[1]
             fpth = os.path.join(dpth, f)
             if ext in ['.mod', '.o', '.a']:

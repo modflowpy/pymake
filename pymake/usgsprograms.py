@@ -1,5 +1,4 @@
 import os
-import shutil
 import json
 from collections import OrderedDict
 
@@ -291,11 +290,12 @@ class usgs_program_data:
             msg = 'could not export json file "{}"'.format(fpth)
             raise IOError(msg)
 
-        #
+        # export code.json to --appdir directory, if it exists
         bindir = pymake.set_bindir()
         if bindir != '.':
             dst = os.path.join(bindir, fpth)
-            shutil.copyfile(fpth, dst)
+            with open(fpth, 'w') as f:
+                json.dump(prog_data, f, indent=4)
 
         return
 
