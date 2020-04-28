@@ -53,7 +53,7 @@ def test_previous_assets():
     assets = pymake.get_repo_assets(mfexes_repo_name, version=version)
     msg = "failed to get release {} ".format(version) + \
           "from the '{}' repo".format(mfexes_repo_name)
-    assert isinstance(assets, (dict)), msg
+    assert isinstance(assets, dict), msg
     return
 
 
