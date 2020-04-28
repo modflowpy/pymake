@@ -276,6 +276,14 @@ def set_fflags(target, fc='gfortran'):
     if target == 'mp7':
         if fc == 'gfortran':
             fflags = '-ffree-line-length-512'
+    elif target == 'gsflow':
+        if fc == 'ifort':
+            if 'win32' in sys.platform.lower():
+                fflags = '/fp:source /names:lowercase /assume:underscore'
+            else:
+                fflags = '-fp-model source'
+        elif fc == 'gfortran':
+            fflags = '-fno-second-underscore'
 
     # add additional fflags from the command line
     for idx, arg in enumerate(sys.argv):
@@ -320,6 +328,14 @@ def set_cflags(target, cc='gcc'):
                 cflags = '-lm'
         else:
             cflags = '-DNO_TIMER'
+    elif target == 'gsflow':
+        if cc == 'icc' or cc == 'icl':
+            if 'win32' in sys.platform.lower():
+                cflags = '/Wall /D_CRT_SECURE_NO_WARNINGS'
+            else:
+                cflags = '-D_UF -Wall'
+        elif cc == 'gcc':
+            cflags = '-D_UF'
 
     # add additional cflags from the command line
     for idx, arg in enumerate(sys.argv):
@@ -373,6 +389,10 @@ def set_syslibs(target, fc, cc):
                 lcc = True
             if lfc and lcc:
                 syslibs = '-lm'
+    elif target == 'gsflow':
+        if 'win32' not in sys.platform.lower():
+            if 'ifort' in fc:
+                syslibs = '-nofor_main'
 
     # write syslibs
     msg = '{} will use the following predefined syslibs:\n'.format(target)
@@ -709,6 +729,18 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         if verify:
             msg = '{} build failure.'.format(app)
             assert os.path.isfile(exe_name), msg
+
+        # remove *.exp and *.lib from windows builds
+        if target in ['gsflow', 'mfnwt']:
+            if fc == 'ifort':
+                if 'win32' in sys.platform.lower():
+                    fpth = exe_name.replace('.exe', '.exp')
+                    if os.path.exists(fpth):
+                        os.remove(fpth)
+                    fpth = exe_name.replace('.exe', '.lib')
+                    if os.path.exists(fpth):
+                        os.remove(fpth)
+
 
         # clean download directory if different than directory with executable
         download_clean = set_download_clean(download_clean)

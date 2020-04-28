@@ -290,10 +290,13 @@ class usgs_program_data:
             msg = 'could not export json file "{}"'.format(fpth)
             raise IOError(msg)
 
+        # determine if running on Travis
+        is_travis = 'TRAVIS' in os.environ
+
         # export code.json to --appdir directory, if the
-        # command line argument was specified
+        # command line argument was specified. Only done if not travis
         bindir = pymake.set_bindir()
-        if bindir != '.':
+        if bindir != '.' and not is_travis:
             dst = os.path.join(bindir, fpth)
             with open(dst, 'w') as f:
                 json.dump(prog_data, f, indent=4)
