@@ -276,18 +276,17 @@ def repo_json(github_repo, tag_name=None):
     # process the request
     success, r, json_obj = get_request_json(request_url)
 
-    # connection established - get the requested data
+    # evaluate request errors
     if not success:
-        if r.status_code != requests.codes.ok:
-            msg = r.text['message']
-            if 'API rate limit exceeded' in msg:
-                print(msg + '\n will use default values.')
-                if github_repo == get_default_repo():
-                    json_obj = get_default_json(tag_name)
-            else:
-                msg = 'Could not find latest executables from ' + request_url
-                print(msg)
-                r.raise_for_status()
+        msg = r.text['message']
+        if 'API rate limit exceeded' in msg:
+            print(msg + '\n will use default values.')
+            if github_repo == get_default_repo():
+                json_obj = get_default_json(tag_name)
+        else:
+            msg = 'Could not find latest executables from ' + request_url
+            print(msg)
+            r.raise_for_status()
 
     # return json object
     return json_obj
