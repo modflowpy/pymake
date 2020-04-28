@@ -55,8 +55,10 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     if not os.path.exists(pth):
         print('Creating the directory:\n    {}'.format(pth))
         os.makedirs(pth)
+
     print('Attempting to download the file:\n    {}'.format(url))
     file_name = os.path.join(pth, url.split('/')[-1])
+
     # download the file
     success = False
     tic = timeit.default_timer()
@@ -84,8 +86,8 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         if fs > 0:
             bfmt = '{:' + '{}'.format(lenfs) + ',d}'
             sbfmt = '{:>' + '{}'.format(len(bfmt.format(int(fs)))) + 's} bytes'
-            print(
-                '   file size: {}'.format(sbfmt.format(bfmt.format(int(fs)))))
+            msg = '   file size: {}'.format(sbfmt.format(bfmt.format(int(fs))))
+            print(msg)
         ds = 0
         try:
             req = requests.get(url, verify=verify, timeout=timeout,
@@ -150,7 +152,7 @@ def get_default_json(tag_name=None):
 
     Returns
     -------
-    jsonobj : dict
+    json_obj : dict
         json object (dictionary) with a tag_name and assets including
         file names and download links
 
@@ -159,7 +161,7 @@ def get_default_json(tag_name=None):
         tag_name = '3.0'
     url = ('https://github.com/MODFLOW-USGS/executables/'
            'releases/download/{}/'.format(tag_name))
-    jsonobj = {'tag_name': tag_name}
+    json_obj = {'tag_name': tag_name}
 
     # define asset names and paths for assets
     names = ['mac.zip', 'linux.zip', 'win32.zip', 'win64.zip']
@@ -168,9 +170,48 @@ def get_default_json(tag_name=None):
     assets_list = []
     for name, path in zip(names, paths):
         assets_list.append({'name': name, 'browser_download_url': path})
-    jsonobj['assets'] = assets_list
+    json_obj['assets'] = assets_list
 
-    return jsonobj
+    return json_obj
+
+
+def get_request_json(request_url):
+    """
+    Process a url request and return a json if successful.
+
+    Parameters
+    ----------
+    request_url : str
+        url for request
+
+    Returns
+    -------
+    success : bool
+        boolean indicating if the requat failed
+
+    status_code: integer
+        request status code
+
+    json_obj : dict
+        json object
+
+    """
+    import requests
+    import json
+
+    json_obj = None
+    success = True
+
+    # open request
+    r = requests.get(request_url)
+
+    # connection established - retrieve the json
+    if r.ok:
+        json_obj = json.loads(r.text or r.content)
+    else:
+        success = r.status_code == requests.codes.ok
+
+    return success, r, json_obj
 
 
 def repo_json(github_repo, tag_name=None):
@@ -188,39 +229,55 @@ def repo_json(github_repo, tag_name=None):
 
     Returns
     -------
-    jsonobj : dict
+    json_obj : dict
         json object (dictionary) with a tag_name and assets including
         file names and download links
 
     """
     import requests
-    import json
     repo_url = 'https://api.github.com/repos/{}'.format(github_repo)
 
-    jsonobj = None
-    request_url = '{}/releases/latest'.format(repo_url)
-    print('Requesting from: {}'.format(request_url))
-
-    # open request
-    r = requests.get(request_url)
-
-    # connection established - get the latest data
-    if r.ok:
-        jsonobj = json.loads(r.text or r.content)
+    if tag_name is None:
+        request_url = '{}/releases/latest'.format(repo_url)
     else:
+        request_url = '{}/releases'.format(repo_url)
+        success, r, json_cat = get_request_json(request_url)
+        if success:
+            request_url = None
+            for release in json_cat:
+                if release['tag_name'] == tag_name:
+                    request_url = release['url']
+                    break
+            if request_url is None:
+                msg = "Could not find tag_name ('{}') ".format(tag_name) + \
+                      "in release catalog"
+                raise Exception(msg)
+        else:
+            msg = 'Could not get release catalog from ' + request_url
+            raise Exception(msg)
+
+    msg = "Requesting asset data for tag_name '{}' ".format(tag_name) + \
+          "from: {}".format(request_url)
+    print(msg)
+
+    # process the request
+    success, r, json_obj = get_request_json(request_url)
+
+    # connection established - get the requested data
+    if not success:
         if r.status_code != requests.codes.ok:
             msg = r.text['message']
             if 'API rate limit exceeded' in msg:
                 print(msg + '\n will use default values.')
                 if github_repo == 'MODFLOW-USGS/modflow6':
-                    jsonobj = get_default_json(tag_name)
+                    json_obj = get_default_json(tag_name)
             else:
                 msg = 'Could not find latest executables from ' + request_url
                 print(msg)
                 r.raise_for_status()
 
-    # return assets
-    return jsonobj
+    # return json object
+    return json_obj
 
 
 def get_repo_assets(github_repo=None, version=None):
@@ -248,8 +305,8 @@ def get_repo_assets(github_repo=None, version=None):
         github_repo = 'MODFLOW-USGS/executables'
 
     # get json and extract assets
-    jsonobj = repo_json(github_repo, tag_name=version)
-    assets = jsonobj['assets']
+    json_obj = repo_json(github_repo, tag_name=version)
+    assets = json_obj['assets']
 
     # build simple assets dictionary
     result_dict = {}
@@ -282,9 +339,9 @@ def repo_latest_version(github_repo=None):
         github_repo = 'MODFLOW-USGS/executables'
 
     # get json
-    jsonobj = repo_json(github_repo)
+    json_obj = repo_json(github_repo)
 
-    return jsonobj['tag_name']
+    return json_obj['tag_name']
 
 
 def getmfexes(pth='.', version=None, platform=None, exes=None):

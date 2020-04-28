@@ -36,7 +36,7 @@ def test_latest_version():
     return
 
 
-def test_assets():
+def test_latest_assets():
     mfexes_repo_name = 'MODFLOW-USGS/executables'
     assets = pymake.get_repo_assets(mfexes_repo_name)
     keys = assets.keys()
@@ -44,6 +44,16 @@ def test_assets():
     for key in keys:
         msg = 'unknown key ({}) found in github repo assets'.format(key)
         assert key in test_keys, msg
+    return
+
+
+def test_previous_assets():
+    mfexes_repo_name = 'MODFLOW-USGS/modflow6'
+    version = '6.0.4'
+    assets = pymake.get_repo_assets(mfexes_repo_name, version=version)
+    msg = "failed to get release {} ".format(version) + \
+          "from the '{}' repo".format(mfexes_repo_name)
+    assert isinstance(assets, (dict)), msg
     return
 
 
@@ -73,6 +83,7 @@ def test_download_and_unzip():
 
 
 if __name__ == '__main__':
+    test_previous_assets()
     test_latest_version()
-    test_assets()
+    test_latest_assets()
     test_download_and_unzip()
