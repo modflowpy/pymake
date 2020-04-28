@@ -138,7 +138,7 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     print('Done downloading and extracting...\n')
 
 
-def repo_json_assets(github_repo):
+def repo_json_assets(github_repo, attempts=10):
     """
     Return a list of dictionaries with attributes for the latest github
     release in a github repository.
@@ -147,6 +147,8 @@ def repo_json_assets(github_repo):
     ----------
     github_repo : str
         Repository name, such as MODFLOW-USGS/modflow6
+    attempts : int
+        Number of attempts to make for establishing a requests connection
 
     Returns
     -------
@@ -161,13 +163,28 @@ def repo_json_assets(github_repo):
     assets = None
     request_url = '{}/releases/latest'.format(repo_url)
     print('Requesting from: {}'.format(request_url))
-    r = requests.get(request_url)
-    if r.ok:
-        jsonobj = json.loads(r.text or r.content)
-        assets = jsonobj['assets']
-    else:
-        msg = 'Could not find latest executables from ' + request_url
-        raise ValueError(msg)
+
+    for idx in range(attempts):
+        print(' request attempt: {}'.format(idx + 1))
+
+        # open request
+        try:
+            r = requests.get(request_url)
+        except TimeoutError:
+            continue
+        except requests.ConnectionError:
+            continue
+        except:
+            e = sys.exc_info()[0]
+            raise Exception(e)
+
+        # connection established - get the data
+        if r.ok:
+            jsonobj = json.loads(r.text or r.content)
+            assets = jsonobj['assets']
+        else:
+            msg = 'Could not find latest executables from ' + request_url
+            raise ValueError(msg)
 
     return assets
 
