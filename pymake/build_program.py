@@ -1102,7 +1102,7 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
                 os.remove(dst_file)
             print('{} -> {}'.format(src_file, dst_dir))
             # shutil.copy(src_file, dst_dir)
-            shutil.move(src_file, dst_dir)
+            shutil.move(src_file, dst_file)
 
     # remove the original source directory
     dname = os.path.join(rootdir, 'src')
@@ -1389,12 +1389,12 @@ def update_mf2000_files(srcdir, fc, cc, arch, double):
     files = [f for f in os.listdir(tpth) if
              os.path.isfile(os.path.join(tpth, f))]
     for f in files:
-        shutil.move(os.path.join(tpth, f), srcdir)
+        shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
     tpth = os.path.join(srcdir, 'mf2k', 'serial')
     files = [f for f in os.listdir(tpth) if
              os.path.isfile(os.path.join(tpth, f))]
     for f in files:
-        shutil.move(os.path.join(tpth, f), srcdir)
+        shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
 
     # Remove mf2k directory in source directory
     tpth = os.path.join(srcdir, 'mf2k')
