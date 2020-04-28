@@ -247,7 +247,6 @@ def repo_json(github_repo, tag_name=None):
         file names and download links
 
     """
-    import requests
     repo_url = 'https://api.github.com/repos/{}'.format(github_repo)
 
     if tag_name is None:
