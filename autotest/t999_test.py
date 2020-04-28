@@ -38,7 +38,7 @@ def test_latest_version():
 
 def test_assets():
     mfexes_repo_name = 'MODFLOW-USGS/executables'
-    assets = pymake.repo_latest_assets(mfexes_repo_name)
+    assets = pymake.get_repo_assets(mfexes_repo_name)
     keys = assets.keys()
     test_keys = ['mac.zip', 'linux.zip', 'win32.zip', 'win64.zip']
     for key in keys:
@@ -50,7 +50,7 @@ def test_assets():
 def test_download_and_unzip():
     exclude_files = ['code.json']
     pth = './temp/t999'
-    pymake.getmfexes(pth, '3.0')
+    pymake.getmfexes(pth)
     for f in os.listdir(pth):
         fpth = os.path.join(pth, f)
         if not os.path.isdir(fpth) and f not in exclude_files:

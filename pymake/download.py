@@ -138,58 +138,92 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     print('Done downloading and extracting...\n')
 
 
-def repo_json_assets(github_repo, attempts=10):
+def get_default_json(tag_name=None):
     """
-    Return a list of dictionaries with attributes for the latest github
-    release in a github repository.
+    Return a default github api json for the provided release tag_name in a
+    github repository.
+
+    Parameters
+    ----------
+    tag_name : str
+        github repository release tag
+
+    Returns
+    -------
+    jsonobj : dict
+        json object (dictionary) with a tag_name and assets including
+        file names and download links
+
+    """
+    if tag_name is None:
+        tag_name = '3.0'
+    url = ('https://github.com/MODFLOW-USGS/executables/'
+           'releases/download/{}/'.format(tag_name))
+    jsonobj = {'tag_name': tag_name}
+
+    # define asset names and paths for assets
+    names = ['mac.zip', 'linux.zip', 'win32.zip', 'win64.zip']
+    paths = [url + p for p in names]
+
+    assets_list = []
+    for name, path in zip(names, paths):
+        assets_list.append({'name': name, 'browser_download_url': path})
+    jsonobj['assets'] = assets_list
+
+    return jsonobj
+
+
+def repo_json(github_repo, tag_name=None):
+    """
+    Return the github api json for the latest github release in a
+    github repository.
 
     Parameters
     ----------
     github_repo : str
         Repository name, such as MODFLOW-USGS/modflow6
-    attempts : int
-        Number of attempts to make for establishing a requests connection
+
+    tag_name : str
+        github repository release tag
 
     Returns
     -------
-    assets : list
-        dictionary of file names and links
+    jsonobj : dict
+        json object (dictionary) with a tag_name and assets including
+        file names and download links
 
     """
     import requests
     import json
     repo_url = 'https://api.github.com/repos/{}'.format(github_repo)
 
-    assets = None
+    jsonobj = None
     request_url = '{}/releases/latest'.format(repo_url)
     print('Requesting from: {}'.format(request_url))
 
-    for idx in range(attempts):
-        print(' request attempt: {}'.format(idx + 1))
+    # open request
+    r = requests.get(request_url)
 
-        # open request
-        try:
-            r = requests.get(request_url)
-        except TimeoutError:
-            continue
-        except requests.ConnectionError:
-            continue
-        except:
-            e = sys.exc_info()[0]
-            raise Exception(e)
+    # connection established - get the latest data
+    if r.ok:
+        jsonobj = json.loads(r.text or r.content)
+    else:
+        if r.status_code != requests.codes.ok:
+            msg = r.text['message']
+            if 'API rate limit exceeded' in msg:
+                print(msg + '\n will use default values.')
+                if github_repo == 'MODFLOW-USGS/modflow6':
+                    jsonobj = get_default_json(tag_name)
+            else:
+                msg = 'Could not find latest executables from ' + request_url
+                print(msg)
+                r.raise_for_status()
 
-        # connection established - get the data
-        if r.ok:
-            jsonobj = json.loads(r.text or r.content)
-            assets = jsonobj['assets']
-        else:
-            msg = 'Could not find latest executables from ' + request_url
-            raise ValueError(msg)
-
-    return assets
+    # return assets
+    return jsonobj
 
 
-def repo_latest_assets(github_repo=None):
+def get_repo_assets(github_repo=None, version=None):
     """
     Return a dictionary containing the file name and the link to the asset
     contained in a github repository.
@@ -200,6 +234,10 @@ def repo_latest_assets(github_repo=None):
         Repository name, such as MODFLOW-USGS/modflow6. If github_repo is
         None set to 'MODFLOW-USGS/executables'
 
+    version : str
+        github repository release tag
+
+
     Returns
     -------
     result_dict : dict
@@ -209,7 +247,11 @@ def repo_latest_assets(github_repo=None):
     if github_repo is None:
         github_repo = 'MODFLOW-USGS/executables'
 
-    assets = repo_json_assets(github_repo)
+    # get json and extract assets
+    jsonobj = repo_json(github_repo, tag_name=version)
+    assets = jsonobj['assets']
+
+    # build simple assets dictionary
     result_dict = {}
     for asset in assets:
         k = asset['name']
@@ -239,22 +281,10 @@ def repo_latest_version(github_repo=None):
     if github_repo is None:
         github_repo = 'MODFLOW-USGS/executables'
 
-    version = None
-    assets = repo_json_assets(github_repo)
+    # get json
+    jsonobj = repo_json(github_repo)
 
-    for asset in assets:
-        v = asset['browser_download_url']
-        if version is None:
-            pths = v.split('/')
-            try:
-                idx = pths.index('download')
-                version = pths[idx + 1]
-            except:
-                msg = 'could not determine the latest version number'
-                raise ValueError(msg)
-            break
-
-    return version
+    return jsonobj['tag_name']
 
 
 def getmfexes(pth='.', version=None, platform=None, exes=None):
@@ -275,16 +305,12 @@ def getmfexes(pth='.', version=None, platform=None, exes=None):
     platform : str
         Platform that will run the executables.  Valid values include mac,
         linux, win32 and win64.  If platform is None, then routine will
-        download the latest asset from the github reposity.
+        download the latest asset from the github repository.
 
     exes : str or list of strings
         executable or list of executables to retain
 
     """
-    # determine latest version number if not passed
-    if version is None:
-        version = repo_latest_version('MODFLOW-USGS/executables')
-
     # set download directory to path in case a selection of files
     download_dir = pth
 
@@ -320,15 +346,9 @@ def getmfexes(pth='.', version=None, platform=None, exes=None):
             msg = 'exes keyword must be a string or a list/tuple of strings'
             raise TypeError(msg)
 
-    # Wanted to use github api, but this is timing out on travis too often
-    # mfexes_repo_name = 'MODFLOW-USGS/executables'
-    # assets = repo_latest_assets(mfexes_repo_name)
-
     # Determine path for file download and then download and unzip
-    url = ('https://github.com/MODFLOW-USGS/executables/'
-           'releases/download/{}/'.format(version))
-    assets = {p: url + p for p in ['mac.zip', 'linux.zip',
-                                   'win32.zip', 'win64.zip']}
+    assets = get_repo_assets(github_repo='MODFLOW-USGS/executables',
+                             version=version)
     download_url = assets[zipname]
     download_and_unzip(download_url, download_dir)
 
