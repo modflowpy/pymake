@@ -21,7 +21,8 @@ class dotdict(dict):
 program_data_file = 'usgsprograms.txt'
 
 # keys to create for each target
-target_keys = ['version', 'current', 'url', 'dirname', 'srcdir']
+target_keys = ['version', 'current', 'url', 'dirname', 'srcdir',
+               'standard_switch', 'double_switch']
 
 
 def str_to_bool(s):
@@ -79,7 +80,7 @@ class usgs_program_data:
             d = OrderedDict()
             for idx, key in enumerate(target_keys):
                 v = t[idx + 1]
-                if key == 'current':
+                if key in ['current', 'standard_switch', 'double_switch']:
                     v = str_to_bool(v)
                 d[key] = v
 
@@ -164,6 +165,31 @@ class usgs_program_data:
 
         """
         return usgs_program_data()._program_dict
+
+    @staticmethod
+    def get_precision(key):
+        """
+        Get the dictionary for a specified target
+
+        Parameters
+        ----------
+        key : str
+            Target USGS program
+
+        Returns
+        -------
+        precision : list
+            List
+
+
+        """
+        target = usgs_program_data().get_target(key)
+        precision = []
+        if target.standard_switch:
+            precision.append(False)
+        if target.double_switch:
+            precision.append(True)
+        return precision
 
     @staticmethod
     def list_targets(current=False):
@@ -263,6 +289,17 @@ class usgs_program_data:
         except:
             msg = 'could not export json file "{}"'.format(fpth)
             raise IOError(msg)
+
+        # determine if running on Travis
+        is_travis = 'TRAVIS' in os.environ
+
+        # export code.json to --appdir directory, if the
+        # command line argument was specified. Only done if not travis
+        bindir = pymake.set_bindir()
+        if bindir != '.' and not is_travis:
+            dst = os.path.join(bindir, fpth)
+            with open(dst, 'w') as f:
+                json.dump(prog_data, f, indent=4)
 
         return
 

@@ -1,23 +1,22 @@
-#target      version  current url                                                                                             dirname           srcdir
-mf2000       1.19.01  True    https://water.usgs.gov/nrp/gwsoftware/modflow2000/mf2k1_19_01.tar.gz                            mf2k.1_19         src
-mf2005       1.12.00  True    https://water.usgs.gov/water-resources/software/MODFLOW-2005/MF2005.1_12u.zip                   MF2005.1_12u      src
-mf2005.1.11  1.11.00  False   https://water.usgs.gov/ogw/modflow/archive-mf2005/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip Unix              src
-mfnwt1.1.4   1.1.4    False   https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.1.4.zip               MODFLOW-NWT_1.1.4 src
-mfnwt        1.2.0    True    https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.2.0.zip               MODFLOW-NWT_1.2.0 src
-mfusg        1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src
-zonbudusg    1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src/zonebudusg
-mf6          6.1.0    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.1.0.zip                           mf6.1.0           src
-zbud6        6.1.0    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.1.0.zip                           mf6.1.0           utils/zonebudget/src
-swtv4        4.00.05  True    https://water.usgs.gov/water-resources/software/SEAWAT/swt_v4_00_05.zip                         swt_v4_00_05      source
-mp6          6.0.1    True    https://water.usgs.gov/water-resources/software/MODPATH/modpath.6_0_01.zip                      modpath.6_0       src
-mp7          7.2.001  True    https://water.usgs.gov/water-resources/software/MODPATH/modpath_7_2_001.zip                     modpath_7_2_001   source
-mflgr        2.0.0    True    https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip                      mflgr.2_0         src
-mt3dms       5.3.0    True    https://hydro.geo.ua.edu/mt3d/mt3dms_530.exe                                                    mt3dms5.3.0       src/true-binary
-mt3dusgs     1.1.0    True    https://water.usgs.gov/water-resources/software/MT3D-USGS/mt3dusgs1.1.0.zip                     mt3dusgs1.1.0     src
-vs2dt        3.3      True    https://water.usgs.gov/water-resources/software/VS2DI/vs2dt3_3.zip                              vs2dt3_3          include
-triangle     1.6      True    https://www.netlib.org/voronoi/triangle.zip                                                     triangle1.6       src
-gridgen      1.0.02   True    https://water.usgs.gov/water-resources/software/GRIDGEN/gridgen.1.0.02.zip                      gridgen.1.0.02    src
-zonbud3      3.01     True    https://water.usgs.gov/water-resources/software/ZONEBUDGET/zonbud3_01.exe                       Zonbud.3_01       Src
-crt          1.3.1    True    https://water.usgs.gov/ogw/CRT/CRT_1.3.1.zip                                                    CRT_1.3.1         SOURCE
-gsflow       2.0.0    False   https://water.usgs.gov/water-resources/software/gsflow/gsflow_2.0.0_linux.zip                   GSFLOW_2.0.0      src
-mf6beta      6.3.0    False   https://github.com/MODFLOW-USGS/modflow6/archive/mf6beta.zip                                    modflow6-mf6beta  src
+#target      version  current url                                                                                             dirname           srcdir                  standard_switch double_switch
+mf2000       1.19.01  True    https://water.usgs.gov/nrp/gwsoftware/modflow2000/mf2k1_19_01.tar.gz                            mf2k.1_19         src                     True            False
+mf2005       1.12.00  True    https://water.usgs.gov/water-resources/software/MODFLOW-2005/MF2005.1_12u.zip                   MF2005.1_12u      src                     True            True
+mf2005.1.11  1.11.00  False   https://water.usgs.gov/ogw/modflow/archive-mf2005/MODFLOW-2005_v1.11.00/mf2005v1_11_00_unix.zip Unix              src                     True            False
+mfnwt1.1.4   1.1.4    False   https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.1.4.zip               MODFLOW-NWT_1.1.4 src                     True            False
+mfnwt        1.2.0    True    https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.2.0.zip               MODFLOW-NWT_1.2.0 src                     True            True
+mfusg        1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src                     True            True
+zonbudusg    1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src/zonebudusg          True            False
+mf6          6.1.0    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.1.0.zip                           mf6.1.0           src                     True            False
+zbud6        6.1.0    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.1.0.zip                           mf6.1.0           utils/zonebudget/src    True            False
+swtv4        4.00.05  True    https://water.usgs.gov/water-resources/software/SEAWAT/swt_v4_00_05.zip                         swt_v4_00_05      source                  False           True
+mp6          6.0.1    True    https://water.usgs.gov/water-resources/software/MODPATH/modpath.6_0_01.zip                      modpath.6_0       src                     True            False
+mp7          7.2.001  True    https://water.usgs.gov/water-resources/software/MODPATH/modpath_7_2_001.zip                     modpath_7_2_001   source                  True            False
+mflgr        2.0.0    True    https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip                      mflgr.2_0         src                     True            True
+mt3dms       5.3.0    True    https://hydro.geo.ua.edu/mt3d/mt3dms_530.exe                                                    mt3dms5.3.0       src/true-binary         True            False
+mt3dusgs     1.1.0    True    https://water.usgs.gov/water-resources/software/MT3D-USGS/mt3dusgs1.1.0.zip                     mt3dusgs1.1.0     src                     True            False
+vs2dt        3.3      True    https://water.usgs.gov/water-resources/software/VS2DI/vs2dt3_3.zip                              vs2dt3_3          include                 True            False
+triangle     1.6      True    https://www.netlib.org/voronoi/triangle.zip                                                     triangle1.6       src                     True            False
+gridgen      1.0.02   True    https://water.usgs.gov/water-resources/software/GRIDGEN/gridgen.1.0.02.zip                      gridgen.1.0.02    src                     True            False
+zonbud3      3.01     True    https://water.usgs.gov/water-resources/software/ZONEBUDGET/zonbud3_01.exe                       Zonbud.3_01       Src                     True            False
+crt          1.3.1    True    https://water.usgs.gov/ogw/CRT/CRT_1.3.1.zip                                                    CRT_1.3.1         SOURCE                  True            False
+gsflow       2.1.0    True    https://water.usgs.gov/water-resources/software/gsflow/gsflow_2.1.0_linux.zip                   gsflow_2.1.0      src                     True            False
