@@ -741,7 +741,6 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                     if os.path.exists(fpth):
                         os.remove(fpth)
 
-
         # clean download directory if different than directory with executable
         download_clean = set_download_clean(download_clean)
         if download_clean:

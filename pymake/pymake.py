@@ -828,7 +828,7 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
 
             # put module files in moddir_temp
             cmdlist.append('-module')
-            cmdlist.append('./' + moddir_temp + '/')
+            cmdlist.append(moddir_temp + '/')
 
         # add search path for any header files
         for sd in searchdir:
@@ -840,7 +840,7 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
         # object file name and location
         srcname, srcext = os.path.splitext(srcfile)
         srcname = srcname.split(os.path.sep)[-1]
-        objfile = os.path.join('.', objdir_temp, srcname + '.o')
+        objfile = os.path.join(objdir_temp, srcname + '.o')
         cmdlist.append('-o')
         cmdlist.append(objfile)
 
