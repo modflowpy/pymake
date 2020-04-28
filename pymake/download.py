@@ -140,6 +140,19 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     print('Done downloading and extracting...\n')
 
 
+def get_default_repo():
+    """
+    Return the default repo name
+
+    Returns
+    -------
+    default_repo : str
+        default github repository repo name
+
+    """
+    return 'MODFLOW-USGS/executables'
+
+
 def get_default_json(tag_name=None):
     """
     Return a default github api json for the provided release tag_name in a
@@ -159,7 +172,7 @@ def get_default_json(tag_name=None):
     """
     if tag_name is None:
         tag_name = '3.0'
-    url = ('https://github.com/MODFLOW-USGS/executables/'
+    url = ('https://github.com/{}/'.format(get_default_repo()) +
            'releases/download/{}/'.format(tag_name))
     json_obj = {'tag_name': tag_name}
 
@@ -269,7 +282,7 @@ def repo_json(github_repo, tag_name=None):
             msg = r.text['message']
             if 'API rate limit exceeded' in msg:
                 print(msg + '\n will use default values.')
-                if github_repo == 'MODFLOW-USGS/modflow6':
+                if github_repo == get_default_repo():
                     json_obj = get_default_json(tag_name)
             else:
                 msg = 'Could not find latest executables from ' + request_url
@@ -302,7 +315,7 @@ def get_repo_assets(github_repo=None, version=None):
 
     """
     if github_repo is None:
-        github_repo = 'MODFLOW-USGS/executables'
+        github_repo = get_default_repo()
 
     # get json and extract assets
     json_obj = repo_json(github_repo, tag_name=version)
@@ -336,7 +349,7 @@ def repo_latest_version(github_repo=None):
 
     """
     if github_repo is None:
-        github_repo = 'MODFLOW-USGS/executables'
+        github_repo = get_default_repo()
 
     # get json
     json_obj = repo_json(github_repo)
@@ -404,7 +417,7 @@ def getmfexes(pth='.', version=None, platform=None, exes=None):
             raise TypeError(msg)
 
     # Determine path for file download and then download and unzip
-    assets = get_repo_assets(github_repo='MODFLOW-USGS/executables',
+    assets = get_repo_assets(github_repo=get_default_repo(),
                              version=version)
     download_url = assets[zipname]
     download_and_unzip(download_url, download_dir)
