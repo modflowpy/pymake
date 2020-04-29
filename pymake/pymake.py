@@ -696,6 +696,8 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
             compileflags.insert(ipos, '-shared')
 
         for switch in compileflags:
+            if switch[:2] == '-I' or switch[:2] == '-J':
+                continue
             cmd += switch + ' '
             cmdlist.append(switch)
 
