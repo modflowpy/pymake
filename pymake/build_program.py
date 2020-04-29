@@ -283,7 +283,9 @@ def set_fflags(target, fc='gfortran'):
             else:
                 fflags = '-fp-model source'
         elif fc == 'gfortran':
-            fflags = '-fno-second-underscore'
+            fflags = '-O1 -fno-second-underscore'
+            # if 'win32' in sys.platform.lower():
+            #     fflags += ' -Bstatic -Wall'
 
     # add additional fflags from the command line
     for idx, arg in enumerate(sys.argv):
@@ -331,11 +333,14 @@ def set_cflags(target, cc='gcc'):
     elif target == 'gsflow':
         if cc == 'icc' or cc == 'icl':
             if 'win32' in sys.platform.lower():
-                cflags = '/Wall /D_CRT_SECURE_NO_WARNINGS'
+                cflags = '/D_CRT_SECURE_NO_WARNINGS'
             else:
-                cflags = '-D_UF -Wall'
+                cflags = '-D_UF'
         elif cc == 'gcc':
-            cflags = '-D_UF'
+            # cflags = '-O -D_UF'
+            cflags = '-O1'
+            # if 'win32' in sys.platform.lower():
+            #     cflags += ' -Bstatic -Wall'
 
     # add additional cflags from the command line
     for idx, arg in enumerate(sys.argv):
@@ -393,6 +398,10 @@ def set_syslibs(target, fc, cc):
         if 'win32' not in sys.platform.lower():
             if 'ifort' in fc:
                 syslibs = '-nofor_main'
+        # else:
+        #     if 'gfortran' in fc:
+        #         if 'win32' in sys.platform.lower():
+        #             syslibs = '-lgfortran -lgcc -lm'
 
     # write syslibs
     msg = '{} will use the following predefined syslibs:\n'.format(target)
@@ -1029,6 +1038,7 @@ def build_apps(targets=None):
     print('elapsed time (hh:mm:ss.ms): {}\n'.format(elapsed))
 
     return returncode
+
 
 def compress_apps(targets=None):
     """

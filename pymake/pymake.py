@@ -449,10 +449,13 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     # define the platform
     platform = sys.platform
 
-    # For horrible windows issue
+    # set shellflg for popen
     shellflg = False
-    if platform == 'win32':
-        shellflg = True
+
+    # jdh commented out 4/29/2020 since is working with python 3
+    # For horrible windows issue
+    # if platform == 'win32':
+    #     shellflg = True
 
     # define the OS macro for gfortran
     if platform == 'win32':
@@ -498,7 +501,7 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
             compileflags.append('-fPIC')
 
         if debug:
-            compileflags += ['-fcheck=all', '-fbounds-check']
+            compileflags += ['-fcheck=all', '-fbounds-check', '-Wall']
             lflag = flag_available('-ffpe-trap')
             if lflag:
                 compileflags.append(
@@ -513,6 +516,10 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
         # add fbacktrace to debug and release versions
         compileflags.append('-fbacktrace')
+
+        # add static
+        if sys.platform == 'win32':
+            compileflags.append('-Bstatic')
 
         # add double precision switches
         if double:
@@ -557,6 +564,8 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         cflags += [opt]
 
     if cc.startswith('g'):
+        if sys.platform == 'win32':
+            cflags += ['-Bstatic']
         if debug:
             lflag = flag_available('-Wall')
             if lflag:
@@ -564,17 +573,33 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         else:
             pass
 
-    # syslibs
+    # determine if any c, cpp or fortran files
+    iscfiles = False
+    isfortranfiles = False
+    for srcfile in srcfiles:
+        ext = os.path.splitext(srcfile)[1].lower()
+        if ext in ['.c', '.cpp']:  # mja
+            iscfiles = True
+        elif ext in ['.f', '.for', '.f90', '.fpp']:
+            isfortranfiles = True
+
     # reset syslibs for windows
     if sys.platform == 'win32':
         syslibs = []
+        if isfortranfiles:
+            syslibs.append('-lgfortran')
+        if iscfiles:
+            syslibs.append('-lgcc')
+        syslibs.append('-lm')
 
     # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
-    # code that is linked to C/C++ code
-    # -D_UF defines UNIX naming conventions for mixed language compilation.
-    use_iso_c = get_iso_c(srcfiles)
-    if not use_iso_c:
-        cflags.append('-D_UF')
+    # code that is linked to C/C++ code. Only needed if there are
+    # any fortran files. -D_UF defines UNIX naming conventions for
+    # mixed language compilation.
+    if isfortranfiles:
+        use_iso_c = get_iso_c(srcfiles)
+        if not use_iso_c:
+            cflags.append('-D_UF')
 
     # build object files
     print('\nCompiling object files for ' +
@@ -591,7 +616,8 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     for srcfile in srcfiles:
         cmdlist = []
         iscfile = False
-        if srcfile.endswith('.c') or srcfile.endswith('.cpp'):  # mja
+        ext = os.path.splitext(srcfile)[1].lower()
+        if ext in ['.c', '.cpp']:  # mja
             iscfile = True
             cmdlist.append(cc)  # mja
             for switch in cflags:  # mja
@@ -601,9 +627,14 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
             for switch in compileflags:
                 cmdlist.append(switch)
 
-        # add search path for any header files
-        for sd in searchdir:
-            cmdlist.append('-I{}'.format(sd))
+        # add search path for any c and c++ header files
+        if iscfile:
+            for sd in searchdir:
+                cmdlist.append('-I{}'.format(sd))
+        # put object files and module files in objdir_temp and moddir_temp
+        else:
+            cmdlist.append('-I{}'.format(objdir_temp))
+            cmdlist.append('-J{}'.format(moddir_temp))
 
         cmdlist.append('-c')
         cmdlist.append(srcfile)
@@ -614,12 +645,6 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         objfile = os.path.join(objdir_temp, srcname + '.o')
         cmdlist.append('-o')
         cmdlist.append(objfile)
-
-        if not iscfile:
-            # put object files in objdir_temp
-            cmdlist.append('-I' + objdir_temp)
-            # put module files in moddir_temp
-            cmdlist.append('-J' + moddir_temp)
 
         # If expedited, then check if object file is out of date (if exists).
         # No need to compile if object file is newer.
@@ -1304,7 +1329,7 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
 
 def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
          expedite=False, dryrun=False, double=False, debug=False,
-         include_subdirs=False, fflags=None, cflags=None, syslibs='-lc',
+         include_subdirs=False, fflags=None, cflags=None, syslibs=None,
          arch='intel64', makefile=False, srcdir2=None, extrafiles=None,
          excludefiles=None, cmake=None, sharedobject=False):
     """
@@ -1351,9 +1376,14 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     # get ordered list of files to compile
     srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
 
+    # add default syslibs
+    if syslibs is None:
+        if sys.platform != 'win32':
+            syslibs = '-lc'
+
     # convert syslibs to a list
     if isinstance(syslibs, str):
-        syslibs = [syslibs]
+        syslibs = syslibs.split()
 
     # compile with gfortran or ifort
     winifort = False
@@ -1389,7 +1419,6 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
         else:
             winifort = True
             objext = '.obj'
-            # cc = 'cl.exe'
             returncode = compile_with_ifort(srcfiles, target, fc, cc,
                                             objdir_temp, moddir_temp,
                                             expedite, dryrun, double, debug,
