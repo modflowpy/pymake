@@ -109,6 +109,8 @@ def test_compile_gsflow():
     # download and compile GSFLOW
     pymake.build_program(target=target,
                          include_subdirs=True,
+                         fflags='-O1 -fno-second-underscore',
+                         cflags='-O1',
                          download_dir=dstpth,
                          exe_dir=dstpth)
     return

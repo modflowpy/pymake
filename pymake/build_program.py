@@ -12,7 +12,7 @@ else:
     from distutils.spawn import find_executable as which
 
 from .pymake import main
-from .download import download_and_unzip
+from .download import download_and_unzip, zip_all
 from .usgsprograms import usgs_program_data
 
 
@@ -283,7 +283,9 @@ def set_fflags(target, fc='gfortran'):
             else:
                 fflags = '-fp-model source'
         elif fc == 'gfortran':
-            fflags = '-fno-second-underscore'
+            fflags = '-O1 -fno-second-underscore'
+            # if 'win32' in sys.platform.lower():
+            #     fflags += ' -Bstatic -Wall'
 
     # add additional fflags from the command line
     for idx, arg in enumerate(sys.argv):
@@ -331,11 +333,14 @@ def set_cflags(target, cc='gcc'):
     elif target == 'gsflow':
         if cc == 'icc' or cc == 'icl':
             if 'win32' in sys.platform.lower():
-                cflags = '/Wall /D_CRT_SECURE_NO_WARNINGS'
+                cflags = '/D_CRT_SECURE_NO_WARNINGS'
             else:
-                cflags = '-D_UF -Wall'
+                cflags = '-D_UF'
         elif cc == 'gcc':
-            cflags = '-D_UF'
+            # cflags = '-O -D_UF'
+            cflags = '-O1'
+            # if 'win32' in sys.platform.lower():
+            #     cflags += ' -Bstatic -Wall'
 
     # add additional cflags from the command line
     for idx, arg in enumerate(sys.argv):
@@ -393,6 +398,10 @@ def set_syslibs(target, fc, cc):
         if 'win32' not in sys.platform.lower():
             if 'ifort' in fc:
                 syslibs = '-nofor_main'
+        # else:
+        #     if 'gfortran' in fc:
+        #         if 'win32' in sys.platform.lower():
+        #             syslibs = '-lgfortran -lgcc -lm'
 
     # write syslibs
     msg = '{} will use the following predefined syslibs:\n'.format(target)
@@ -530,6 +539,34 @@ def set_extrafiles(target, download_dir):
     print('{}\n'.format(msg))
 
     return extrafiles
+
+
+def set_zip():
+    """
+    Set file path for zip file
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    zip_pth : str
+        path for zip file
+
+    """
+    zip_pth = None
+    for idx, arg in enumerate(sys.argv):
+        if arg.lower() == '--zip':
+            if idx < len(sys.argv) - 1:
+                zip_pth = sys.argv[idx + 1]
+
+    # write c/c++ flags
+    if zip_pth is not None:
+        msg = 'compiled executibles will be compressed to:\n'
+        msg += '    {}\n'.format(zip_pth)
+        print(msg)
+
+    return zip_pth
 
 
 def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
@@ -999,6 +1036,55 @@ def build_apps(targets=None):
     end_time = datetime.now()
     elapsed = end_time - start_time
     print('elapsed time (hh:mm:ss.ms): {}\n'.format(elapsed))
+
+    return returncode
+
+
+def compress_apps(targets=None):
+    """
+
+    Parameters
+    ----------
+    targets : str or list of str
+
+    Returns
+    -------
+    returncode : int
+
+    """
+    # intialize the return code
+    returncode = 0
+
+    # get the specified zip file path
+    zip_pth = set_zip()
+
+    # compress the compiled executables
+    if zip_pth is not None:
+        # determine targets if not defined
+        if targets is None:
+            targets = build_targets()
+
+        # add code.json
+        if 'code.json' not in targets:
+            targets.append('code.json')
+
+        # delete the zip file if it exists
+        if os.path.exists(zip_pth):
+            print("Deleting existing zipfile '{}'".format(zip_pth))
+            os.remove(zip_pth)
+
+        # set the bin dir
+        bindir = set_bindir()
+
+        # compress the compiled executables
+        msg = "Compressing files in '{}' ".format(bindir) + \
+              "directory to zip file '{}'".format(zip_pth)
+        print(msg)
+        success = zip_all(zip_pth, dir_pths=bindir, patterns=targets)
+
+        # set return code
+        if not success:
+            returncode = 1
 
     return returncode
 

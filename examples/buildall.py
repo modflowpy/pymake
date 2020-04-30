@@ -15,6 +15,9 @@ def build_all():
         # build code json
         pymake.usgs_program_data.export_json(current=True)
 
+        # compress files
+        pymake.compress_apps()
+
 
 if __name__ == '__main__':
     build_all()

@@ -4,11 +4,11 @@ import os
 import sys
 import shutil
 import timeit
-from zipfile import ZipFile, ZipInfo
+from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 import tarfile
 
 
-class MyZipFile(ZipFile):
+class pymakeZipFile(ZipFile):
     """
     ZipFile file attributes are not being preserved.  This preserves file
     attributes as described here
@@ -42,6 +42,71 @@ class MyZipFile(ZipFile):
 
         for zipinfo in members:
             self.extract(zipinfo, path, pwd)
+
+    @staticmethod
+    def compressall(path, file_pths=None, dir_pths=None, patterns=None):
+
+        # create an empty list
+        if file_pths is None:
+            file_pths = []
+        # convert files to a list
+        else:
+            if isinstance(file_pths, str):
+                file_pths = [file_pths]
+            elif isinstance(file_pths, tuple):
+                file_pths = list(file_pths)
+
+        # remove directories from the file list
+        if len(file_pths) > 0:
+            file_pths = [e for e in file_pths if os.path.isfile(e)]
+
+        # convert dirs to a list if a str (a tuple is allowed)
+        if dir_pths is None:
+            dir_pths = []
+        else:
+            if isinstance(dir_pths, str):
+                dir_pths = [dir_pths]
+
+        # convert find to a list if a str (a tuple is allowed)
+        if patterns is not None:
+            if isinstance(patterns, str):
+                patterns = [patterns]
+
+        # walk through dirs and add files to the list
+        for dir_pth in dir_pths:
+            for dirname, subdirs, files in os.walk(dir_pth):
+                for filename in files:
+                    fpth = os.path.join(dirname, filename)
+                    # add the file if it does not exist in file_pths
+                    if fpth not in file_pths:
+                        file_pths.append(fpth)
+
+        # remove file_paths that do not match the patterns
+        if patterns is not None:
+            tlist = []
+            for file_pth in file_pths:
+                if any(p in os.path.basename(file_pth) for p in patterns):
+                    tlist.append(file_pth)
+            file_pths = tlist
+
+        # write the zipfile
+        success = True
+        if len(file_pths) > 0:
+            zf = ZipFile(path, 'w', ZIP_DEFLATED)
+
+            # write files to zip file
+            for file_pth in file_pths:
+                arcname = os.path.basename(file_pth)
+                zf.write(file_pth, arcname=arcname)
+
+            # close the zip file
+            zf.close()
+        else:
+            msg = 'No files to add to the zip file'
+            print(msg)
+            success = False
+
+        return success
 
 
 def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
@@ -120,7 +185,7 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     # Unzip the file, and delete zip file if successful.
     if 'zip' in os.path.basename(file_name) or \
             'exe' in os.path.basename(file_name):
-        z = MyZipFile(file_name)
+        z = pymakeZipFile(file_name)
         try:
             print('Extracting the zipfile...')
             z.extractall(pth)
@@ -138,6 +203,36 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         print('Deleting the zipfile...')
         os.remove(file_name)
     print('Done downloading and extracting...\n')
+
+
+def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
+    """
+    compress all files in the user-provided list of file paths and directory
+    paths that match the provided file patterns
+
+    Parameters
+    ----------
+    path : str
+        path of the zip file that will be created
+
+    file_pths : str or list
+        file path or list of file paths to be compressed
+
+    dir_pths : str or list
+        directory path or list of directory paths to search for files that
+        will be compressed
+
+    patterns : str or list
+        file pattern or list of file patterns s to match to when creating a
+        list of files that will be compressed
+
+    Returns
+    -------
+
+
+    """
+    return pymakeZipFile.compressall(path, file_pths=file_pths,
+                                     dir_pths=dir_pths, patterns=patterns)
 
 
 def get_default_repo():
@@ -268,8 +363,10 @@ def repo_json(github_repo, tag_name=None):
             msg = 'Could not get release catalog from ' + request_url
             raise Exception(msg)
 
-    msg = "Requesting asset data for tag_name '{}' ".format(tag_name) + \
-          "from: {}".format(request_url)
+    msg = "Requesting asset data "
+    if tag_name is not None:
+        msg += "for tag_name '{}' ".format(tag_name)
+    msg += "from: {}".format(request_url)
     print(msg)
 
     # process the request

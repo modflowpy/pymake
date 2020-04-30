@@ -20,3 +20,4 @@ gridgen      1.0.02   True    https://water.usgs.gov/water-resources/software/GR
 zonbud3      3.01     True    https://water.usgs.gov/water-resources/software/ZONEBUDGET/zonbud3_01.exe                       Zonbud.3_01       Src                     True            False
 crt          1.3.1    True    https://water.usgs.gov/ogw/CRT/CRT_1.3.1.zip                                                    CRT_1.3.1         SOURCE                  True            False
 gsflow       2.1.0    True    https://water.usgs.gov/water-resources/software/gsflow/gsflow_2.1.0_linux.zip                   gsflow_2.1.0      src                     True            False
+sutra        3.0      True    http://water.usgs.gov/water-resources/software/sutra/SUTRA_3_0_0.zip                            SutraSuite        SUTRA_3_0/source        True            False
