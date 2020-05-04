@@ -374,13 +374,12 @@ def repo_json(github_repo, tag_name=None):
 
     # evaluate request errors
     if not success:
-        msg = r.text['message']
-        if 'API rate limit exceeded' in msg:
-            print(msg + '\n will use default values.')
-            if github_repo == get_default_repo():
-                json_obj = get_default_json(tag_name)
+        if github_repo == get_default_repo():
+            msg = 'will use dafault values for {}'.format(github_repo)
+            print(msg)
+            json_obj = get_default_json(tag_name)
         else:
-            msg = 'Could not find latest executables from ' + request_url
+            msg = 'Could not find json from ' + request_url
             print(msg)
             r.raise_for_status()
 
