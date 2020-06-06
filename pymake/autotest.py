@@ -456,13 +456,22 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
                 else:
                     print(srcf + ' does not exist')
         else:
-            for file in files:
-                if '.nam' in os.path.splitext(file)[1].lower():
-                    files2copy.append(
-                        os.path.join(cmppth, os.path.basename(file)))
-                    nf = os.path.join(src, action, os.path.basename(file))
-                    setup(nf, dst, remove_existing=remove_existing)
-                    break
+            if 'mf6' in action.lower():
+                for file in files:
+                    if 'mfsim.nam' in file.lower():
+                        srcf = os.path.join(cmppth, os.path.basename(file))
+                        files2copy.append(srcf)
+                        srcdir = os.path.join(src, action)
+                        setup_mf6(srcdir, dst, remove_existing=remove_existing)
+                        break
+            else:
+                for file in files:
+                    if '.nam' in os.path.splitext(file)[1].lower():
+                        srcf = os.path.join(cmppth, os.path.basename(file))
+                        files2copy.append(srcf)
+                        nf = os.path.join(src, action, os.path.basename(file))
+                        setup(nf, dst, remove_existing=remove_existing)
+                        break
 
     return action
 
