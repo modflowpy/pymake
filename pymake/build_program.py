@@ -1295,6 +1295,20 @@ def update_swtv4_files(srcdir, fc, cc, arch, double):
     return
 
 
+def update_mf6_files(srcdir, fc, cc, arch, double):
+    # update utl7.f
+    fpth = os.path.join(srcdir, 'Utilities', 'defmacro.fpp')
+    tag = 'ios = OSUNIX'
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if tag in line:
+            line = line.replace('OSUNIX', 'OSLINUX')
+        f.write(line)
+    f.close()
+
+
 def update_mf2005_files(srcdir, fc, cc, arch, double):
     # update utl7.f
     tag = 'IBINARY=0'
