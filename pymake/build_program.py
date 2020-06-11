@@ -504,6 +504,8 @@ def set_extrafiles(target, download_dir):
                       '../../../src/Utilities/kind.f90',
                       '../../../src/Utilities/OpenSpec.f90',
                       '../../../src/Utilities/sort.f90',
+                      '../../../src/Utilities/Message.f90',
+                      '../../../src/Utilities/defmacro.fpp',
                       '../../../src/Utilities/Sim.f90',
                       '../../../src/Utilities/SimVariables.f90',
                       '../../../src/Utilities/version.f90']
