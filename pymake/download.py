@@ -179,8 +179,12 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     toc = timeit.default_timer()
     tsec = toc - tic
     print('\ntotal download time: {} seconds'.format(tsec))
-    if fs > 0:
-        print('download speed:      {} MB/s'.format(fs / (1e6 * tsec)))
+    if success:
+        if fs > 0:
+            print('download speed:      {} MB/s'.format(fs / (1e6 * tsec)))
+    else:
+        msg = 'could not download...{}'.format(url)
+        raise ConnectionError(msg)
 
     # Unzip the file, and delete zip file if successful.
     if 'zip' in os.path.basename(file_name) or \
