@@ -236,6 +236,8 @@ def set_compiler(target):
             fc = 'ifort'
         elif arg.lower() == '--icc':
             cc = 'icc'
+        elif arg.lower() == '--icpc':
+            cc = 'icpc'
         elif arg.lower() == '--cl':
             cc = 'cl'
         elif arg.lower() == '--icl':
@@ -249,6 +251,8 @@ def set_compiler(target):
     if target == 'gridgen':
         if cc == 'clang':
             cc = 'clang++'
+        elif cc == 'icc':
+            cc = 'icpc'
 
     msg = '{} fortran code will be built with "{}".\n'.format(target, fc)
     msg += '{} c/c++ code will be built with "{}".\n'.format(target, cc)
