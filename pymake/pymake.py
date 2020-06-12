@@ -1405,7 +1405,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
                                       srcdir, srcdir2,
                                       extrafiles, makefile, sharedobject)
     elif fc == 'ifort' or fc == 'mpiifort' or \
-            (fc is None and cc in ['icc', 'cl', 'icl']):
+            (fc is None and cc in ['icc', 'icpc', 'cl', 'icl']):
         platform = sys.platform
         if 'darwin' in platform.lower() or 'linux' in platform.lower():
             objext = '.o'
