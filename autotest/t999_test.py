@@ -29,10 +29,11 @@ def which(program):
 
 def test_latest_version():
     version = pymake.repo_latest_version()
-    test_version = '3.0'
+    test_version = '4.0'
     msg = 'returned version ({}) '.format(version) + \
-          'is not equal to defined version ({})'.format(test_version)
-    assert version == test_version, msg
+          'is not greater than or equal to ' + \
+          'defined version ({})'.format(test_version)
+    assert float(version) >= float(test_version), msg
     return
 
 
