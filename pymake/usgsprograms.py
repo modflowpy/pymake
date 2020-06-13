@@ -192,6 +192,26 @@ class usgs_program_data:
         return precision
 
     @staticmethod
+    def get_version(key):
+        """
+        Get the current version of the specified target
+
+        Parameters
+        ----------
+        key : str
+            Target USGS program
+
+        Returns
+        -------
+        version : str
+            current version of the specified target
+
+
+        """
+        target = usgs_program_data().get_target(key)
+        return target.version
+
+    @staticmethod
     def list_targets(current=False):
         """
         Print a list of the available USGS program targets
