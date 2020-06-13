@@ -38,7 +38,20 @@ exes = [emtusgs, emfnwt, emf6]
 
 def get_example_dirs():
     exclude_dirs = ['Keating', 'Keating_UZF']
-    exdirs = [o for o in os.listdir(expth)
+
+    upd = pymake.usgs_program_data()
+
+    # exclude additional directories based on version of codes
+    # MODFLOW-NWT
+    ver = upd.get_version('mfnwt')
+    if ver == '1.2.0':
+        exclude_dirs += ['UZT_NonLin',
+                         'UZT_Disp_Lamb01_TVD',
+                         'UZT_Disp_Lamb1',
+                         'UZT_Disp_Lamb10']
+
+    # create list of example directories to test
+    exdirs = [o for o in sorted(os.listdir(expth))
               if os.path.isdir(os.path.join(expth, o)) and
               o not in exclude_dirs]
     return exdirs
