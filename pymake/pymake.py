@@ -56,7 +56,7 @@ def parser():
                                                      'gfortran'])
     parser.add_argument('-cc', help='C compiler to use (default is gcc)',
                         default='gcc', choices=['gcc', 'clang', 'icc',
-                                                'mpiicc', 'g++'])
+                                                'mpiicc', 'g++', 'cl'])
     parser.add_argument('-ar', '--arch',
                         help='Architecture to use for ifort (default is intel64)',
                         default='intel64',
@@ -469,11 +469,13 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     else:
         os_macro = None
 
-    # fortran compiler switches
+    # compiler optimization level
     if debug:
-        opt = '-O0'
+        optlevel = '-O0'
     else:
-        opt = '-O2'
+        optlevel = '-O2'
+
+    # fortran compiler switches
     if fflags is None:
         fflags = []
     elif isinstance(fflags, str):
@@ -482,17 +484,16 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     for fflag in fflags:
         if fflag[:2] == '-O':
             if not debug:
-                opt = fflag
+                optlevel = fflag
             fflags.remove(fflag)
             break  # after first optimization (O) flag
 
     # set fortran flags
+    compileflags = []
+
+    # Debug flags
     if debug:
-        # Debug flags
-        compileflags = ['-g',
-                        opt]
-    else:
-        compileflags = [opt]
+        compileflags = ['-g']
 
     # add gfortran specific compiler switches
     if fc is not None:
@@ -536,11 +537,6 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
             compileflags.append(fflag)
 
     # C/C++ compiler switches -- thanks to mja
-    if debug:
-        opt = '-O0'
-    else:
-        opt = '-O2'
-
     if cflags is None:
         cflags = []
     else:
@@ -551,17 +547,14 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     for cflag in cflags:
         if cflag[:2] == '-O':
             if not debug:
-                opt = cflag
+                optlevel = cflag
             cflags.remove(cflag)
             break  # after first optimization (O) flag
 
     # set additional c flags
+    # Debug flags
     if debug:
-        # Debug flags
-        cflags += ['-g',
-                   opt]
-    else:
-        cflags += [opt]
+        cflags += ['-g']
 
     if cc.startswith('g'):
         if sys.platform == 'win32':
@@ -620,10 +613,12 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         if ext in ['.c', '.cpp']:  # mja
             iscfile = True
             cmdlist.append(cc)  # mja
+            cmdlist.append(optlevel)
             for switch in cflags:  # mja
                 cmdlist.append(switch)  # mja
         else:  # mja
             cmdlist.append(fc)
+            cmdlist.append(optlevel)
             for switch in compileflags:
                 cmdlist.append(switch)
 
@@ -656,7 +651,6 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         # Compile
         if compilefile:
             if not dryrun:
-                # subprocess.check_call(cmdlist, shell=shellflg)
                 proc = Popen(cmdlist, shell=shellflg, stdout=PIPE, stderr=PIPE)
                 process_Popen_command(shellflg, cmdlist)
 
@@ -684,12 +678,14 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     if fc is None:
         cmd = cc + ' '
         cmdlist.append(cc)
+        cmdlist.append(optlevel)
         for switch in cflags:
             cmd += switch + ' '
             cmdlist.append(switch)
     else:
         cmd = fc + ' '
         cmdlist.append(fc)
+        cmdlist.append(optlevel)
 
         if sharedobject:
             ipos = compileflags.index('-fPIC')
@@ -702,8 +698,7 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
             cmdlist.append(switch)
 
     cmdlist.append('-o')
-    cmdlist.append(os.path.join('.', target))
-
+    cmdlist.append(target)
     for objfile in objfiles:
         cmdlist.append(objfile)
 
@@ -735,6 +730,36 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     # return
     return 0
 
+def get_fortran_flags(fc, fflags, debug, double, sharedobject=False,
+                      osname=None):
+    if osname is None:
+        osname = sys.platform.lower()
+
+    if osname in ['linux', 'darwin']:
+        switch = '-'
+    else:
+        switch = '/'
+
+    compileflags = []
+
+    # set optimization
+    if debug:
+        compileflags.append(switch + 'O0')
+    else:
+        compileflags.append(switch + 'O2')
+
+    # add
+    if fc == 'gfortran':
+        if 'win32' in os:
+            compileflags.append('-Bstatic')
+    elif fc in ['ifort', 'ifortmpi']:
+        if 'darwin' in os or 'linux' in os:
+            print('do it')
+
+        else:
+            msg = "unsupported system '{}'".format(os)
+            print('do it')
+
 
 def compile_with_macnix_ifort(srcfiles, target, fc, cc,
                               objdir_temp, moddir_temp,
@@ -746,11 +771,11 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     Make target on Mac OSX
     """
     # fortran compiler switches
-
     if debug:
-        opt = '-O0'
+        optlevel = '-O0'
     else:
-        opt = '-O2'
+        optlevel = '-O2'
+
     if fflags is None:
         fflags = []
     elif isinstance(fflags, str):
@@ -760,21 +785,19 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     for fflag in fflags:
         if fflag[:2] == '-O' or fflag == '-fast':
             if not debug:
-                opt = fflag
+                optlevel = fflag
             fflags.remove(fflag)
             break  # after first optimization (O) flag
 
     # add ifort specific compiler switches
     compileflags = []
     if fc is not None:
-        compileflags.append(opt)
-
         # add shared object switches
         if sharedobject:
             compileflags.append('-fpic')
 
+        # Debug flags
         if debug:
-            # Debug flags
             compileflags += ['-debug', 'all',
                              '-no-heap-arrays',
                              '-fpe0',
@@ -796,11 +819,6 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
                 compileflags.append(fflag)
 
     # C/C++ compiler switches -- thanks to mja
-    if debug:
-        opt = '-O0'
-    else:
-        opt = '-O2'
-
     if cflags is None:
         cflags = []
     else:
@@ -811,17 +829,14 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
     for cflag in cflags:
         if cflag[:2] == '-O':
             if not debug:
-                opt = cflag
+                optlevel = cflag
             cflags.remove(cflag)
             break  # after first optimization (O) flag
 
     # set additional c flags
+    # Debug flags
     if debug:
-        # Debug flags
-        cflags += ['-g',
-                   opt]
-    else:
-        cflags += [opt]
+        cflags += ['-g']
 
     # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
     # code that is linked to C/C++ code
@@ -846,20 +861,29 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
         cmdlist = []
         if srcfile.endswith('.c') or srcfile.endswith('.cpp'):  # mja
             cmdlist.append(cc)  # mja
+            cmdlist.append(optlevel)
             for switch in cflags:  # mja
                 cmdlist.append(switch)  # mja
+
+            # add search path for any header files
+            for sd in searchdir:
+                cmdlist.append('-I {}'.format(sd))
         else:  # mja
             cmdlist.append(fc)
+            cmdlist.append(optlevel)
             for switch in compileflags:
                 cmdlist.append(switch)
+
+            # put object files in objdir_temp
+            cmdlist.append('-I {}/'.format(objdir_temp))
 
             # put module files in moddir_temp
             cmdlist.append('-module')
             cmdlist.append(moddir_temp + '/')
 
-        # add search path for any header files
-        for sd in searchdir:
-            cmdlist.append('-I{}'.format(sd))
+        # # add search path for any header files
+        # for sd in searchdir:
+        #     cmdlist.append('-I {}'.format(sd))
 
         cmdlist.append('-c')
         cmdlist.append(srcfile)
@@ -906,14 +930,13 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
 
     cmdlist = []
     if fc is None:
-        cmd = cc + ' '
         cmdlist.append(cc)
+        cmdlist.append(optlevel)
         for switch in cflags:
-            cmd += switch + ' '
             cmdlist.append(switch)
     else:
-        cmd = fc + ' '
         cmdlist.append(fc)
+        cmdlist.append(optlevel)
 
         if sharedobject:
             ipos = compileflags.index('-fpic')
@@ -924,15 +947,16 @@ def compile_with_macnix_ifort(srcfiles, target, fc, cc,
             compileflags.insert(ipos, copt)
 
         for switch in compileflags:
-            cmd += switch + ' '
             cmdlist.append(switch)
 
     cmdlist.append('-o')
-    cmdlist.append(os.path.join('.', target))
+    # cmdlist.append(os.path.join('.', target))
+    cmdlist.append(target)
     for objfile in objfiles:
         cmdlist.append(objfile)
     for switch in syslibs:
         cmdlist.append(switch)
+
     if not dryrun:
         # subprocess.check_call(cmdlist)
         proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
@@ -987,9 +1011,9 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
     fflags = ['/heap-arrays:0', '/fpe:0', '/traceback', '/nologo']
     if debug:
-        opt = '/debug'
+        optlevel = '/debug'
     else:
-        opt = '/O2'
+        optlevel = '/O2'
     if fflagsu is None:
         fflagsu = []
     elif isinstance(fflagsu, str):
@@ -1002,16 +1026,16 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     for fflag in fflagsu:
         if fflag[:2] in ('-O', '/O') or fflag in ('-fast', '/fast'):
             if not debug:
-                opt = fflag
+                optlevel = fflag
             fflagsu.remove(fflag)
             break  # after first optimization (O) flag
     if debug:
-        fflags.append(opt)
+        # fflags.append(optlevel)
         cflags.append('/Zi')
-    else:
-        # production version compile flags
-        fflags.append(opt)
-        cflags.append('/O2')
+    # else:
+    #     # production version compile flags
+    #     fflags.append(optlevel)
+    #     cflags.append('/O2')
     if double:
         fflags.append('/real-size:64')
         fflags.append('/double-size:64')
@@ -1036,7 +1060,7 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         if flopy_avail:
             if flopy_is_exe(target):
                 os.remove(target)
-        makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target,
+        makebatch(batchfile, fc, cc, optlevel, fflags, cflags, srcfiles, target,
                   arch, objdir_temp, moddir_temp)
         proc = Popen([batchfile, ], stdout=PIPE, stderr=STDOUT)
         while True:
@@ -1064,8 +1088,8 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     return 0
 
 
-def makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target, arch,
-              objdir_temp, moddir_temp):
+def makebatch(batchfile, fc, cc, optlevel, fflags, cflags, srcfiles, target,
+              arch, objdir_temp, moddir_temp):
     """
     Make an ifort batch file
 
@@ -1096,7 +1120,7 @@ def makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target, arch,
     # write commands to build object files
     for srcfile in srcfiles:
         if srcfile.endswith('.c') or srcfile.endswith('.cpp'):
-            cmd = cc + ' '
+            cmd = cc + ' ' + optlevel + ' '
             for switch in cflags:
                 cmd += switch + ' '
 
@@ -1110,7 +1134,7 @@ def makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target, arch,
             cmd += '/Fo' + obj + ' '
             cmd += srcfile
         else:
-            cmd = fc + ' '
+            cmd = fc + ' ' + optlevel + ' '
             for switch in fflags:
                 cmd += switch + ' '
             cmd += '-c' + ' '
@@ -1122,9 +1146,9 @@ def makebatch(batchfile, fc, cc, fflags, cflags, srcfiles, target, arch,
 
     # write commands to link
     if fc is None:
-        cmd = cc + ' '
+        cmd = cc + ' ' + optlevel + ' '
     else:
-        cmd = fc + ' '
+        cmd = fc + ' ' + optlevel + ' '
         for switch in fflags:
             cmd += switch + ' '
     cmd += '-o' + ' ' + target + ' ' + objdir_temp + '\\*.obj' + '\n'
