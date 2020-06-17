@@ -34,6 +34,11 @@ except:
 
 PY3 = sys.version_info[0] >= 3
 
+# define temporary directories
+srcdir_temp = os.path.join('.', 'src_temp')
+objdir_temp = os.path.join('.', 'obj_temp')
+moddir_temp = os.path.join('.', 'mod_temp')
+
 
 def parser():
     """Construct the parser and return argument values."""
@@ -115,7 +120,8 @@ def parser():
 
 
 def process_Popen_command(shellflg, cmdlist):
-    """Generic function to write Popen command data to the screen.
+    """
+    Generic function to write Popen command data to the screen.
 
     Parameters
     ----------
@@ -134,7 +140,8 @@ def process_Popen_command(shellflg, cmdlist):
 
 
 def process_Popen_communicate(stdout, stderr):
-    """Generic function to write communication information from Popen to the
+    """
+    Generic function to write communication information from Popen to the
     screen.
 
     Parameters
@@ -160,21 +167,19 @@ def process_Popen_communicate(stdout, stderr):
 
 
 def initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
-    """Remove temp source directory and target, and then copy source into
+    """
+    Remove temp source directory and target, and then copy source into
     source temp directory.
 
     Return temp directory path.
     """
     # remove the target if it already exists
-    srcdir_temp = os.path.join('.', 'src_temp')
-    objdir_temp = os.path.join('.', 'obj_temp')
-    moddir_temp = os.path.join('.', 'mod_temp')
-
-    # remove srcdir_temp and copy in srcdir
     try:
         os.remove(target)
     except:
         pass
+
+    # remove srcdir_temp and copy in srcdir
     try:
         shutil.rmtree(srcdir_temp)
     except:
@@ -230,16 +235,13 @@ def initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
                     os.remove(dst)
                     tail = False
 
-    # set srcdir_temp
-    srcdir_temp = os.path.join(srcdir_temp)
-
     # if they don't exist, create directories for objects and mods
     if not os.path.exists(objdir_temp):
         os.makedirs(objdir_temp)
     if not os.path.exists(moddir_temp):
         os.makedirs(moddir_temp)
 
-    return srcdir_temp, objdir_temp, moddir_temp
+    return
 
 
 def parse_extrafiles(extrafiles):
@@ -264,8 +266,11 @@ def parse_extrafiles(extrafiles):
     return files
 
 
-def clean(srcdir_temp, objdir_temp, moddir_temp, objext, intelwin):
-    """Remove mod and object files, and remove the temp source directory."""
+def clean(objext, intelwin):
+    """
+    Remove mod and object files, and remove the temp source directory.
+
+    """
     # clean things up
     print('\nCleaning up temporary source, object, and module files...')
     filelist = os.listdir('.')
@@ -274,6 +279,8 @@ def clean(srcdir_temp, objdir_temp, moddir_temp, objext, intelwin):
         for ext in delext:
             if f.endswith(ext):
                 os.remove(f)
+
+    # remove temporary directories
     shutil.rmtree(srcdir_temp)
     shutil.rmtree(objdir_temp)
     shutil.rmtree(moddir_temp)
@@ -282,8 +289,9 @@ def clean(srcdir_temp, objdir_temp, moddir_temp, objext, intelwin):
     return
 
 
-def get_ordered_srcfiles(srcdir_temp, include_subdir=False):
-    """Create a list of ordered source files (both fortran and c).
+def get_ordered_srcfiles(include_subdir=False):
+    """
+    Create a list of ordered source files (both fortran and c).
 
     Ordering is build using a directed acyclic graph to determine module
     dependencies.
@@ -334,8 +342,9 @@ def get_ordered_srcfiles(srcdir_temp, include_subdir=False):
     return orderedsourcefiles
 
 
-def create_openspec(srcdir_temp):
-    """Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
+def create_openspec():
+    """
+    Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
     STREAM ACCESS.
 
     This is specific to MODFLOW and MT3D based targets.
@@ -395,7 +404,8 @@ def get_iso_c(srcfiles):
 
 
 def flag_available(flag):
-    """Determine if a specified flag exists.
+    """
+    Determine if a specified flag exists.
 
     Not all flags will be detected, for example -O2 -fbounds-check=on
     """
@@ -563,7 +573,8 @@ def compile_std(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
 
 def get_osname():
-    """Return the lower case OS platform name.
+    """
+    Return the lower case OS platform name.
 
     Parameters
     -------
@@ -577,7 +588,8 @@ def get_osname():
 
 
 def get_prepend(compiler, osname):
-    """Return the appropriate prepend for a compiler switch for a OS.
+    """
+    Return the appropriate prepend for a compiler switch for a OS.
 
     Parameters
     -------
@@ -602,7 +614,8 @@ def get_prepend(compiler, osname):
 
 
 def fortran_files(srcfiles, extensions=False):
-    """Return a list of fortran files or unique fortran file extensions.
+    """
+    Return a list of fortran files or unique fortran file extensions.
 
     Parameters
     -------
@@ -633,7 +646,8 @@ def fortran_files(srcfiles, extensions=False):
 
 
 def c_files(srcfiles, extensions=False):
-    """Return a list of c and cpp files or unique c and cpp file extensions.
+    """
+    Return a list of c and cpp files or unique c and cpp file extensions.
 
     Parameters
     -------
@@ -663,7 +677,8 @@ def c_files(srcfiles, extensions=False):
 
 
 def get_optlevel(fc, cc, debug, fflags, cflags, osname=None):
-    """Return a compiler optimization switch.
+    """
+    Return a compiler optimization switch.
 
     Parameters
     -------
@@ -730,7 +745,8 @@ def get_optlevel(fc, cc, debug, fflags, cflags, osname=None):
 
 def get_fortran_flags(fc, fflags, debug, double, sharedobject=False,
                       osname=None):
-    """Return a list of standard pymake and user specified fortran compiler
+    """
+    Return a list of standard pymake and user specified fortran compiler
     switches.
 
     Parameters
@@ -832,7 +848,8 @@ def get_fortran_flags(fc, fflags, debug, double, sharedobject=False,
 
 def get_c_flags(cc, cflags, debug, double, srcfiles, sharedobject=False,
                 osname=None):
-    """Return a list of standard pymake and user specified c or cpp compiler
+    """
+    Return a list of standard pymake and user specified c or cpp compiler
     switches.
 
     Parameters
@@ -928,7 +945,8 @@ def get_c_flags(cc, cflags, debug, double, srcfiles, sharedobject=False,
 
 def get_linker_flags(fc, cc, fflags, cflags, debug, double, srcfiles,
                      syslibs, sharedobject=False, osname=None):
-    """Return a list of standard pymake and user specified c or cpp compiler
+    """
+    Return a list of standard pymake and user specified c or cpp compiler
     switches.
 
     Parameters
@@ -1028,7 +1046,7 @@ def compile_intel_win(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     tcflags = get_c_flags(cc, cflags, debug, double, srcfiles)
 
     # get linker flags
-    tcomp, tlflags, tsyslibs = get_linker_flags(fc, cc, fflags, cflags,
+    lc, tlflags, tsyslibs = get_linker_flags(fc, cc, fflags, cflags,
                                                 debug, double,
                                                 srcfiles, syslibs)
 
@@ -1048,7 +1066,7 @@ def compile_intel_win(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
             if flopy_is_exe(target):
                 os.remove(target)
 
-        makebatch(batchfile, fc, cc, optlevel,
+        makebatch(batchfile, fc, cc, lc, optlevel,
                   tfflags, tcflags, tlflags, tsyslibs,
                   srcfiles, target, arch, objdir_temp, moddir_temp)
 
@@ -1082,9 +1100,10 @@ def compile_intel_win(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
     return 0
 
 
-def makebatch(batchfile, fc, cc, optlevel, fflags, cflags, lflags, syslibs,
+def makebatch(batchfile, fc, cc, lc, optlevel, fflags, cflags, lflags, syslibs,
               srcfiles, target, arch, objdir_temp, moddir_temp):
     """Make an ifort batch file for compiling on windows."""
+    # get path to compilervars batch file
     iflist = ['IFORT_COMPILER{}'.format(i) for i in range(30, 12, -1)]
     found = False
     for ift in iflist:
@@ -1140,11 +1159,9 @@ def makebatch(batchfile, fc, cc, optlevel, fflags, cflags, lflags, syslibs,
     line = "echo Linking oject files to create '" + \
            os.path.basename(target) + "'\n"
     f.write(line)
-    if fc is None:
-        cmd = cc
-    else:
-        cmd = fc
-    cmd += ' ' + optlevel
+
+    # assemble the link command
+    cmd = lc + ' ' + optlevel
     for switch in lflags:
         cmd += ' ' + switch
     cmd += ' ' + '-o' + ' ' + target + ' ' + objdir_temp + '\\*.obj'
@@ -1152,7 +1169,10 @@ def makebatch(batchfile, fc, cc, optlevel, fflags, cflags, lflags, syslibs,
         cmd += ' ' + switch
     cmd += '\n'
     f.write(cmd)
+
+    # close the batch file
     f.close()
+
     return
 
 
@@ -1370,9 +1390,8 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
         os.makedirs(pth)
 
     # initialize
-    srcdir_temp, objdir_temp, moddir_temp = initialize(srcdir, target,
-                                                       srcdir2, extrafiles,
-                                                       excludefiles)
+    initialize(srcdir, target, srcdir2, extrafiles, excludefiles)
+
     if cmake is not None:
         if excludefiles is not None:
             efiles = [os.path.basename(fpth) for fpth in
@@ -1390,16 +1409,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
         f.close()
 
     # get ordered list of files to compile
-    srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
-
-    # add default syslibs
-    if syslibs is None:
-        if sys.platform != 'win32':
-            syslibs = '-lc'
-
-    # convert syslibs to a list
-    if isinstance(syslibs, str):
-        syslibs = syslibs.split()
+    srcfiles = get_ordered_srcfiles(include_subdirs)
 
     # compile with gfortran or ifort
     intelwin = False
@@ -1424,7 +1434,11 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
             ext = os.path.splitext(target)[-1].lower()
             if ext != '.so':
                 target += '.so'
-        create_openspec(srcdir_temp)
+
+        # update openspec files
+        create_openspec()
+
+        # compile the code
         returncode = compile_std(srcfiles, target, fc, cc,
                                  objdir_temp, moddir_temp,
                                  expedite, dryrun,
@@ -1433,9 +1447,9 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
                                  srcdir, srcdir2,
                                  extrafiles, makefile, sharedobject)
 
-    # Clean it up
+    # clean up temporary files
     if makeclean and returncode == 0:
-        clean(srcdir_temp, objdir_temp, moddir_temp, objext, intelwin)
+        clean(objext, intelwin)
 
     return returncode
 
