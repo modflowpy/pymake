@@ -264,7 +264,7 @@ def parse_extrafiles(extrafiles):
     return files
 
 
-def clean(srcdir_temp, objdir_temp, moddir_temp, objext, winifort):
+def clean(srcdir_temp, objdir_temp, moddir_temp, objext, intelwin):
     """Remove mod and object files, and remove the temp source directory."""
     # clean things up
     print('\nCleaning up temporary source, object, and module files...')
@@ -277,7 +277,7 @@ def clean(srcdir_temp, objdir_temp, moddir_temp, objext, winifort):
     shutil.rmtree(srcdir_temp)
     shutil.rmtree(objdir_temp)
     shutil.rmtree(moddir_temp)
-    if winifort:
+    if intelwin:
         os.remove('compile.bat')
     return
 
@@ -381,6 +381,7 @@ def get_iso_c(srcfiles):
             continue
         lines = f.read()
         lines = lines.decode('ascii', 'replace').splitlines()
+
         # develop a list of modules in the file
         for idx, line in enumerate(lines):
             linelist = line.strip().split()
@@ -411,13 +412,6 @@ def flag_available(flag):
 
     # establish communicator
     stdout, stderr = proc.communicate()
-    # process_Popen_communicate(stdout, stderr)
-
-    # # catch non-zero return code
-    # if proc.returncode != 0:
-    #     msg = '{} failed, status code {}\n' \
-    #         .format(' '.join(cmdlist), proc.returncode)
-    #     raise RuntimeError(msg)
 
     if PY3:
         stdout = stdout.decode()
@@ -429,195 +423,18 @@ def flag_available(flag):
     return avail
 
 
-def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
-                     expedite, dryrun, double, debug, fflags, cflags, syslibs,
-                     srcdir, srcdir2, extrafiles, makefile, sharedobject):
-    """Compile the program using the gnu compilers (gfortran and gcc)"""
-
-    # define the platform
-    platform = sys.platform
-
-    # set shellflg for popen
-    shellflg = False
-
-    # jdh commented out 4/29/2020 since is working with python 3
-    # For horrible windows issue
-    # if platform == 'win32':
-    #     shellflg = True
-    #
-    # # define the OS macro for gfortran
-    # if platform == 'win32':
-    #     os_macro = '-D_WIN32'
-    # elif platform == 'darwin':
-    #     os_macro = '-D__APPLE__'
-    # elif platform == 'linux' or platform == 'linux2':
-    #     os_macro = '-D__linux__'
-    # elif 'bsd' in platform:
-    #     os_macro = '-D__unix__'
-    # else:
-    #     os_macro = None
-
-    # convert fflags and cflags to lists
-    if fflags is None:
-        fflags = []
-    elif isinstance(fflags, str):
-        fflags = fflags.split()
-    if cflags is None:
-        cflags = []
-    elif isinstance(cflags, str):
-        cflags = cflags.split()
-
+def compile_std(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
+                expedite, dryrun, double, debug, fflags, cflags, syslibs,
+                srcdir, srcdir2, extrafiles, makefile, sharedobject):
+    """Standard program compile"""
     # set optimization levels
     optlevel = get_optlevel(fc, cc, debug, fflags, cflags)
-    # if debug:
-    #     optlevel = '-O0'
-    # else:
-    #     optlevel = '-O2'
-    # # look for optimization levels in fflags
-    # for flag in fflags:
-    #     if flag[:2] == '-O' or flag == '-fast':
-    #         if not debug:
-    #             optlevel = flag
-    #         fflags.remove(flag)
-    #         break  # after first optimization (O) flag
-    # # look for optimization levels in cflags
-    # for flag in cflags:
-    #     if flag[:2] == '-O':
-    #         if not debug:
-    #             optlevel = flag
-    #         cflags.remove(flag)
-    #         break  # after first optimization (O) flag
 
     # get fortran and c compiler switches
     tfflags = get_fortran_flags(fc, fflags, debug, double,
                                 sharedobject=sharedobject)
     tcflags = get_c_flags(cc, cflags, debug, double, srcfiles,
                           sharedobject=sharedobject)
-
-    # # compiler optimization level
-    # if debug:
-    #     optlevel = '-O0'
-    # else:
-    #     optlevel = '-O2'
-    #
-    # # fortran compiler switches
-    # if fflags is None:
-    #     fflags = []
-    # elif isinstance(fflags, str):
-    #     fflags = fflags.split()
-    # # look for optimization levels in fflags
-    # for fflag in fflags:
-    #     if fflag[:2] == '-O':
-    #         if not debug:
-    #             optlevel = fflag
-    #         fflags.remove(fflag)
-    #         break  # after first optimization (O) flag
-    #
-    # # set fortran flags
-    # compileflags = []
-    #
-    # # Debug flags
-    # if debug:
-    #     compileflags = ['-g']
-    #
-    # # add gfortran specific compiler switches
-    # if fc is not None:
-    #     # add shared object switches
-    #     if sharedobject:
-    #         compileflags.append('-fPIC')
-    #
-    #     if debug:
-    #         compileflags += ['-fcheck=all', '-fbounds-check', '-Wall']
-    #         lflag = flag_available('-ffpe-trap')
-    #         if lflag:
-    #             compileflags.append(
-    #                 '-ffpe-trap=overflow,zero,invalid,denormal')
-    #     else:
-    #         lflag = flag_available('-ffpe-summary')
-    #         if lflag:
-    #             compileflags.append('-ffpe-summary=overflow')
-    #         lflag = flag_available('-ffpe-trap')
-    #         if lflag:
-    #             compileflags.append('-ffpe-trap=overflow,zero,invalid')
-    #
-    #     # add fbacktrace to debug and release versions
-    #     compileflags.append('-fbacktrace')
-    #
-    #     # add static
-    #     if sys.platform == 'win32':
-    #         compileflags.append('-Bstatic')
-    #
-    #     # add double precision switches
-    #     if double:
-    #         compileflags.append('-fdefault-real-8')
-    #         compileflags.append('-fdefault-double-8')
-    #
-    #     # add defined OS macro
-    #     if os_macro is not None:
-    #         compileflags.append(os_macro)
-    #
-    # # Split all tokens by spaces
-    # for fflag in ' '.join(fflags).split():
-    #     if fflag not in compileflags:
-    #         compileflags.append(fflag)
-    #
-    # # C/C++ compiler switches -- thanks to mja
-    # if cflags is None:
-    #     cflags = []
-    # else:
-    #     if isinstance(cflags, str):
-    #         cflags = cflags.split()
-    #
-    # # look for optimization levels in cflags
-    # for cflag in cflags:
-    #     if cflag[:2] == '-O':
-    #         if not debug:
-    #             optlevel = cflag
-    #         cflags.remove(cflag)
-    #         break  # after first optimization (O) flag
-    #
-    # # set additional c flags
-    # # Debug flags
-    # if debug:
-    #     cflags += ['-g']
-    #
-    # if cc.startswith('g'):
-    #     if sys.platform == 'win32':
-    #         cflags += ['-Bstatic']
-    #     if debug:
-    #         lflag = flag_available('-Wall')
-    #         if lflag:
-    #             cflags += ['-Wall']
-    #     else:
-    #         pass
-    #
-    # # determine if any c, cpp or fortran files
-    # iscfiles = False
-    # isfortranfiles = False
-    # for srcfile in srcfiles:
-    #     ext = os.path.splitext(srcfile)[1].lower()
-    #     if ext in ['.c', '.cpp']:  # mja
-    #         iscfiles = True
-    #     elif ext in ['.f', '.for', '.f90', '.fpp']:
-    #         isfortranfiles = True
-    #
-    # # reset syslibs for windows
-    # if sys.platform == 'win32':
-    #     syslibs = []
-    #     if isfortranfiles:
-    #         syslibs.append('-lgfortran')
-    #     if iscfiles:
-    #         syslibs.append('-lgcc')
-    #     syslibs.append('-lm')
-    #
-    # # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
-    # # code that is linked to C/C++ code. Only needed if there are
-    # # any fortran files. -D_UF defines UNIX naming conventions for
-    # # mixed language compilation.
-    # if isfortranfiles:
-    #     use_iso_c = get_iso_c(srcfiles)
-    #     if not use_iso_c:
-    #         cflags.append('-D_UF')
 
     # build object files
     print('\nCompiling object files for ' +
@@ -654,7 +471,11 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         # put object files and module files in objdir_temp and moddir_temp
         else:
             cmdlist.append('-I{}'.format(objdir_temp))
-            cmdlist.append('-J{}'.format(moddir_temp))
+            if fc in ['ifort', 'mpiifort']:
+                cmdlist.append('-module')
+                cmdlist.append(moddir_temp + '/')
+            else:
+                cmdlist.append('-J{}'.format(moddir_temp))
 
         cmdlist.append('-c')
         cmdlist.append(srcfile)
@@ -673,11 +494,11 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
             if not out_of_date(srcfile, objfile):
                 compilefile = False
 
-        # Compile
+        # Compile the source code
         if compilefile:
             if not dryrun:
-                proc = Popen(cmdlist, shell=shellflg, stdout=PIPE, stderr=PIPE)
-                process_Popen_command(shellflg, cmdlist)
+                proc = Popen(cmdlist, shell=False, stdout=PIPE, stderr=PIPE)
+                process_Popen_command(False, cmdlist)
 
                 # establish communicator
                 stdout, stderr = proc.communicate()
@@ -694,45 +515,30 @@ def compile_with_gnu(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         # at the end
         objfiles.append(objfile)
 
-    # Build the link command and then link
+    # Build the link command and then link to create the executable
     msg = '\nLinking object files ' + \
           'to make {}...'.format(os.path.basename(target))
     print(msg)
 
-    cmdlist = []
-    if fc is None:
-        cmd = cc + ' '
-        cmdlist.append(cc)
-        cmdlist.append(optlevel)
-        for switch in tcflags:
-            cmd += switch + ' '
-            cmdlist.append(switch)
-    else:
-        cmd = fc + ' '
-        cmdlist.append(fc)
-        cmdlist.append(optlevel)
-
-        if sharedobject:
-            ipos = tfflags.index('-fPIC')
-            tfflags.insert(ipos, '-shared')
-
-        for switch in tfflags:
-            if switch[:2] == '-I' or switch[:2] == '-J':
-                continue
-            cmd += switch + ' '
-            cmdlist.append(switch)
+    tcomp, tlink_flags, tsyslibs = get_linker_flags(fc, cc, fflags, cflags,
+                                                    debug, double,
+                                                    srcfiles, syslibs,
+                                                    sharedobject=sharedobject)
+    cmdlist = [tcomp, optlevel]
+    for switch in tlink_flags:
+        cmdlist.append(switch)
 
     cmdlist.append('-o')
     cmdlist.append(target)
     for objfile in objfiles:
         cmdlist.append(objfile)
 
-    for switch in syslibs:
+    for switch in tsyslibs:
         cmdlist.append(switch)
 
     if not dryrun:
-        proc = Popen(cmdlist, shell=shellflg, stdout=PIPE, stderr=PIPE)
-        process_Popen_command(shellflg, cmdlist)
+        proc = Popen(cmdlist, shell=False, stdout=PIPE, stderr=PIPE)
+        process_Popen_command(False, cmdlist)
 
         # establish communicator
         stdout, stderr = proc.communicate()
@@ -855,6 +661,7 @@ def c_files(srcfiles, extensions=False):
         l = None
     return l
 
+
 def get_optlevel(fc, cc, debug, fflags, cflags, osname=None):
     """Return a compiler optimization switch.
 
@@ -886,11 +693,11 @@ def get_optlevel(fc, cc, debug, fflags, cflags, osname=None):
     compiler = None
     if fc is not None:
         compiler = fc
-    elif compiler is None:
+    if compiler is None:
         compiler = cc
 
     # get - or / to prepend for compiler switches
-    prepend = get_prepend(fc, osname)
+    prepend = get_prepend(compiler, osname)
 
     # set basic optimization level
     if debug:
@@ -920,6 +727,7 @@ def get_optlevel(fc, cc, debug, fflags, cflags, osname=None):
 
     return optlevel
 
+
 def get_fortran_flags(fc, fflags, debug, double, sharedobject=False,
                       osname=None):
     """Return a list of standard pymake and user specified fortran compiler
@@ -946,75 +754,78 @@ def get_fortran_flags(fc, fflags, debug, double, sharedobject=False,
     flags : str
         fortran compiler switches
     """
-    # remove .exe extension of necessary
-    if '.exe' in fc.lower():
-        fc = fc[:-4]
-
-    # get lower case OS string
-    if osname is None:
-        osname = get_osname()
-
-    # get - or / to prepend for compiler switches
-    prepend = get_prepend(fc, osname)
-
-    # generate standard fortran flags
     flags = []
-    if fc == 'gfortran':
-        if sharedobject:
-            flags.append('fPIC')
-        flags.append('fbacktrace')
-        if osname == 'win32':
-            flags.append('Bstatic')
-        if debug:
-            flags += ['g', 'fcheck=all', 'fbounds-check', 'Wall']
-            if flag_available('-ffpe-trap'):
-                flags.append('ffpe-trap=overflow,zero,invalid,denormal')
-        else:
-            if flag_available('-ffpe-summary'):
-                flags.append('ffpe-summary=overflow')
-            if flag_available('-ffpe-trap'):
-                flags.append('ffpe-trap=overflow,zero,invalid')
-        if double:
-            flags += ['fdefault-real-8', 'fdefault-double-8']
-        # define the OS macro for gfortran
-        if osname == 'win32':
-            os_macro = 'D_WIN32'
-        elif osname == 'darwin':
-            os_macro = 'D__APPLE__'
-        elif 'linux' in osname:
-            os_macro = 'D__linux__'
-        elif 'bsd' in osname:
-            os_macro = 'D__unix__'
-        else:
-            os_macro = None
-        if os_macro is not None:
-            flags.append(os_macro)
-    elif fc in ['ifort', 'mpiifort']:
-        if osname == 'win32':
-            flags += ['heap-arrays:0', 'fpe:0', 'traceback', 'nologo']
-            if debug:
-                flags += ['debug:full', 'Zi']
-            if double:
-                flags += ['real-size:64', 'double-size:64']
-        else:
+
+    # define fortran flags
+    if fc is not None:
+        # remove .exe extension of necessary
+        if '.exe' in fc.lower():
+            fc = fc[:-4]
+
+        # get lower case OS string
+        if osname is None:
+            osname = get_osname()
+
+        # get - or / to prepend for compiler switches
+        prepend = get_prepend(fc, osname)
+
+        # generate standard fortran flags
+        if fc == 'gfortran':
             if sharedobject:
-                flags.append('fpic')
+                flags.append('fPIC')
+            flags.append('fbacktrace')
+            if osname == 'win32':
+                flags.append('Bstatic')
             if debug:
-                flags += ['g']
-            flags += ['no-heap-arrays', 'fpe0', 'traceback']
+                flags += ['g', 'fcheck=all', 'fbounds-check', 'Wall']
+                if flag_available('-ffpe-trap'):
+                    flags.append('ffpe-trap=overflow,zero,invalid,denormal')
+            else:
+                if flag_available('-ffpe-summary'):
+                    flags.append('ffpe-summary=overflow')
+                if flag_available('-ffpe-trap'):
+                    flags.append('ffpe-trap=overflow,zero,invalid')
             if double:
-                flags += ['real-size 64', 'double-size 64']
+                flags += ['fdefault-real-8', 'fdefault-double-8']
+            # define the OS macro for gfortran
+            if osname == 'win32':
+                os_macro = 'D_WIN32'
+            elif osname == 'darwin':
+                os_macro = 'D__APPLE__'
+            elif 'linux' in osname:
+                os_macro = 'D__linux__'
+            elif 'bsd' in osname:
+                os_macro = 'D__unix__'
+            else:
+                os_macro = None
+            if os_macro is not None:
+                flags.append(os_macro)
+        elif fc in ['ifort', 'mpiifort']:
+            if osname == 'win32':
+                flags += ['heap-arrays:0', 'fpe:0', 'traceback', 'nologo']
+                if debug:
+                    flags += ['debug:full', 'Zi']
+                if double:
+                    flags += ['real-size:64', 'double-size:64']
+            else:
+                if sharedobject:
+                    flags.append('fPIC')
+                if debug:
+                    flags += ['g']
+                flags += ['no-heap-arrays', 'fpe0', 'traceback']
+                if double:
+                    flags += ['real-size 64', 'double-size 64']
 
-    # Add passed fortran flags - assume that flags have - or / as the
-    # first character. fortran flags starting with O are excluded
-    for flag in fflags:
-        if flag[1] is not 'O':
-            if flag[1:] not in flags:
-                flags.append(flag[1:])
+        # Add passed fortran flags - assume that flags have - or / as the
+        # first character. fortran flags starting with O are excluded
+        for flag in fflags:
+            if flag[1] is not 'O':
+                if flag[1:] not in flags:
+                    flags.append(flag[1:])
 
-    # add prepend to compiler flags
-    for idx, flag in enumerate(flags):
-        flags[idx] = prepend + flag
+        # add prepend to compiler flags
+        for idx, flag in enumerate(flags):
+            flags[idx] = prepend + flag
 
     return flags
 
@@ -1047,66 +858,70 @@ def get_c_flags(cc, cflags, debug, double, srcfiles, sharedobject=False,
     flags : str
         c or cpp compiler switches
     """
-    # remove .exe extension of necessary
-    if '.exe' in cc.lower():
-        cc = cc[:-4]
-
-    # get lower case OS string
-    if osname is None:
-        osname = get_osname()
-
-    # get - or / to prepend for compiler switches
-    prepend = get_prepend(cc, osname)
-
-    # generate c flags
     flags = []
-    if cc in ['gcc', 'g++', 'clang']:
-        if sharedobject:
-            flags.append('fPIC')
-        if osname == 'win32':
-            flags.append('Bstatic')
-        if debug:
-            flags += ['g']
-            if flag_available('-Wall'):
-                flags.append('Wall')
-        else:
-            pass
-    elif cc in ['icc', 'icpc', 'mpiicc', 'mpiicpc']:
-        if osname == 'win32':
-            if debug:
-                flags.append('/debug:full')
-        else:
+
+    # define c flags
+    if cc is not None:
+        # remove .exe extension of necessary
+        if '.exe' in cc.lower():
+            cc = cc[:-4]
+
+        # get lower case OS string
+        if osname is None:
+            osname = get_osname()
+
+        # get - or / to prepend for compiler switches
+        prepend = get_prepend(cc, osname)
+
+        # generate c flags
+        if cc in ['gcc', 'g++', 'clang']:
             if sharedobject:
-                flags.append('fpic')
+                flags.append('fPIC')
+            if osname == 'win32':
+                flags.append('Bstatic')
             if debug:
-                flags += ['debug full']
-    elif cc in ['cl']:
-        if osname == 'win32':
-            if debug:
-                flags.append('Zi')
+                flags += ['g']
+                if flag_available('-Wall'):
+                    flags.append('Wall')
+            else:
+                pass
+        elif cc in ['icc', 'icpc', 'mpiicc', 'mpiicpc', 'icl']:
+            if osname == 'win32':
+                if cc == 'icl':
+                    flags += ['nologo']
+                if debug:
+                    flags.append('/debug:full')
+            else:
+                if sharedobject:
+                    flags.append('fpic')
+                if debug:
+                    flags += ['debug full']
+        elif cc in ['cl']:
+            if osname == 'win32':
+                if debug:
+                    flags.append('Zi')
 
+        # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
+        # code that is linked to C/C++ code. Only needed if there are
+        # any fortran files. -D_UF defines UNIX naming conventions for
+        # mixed language compilation.
+        ffiles = fortran_files(srcfiles)
+        cfiles = c_files(srcfiles)
+        if ffiles is not None:
+            use_iso_c = get_iso_c(ffiles)
+            if not use_iso_c and cfiles is not None:
+                flags.append('D_UF')
 
-    # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
-    # code that is linked to C/C++ code. Only needed if there are
-    # any fortran files. -D_UF defines UNIX naming conventions for
-    # mixed language compilation.
-    ffiles = fortran_files(srcfiles)
-    cfiles = c_files(srcfiles)
-    if ffiles is not None:
-        use_iso_c = get_iso_c(ffiles)
-        if not use_iso_c and cfiles is not None:
-            flags.append('D_UF')
+        # add passed c flags - assume that flags have - or / as the
+        # first character. c flags starting with O are excluded
+        for flag in cflags:
+            if flag[1] is not 'O':
+                if flag[1:] not in flags:
+                    flags.append(flag[1:])
 
-    # add passed c flags - assume that flags have - or / as the
-    # first character. c flags starting with O are excluded
-    for flag in cflags:
-        if flag[1] is not 'O':
-            if flag[1:] not in flags:
-                flags.append(flag[1:])
-
-    # add prepend to compiler flags
-    for idx, flag in enumerate(flags):
-        flags[idx] = prepend + flag
+        # add prepend to compiler flags
+        for idx, flag in enumerate(flags):
+            flags[idx] = prepend + flag
 
     return flags
 
@@ -1157,354 +972,67 @@ def get_linker_flags(fc, cc, fflags, cflags, debug, double, srcfiles,
     if compiler in ['gfortran', 'ifort', 'mpiifort']:
         flags = get_fortran_flags(compiler, fflags, debug, double,
                                   sharedobject=sharedobject, osname=osname)
-    elif compiler in ['gcc', 'g++', 'clang', 'icc', 'icpc',
+    elif compiler in ['gcc', 'g++', 'clang', 'clang++',
+                      'icc', 'icpc', 'icl', 'cl',
                       'mpiicc', 'mpiicpc']:
         flags = get_c_flags(compiler, cflags, debug, double, srcfiles,
                             sharedobject=sharedobject, osname=osname)
 
     if sharedobject:
-        tag = prepend + 'pic'
+        tag = prepend + 'fPIC'
         ipos = flags.index(tag)
         if osname == 'darwin':
-            copt = '-dynamiclib'
+            copt = prepend + 'dynamiclib'
         else:
-            copt = '-shared'
+            copt = prepend + 'shared'
         flags.insert(ipos, copt)
 
-    return flags, syslibs
+    # set outgoing syslibs
+    syslibs_out = []
+
+    # add passed syslibs flags - assume that flags have - or / as the
+    # first character.
+    for flag in syslibs:
+        if flag[1:] not in syslibs_out:
+            syslibs_out.append(flag[1:])
+
+    # add prepend to syslibs flags
+    for idx, flag in enumerate(syslibs_out):
+        syslibs_out[idx] = prepend + flag
+
+    return compiler, flags, syslibs_out
 
 
-def compile_with_macnix_ifort(srcfiles, target, fc, cc,
-                              objdir_temp, moddir_temp,
-                              expedite, dryrun, double, debug,
-                              fflags, cflags, syslibs,
-                              srcdir, srcdir2, extrafiles, makefile,
-                              sharedobject):
-    """Make target on Mac OSX."""
-    # convert fflags and cflags to lists
-    if fflags is None:
-        fflags = []
-    elif isinstance(fflags, str):
-        fflags = fflags.split()
-    if cflags is None:
-        cflags = []
-    elif isinstance(cflags, str):
-        cflags = cflags.split()
-
-    # set optimization levels
-    optlevel = get_optlevel(fc, cc, debug, fflags, cflags)
-    # if debug:
-    #     optlevel = '-O0'
-    # else:
-    #     optlevel = '-O2'
-    # # look for optimization levels in fflags
-    # for flag in fflags:
-    #     if flag[:2] == '-O' or flag == '-fast':
-    #         if not debug:
-    #             optlevel = flag
-    #         fflags.remove(flag)
-    #         break  # after first optimization (O) flag
-    # # look for optimization levels in cflags
-    # for flag in cflags:
-    #     if flag[:2] == '-O':
-    #         if not debug:
-    #             optlevel = flag
-    #         cflags.remove(flag)
-    #         break  # after first optimization (O) flag
-
-    # get fortran and c compiler switches
-    tfflags = get_fortran_flags(fc, fflags, debug, double,
-                                sharedobject=sharedobject)
-    tcflags = get_c_flags(cc, cflags, debug, double, srcfiles,
-                          sharedobject=sharedobject)
-
-    # # add ifort specific compiler switches
-    # compileflags = []
-    # if fc is not None:
-    #     # add shared object switches
-    #     if sharedobject:
-    #         compileflags.append('-fpic')
-    #
-    #     # Debug flags
-    #     if debug:
-    #         compileflags += ['-debug', 'all',
-    #                          '-no-heap-arrays',
-    #                          '-fpe0',
-    #                          '-traceback']
-    #     else:
-    #         # production version compile flags
-    #         compileflags += ['-no-heap-arrays',
-    #                          '-fpe0',
-    #                          '-traceback']
-    #
-    #     # add double precision compiler switches
-    #     if double:
-    #         compileflags += ['-real-size', '64']
-    #         compileflags += ['-double-size', '64']
-    #
-    #     # Split all tokens by spaces
-    #     for fflag in ' '.join(fflags).split():
-    #         if fflag not in compileflags:
-    #             compileflags.append(fflag)
-    #
-    # # C/C++ compiler switches -- thanks to mja
-    # if cflags is None:
-    #     cflags = []
-    # else:
-    #     if isinstance(cflags, str):
-    #         cflags = cflags.split()
-    #
-    # # look for optimization levels in cflags
-    # for cflag in cflags:
-    #     if cflag[:2] == '-O':
-    #         if not debug:
-    #             optlevel = cflag
-    #         cflags.remove(cflag)
-    #         break  # after first optimization (O) flag
-    #
-    # # set additional c flags
-    # # Debug flags
-    # if debug:
-    #     cflags += ['-g']
-    #
-    # # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
-    # # code that is linked to C/C++ code
-    # # -D_UF defines UNIX naming conventions for mixed language compilation.
-    # use_iso_c = get_iso_c(srcfiles)
-    # if not use_iso_c:
-    #     cflags.append('-D_UF')
-
-    # build object files
-    print('\nCompiling object files for ' +
-          '{}...'.format(os.path.basename(target)))
-    objfiles = []
-
-    # assume that header files may be in other folders, so make a list
-    searchdir = []
-    for f in srcfiles:
-        dirname = os.path.dirname(f)
-        if dirname not in searchdir:
-            searchdir.append(dirname)
-
-    for srcfile in srcfiles:
-        cmdlist = []
-        if srcfile.endswith('.c') or srcfile.endswith('.cpp'):  # mja
-            cmdlist.append(cc)  # mja
-            cmdlist.append(optlevel)
-            for switch in tcflags:  # mja
-                cmdlist.append(switch)  # mja
-
-            # add search path for any header files
-            for sd in searchdir:
-                cmdlist.append('-I {}'.format(sd))
-        else:  # mja
-            cmdlist.append(fc)
-            cmdlist.append(optlevel)
-            for switch in tfflags:
-                cmdlist.append(switch)
-
-            # put object files in objdir_temp
-            cmdlist.append('-I {}/'.format(objdir_temp))
-
-            # put module files in moddir_temp
-            cmdlist.append('-module')
-            cmdlist.append(moddir_temp + '/')
-
-        cmdlist.append('-c')
-        cmdlist.append(srcfile)
-
-        # object file name and location
-        srcname, srcext = os.path.splitext(srcfile)
-        srcname = srcname.split(os.path.sep)[-1]
-        objfile = os.path.join(objdir_temp, srcname + '.o')
-        cmdlist.append('-o')
-        cmdlist.append(objfile)
-
-        # If expedited, then check if object file is out of date (if exists).
-        # No need to compile if object file is newer.
-        compilefile = True
-        if expedite:
-            if not out_of_date(srcfile, objfile):
-                compilefile = False
-
-        # Compile
-        if compilefile:
-            if not dryrun:
-                # subprocess.check_call(cmdlist)
-                proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
-                process_Popen_command(False, cmdlist)
-
-                # establish communicator
-                stdout, stderr = proc.communicate()
-                process_Popen_communicate(stdout, stderr)
-
-                # catch non-zero return code
-                if proc.returncode != 0:
-                    msg = '{} failed, status code {}\n' \
-                        .format(' '.join(cmdlist), proc.returncode)
-                    print(msg)
-                    return proc.returncode
-
-        # Save the name of the object file so that they can all be linked
-        # at the end
-        objfiles.append(objfile)
-
-    # Build the link command and then link
-    print(('\nLinking object files to make ' +
-           '{}...'.format(os.path.basename(target))))
-
-    cmdlist = []
-    if fc is None:
-        cmdlist.append(cc)
-        cmdlist.append(optlevel)
-        for switch in cflags:
-            cmdlist.append(switch)
-    else:
-        cmdlist.append(fc)
-        cmdlist.append(optlevel)
-
-        if sharedobject:
-            ipos = tfflags.index('-fpic')
-            if 'darwin' in sys.platform.lower():
-                copt = '-dynamiclib'
-            else:
-                copt = '-shared'
-            tfflags.insert(ipos, copt)
-
-        for switch in tfflags:
-            cmdlist.append(switch)
-
-    cmdlist.append('-o')
-    # cmdlist.append(os.path.join('.', target))
-    cmdlist.append(target)
-    for objfile in objfiles:
-        cmdlist.append(objfile)
-    for switch in syslibs:
-        cmdlist.append(switch)
-
-    if not dryrun:
-        # subprocess.check_call(cmdlist)
-        proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE)
-        process_Popen_command(False, cmdlist)
-
-        # establish communicator
-        stdout, stderr = proc.communicate()
-        process_Popen_communicate(stdout, stderr)
-
-        # catch non-zero return code
-        if proc.returncode != 0:
-            msg = '{} failed, status code {}\n' \
-                .format(' '.join(cmdlist), proc.returncode)
-            print(msg)
-            return proc.returncode
-
-    # create makefile
-    if makefile:
-        create_makefile(target, srcdir, srcdir2, extrafiles,
-                        srcfiles, objfiles,
-                        fc, tfflags, cc, tcflags, syslibs,
-                        modules=['-module '])
-
-    # return
-    return 0
-
-
-def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
-                       expedite, dryrun, double, debug, fflags, cflags,
-                       syslibs, arch, srcdir, srcdir2, extrafiles, makefile):
+def compile_intel_win(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
+                      expedite, dryrun, double, debug, fflags, cflags,
+                      syslibs, arch, srcdir, srcdir2, extrafiles, makefile):
     """Make target on Windows OS."""
 
+    ext = '.exe'
     if fc == 'ifort':
-        fc = 'ifort.exe'
+        fc += ext
     elif fc is not None:
-        fc = '{}.exe'.format(fc)
+        fc += ext
     if cc == 'icc':
-        cc = 'icc.exe'
+        cc += ext
     elif cc == 'icl':
-        cc = 'icl.exe'
+        cc += ext
     else:
-        cc = 'cl.exe'
-
-    # convert fflags and cflags to lists
-    if fflags is None:
-        fflags = []
-    elif isinstance(fflags, str):
-        fflags = fflags.split()
-    if cflags is None:
-        cflags = []
-    elif isinstance(cflags, str):
-        cflags = cflags.split()
+        cc = 'cl' + ext
 
     # set optimization levels
     optlevel = get_optlevel(fc, cc, debug, fflags, cflags)
-    # if debug:
-    #     optlevel = '-O0'
-    # else:
-    #     optlevel = '-O2'
-    # # look for optimization levels in fflags
-    # for flag in fflags:
-    #     if flag[:2] == '-O' or flag == '-fast':
-    #         if not debug:
-    #             optlevel = flag
-    #         fflags.remove(flag)
-    #         break  # after first optimization (O) flag
-    # # look for optimization levels in cflags
-    # for flag in cflags:
-    #     if flag[:2] == '-O':
-    #         if not debug:
-    #             optlevel = flag
-    #         cflags.remove(flag)
-    #         break  # after first optimization (O) flag
 
     # get fortran and c compiler switches
     tfflags = get_fortran_flags(fc, fflags, debug, double)
     tcflags = get_c_flags(cc, cflags, debug, double, srcfiles)
 
-    #
-    # # C/C++ compiler switches
-    # cflags = ['/nologo', '/c']
-    # # if debug:
-    # #    cflags += ['/O0', '/g']
-    # # else:
-    # #    cflags += ['/O3']
-    #
-    # fflags = ['/heap-arrays:0', '/fpe:0', '/traceback', '/nologo']
-    # if debug:
-    #     optlevel = '/debug'
-    # else:
-    #     optlevel = '/O2'
-    # if fflagsu is None:
-    #     fflagsu = []
-    # elif isinstance(fflagsu, str):
-    #     fflagsu = fflagsu.split()
-    # if cflagsu is None:
-    #     cflagsu = []
-    # elif isinstance(cflagsu, str):
-    #     cflagsu = cflagsu.split()
-    # # look for optimization levels in fflags
-    # for fflag in fflagsu:
-    #     if fflag[:2] in ('-O', '/O') or fflag in ('-fast', '/fast'):
-    #         if not debug:
-    #             optlevel = fflag
-    #         fflagsu.remove(fflag)
-    #         break  # after first optimization (O) flag
-    # if debug:
-    #     # fflags.append(optlevel)
-    #     cflags.append('/Zi')
-    # # else:
-    # #     # production version compile flags
-    # #     fflags.append(optlevel)
-    # #     cflags.append('/O2')
-    # if double:
-    #     fflags.append('/real-size:64')
-    #     fflags.append('/double-size:64')
-    # # Split all tokens by spaces
-    # for fflag in ' '.join(fflagsu).split():
-    #     if fflag not in fflags:
-    #         fflags.append(fflag)
-    # for cflag in ' '.join(cflagsu).split():
-    #     if cflag not in cflags:
-    #         cflags.append(cflag)
+    # get linker flags
+    tcomp, tlflags, tsyslibs = get_linker_flags(fc, cc, fflags, cflags,
+                                                debug, double,
+                                                srcfiles, syslibs)
+
+    # delete the batch file if it exists
     batchfile = 'compile.bat'
     if os.path.isfile(batchfile):
         try:
@@ -1512,15 +1040,19 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         except:
             pass
 
-    # Create target
+    # Create target using a batch file on Windows
     try:
         # clean exe prior to build so that test for exe below can return a
         # non-zero error code
         if flopy_avail:
             if flopy_is_exe(target):
                 os.remove(target)
-        makebatch(batchfile, fc, cc, optlevel, tfflags, tcflags, srcfiles,
-                  target, arch, objdir_temp, moddir_temp)
+
+        makebatch(batchfile, fc, cc, optlevel,
+                  tfflags, tcflags, tlflags, tsyslibs,
+                  srcfiles, target, arch, objdir_temp, moddir_temp)
+
+        # run the batch file
         proc = Popen([batchfile, ], stdout=PIPE, stderr=STDOUT)
         while True:
             line = proc.stdout.readline()
@@ -1530,6 +1062,8 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
                 print('{}'.format(c))
             else:
                 break
+
+        # evaluate if the executable is available
         if flopy_avail:
             if not flopy_is_exe(target):
                 return 1
@@ -1541,15 +1075,16 @@ def compile_with_ifort(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
     # create makefile
     if makefile:
-        print('makefile not created for Windows with Intel Compiler.')
+        msg = 'makefile not created for Windows with Intel Compilers.'
+        print(msg)
 
     # return
     return 0
 
 
-def makebatch(batchfile, fc, cc, optlevel, fflags, cflags, srcfiles, target,
-              arch, objdir_temp, moddir_temp):
-    """Make an ifort batch file."""
+def makebatch(batchfile, fc, cc, optlevel, fflags, cflags, lflags, syslibs,
+              srcfiles, target, arch, objdir_temp, moddir_temp):
+    """Make an ifort batch file for compiling on windows."""
     iflist = ['IFORT_COMPILER{}'.format(i) for i in range(30, 12, -1)]
     found = False
     for ift in iflist:
@@ -1579,6 +1114,7 @@ def makebatch(batchfile, fc, cc, optlevel, fflags, cflags, srcfiles, target,
             cmd = cc + ' ' + optlevel + ' '
             for switch in cflags:
                 cmd += switch + ' '
+            cmd += '/c' + ' '
 
             # add search path for any header files
             for sd in searchdir:
@@ -1587,27 +1123,34 @@ def makebatch(batchfile, fc, cc, optlevel, fflags, cflags, srcfiles, target,
             obj = os.path.join(objdir_temp,
                                os.path.splitext(os.path.basename(srcfile))[0]
                                + '.obj')
-            cmd += '/Fo' + obj + ' '
+            cmd += '/Fo:' + obj + ' '
             cmd += srcfile
         else:
             cmd = fc + ' ' + optlevel + ' '
             for switch in fflags:
                 cmd += switch + ' '
-            cmd += '-c' + ' '
+            cmd += '/c' + ' '
             cmd += '/module:{0}\\ '.format(moddir_temp)
             cmd += '/object:{0}\\ '.format(objdir_temp)
             cmd += srcfile
-            f.write('echo ' + os.path.basename(srcfile) + '\n')
+        f.write("echo compiling '" + os.path.basename(srcfile) + "'\n")
         f.write(cmd + '\n')
 
     # write commands to link
+    line = "echo Linking oject files to create '" + \
+           os.path.basename(target) + "'\n"
+    f.write(line)
     if fc is None:
-        cmd = cc + ' ' + optlevel + ' '
+        cmd = cc
     else:
-        cmd = fc + ' ' + optlevel + ' '
-        for switch in fflags:
-            cmd += switch + ' '
-    cmd += '-o' + ' ' + target + ' ' + objdir_temp + '\\*.obj' + '\n'
+        cmd = fc
+    cmd += ' ' + optlevel
+    for switch in lflags:
+        cmd += ' ' + switch
+    cmd += ' ' + '-o' + ' ' + target + ' ' + objdir_temp + '\\*.obj'
+    for switch in syslibs:
+        cmd += ' ' + switch
+    cmd += '\n'
     f.write(cmd)
     f.close()
     return
@@ -1671,26 +1214,6 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
         odir = os.path.dirname(objfile)
         if odir not in odirs:
             odirs.append(odir)
-
-    # line = 'VPATH = '
-    # for idx, dir in enumerate(odirs):
-    #     #srcdirs.append('SOURCEDIR{}'.format(idx + 1))
-    #     #line = '{}={}\n'.format(srcdirs[idx], dir)
-    #     #f.write(line)
-    #     line += '{} '.format(dir)
-    # line += '\n'
-    # f.write('{}\n'.format(line))
-    # # f.write('\n')
-    # f.write('VPATH = \\\n')
-    # for idx, sd in enumerate(srcdirs):
-    #     f.write('${' + '{}'.format(sd) + '} ')
-    #     if idx + 1 < len(srcdirs):
-    #         f.write('\\')
-    #     f.write('\n')
-    # f.write('\n')
-
-    # 'SRCS =$(wildcard $(addsuffix / *.f90, $(SUBDIRS)))
-    # OBJS =$(filter - out cusg_wrap.o, ${SRCS:.cpp=.o})
 
     ffiles = ['.f', '.f90', '.F90', '.fpp']
     cfiles = ['.c', '.cpp']
@@ -1815,8 +1338,22 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
          arch='intel64', makefile=False, srcdir2=None, extrafiles=None,
          excludefiles=None, cmake=None, sharedobject=False):
     """Main part of program."""
-    # initialize success
-    success = 0
+    # initialize return code
+    returncode = 0
+
+    # convert fflags, cflags, and syslibs to lists
+    if fflags is None:
+        fflags = []
+    elif isinstance(fflags, str):
+        fflags = fflags.split()
+    if cflags is None:
+        cflags = []
+    elif isinstance(cflags, str):
+        cflags = cflags.split()
+    if syslibs is None:
+        syslibs = []
+    elif isinstance(syslibs, str):
+        syslibs = syslibs.split()
 
     # write summary information
     print('\nsource files are in:\n    {}\n'.format(srcdir))
@@ -1865,53 +1402,42 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
         syslibs = syslibs.split()
 
     # compile with gfortran or ifort
-    winifort = False
-    if fc == 'gfortran' or (fc is None and cc in ['gcc', 'g++',
-                                                  'clang', 'clang++']):
+    intelwin = False
+    if 'win32' in sys.platform.lower():
+        if fc is not None:
+            if fc in ['ifort', 'mpiifort']:
+                intelwin = True
+        if cc is not None:
+            if cc in ['cl', 'icl']:
+                intelwin = True
+    if intelwin:
+        objext = '.obj'
+        returncode = compile_intel_win(srcfiles, target, fc, cc,
+                                       objdir_temp, moddir_temp,
+                                       expedite, dryrun, double, debug,
+                                       fflags, cflags, syslibs, arch,
+                                       srcdir, srcdir2,
+                                       extrafiles, makefile)
+    else:
         objext = '.o'
         if sharedobject:
             ext = os.path.splitext(target)[-1].lower()
             if ext != '.so':
                 target += '.so'
         create_openspec(srcdir_temp)
-        returncode = compile_with_gnu(srcfiles, target, fc, cc,
-                                      objdir_temp, moddir_temp,
-                                      expedite, dryrun,
-                                      double, debug,
-                                      fflags, cflags, syslibs,
-                                      srcdir, srcdir2,
-                                      extrafiles, makefile, sharedobject)
-    elif fc == 'ifort' or fc == 'mpiifort' or \
-            (fc is None and cc in ['icc', 'icpc', 'cl', 'icl']):
-        platform = sys.platform
-        if 'darwin' in platform.lower() or 'linux' in platform.lower():
-            objext = '.o'
-            create_openspec(srcdir_temp)
-            returncode = compile_with_macnix_ifort(srcfiles, target, fc, cc,
-                                                   objdir_temp, moddir_temp,
-                                                   expedite, dryrun,
-                                                   double, debug,
-                                                   fflags, cflags, syslibs,
-                                                   srcdir, srcdir2,
-                                                   extrafiles, makefile,
-                                                   sharedobject)
-        else:
-            winifort = True
-            objext = '.obj'
-            returncode = compile_with_ifort(srcfiles, target, fc, cc,
-                                            objdir_temp, moddir_temp,
-                                            expedite, dryrun, double, debug,
-                                            fflags, cflags, syslibs, arch,
-                                            srcdir, srcdir2,
-                                            extrafiles, makefile)
-    else:
-        raise Exception('Unsupported compiler')
+        returncode = compile_std(srcfiles, target, fc, cc,
+                                 objdir_temp, moddir_temp,
+                                 expedite, dryrun,
+                                 double, debug,
+                                 fflags, cflags, syslibs,
+                                 srcdir, srcdir2,
+                                 extrafiles, makefile, sharedobject)
 
     # Clean it up
     if makeclean and returncode == 0:
-        clean(srcdir_temp, objdir_temp, moddir_temp, objext, winifort)
+        clean(srcdir_temp, objdir_temp, moddir_temp, objext, intelwin)
 
-    return success
+    return returncode
 
 
 if __name__ == "__main__":
