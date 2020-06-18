@@ -593,6 +593,33 @@ def set_zip():
     return zip_pth
 
 
+def set_makefile():
+    """
+    Set boolean for whether a makefile should be created
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    makefile : bool
+        boolean indicating if a makefile should be created
+
+    """
+    makefile = False
+    for idx, arg in enumerate(sys.argv):
+        if arg.lower() == '--makefile':
+            makefile = True
+            break
+
+    # write c/c++ flags
+    if makefile:
+        msg = 'a GNU make makefile will be created:\n'
+        print(msg)
+
+    return makefile
+
+
 def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                   expedite=False, dryrun=False, double=False, debug=False,
                   include_subdirs=False,
@@ -1023,10 +1050,16 @@ def build_apps(targets=None):
                 download = download_now
                 clean = download_clean
 
+            # set makefile, only done for first target and precision
+            makefile = False
+            if idt == 0 and idx == 0:
+                makefile = set_makefile()
+
             # print download information
             msg = 'downloading file:         {}\n'.format(download)
             msg += 'verified download:        {}\n'.format(download_verify)
             msg += 'download timeout:         {} sec.\n'.format(timeout)
+            msg += 'create GNU make makefile: {}\n'.format(makefile)
             msg += 'cleaning extracted files: {}\n'.format(clean)
             print(msg)
 
@@ -1049,7 +1082,8 @@ def build_apps(targets=None):
                                        download_dir=download_dir,
                                        download_clean=clean,
                                        download_verify=download_verify,
-                                       timeout=timeout)
+                                       timeout=timeout,
+                                       makefile=makefile)
 
         # calculate download and compile time
         end_downcomp = datetime.now()
