@@ -42,13 +42,17 @@ def build_with_makefile():
             tepth += '.exe'
 
         # remove existing target
-        print('Removing ' + target)
-        os.remove(tepth)
+        if os.path.isfile(tepth):
+            print('Removing ' + target)
+            os.remove(tepth)
 
         print('Removing temporary build directories')
-        shutil.rmtree(os.path.join('src_temp'))
-        shutil.rmtree(os.path.join('obj_temp'))
-        shutil.rmtree(os.path.join('mod_temp'))
+        dirs_temp = [os.path.join('src_temp'),
+                     os.path.join('obj_temp'),
+                     os.path.join('mod_temp')]
+        for d in dirs_temp:
+            if os.path.isdir(d):
+                shutil.rmtree(d)
 
         # build MODFLOW-NWT with makefile
         print('build {} with makefile'.format(target))
@@ -62,10 +66,16 @@ def build_with_makefile():
 
 def clean_up():
     # clean up make file
-    if os.path.isfile('makefile'):
-        print('Removing makefile and temporary build directories')
-        shutil.rmtree(os.path.join('obj_temp'))
-        os.remove('makefile')
+    files = ['makefile', 'makedefaults']
+    print('Removing makefile and temporary build directories')
+    for fpth in files:
+        if os.path.isfile(fpth):
+            os.remove(fpth)
+    dirs_temp = [os.path.join('obj_temp'),
+                 os.path.join('mod_temp')]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
 
     # clean up MODFLOW-NWT download
     if os.path.isdir(mfnwtpth):

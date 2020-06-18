@@ -787,7 +787,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         msg = 'failure to build {}.'.format(app)
         assert returncode == 0, msg
 
-        if verify:
+        if verify and not dryrun:
             msg = '{} build failure.'.format(app)
             assert os.path.isfile(exe_name), msg
 

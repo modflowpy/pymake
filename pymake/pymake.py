@@ -289,7 +289,7 @@ def clean(objext, intelwin):
     return
 
 
-def get_ordered_srcfiles(include_subdir=False):
+def get_ordered_srcfiles(srcdir, include_subdir=False):
     """
     Create a list of ordered source files (both fortran and c).
 
@@ -299,10 +299,10 @@ def get_ordered_srcfiles(include_subdir=False):
     # create a list of all c(pp), f and f90 source files
 
     templist = []
-    for path, subdirs, files in os.walk(srcdir_temp):
+    for path, subdirs, files in os.walk(srcdir):
         for name in files:
             if not include_subdir:
-                if path != srcdir_temp:
+                if path != srcdir:
                     continue
             f = os.path.join(os.path.join(path, name))
             templist.append(f)
@@ -320,14 +320,14 @@ def get_ordered_srcfiles(include_subdir=False):
 
     srcfileswithpath = []
     for srcfile in srcfiles:
-        s = os.path.join(srcdir_temp, srcfile)
+        s = os.path.join(srcdir, srcfile)
         s = srcfile
         srcfileswithpath.append(s)
 
     # from mja
     cfileswithpath = []
     for srcfile in cfiles:
-        s = os.path.join(srcdir_temp, srcfile)
+        s = os.path.join(srcdir, srcfile)
         s = srcfile
         cfileswithpath.append(s)
 
@@ -431,145 +431,6 @@ def flag_available(flag):
     print(msg)
 
     return avail
-
-
-def compile_std(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
-                expedite, dryrun, double, debug, fflags, cflags, syslibs,
-                srcdir, srcdir2, extrafiles, makefile, sharedobject):
-    """Standard program compile"""
-    # set optimization levels
-    optlevel = get_optlevel(fc, cc, debug, fflags, cflags)
-
-    # get fortran and c compiler switches
-    tfflags = get_fortran_flags(fc, fflags, debug, double,
-                                sharedobject=sharedobject)
-    tcflags = get_c_flags(cc, cflags, debug, double, srcfiles,
-                          sharedobject=sharedobject)
-
-    # build object files
-    print('\nCompiling object files for ' +
-          '{}...'.format(os.path.basename(target)))
-    objfiles = []
-
-    # assume that header files may be in other folders, so make a list
-    searchdir = []
-    for f in srcfiles:
-        dirname = os.path.dirname(f)
-        if dirname not in searchdir:
-            searchdir.append(dirname)
-
-    for srcfile in srcfiles:
-        cmdlist = []
-        iscfile = False
-        ext = os.path.splitext(srcfile)[1].lower()
-        if ext in ['.c', '.cpp']:  # mja
-            iscfile = True
-            cmdlist.append(cc)  # mja
-            cmdlist.append(optlevel)
-            for switch in tcflags:  # mja
-                cmdlist.append(switch)  # mja
-        else:  # mja
-            cmdlist.append(fc)
-            cmdlist.append(optlevel)
-            for switch in tfflags:
-                cmdlist.append(switch)
-
-        # add search path for any c and c++ header files
-        if iscfile:
-            for sd in searchdir:
-                cmdlist.append('-I{}'.format(sd))
-        # put object files and module files in objdir_temp and moddir_temp
-        else:
-            cmdlist.append('-I{}'.format(objdir_temp))
-            if fc in ['ifort', 'mpiifort']:
-                cmdlist.append('-module')
-                cmdlist.append(moddir_temp + '/')
-            else:
-                cmdlist.append('-J{}'.format(moddir_temp))
-
-        cmdlist.append('-c')
-        cmdlist.append(srcfile)
-
-        # object file name and location
-        srcname, srcext = os.path.splitext(srcfile)
-        srcname = srcname.split(os.path.sep)[-1]
-        objfile = os.path.join(objdir_temp, srcname + '.o')
-        cmdlist.append('-o')
-        cmdlist.append(objfile)
-
-        # If expedited, then check if object file is out of date (if exists).
-        # No need to compile if object file is newer.
-        compilefile = True
-        if expedite:
-            if not out_of_date(srcfile, objfile):
-                compilefile = False
-
-        # Compile the source code
-        if compilefile:
-            if not dryrun:
-                proc = Popen(cmdlist, shell=False, stdout=PIPE, stderr=PIPE)
-                process_Popen_command(False, cmdlist)
-
-                # establish communicator
-                stdout, stderr = proc.communicate()
-                process_Popen_communicate(stdout, stderr)
-
-                # catch non-zero return code
-                if proc.returncode != 0:
-                    msg = '{} failed, status code {}\n' \
-                        .format(' '.join(cmdlist), proc.returncode)
-                    print(msg)
-                    return proc.returncode
-
-        # Save the name of the object file so that they can all be linked
-        # at the end
-        objfiles.append(objfile)
-
-    # Build the link command and then link to create the executable
-    msg = '\nLinking object files ' + \
-          'to make {}...'.format(os.path.basename(target))
-    print(msg)
-
-    tcomp, tlink_flags, tsyslibs = get_linker_flags(fc, cc, fflags, cflags,
-                                                    debug, double,
-                                                    srcfiles, syslibs,
-                                                    sharedobject=sharedobject)
-    cmdlist = [tcomp, optlevel]
-    for switch in tlink_flags:
-        cmdlist.append(switch)
-
-    cmdlist.append('-o')
-    cmdlist.append(target)
-    for objfile in objfiles:
-        cmdlist.append(objfile)
-
-    for switch in tsyslibs:
-        cmdlist.append(switch)
-
-    if not dryrun:
-        proc = Popen(cmdlist, shell=False, stdout=PIPE, stderr=PIPE)
-        process_Popen_command(False, cmdlist)
-
-        # establish communicator
-        stdout, stderr = proc.communicate()
-        process_Popen_communicate(stdout, stderr)
-
-        # catch non-zero return code
-        if proc.returncode != 0:
-            msg = '{} failed, status code {}\n' \
-                .format(' '.join(cmdlist), proc.returncode)
-            print(msg)
-            return proc.returncode
-
-    # create makefile
-    if makefile:
-        create_makefile(target, srcdir, srcdir2, extrafiles,
-                        srcfiles, objfiles,
-                        fc, tfflags, cc, tcflags, syslibs,
-                        modules=['-I', '-J'])
-
-    # return
-    return 0
 
 
 def get_osname():
@@ -835,7 +696,7 @@ def get_fortran_flags(fc, fflags, debug, double, sharedobject=False,
         # Add passed fortran flags - assume that flags have - or / as the
         # first character. fortran flags starting with O are excluded
         for flag in fflags:
-            if flag[1] is not 'O':
+            if flag[1] != 'O':
                 if flag[1:] not in flags:
                     flags.append(flag[1:])
 
@@ -932,7 +793,7 @@ def get_c_flags(cc, cflags, debug, double, srcfiles, sharedobject=False,
         # add passed c flags - assume that flags have - or / as the
         # first character. c flags starting with O are excluded
         for flag in cflags:
-            if flag[1] is not 'O':
+            if flag[1] != 'O':
                 if flag[1:] not in flags:
                     flags.append(flag[1:])
 
@@ -1021,7 +882,142 @@ def get_linker_flags(fc, cc, fflags, cflags, debug, double, srcfiles,
     return compiler, flags, syslibs_out
 
 
-def compile_intel_win(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
+def compile_std(srcfiles, target, fc, cc,
+                expedite, dryrun, double, debug, fflags, cflags, syslibs,
+                srcdir, srcdir2, extrafiles, makefile, sharedobject):
+    """
+    Standard compile method
+
+    """
+    # set optimization levels
+    optlevel = get_optlevel(fc, cc, debug, fflags, cflags)
+
+    # get fortran and c compiler switches
+    tfflags = get_fortran_flags(fc, fflags, debug, double,
+                                sharedobject=sharedobject)
+    tcflags = get_c_flags(cc, cflags, debug, double, srcfiles,
+                          sharedobject=sharedobject)
+
+    # build object files
+    print('\nCompiling object files for ' +
+          '{}...'.format(os.path.basename(target)))
+    objfiles = []
+
+    # assume that header files may be in other folders, so make a list
+    searchdir = []
+    for f in srcfiles:
+        dirname = os.path.dirname(f)
+        if dirname not in searchdir:
+            searchdir.append(dirname)
+
+    for srcfile in srcfiles:
+        cmdlist = []
+        iscfile = False
+        ext = os.path.splitext(srcfile)[1].lower()
+        if ext in ['.c', '.cpp']:  # mja
+            iscfile = True
+            cmdlist.append(cc)  # mja
+            cmdlist.append(optlevel)
+            for switch in tcflags:  # mja
+                cmdlist.append(switch)  # mja
+        else:  # mja
+            cmdlist.append(fc)
+            cmdlist.append(optlevel)
+            for switch in tfflags:
+                cmdlist.append(switch)
+
+        # add search path for any c and c++ header files
+        if iscfile:
+            for sd in searchdir:
+                cmdlist.append('-I{}'.format(sd))
+        # put object files and module files in objdir_temp and moddir_temp
+        else:
+            cmdlist.append('-I{}'.format(objdir_temp))
+            if fc in ['ifort', 'mpiifort']:
+                cmdlist.append('-module')
+                cmdlist.append(moddir_temp + '/')
+            else:
+                cmdlist.append('-J{}'.format(moddir_temp))
+
+        cmdlist.append('-c')
+        cmdlist.append(srcfile)
+
+        # object file name and location
+        srcname, srcext = os.path.splitext(srcfile)
+        srcname = srcname.split(os.path.sep)[-1]
+        objfile = os.path.join(objdir_temp, srcname + '.o')
+        cmdlist.append('-o')
+        cmdlist.append(objfile)
+
+        # If expedited, then check if object file is out of date (if exists).
+        # No need to compile if object file is newer.
+        compilefile = True
+        if expedite:
+            if not out_of_date(srcfile, objfile):
+                compilefile = False
+
+        # Compile the source code
+        if compilefile:
+            if not dryrun:
+                proc = Popen(cmdlist, shell=False, stdout=PIPE, stderr=PIPE)
+                process_Popen_command(False, cmdlist)
+
+                # establish communicator
+                stdout, stderr = proc.communicate()
+                process_Popen_communicate(stdout, stderr)
+
+                # catch non-zero return code
+                if proc.returncode != 0:
+                    msg = '{} failed, status code {}\n' \
+                        .format(' '.join(cmdlist), proc.returncode)
+                    print(msg)
+                    return proc.returncode
+
+        # Save the name of the object file so that they can all be linked
+        # at the end
+        objfiles.append(objfile)
+
+    # Build the link command and then link to create the executable
+    msg = '\nLinking object files ' + \
+          'to make {}...'.format(os.path.basename(target))
+    print(msg)
+
+    tcomp, tlink_flags, tsyslibs = get_linker_flags(fc, cc, fflags, cflags,
+                                                    debug, double,
+                                                    srcfiles, syslibs,
+                                                    sharedobject=sharedobject)
+    cmdlist = [tcomp, optlevel]
+    for switch in tlink_flags:
+        cmdlist.append(switch)
+
+    cmdlist.append('-o')
+    cmdlist.append(target)
+    for objfile in objfiles:
+        cmdlist.append(objfile)
+
+    for switch in tsyslibs:
+        cmdlist.append(switch)
+
+    if not dryrun:
+        proc = Popen(cmdlist, shell=False, stdout=PIPE, stderr=PIPE)
+        process_Popen_command(False, cmdlist)
+
+        # establish communicator
+        stdout, stderr = proc.communicate()
+        process_Popen_communicate(stdout, stderr)
+
+        # catch non-zero return code
+        if proc.returncode != 0:
+            msg = '{} failed, status code {}\n' \
+                .format(' '.join(cmdlist), proc.returncode)
+            print(msg)
+            return proc.returncode
+
+    # return
+    return 0
+
+
+def compile_intel_win(srcfiles, target, fc, cc,
                       expedite, dryrun, double, debug, fflags, cflags,
                       syslibs, arch, srcdir, srcdir2, extrafiles, makefile):
     """Make target on Windows OS."""
@@ -1047,8 +1043,8 @@ def compile_intel_win(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
     # get linker flags
     lc, tlflags, tsyslibs = get_linker_flags(fc, cc, fflags, cflags,
-                                                debug, double,
-                                                srcfiles, syslibs)
+                                             debug, double,
+                                             srcfiles, syslibs)
 
     # delete the batch file if it exists
     batchfile = 'compile.bat'
@@ -1068,7 +1064,7 @@ def compile_intel_win(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
 
         makebatch(batchfile, fc, cc, lc, optlevel,
                   tfflags, tcflags, tlflags, tsyslibs,
-                  srcfiles, target, arch, objdir_temp, moddir_temp)
+                  srcfiles, target, arch)
 
         # run the batch file
         proc = Popen([batchfile, ], stdout=PIPE, stderr=STDOUT)
@@ -1091,18 +1087,16 @@ def compile_intel_win(srcfiles, target, fc, cc, objdir_temp, moddir_temp,
         print('Could not make x64 target: ', target)
         print(traceback.print_exc())
 
-    # create makefile
-    if makefile:
-        msg = 'makefile not created for Windows with Intel Compilers.'
-        print(msg)
-
     # return
     return 0
 
 
 def makebatch(batchfile, fc, cc, lc, optlevel, fflags, cflags, lflags, syslibs,
-              srcfiles, target, arch, objdir_temp, moddir_temp):
-    """Make an ifort batch file for compiling on windows."""
+              srcfiles, target, arch):
+    """
+    Make an ifort batch file for compiling on windows.
+
+    """
     # get path to compilervars batch file
     iflist = ['IFORT_COMPILER{}'.format(i) for i in range(30, 12, -1)]
     found = False
@@ -1177,35 +1171,44 @@ def makebatch(batchfile, fc, cc, lc, optlevel, fflags, cflags, lflags, syslibs,
 
 
 def create_makefile(target, srcdir, srcdir2, extrafiles,
-                    srcfiles, objfiles,
-                    fc, fflags, cc, cflags, syslibs,
-                    objext='.o', modules=['-I', '-J']):
+                    srcfiles, debug, double,
+                    fc, cc, fflags, cflags, syslibs,
+                    objext='.o',
+                    makedefaults='makedefaults'):
+    # get list of unique fortran and c/c++ file extensions
+    fext = fortran_files(srcfiles, extensions=True)
+    cext = c_files(srcfiles, extensions=True)
+
+    # build heading
+    heading = '# makefile created on {}\n'.format(datetime.datetime.now()) + \
+              '# by pymake (version {})\n'.format(__version__)
+    heading += '# using the'
+    if fext is not None:
+        heading += " '{}' fortran".format(fc)
+        if cext is not None:
+            heading += ' and'
+    if cext is not None:
+        heading += " '{}' c/c++".format(cc)
+    heading += ' compiler(s).\n'
+
     # open makefile
     f = open('makefile', 'w')
 
-    # write header for the make file
-    f.write('# makefile created on {}\n'.format(datetime.datetime.now()) +
-            '# by pymake (version {})\n'.format(__version__))
-    f.write('# using the {} fortran and {} c/c++ compilers.\n'.format(fc, cc))
-    f.write('\n')
+    # write header
+    f.write(heading + '\n')
 
-    # specify directory for the executable
-    f.write('# Define the directories for the object and module files,\n' +
-            '# the executable, and the executable name and path.\n')
-    opth = os.path.dirname(objfiles[0]).replace('\\', '/')
-    f.write('OBJDIR = {}\n'.format(opth))
-    pth = os.path.dirname(target).replace('\\', '/')
-    if len(pth) < 1:
-        pth = '.'
-    f.write('BINDIR = {}\n'.format(pth))
-    pth = target.replace('\\', '/')
-    f.write('PROGRAM = {}\n'.format(pth))
-    f.write('\n')
+    #  write include file
+    line = '\ninclude ./{}\n\n'.format(makedefaults)
+    f.write(line)
+
+    # determine the directories with source files
+    # source files in sdir and sdir2
     dirs = [d[0].replace('\\', '/') for d in os.walk(srcdir)]
     if srcdir2 is not None:
         dirs2 = [d[0].replace('\\', '/') for d in os.walk(srcdir2)]
         dirs = dirs + dirs2
-    # add extrafiles
+
+    # source files in extrafiles
     files = parse_extrafiles(extrafiles)
     if files is not None:
         for ef in files:
@@ -1215,141 +1218,260 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
             if rdir not in dirs:
                 dirs.append(rdir)
 
-    srcdirs = []
+    # write directories with source files and create vpath data
+    line = '# Define the source file directories\n'
+    f.write(line)
+    vpaths = []
     for idx, dir in enumerate(dirs):
-        srcdirs.append('SOURCEDIR{}'.format(idx + 1))
-        line = '{}={}\n'.format(srcdirs[idx], dir)
+        vpaths.append('SOURCEDIR{}'.format(idx + 1))
+        line = '{}={}\n'.format(vpaths[idx], dir)
         f.write(line)
     f.write('\n')
+
+    # write vpath
     f.write('VPATH = \\\n')
-    for idx, sd in enumerate(srcdirs):
+    for idx, sd in enumerate(vpaths):
         f.write('${' + '{}'.format(sd) + '} ')
-        if idx + 1 < len(srcdirs):
+        if idx + 1 < len(vpaths):
             f.write('\\')
         f.write('\n')
     f.write('\n')
 
-    odirs = []
-    for idx, objfile in enumerate(srcfiles):
-        odir = os.path.dirname(objfile)
-        if odir not in odirs:
-            odirs.append(odir)
-
-    ffiles = ['.f', '.f90', '.F90', '.fpp']
-    cfiles = ['.c', '.cpp']
-
-    # for tf in ffiles + cfiles:
-    #     line = 'SRCS =$(wildcard $(addsuffix / *{}, $(SUBDIRS))'.format(tf)
-    #     f.write('{}\n'.format(line))
-    # for tf in ffiles + cfiles:
-    #     line = 'OBJS =$(${{SRCS:{}=.o}})'.format(tf)
-    #     f.write('{}\n'.format(line))
-
+    # write file extensions
     line = '.SUFFIXES: '
-    for tc in cfiles:
-        line += '{} '.format(tc)
-    for tf in ffiles:
-        line += '{} '.format(tf)
+    if fext is not None:
+        for ext in fext:
+            line += '{} '.format(ext)
+    if cext is not None:
+        for ext in cext:
+            line += '{} '.format(ext)
     line += objext
     f.write('{}\n'.format(line))
     f.write('\n')
 
-    f.write('# Define the Fortran compile flags\n')
-    f.write('FC = {}\n'.format(fc))
-    line = 'FFLAGS = '
-    if '-MMD' not in fflags:
-        fflags += ['-MMD', '-cpp']
-    for ff in fflags:
-        line += '{} '.format(ff)
-    f.write('{}\n'.format(line))
-    f.write('\n')
-
-    f.write('# Define the C compile flags\n')
-    f.write('CC = {}\n'.format(cc))
-    line = 'CFLAGS = '
-    if '-MMD' not in cflags:
-        cflags += ['-MMD']
-        if cc not in ['g++']:
-            cflags += ['-cpp']
-    for cf in cflags:
-        line += '{} '.format(cf)
-    f.write('{}\n'.format(line))
-    f.write('\n')
-
-    f.write('# Define the libraries\n')
-    line = 'SYSLIBS = '
-    for sl in syslibs:
-        line += '{} '.format(sl)
-    f.write('{}\n'.format(line))
-    f.write('\n')
-
     f.write('OBJECTS = \\\n')
-    for idx, objfile in enumerate(objfiles):
-        f.write('$(OBJDIR)/{} '.format(os.path.basename(objfile)))
-        if idx + 1 < len(objfiles):
+    for idx, srcfile in enumerate(srcfiles):
+        objpth = os.path.splitext(os.path.basename(srcfile))[0] + objext
+        f.write('$(OBJDIR)/{} '.format(objpth))
+        if idx + 1 < len(srcfiles):
             f.write('\\')
         f.write('\n')
     f.write('\n')
 
-    f.write('# Define task functions\n')
-    f.write('\n')
-
-    f.write('# Create the bin directory and compile and link the program\n')
-    f.write('all: makebin | $(PROGRAM)\n')
-    f.write('\n')
-
-    f.write('# Make the bin directory for the executable\n')
-    f.write('makebin :\n')
-    f.write('\tmkdir -p $(BINDIR)\n')
-    f.write('\n')
-
     f.write('# Define the objects that make up the program\n')
     f.write('$(PROGRAM) : $(OBJECTS)\n')
-    line = '\t-$(FC) $(FFLAGS) -o $@ $(OBJECTS) $(SYSLIBS) '
-    for m in modules:
-        line += '{}$(OBJDIR) '.format(m)
+    if fc is None:
+        line = '\t-$(CC) $(OPTLEVEL) $(CFLAGS) -o $@ $(OBJECTS)\n'
+    else:
+        line = '\t-$(FC) $(OPTLEVEL) $(FFLAGS) -o $@ $(OBJECTS) $(SYSLIBS)\n'
     f.write('{}\n'.format(line))
-    f.write('\n')
 
-    for tf in ffiles:
-        f.write('$(OBJDIR)/%{} : %{}\n'.format(objext, tf))
-        f.write('\t@mkdir -p $(@D)\n')
-        line = '\t$(FC) $(FFLAGS) -c $< -o $@ '
-        for m in modules:
-            line += '{}$(OBJDIR) '.format(m)
-        f.write('{}\n'.format(line))
-        f.write('\tcat {}/$*.d >> Dependencies\n\trm -f $*.d\n'.format(opth))
-        f.write('\n')
+    if fext is not None:
+        for ext in fext:
+            f.write('$(OBJDIR)/%{} : %{}\n'.format(objext, ext))
+            f.write('\t@mkdir -p $(@D)\n')
+            line = '\t$(FC) $(OPTLEVEL) $(FFLAGS) -c $< -o $@ ' + \
+                   '$(INCSWITCH) $(MODSWITCH)\n'
+            f.write('{}\n'.format(line))
 
-    for tc in cfiles:
-        f.write('$(OBJDIR)/%.o : %{}\n'.format(tc))
-        f.write('\t@mkdir -p $(@D)\n')
-        line = '\t$(CC) $(CFLAGS) -c $< -o $@'
-        f.write('{}\n'.format(line))
-        f.write('\tcat {}/$*.d >> Dependencies\n\trm -f $*.d\n'.format(opth))
-        f.write('\n')
+    if cext is not None:
+        for ext in cext:
+            f.write('$(OBJDIR)/%{} : %{}\n'.format(objext, ext))
+            f.write('\t@mkdir -p $(@D)\n')
+            line = '\t$(CC) $(OPTLEVEL) $(CFLAGS) -c $< -o $@ ' + \
+                   '$(INCSWITCH)\n'
+            f.write('{}\n'.format(line))
 
-    f.write('# Clean the object and module files and the executable\n')
-    f.write('.PHONY : clean\n' +
-            'clean : \n' +
-            '\t-rm -r Dependencies\n' +
-            '\t-rm -rf $(OBJDIR)\n' +
-            '\t-rm -rf $(PROGRAM)\n')
-    f.write('\n')
-
-    f.write('# Clean the object and module files\n')
-    f.write('.PHONY : cleanobj\n' +
-            'cleanobj : \n' +
-            '\t-rm -rf $(OBJDIR)\n')
-    f.write('\n')
-
-    f.write('# Touch dependencies\n')
-    f.write('Dependencies : \n' +
-            '\ttouch Dependencies\n')
-    f.write('\n')
-
-    # close the make file
+    # close the makefile
     f.close()
+
+    # open makedefaults
+    f = open(makedefaults, 'w')
+
+    # replace makefile in heading with makedefaults
+    heading = heading.replace('makefile', makedefaults)
+
+    # write header
+    f.write(heading + '\n')
+
+    # write OS evaluation
+    line = '# determine OS\n'
+    line += 'ifeq ($(OS), Windows_NT)\n'
+    line += '\tdetected_OS = Windows\n'
+    line += '\tOS_macro = -D_WIN32\n'
+    line += 'else\n'
+    line += "\tdetected_OS = $(shell sh -c 'uname 2>/dev/null " + \
+            "|| echo Unknown')\n"
+    line += '\tifeq ($(detected_OS), Darwin)\n'
+    line += '\t\tOS_macro = -D__APPLE__\n'
+    line += '\telse\n'
+    line += '\t\tOS_macro = -D__LINUX__\n'
+    line += '\tendif\n'
+    line += 'endif\n\n'
+    f.write(line)
+
+    # get path to executable
+    dpth = os.path.dirname(target)
+    if len(dpth) > 0:
+        dpth = os.path.relpath(dpth)
+    else:
+        dpth = '.'
+
+    # write
+    line = '# Define the directories for the object and module files\n' + \
+           '# and the executable and its path.\n'
+    line += 'BINDIR = {}\n'.format(dpth)
+    line += 'OBJDIR = {}\n'.format(objdir_temp)
+    line += 'MODDIR = {}\n'.format(moddir_temp)
+    line += 'INCSWITCH = -I $(OBJDIR)\n'
+    line += 'MODSWITCH = -J $(MODDIR)\n\n'
+    f.write(line)
+
+    exe_name = os.path.splitext(os.path.basename(target))[0]
+    line = '# define os dependent executable name\n'
+    line += 'ifeq ($(detected_OS), Windows)\n'
+    line += '\tPROGRAM = {}.exe\n'.format(exe_name)
+    line += 'else\n'
+    line += '\tPROGRAM = {}\n'.format(exe_name)
+    line += 'endif\n\n'
+    f.write(line)
+
+    # set gfortran as compiler if it is f77
+    line = '# set fortran compiler to gfortran if it is f77\n'
+    line += 'ifeq ($(FC), f77)\n'
+    line += '\tFC = gfortran\n'
+    line += '\t# set c compiler to gcc if not passed on the command line\n'
+    line += '\tifneq ($(origin CC), "command line")\n'
+    line += '\t\tifneq ($(CC), gcc)\n'
+    line += '\t\t\tCC = gcc\n'
+    line += '\t\tendif\n'
+    line += '\tendif\n'
+    line += 'endif\n\n'
+    f.write(line)
+
+    # optimization level
+    optlevel = get_optlevel(fc, cc, debug, fflags, cflags)
+    line = '# set the optimization level (OPTLEVEL) if not defined\n'
+    line += 'OPTLEVEL ?= {}\n\n'.format(optlevel)
+    f.write(line)
+
+    # fortran flags
+    if fext is not None:
+        line = '# set the fortran flags\n'
+        line += 'ifeq ($(detected_OS), Windows)\n'
+        line += '\tifeq ($(FC), gfortran)\n'
+        tfflags = get_fortran_flags('gfortran', fflags, debug, double,
+                                    osname='win32')
+        line += '\t\tFFLAGS ?= {}\n'.format(' '.join(tfflags))
+        line += '\tendif\n'
+        line += 'else\n'
+        line += '\tifeq ($(FC), gfortran)\n'
+        tfflags = get_fortran_flags('gfortran', fflags, debug, double,
+                                    osname='linux')
+        for idx, flag in enumerate(tfflags):
+            if '-D__' in flag:
+                tfflags[idx] = '$(OS_macro)'
+        line += '\t\tFFLAGS ?= {}\n'.format(' '.join(tfflags))
+        line += '\tendif\n'
+        line += '\tifeq ($(FC), ifort mpiifort)\n'
+        tfflags = get_fortran_flags('ifort', fflags, debug, double,
+                                    osname='linux')
+        line += '\t\tFFLAGS ?= {}\n'.format(' '.join(tfflags))
+        line += '\t\tMODSWITCH = -module $(MODDIR)\n'
+        line += '\tendif\n'
+        line += 'endif\n\n'
+        f.write(line)
+
+    # c/c++ flags
+    if cext is not None:
+        line = '# set the c/c++ flags\n'
+        line += 'ifeq ($(detected_OS), Windows)\n'
+        line += '\tifeq ($(FC), gcc g++ clang clang++)\n'
+        tcflags = get_c_flags('gcc', fflags, debug, double,
+                              osname='win32')
+        line += '\t\tCFLAGS ?= {}\n'.format(' '.join(tcflags))
+        line += '\tendif\n'
+        line += 'else\n'
+        line += '\tifeq ($(FC), gcc g++ clang clang++)\n'
+        tcflags = get_c_flags('gcc', fflags, debug, double,
+                              osname='linux')
+        line += '\t\tCFLAGS ?= {}\n'.format(' '.join(tcflags))
+        line += '\tendif\n'
+        line += '\tifeq ($(FC), icc mpiicc icpc)\n'
+        tcflags = get_c_flags('icc', fflags, debug, double,
+                              osname='linux')
+        line += '\t\tCFLAGS ?= {}\n'.format(' '.join(tcflags))
+        line += '\tendif\n'
+        line += 'endif\n\n'
+        f.write(line)
+
+    # syslibs
+    line = '# set the syslibs\n'
+    line += 'ifeq ($(detected_OS), Windows)\n'
+    line += '\tifeq ($(FC), gfortran gcc g++)\n'
+    tcomp, tlink_flags, tsyslibs = get_linker_flags('gfortran', 'gcc',
+                                                    fflags, cflags,
+                                                    debug, double,
+                                                    srcfiles, syslibs,
+                                                    osname='win32')
+    line += '\t\tSYSLIBS ?= {}\n'.format(' '.join(tsyslibs))
+    line += '\tendif\n'
+    line += 'else\n'
+    line += '\tifeq ($(FC), gfortran gcc g++ clang clang++)\n'
+    tcomp, tlink_flags, tsyslibs = get_linker_flags('gfortran', 'gcc',
+                                                    fflags, cflags,
+                                                    debug, double,
+                                                    srcfiles, syslibs,
+                                                    osname='linux')
+    line += '\t\tSYSLIBS ?= {}\n'.format(' '.join(tsyslibs))
+    line += '\tendif\n'
+    line += '\tifeq ($(FC), ifort mpiifort icc icpc mpiicc)\n'
+    tcomp, tlink_flags, tsyslibs = get_linker_flags('ifort', 'icc',
+                                                    fflags, cflags,
+                                                    debug, double,
+                                                    srcfiles, syslibs,
+                                                    osname='linux')
+    line += '\t\tSYSLIBS ?= {}\n'.format(' '.join(tsyslibs))
+    line += '\tendif\n'
+    line += 'endif\n\n'
+    f.write(line)
+
+    # task functions
+    line = '# Define task functions\n'
+    line += '# Create the bin directory and compile and link the program\n'
+    line += 'all: makedirs | $(PROGRAM)\n\n'
+    line += '# Make the bin directory for the executable\n'
+    line += 'makedirs:\n'
+    line += '\tmkdir -p $(BINDIR)\n'
+    line += '\tmkdir -p $(MODDIR)\n\n'
+    line += '# Write selected compiler settings\n'
+    line += '.PHONY: settings\n'
+    line += 'settings:\n'
+    line += '\t@echo "Optimization level: $(OPTLEVEL)"\n'
+    if fext is not None:
+        line += '\t@echo "Fortran compiler:   $(FC)"\n'
+        line += '\t@echo "Fortran flags:      $(FFLAGS)"\n'
+    if cext is not None:
+        line += '\t@echo "C compiler:         $(CC)"\n'
+        line += '\t@echo "C flags:            $(CFLAGS)"\n'
+    line += '\t@echo "SYSLIBS:            $(SYSLIBS)"\n\n'
+    line += '# Clean the object and module files and the executable\n'
+    line += '.PHONY: clean\n'
+    line += 'clean:\n'
+    line += '\t-rm -rf $(OBJDIR)\n'
+    line += '\t-rm -rf $(MODDIR)\n'
+    line += '\t-rm -rf $(PROGRAM)\n\n'
+    line += '# Clean the object and module files\n'
+    line += '.PHONY: cleanobj\n'
+    line += 'cleanobj:\n'
+    line += '\t-rm -rf $(OBJDIR)\n'
+    line += '\t-rm -rf $(MODDIR)\n\n'
+    f.write(line)
+
+    # close the makedefaults
+    f.close()
+
+    return
 
 
 def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
@@ -1409,7 +1531,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
         f.close()
 
     # get ordered list of files to compile
-    srcfiles = get_ordered_srcfiles(include_subdirs)
+    srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
 
     # compile with gfortran or ifort
     intelwin = False
@@ -1423,7 +1545,6 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     if intelwin:
         objext = '.obj'
         returncode = compile_intel_win(srcfiles, target, fc, cc,
-                                       objdir_temp, moddir_temp,
                                        expedite, dryrun, double, debug,
                                        fflags, cflags, syslibs, arch,
                                        srcdir, srcdir2,
@@ -1440,12 +1561,18 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
 
         # compile the code
         returncode = compile_std(srcfiles, target, fc, cc,
-                                 objdir_temp, moddir_temp,
                                  expedite, dryrun,
                                  double, debug,
                                  fflags, cflags, syslibs,
                                  srcdir, srcdir2,
                                  extrafiles, makefile, sharedobject)
+
+    # create makefile
+    if makefile:
+        create_makefile(target, srcdir, srcdir2, extrafiles, srcfiles,
+                        debug, double,
+                        fc, cc, fflags, cflags, syslibs,
+                        objext=objext)
 
     # clean up temporary files
     if makeclean and returncode == 0:
