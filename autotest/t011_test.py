@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import shutil
 import json
 
@@ -107,6 +108,33 @@ def test_usgsprograms_list_json():
     return
 
 
+def test_make():
+    # add --makefile to command line list
+    sys.argv.append('--makefile')
+
+    # get current directory and change to working directory
+    cwd = os.getcwd()
+    os.chdir(cpth)
+
+    # build triangle and makefile
+    success = True
+    try:
+        pymake.build_apps('triangle')
+    except:
+        success = False
+
+    # change to starting directory
+    os.chdir(cwd)
+
+    # remove --makefile from command line list
+    sys.argv.remove('--makefile')
+
+    # evaluate success
+    assert success, 'could not build triangle'
+
+    return
+
+
 def test_clean_up():
     shutil.rmtree(cpth)
 
@@ -120,4 +148,5 @@ if __name__ == "__main__":
     test_usgsprograms_load_json()
     test_usgsprograms_list_json_error()
     test_usgsprograms_list_json()
+    test_make()
     test_clean_up()

@@ -276,36 +276,38 @@ def set_fflags(target, fc='gfortran'):
         fortran compiler flags. Default is None
 
     """
-    fflags = None
+    fflags = []
     if target == 'mp7':
         if fc == 'gfortran':
-            fflags = '-ffree-line-length-512'
+            fflags.append('-ffree-line-length-512')
     elif target == 'gsflow':
         if fc == 'ifort':
             if 'win32' in sys.platform.lower():
-                fflags = '/fp:source /names:lowercase /assume:underscore'
+                fflags += ['-fp:source', '-names:lowercase',
+                           '-assume:underscore']
             else:
-                fflags = '-fp-model source'
+                # fflags.append('-fp-model source')
+                pass
         elif fc == 'gfortran':
-            fflags = '-O1 -fno-second-underscore'
-            # if 'win32' in sys.platform.lower():
-            #     fflags += ' -Bstatic -Wall'
+            fflags += ['-O1', '-fno-second-underscore']
 
     # add additional fflags from the command line
     for idx, arg in enumerate(sys.argv):
         if '--fflags' in arg.lower():
-            if fflags is None:
-                fflags = ''
-            if len(fflags) > 0:
-                fflags += ' '
-            fflags += sys.argv[idx + 1]
+            s = sys.argv[idx + 1]
+            delim = ' -'
+            if ' /' in s:
+                delim = ' /'
+            fflags += s.split(delim)
 
     # write fortran flags
-    if fflags is not None:
+    if len(fflags) > 0:
         msg = '{} fortran code '.format(target) + \
               'will be built with the following predefined flags:\n'
-        msg += '    {}\n'.format(fflags)
+        msg += '    {}\n'.format(' '.join(fflags))
         print(msg)
+    else:
+        fflags = None
 
     return fflags
 
@@ -327,40 +329,39 @@ def set_cflags(target, cc='gcc'):
         c compiler flags. Default is None
 
     """
-    cflags = None
+    cflags = []
     if target == 'triangle':
         if 'linux' in sys.platform.lower() or 'darwin' in sys.platform.lower():
             if cc.startswith('g'):
-                cflags = '-lm'
+                cflags += ['-lm']
         else:
-            cflags = '-DNO_TIMER'
+            cflags += ['-DNO_TIMER']
     elif target == 'gsflow':
-        if cc == 'icc' or cc == 'icl':
+        if cc in ['icc', 'icpl', 'icl']:
             if 'win32' in sys.platform.lower():
-                cflags = '/D_CRT_SECURE_NO_WARNINGS'
+                cflags += ['-D_CRT_SECURE_NO_WARNINGS']
             else:
-                cflags = '-D_UF'
+                cflags += ['-D_UF']
         elif cc == 'gcc':
-            # cflags = '-O -D_UF'
-            cflags = '-O1'
-            # if 'win32' in sys.platform.lower():
-            #     cflags += ' -Bstatic -Wall'
+            cflags += ['-O1']
 
     # add additional cflags from the command line
     for idx, arg in enumerate(sys.argv):
         if '--cflags' in arg.lower():
-            if cflags is None:
-                cflags = ''
-            if len(cflags) > 0:
-                cflags += ' '
-            cflags += sys.argv[idx + 1]
+            s = sys.argv[idx + 1]
+            delim = ' -'
+            if ' /' in s:
+                delim = ' /'
+            cflags += s.split(delim)
 
     # write c/c++ flags
-    if cflags is not None:
+    if len(cflags) > 0:
         msg = '{} c/c++ code '.format(target) + \
               'will be built with the following predefined flags:\n'
-        msg += '    {}\n'.format(cflags)
+        msg += '    {}\n'.format(' '.join(cflags))
         print(msg)
+    else:
+        cflags = None
 
     return cflags
 
@@ -386,9 +387,30 @@ def set_syslibs(target, fc, cc):
         fortran compiler flags. Default is None
 
     """
-    syslibs = '-lc'
+    # set osname
+    osname = sys.platform.lower()
+
+    # initialize syslibs
+    syslibs = []
+
+    # determine if default syslibs will be defined
+    default_syslibs = True
+    if osname == 'win32':
+        if fc is not None:
+            if fc in ['ifort', 'gfortran']:
+                default_syslibs = False
+        if default_syslibs:
+            if cc is not None:
+                if cc in ['cl', 'icl', 'gcc', 'g++']:
+                    default_syslibs = False
+
+    # set default syslibs
+    if default_syslibs:
+        syslibs.append('-lc')
+
+    # add additional syslibs for select programs
     if target == 'triangle':
-        if 'linux' in sys.platform.lower() or 'darwin' in sys.platform.lower():
+        if osname in ['linux', 'darwin']:
             if fc is None:
                 lfc = True
             else:
@@ -397,19 +419,15 @@ def set_syslibs(target, fc, cc):
             if cc in ['gcc', 'g++', 'clang', 'clang++']:
                 lcc = True
             if lfc and lcc:
-                syslibs = '-lm'
+                syslibs += ['-lm']
     elif target == 'gsflow':
-        if 'win32' not in sys.platform.lower():
+        if 'win32' not in osname:
             if 'ifort' in fc:
-                syslibs = '-nofor_main'
-        # else:
-        #     if 'gfortran' in fc:
-        #         if 'win32' in sys.platform.lower():
-        #             syslibs = '-lgfortran -lgcc -lm'
+                syslibs += ['-nofor_main']
 
     # write syslibs
     msg = '{} will use the following predefined syslibs:\n'.format(target)
-    msg += '    {}\n'.format(syslibs)
+    msg += '    {}\n'.format(' '.join(syslibs))
     print(msg)
 
     return syslibs
@@ -573,6 +591,33 @@ def set_zip():
         print(msg)
 
     return zip_pth
+
+
+def set_makefile():
+    """
+    Set boolean for whether a makefile should be created
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    makefile : bool
+        boolean indicating if a makefile should be created
+
+    """
+    makefile = False
+    for idx, arg in enumerate(sys.argv):
+        if arg.lower() == '--makefile':
+            makefile = True
+            break
+
+    # write c/c++ flags
+    if makefile:
+        msg = 'a GNU make makefile will be created:\n'
+        print(msg)
+
+    return makefile
 
 
 def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
@@ -769,7 +814,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         msg = 'failure to build {}.'.format(app)
         assert returncode == 0, msg
 
-        if verify:
+        if verify and not dryrun:
             msg = '{} build failure.'.format(app)
             assert os.path.isfile(exe_name), msg
 
@@ -1005,10 +1050,16 @@ def build_apps(targets=None):
                 download = download_now
                 clean = download_clean
 
+            # set makefile, only done for first target and precision
+            makefile = False
+            if idt == 0 and idx == 0:
+                makefile = set_makefile()
+
             # print download information
             msg = 'downloading file:         {}\n'.format(download)
             msg += 'verified download:        {}\n'.format(download_verify)
             msg += 'download timeout:         {} sec.\n'.format(timeout)
+            msg += 'create GNU make makefile: {}\n'.format(makefile)
             msg += 'cleaning extracted files: {}\n'.format(clean)
             print(msg)
 
@@ -1031,7 +1082,8 @@ def build_apps(targets=None):
                                        download_dir=download_dir,
                                        download_clean=clean,
                                        download_verify=download_verify,
-                                       timeout=timeout)
+                                       timeout=timeout,
+                                       makefile=makefile)
 
         # calculate download and compile time
         end_downcomp = datetime.now()

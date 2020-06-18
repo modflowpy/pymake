@@ -36,20 +36,68 @@ def compile_code():
     pymake.build_program(target=target,
                          include_subdirs=True,
                          download_dir=dstpth,
-                         replace_function=replace_function)
+                         replace_function=replace_function,
+                         dryrun=False,
+                         makefile=True)
+
+
+def build_with_makefile():
+    if os.path.isfile('makefile'):
+
+        tepth = target
+        if sys.platform.lower() == 'win32':
+            tepth += '.exe'
+
+        # remove existing target
+        if os.path.isfile(tepth):
+            print('Removing ' + target)
+            os.remove(tepth)
+
+        print('Removing temporary build directories')
+        dirs_temp = [os.path.join('src_temp'),
+                     os.path.join('obj_temp'),
+                     os.path.join('mod_temp')]
+        for d in dirs_temp:
+            if os.path.isdir(d):
+                shutil.rmtree(d)
+
+        # build MODFLOW 6 with makefile
+        print('build {} with makefile'.format(target))
+        os.system('make')
+
+        # verify that MODFLOW 6 was made
+        errmsg = '{} created by makefile does not exist.'.format(target)
+        assert os.path.isfile(tepth), errmsg
+
+    else:
+        print('makefile does not exist...skipping build_with_make()')
+    return
 
 
 def clean_up():
+    # clean up makefile
+    files = ['makefile', 'makedefaults']
+    print('Removing makefile and temporary build directories')
+    for fpth in files:
+        if os.path.isfile(fpth):
+            os.remove(fpth)
+    dirs_temp = [os.path.join('obj_temp'),
+                 os.path.join('mod_temp')]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+
     # clean up
     print('Removing folder ' + mf6pth)
     shutil.rmtree(mf6pth)
 
-    ext = ''
+    tepth = target
     if sys.platform == 'win32':
-        ext = '.exe'
+        tepth += '.exe'
 
-    print('Removing ' + target)
-    os.remove(target + ext)
+    if os.path.isfile(tepth):
+        print('Removing ' + target)
+        os.remove(tepth)
     return
 
 
@@ -85,6 +133,10 @@ def test_mf6():
         yield run_mf6, d
 
 
+def test_makefile():
+    build_with_makefile()
+
+
 def test_clean_up():
     yield clean_up
 
@@ -92,10 +144,16 @@ def test_clean_up():
 if __name__ == "__main__":
     # compile MODFLOW 6
     compile_code()
+
     # get name files and simulation name
     example_dirs = get_example_dirs()
+
     # run models
     for d in example_dirs:
         run_mf6(d)
+
+    # build modflow 6 with a pymake generated makefile
+    build_with_makefile()
+
     # clean up
     clean_up()
