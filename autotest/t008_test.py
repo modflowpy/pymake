@@ -45,7 +45,7 @@ def build_with_makefile():
     if os.path.isfile('makefile'):
 
         tepth = target
-        if sys.platform == 'win32':
+        if sys.platform.lower() == 'win32':
             tepth += '.exe'
 
         # remove existing target
@@ -64,8 +64,11 @@ def build_with_makefile():
         # build MODFLOW 6 with makefile
         print('build {} with makefile'.format(target))
         os.system('make')
-        assert os.path.isfile(tepth), \
-            '{} created by makefile does not exist.'.format(target)
+
+        # verify that MODFLOW 6 was made
+        errmsg = '{} created by makefile does not exist.'.format(target)
+        assert os.path.isfile(tepth), errmsg
+
     else:
         print('makefile does not exist...skipping build_with_make()')
     return
@@ -88,12 +91,13 @@ def clean_up():
     print('Removing folder ' + mf6pth)
     shutil.rmtree(mf6pth)
 
-    ext = ''
+    tepth = target
     if sys.platform == 'win32':
-        ext = '.exe'
+        tepth += '.exe'
 
-    print('Removing ' + target)
-    os.remove(target + ext)
+    if os.path.isfile(tepth):
+        print('Removing ' + target)
+        os.remove(tepth)
     return
 
 

@@ -1387,18 +1387,18 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
         line = '# set the c/c++ flags\n'
         line += 'ifeq ($(detected_OS), Windows)\n'
         line += '\tifeq ($(FC), gcc g++ clang clang++)\n'
-        tcflags = get_c_flags('gcc', fflags, debug, double,
+        tcflags = get_c_flags('gcc', fflags, debug, double, srcfiles,
                               osname='win32')
         line += '\t\tCFLAGS ?= {}\n'.format(' '.join(tcflags))
         line += '\tendif\n'
         line += 'else\n'
         line += '\tifeq ($(FC), gcc g++ clang clang++)\n'
-        tcflags = get_c_flags('gcc', fflags, debug, double,
+        tcflags = get_c_flags('gcc', fflags, debug, double, srcfiles,
                               osname='linux')
         line += '\t\tCFLAGS ?= {}\n'.format(' '.join(tcflags))
         line += '\tendif\n'
         line += '\tifeq ($(FC), icc mpiicc icpc)\n'
-        tcflags = get_c_flags('icc', fflags, debug, double,
+        tcflags = get_c_flags('icc', fflags, debug, double, srcfiles,
                               osname='linux')
         line += '\t\tCFLAGS ?= {}\n'.format(' '.join(tcflags))
         line += '\tendif\n'
@@ -1408,29 +1408,33 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
     # syslibs
     line = '# set the syslibs\n'
     line += 'ifeq ($(detected_OS), Windows)\n'
-    line += '\tifeq ($(FC), gfortran gcc g++)\n'
-    tcomp, tlink_flags, tsyslibs = get_linker_flags('gfortran', 'gcc',
-                                                    fflags, cflags,
-                                                    debug, double,
-                                                    srcfiles, syslibs,
-                                                    osname='win32')
-    line += '\t\tSYSLIBS ?= {}\n'.format(' '.join(tsyslibs))
-    line += '\tendif\n'
+    _, tlink_flags, tsyslibs = get_linker_flags('gfortran', 'gcc',
+                                                fflags, cflags,
+                                                debug, double,
+                                                srcfiles, syslibs,
+                                                osname='win32')
+    line += '\tSYSLIBS ?= {}\n'.format(' '.join(tsyslibs))
     line += 'else\n'
-    line += '\tifeq ($(FC), gfortran gcc g++ clang clang++)\n'
-    tcomp, tlink_flags, tsyslibs = get_linker_flags('gfortran', 'gcc',
-                                                    fflags, cflags,
-                                                    debug, double,
-                                                    srcfiles, syslibs,
-                                                    osname='linux')
+    if fc is None:
+        line += '\tifeq ($(CC), gcc g++ clang clang++)\n'
+    else:
+        line += '\tifeq ($(FC), gfortran)\n'
+    _, tlink_flags, tsyslibs = get_linker_flags('gfortran', 'gcc',
+                                                fflags, cflags,
+                                                debug, double,
+                                                srcfiles, syslibs,
+                                                osname='linux')
     line += '\t\tSYSLIBS ?= {}\n'.format(' '.join(tsyslibs))
     line += '\tendif\n'
-    line += '\tifeq ($(FC), ifort mpiifort icc icpc mpiicc)\n'
-    tcomp, tlink_flags, tsyslibs = get_linker_flags('ifort', 'icc',
-                                                    fflags, cflags,
-                                                    debug, double,
-                                                    srcfiles, syslibs,
-                                                    osname='linux')
+    if fc is None:
+        line += '\tifeq ($(CC), icc icpc mpiicc)\n'
+    else:
+        line += '\tifeq ($(FC), ifort mpiifort)\n'
+    _, tlink_flags, tsyslibs = get_linker_flags('ifort', 'icc',
+                                                fflags, cflags,
+                                                debug, double,
+                                                srcfiles, syslibs,
+                                                osname='linux')
     line += '\t\tSYSLIBS ?= {}\n'.format(' '.join(tsyslibs))
     line += '\tendif\n'
     line += 'endif\n\n'
