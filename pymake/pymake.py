@@ -119,6 +119,34 @@ def parser():
     return args
 
 
+def process_Popen_stdout(proc):
+    """
+    Generic function to write Popen stdout data to the terminal.
+
+    Parameters
+    ----------
+    proc : Popen
+        Popen instance
+
+    Returns
+    -------
+    """
+    # write stdout to the terminal
+    while True:
+        line = proc.stdout.readline()
+        c = line.decode('utf-8')
+        if c != '':
+            c = c.rstrip('\r\n')
+            print('{}'.format(c))
+        else:
+            break
+
+    # setup a communicator so that the Popen return code is set
+    proc.communicate()
+
+    return
+
+
 def process_Popen_command(shellflg, cmdlist):
     """
     Generic function to write Popen command data to the screen.
@@ -135,26 +163,31 @@ def process_Popen_command(shellflg, cmdlist):
     -------
     """
     if not shellflg:
-        print(' '.join(cmdlist))
+        if isinstance(cmdlist, str):
+            print(cmdlist)
+        elif isinstance(cmdlist, list):
+            print(' '.join(cmdlist))
     return
 
 
-def process_Popen_communicate(stdout, stderr):
+def process_Popen_communicate(proc):
     """
     Generic function to write communication information from Popen to the
     screen.
 
     Parameters
     ----------
-    stdout : str
-        string with standard output from Popen
-
-    stderr : str
-        string with standard error output from Popen
+    proc : Popen
+        Popen instance
 
     Returns
     -------
+    returncode : int
+        proc.returncode
+
     """
+    stdout, stderr = proc.communicate()
+
     if stdout:
         if PY3:
             stdout = stdout.decode()
@@ -163,6 +196,13 @@ def process_Popen_communicate(stdout, stderr):
         if PY3:
             stderr = stderr.decode()
         print(stderr)
+
+    # catch non-zero return code
+    if proc.returncode != 0:
+        msg = '{} failed\n'.format(' '.join(proc.args)) + \
+              '\tstatus code {}\n'.format(proc.returncode)
+        print(msg)
+
     return
 
 
@@ -882,13 +922,20 @@ def get_linker_flags(fc, cc, fflags, cflags, debug, double, srcfiles,
     return compiler, flags, syslibs_out
 
 
-def compile_std(srcfiles, target, fc, cc,
-                expedite, dryrun, double, debug, fflags, cflags, syslibs,
-                srcdir, srcdir2, extrafiles, makefile, sharedobject):
+def compile(srcfiles, target, fc, cc,
+            expedite, dryrun, double, debug,
+            fflags, cflags, syslibs, arch, intelwin,
+            sharedobject):
     """
     Standard compile method
 
     """
+    # initialize returncode
+    returncode = 0
+
+    # initialize ilink
+    ilink = 0
+
     # set optimization levels
     optlevel = get_optlevel(fc, cc, debug, fflags, cflags)
 
@@ -898,203 +945,189 @@ def compile_std(srcfiles, target, fc, cc,
     tcflags = get_c_flags(cc, cflags, debug, double, srcfiles,
                           sharedobject=sharedobject)
 
-    # build object files
-    print('\nCompiling object files for ' +
-          '{}...'.format(os.path.basename(target)))
-    objfiles = []
-
-    # assume that header files may be in other folders, so make a list
-    searchdir = []
-    for f in srcfiles:
-        dirname = os.path.dirname(f)
-        if dirname not in searchdir:
-            searchdir.append(dirname)
-
-    for srcfile in srcfiles:
-        cmdlist = []
-        iscfile = False
-        ext = os.path.splitext(srcfile)[1].lower()
-        if ext in ['.c', '.cpp']:  # mja
-            iscfile = True
-            cmdlist.append(cc)  # mja
-            cmdlist.append(optlevel)
-            for switch in tcflags:  # mja
-                cmdlist.append(switch)  # mja
-        else:  # mja
-            cmdlist.append(fc)
-            cmdlist.append(optlevel)
-            for switch in tfflags:
-                cmdlist.append(switch)
-
-        # add search path for any c and c++ header files
-        if iscfile:
-            for sd in searchdir:
-                cmdlist.append('-I{}'.format(sd))
-        # put object files and module files in objdir_temp and moddir_temp
-        else:
-            cmdlist.append('-I{}'.format(objdir_temp))
-            if fc in ['ifort', 'mpiifort']:
-                cmdlist.append('-module')
-                cmdlist.append(moddir_temp + '/')
-            else:
-                cmdlist.append('-J{}'.format(moddir_temp))
-
-        cmdlist.append('-c')
-        cmdlist.append(srcfile)
-
-        # object file name and location
-        srcname, srcext = os.path.splitext(srcfile)
-        srcname = srcname.split(os.path.sep)[-1]
-        objfile = os.path.join(objdir_temp, srcname + '.o')
-        cmdlist.append('-o')
-        cmdlist.append(objfile)
-
-        # If expedited, then check if object file is out of date (if exists).
-        # No need to compile if object file is newer.
-        compilefile = True
-        if expedite:
-            if not out_of_date(srcfile, objfile):
-                compilefile = False
-
-        # Compile the source code
-        if compilefile:
-            if not dryrun:
-                proc = Popen(cmdlist, shell=False, stdout=PIPE, stderr=PIPE)
-                process_Popen_command(False, cmdlist)
-
-                # establish communicator
-                stdout, stderr = proc.communicate()
-                process_Popen_communicate(stdout, stderr)
-
-                # catch non-zero return code
-                if proc.returncode != 0:
-                    msg = '{} failed, status code {}\n' \
-                        .format(' '.join(cmdlist), proc.returncode)
-                    print(msg)
-                    return proc.returncode
-
-        # Save the name of the object file so that they can all be linked
-        # at the end
-        objfiles.append(objfile)
-
-    # Build the link command and then link to create the executable
-    msg = '\nLinking object files ' + \
-          'to make {}...'.format(os.path.basename(target))
-    print(msg)
-
-    tcomp, tlink_flags, tsyslibs = get_linker_flags(fc, cc, fflags, cflags,
-                                                    debug, double,
-                                                    srcfiles, syslibs,
-                                                    sharedobject=sharedobject)
-    cmdlist = [tcomp, optlevel]
-    for switch in tlink_flags:
-        cmdlist.append(switch)
-
-    cmdlist.append('-o')
-    cmdlist.append(target)
-    for objfile in objfiles:
-        cmdlist.append(objfile)
-
-    for switch in tsyslibs:
-        cmdlist.append(switch)
-
-    if not dryrun:
-        proc = Popen(cmdlist, shell=False, stdout=PIPE, stderr=PIPE)
-        process_Popen_command(False, cmdlist)
-
-        # establish communicator
-        stdout, stderr = proc.communicate()
-        process_Popen_communicate(stdout, stderr)
-
-        # catch non-zero return code
-        if proc.returncode != 0:
-            msg = '{} failed, status code {}\n' \
-                .format(' '.join(cmdlist), proc.returncode)
-            print(msg)
-            return proc.returncode
-
-    # return
-    return 0
-
-
-def compile_intel_win(srcfiles, target, fc, cc,
-                      expedite, dryrun, double, debug, fflags, cflags,
-                      syslibs, arch, srcdir, srcdir2, extrafiles, makefile):
-    """Make target on Windows OS."""
-
-    ext = '.exe'
-    if fc == 'ifort':
-        fc += ext
-    elif fc is not None:
-        fc += ext
-    if cc == 'icc':
-        cc += ext
-    elif cc == 'icl':
-        cc += ext
-    else:
-        cc = 'cl' + ext
-
-    # set optimization levels
-    optlevel = get_optlevel(fc, cc, debug, fflags, cflags)
-
-    # get fortran and c compiler switches
-    tfflags = get_fortran_flags(fc, fflags, debug, double)
-    tcflags = get_c_flags(cc, cflags, debug, double, srcfiles)
-
-    # get linker flags
+    # get linker flags and syslibs
     lc, tlflags, tsyslibs = get_linker_flags(fc, cc, fflags, cflags,
                                              debug, double,
-                                             srcfiles, syslibs)
+                                             srcfiles, syslibs,
+                                             sharedobject=sharedobject)
 
-    # delete the batch file if it exists
-    batchfile = 'compile.bat'
-    if os.path.isfile(batchfile):
+    # clean exe prior to build so that test for exe below can return a
+    # non-zero error code
+    if flopy_avail:
+        if flopy_is_exe(target):
+            os.remove(target)
+
+    if intelwin:
+        # update compiler names if necessary
+        ext = '.exe'
+        if fc is not None:
+            if ext not in fc:
+                fc += ext
+        if cc is not None:
+            if ext not in cc:
+                cc += ext
+        if ext not in lc:
+            lc += ext
+        if ext not in target:
+            target += ext
+
+        # update target extension if shared object
+        if sharedobject:
+            ttarget, ext = os.path.splitext(target)
+            if ext.lower() != '.dll':
+                target = ttarget + '.dll'
+
+        # delete the batch file if it exists
+        batchfile = 'compile.bat'
+        if os.path.isfile(batchfile):
+            try:
+                os.remove(batchfile)
+            except:
+                print("could not remove '{}'".format(batchfile))
+
+        # Create target using a batch file on Windows
         try:
-            os.remove(batchfile)
+            create_win_batch(batchfile, fc, cc, lc, optlevel,
+                             tfflags, tcflags, tlflags, tsyslibs,
+                             srcfiles, target, arch)
+
+            # build the command list for the Windows batch file
+            cmdlists = [batchfile, ]
         except:
-            pass
+            errmsg = 'Could not make x64 target: {}\n'.format(target)
+            errmsg += traceback.print_exc()
+            print(errmsg)
 
-    # Create target using a batch file on Windows
-    try:
-        # clean exe prior to build so that test for exe below can return a
-        # non-zero error code
-        if flopy_avail:
-            if flopy_is_exe(target):
-                os.remove(target)
+    else:
+        if sharedobject:
+            ext = os.path.splitext(target)[-1].lower()
+            if ext != '.so':
+                target += '.so'
 
-        makebatch(batchfile, fc, cc, lc, optlevel,
-                  tfflags, tcflags, tlflags, tsyslibs,
-                  srcfiles, target, arch)
+        # initialize the commands and object files list
+        cmdlists = []
+        objfiles = []
 
-        # run the batch file
-        proc = Popen([batchfile, ], stdout=PIPE, stderr=STDOUT)
-        while True:
-            line = proc.stdout.readline()
-            c = line.decode('utf-8')
-            if c != '':
-                c = c.rstrip('\r\n')
-                print('{}'.format(c))
+        # assume that header files may be in other folders, so make a list
+        searchdir = []
+        for f in srcfiles:
+            dirname = os.path.dirname(f)
+            if dirname not in searchdir:
+                searchdir.append(dirname)
+
+        # build the command for each source file and add to the
+        # list of commands
+        for srcfile in srcfiles:
+            cmdlist = []
+            iscfile = False
+            ext = os.path.splitext(srcfile)[1].lower()
+            if ext in ['.c', '.cpp']:  # mja
+                iscfile = True
+                cmdlist.append(cc)  # mja
+                cmdlist.append(optlevel)
+                for switch in tcflags:  # mja
+                    cmdlist.append(switch)  # mja
+            else:  # mja
+                cmdlist.append(fc)
+                cmdlist.append(optlevel)
+                for switch in tfflags:
+                    cmdlist.append(switch)
+
+            # add search path for any c and c++ header files
+            if iscfile:
+                for sd in searchdir:
+                    cmdlist.append('-I{}'.format(sd))
+            # put object files and module files in objdir_temp and moddir_temp
             else:
-                break
+                cmdlist.append('-I{}'.format(objdir_temp))
+                if fc in ['ifort', 'mpiifort']:
+                    cmdlist.append('-module')
+                    cmdlist.append(moddir_temp + '/')
+                else:
+                    cmdlist.append('-J{}'.format(moddir_temp))
 
-        # evaluate if the executable is available
-        if flopy_avail:
-            if not flopy_is_exe(target):
-                return 1
-        else:
-            return 0
-    except:
-        print('Could not make x64 target: ', target)
-        print(traceback.print_exc())
+            cmdlist.append('-c')
+            cmdlist.append(srcfile)
+
+            # object file name and location
+            srcname, srcext = os.path.splitext(srcfile)
+            srcname = srcname.split(os.path.sep)[-1]
+            objfile = os.path.join(objdir_temp, srcname + '.o')
+            cmdlist.append('-o')
+            cmdlist.append(objfile)
+
+            # Save the name of the object file for linker
+            objfiles.append(objfile)
+
+            # If expedited, then check if object file is out of date, if it
+            # exists. No need to compile if object file is newer.
+            compilefile = True
+            if expedite:
+                if not out_of_date(srcfile, objfile):
+                    compilefile = False
+
+            if compilefile:
+                cmdlists.append(cmdlist)
+
+        # Build the link command and then link to create the executable
+        ilink = len(cmdlists)
+        if ilink > 0:
+            cmdlist = [lc, optlevel]
+            for switch in tlflags:
+                cmdlist.append(switch)
+
+            cmdlist.append('-o')
+            cmdlist.append(target)
+            for objfile in objfiles:
+                cmdlist.append(objfile)
+
+            for switch in tsyslibs:
+                cmdlist.append(switch)
+
+            # add linker
+            cmdlists.append(cmdlist)
+
+    # execute each command in cmdlists
+    if not dryrun:
+        for idx, cmdlist in enumerate(cmdlists):
+            if idx == 0:
+                if intelwin:
+                    msg = "\nCompiling '{}' ".format(os.path.basename(target)) + \
+                          'for Windows using Intel compilers...'
+                else:
+                    msg = "\nCompiling object files for " + \
+                          "'{}'...".format(os.path.basename(target))
+                print(msg)
+            if idx > 0 and idx == ilink:
+                msg = "\nLinking object files " + \
+                      "to make '{}'...".format(os.path.basename(target))
+                print(msg)
+
+            # write the command to the terminal
+            process_Popen_command(False, cmdlist)
+
+            # run the command using Popen
+            proc = Popen(cmdlist, shell=False, stdout=PIPE, stderr=PIPE)
+
+            # write batch file execution to terminal
+            if intelwin:
+                process_Popen_stdout(proc)
+            # establish communicator to report errors
+            else:
+                process_Popen_communicate(proc)
+
+            # set return code
+            returncode = proc.returncode
 
     # return
-    return 0
+    return returncode
 
 
-def makebatch(batchfile, fc, cc, lc, optlevel, fflags, cflags, lflags, syslibs,
-              srcfiles, target, arch):
+def create_win_batch(batchfile, fc, cc, lc, optlevel,
+                     fflags, cflags, lflags, syslibs,
+                     srcfiles, target, arch):
     """
-    Make an ifort batch file for compiling on windows.
+    Make an intel compiler batch file for compiling on windows.
 
     """
     # get path to compilervars batch file
@@ -1109,7 +1142,7 @@ def makebatch(batchfile, fc, cc, lc, optlevel, fflags, cflags, lflags, syslibs,
         raise Exception('Pymake could not find IFORT compiler.')
     cpvars += os.path.join('bin', 'compilervars.bat')
     if not os.path.isfile(cpvars):
-        raise Exception('Could not find cpvars: {0}'.format(cpvars))
+        raise Exception('Could not find cpvars: {}'.format(cpvars))
     f = open(batchfile, 'w')
     line = 'call ' + '"' + os.path.normpath(cpvars) + '" ' + arch + '\n'
     f.write(line)
@@ -1546,30 +1579,20 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
         if cc is not None:
             if cc in ['cl', 'icl']:
                 intelwin = True
+
     if intelwin:
         objext = '.obj'
-        returncode = compile_intel_win(srcfiles, target, fc, cc,
-                                       expedite, dryrun, double, debug,
-                                       fflags, cflags, syslibs, arch,
-                                       srcdir, srcdir2,
-                                       extrafiles, makefile)
     else:
         objext = '.o'
-        if sharedobject:
-            ext = os.path.splitext(target)[-1].lower()
-            if ext != '.so':
-                target += '.so'
 
         # update openspec files
         create_openspec()
 
-        # compile the code
-        returncode = compile_std(srcfiles, target, fc, cc,
-                                 expedite, dryrun,
-                                 double, debug,
-                                 fflags, cflags, syslibs,
-                                 srcdir, srcdir2,
-                                 extrafiles, makefile, sharedobject)
+    # compile the executable
+    returncode = compile(srcfiles, target, fc, cc,
+                         expedite, dryrun, double, debug,
+                         fflags, cflags, syslibs, arch, intelwin,
+                         sharedobject)
 
     # create makefile
     if makefile:
