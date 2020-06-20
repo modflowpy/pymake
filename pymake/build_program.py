@@ -36,6 +36,7 @@ def get_function_names(module, select_name=None):
     -------
     func : dict
         dictionary with function name keys and values set to function pointers
+
     """
     func = {}
     for key, value in module.__dict__.items():
@@ -69,6 +70,7 @@ def set_bindir(target=None):
         set bindir to C:\\Users\\username\\.local\\bin on windows and
         /Users/username/.local/bin on Linux and OSX. Passing --appdir bindir
         command line argument will set bindir to user-defined path
+
     """
     # determine if running on Travis
     is_travis = 'TRAVIS' in os.environ
@@ -126,6 +128,7 @@ def set_build(target, exe_name):
     Returns
     -------
     build : bool
+
     """
     # determine if running on Travis
     is_travis = 'TRAVIS' in os.environ
@@ -214,6 +217,7 @@ def set_extrafiles(target, download_dir):
     Returns
     -------
     extra_files : str
+
     """
     extrafiles = None
     if target in ['zbud6']:
@@ -276,6 +280,7 @@ def set_zip():
     -------
     zip_pth : str
         path for zip file
+
     """
     zip_pth = None
     for idx, arg in enumerate(sys.argv):
@@ -302,6 +307,7 @@ def set_makefile():
     -------
     makefile : bool
         boolean indicating if a makefile should be created
+
     """
     makefile = False
     for idx, arg in enumerate(sys.argv):
@@ -575,6 +581,7 @@ def build_targets(current=True):
     -------
     targets : list
         list of targets
+
     """
     return usgs_program_data.get_keys(current=current)
 
@@ -591,6 +598,7 @@ def build_replace(targets):
     replace_funcs : function pointer or list of function pointers
         None is returned as the function pointer if the target string is
         not in the function name
+
     """
     if isinstance(targets, str):
         targets = [targets]
@@ -627,6 +635,7 @@ def build_apps(targets=None):
     Returns
     -------
     returncode : int
+
     """
     start_time = datetime.now()
     if targets is None:
@@ -851,6 +860,7 @@ def update_triangle_files(srcdir, fc, cc, arch, double):
 
     Returns
     -------
+
     """
     # move the downloaded files
     rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))
@@ -889,6 +899,7 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
 
     Returns
     -------
+
     """
     # move the downloaded files
     rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))

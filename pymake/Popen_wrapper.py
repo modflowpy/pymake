@@ -5,8 +5,7 @@ PY3 = sys.version_info[0] >= 3
 
 
 def process_Popen_initialize(cmdlist):
-    """
-    Generic function to initialize a Popen process
+    """Generic function to initialize a Popen process.
 
     Parameters
     ----------
@@ -23,8 +22,7 @@ def process_Popen_initialize(cmdlist):
 
 
 def process_Popen_command(shellflg, cmdlist):
-    """
-    Generic function to write Popen command data to the screen.
+    """Generic function to write Popen command data to the screen.
 
     Parameters
     ----------
@@ -47,8 +45,7 @@ def process_Popen_command(shellflg, cmdlist):
 
 
 def process_Popen_communicate(proc, verbose=True):
-    """
-    Generic function to write communication information from Popen to the
+    """Generic function to write communication information from Popen to the
     screen.
 
     Parameters
@@ -90,8 +87,7 @@ def process_Popen_communicate(proc, verbose=True):
 
 
 def process_Popen_stdout(proc):
-    """
-    Generic function to write Popen stdout data to the terminal.
+    """Generic function to write Popen stdout data to the terminal.
 
     Parameters
     ----------

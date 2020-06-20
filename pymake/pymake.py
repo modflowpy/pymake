@@ -50,6 +50,7 @@ def parser():
     -------
     args : list
         command line argument list
+
     """
     description = __description__
     parser = argparse.ArgumentParser(description=description,
@@ -148,6 +149,7 @@ def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
     Returns
     -------
     None
+
     """
     # remove the target if it already exists
     try:
@@ -233,6 +235,7 @@ def get_extrafiles(extrafiles):
     -------
     files : list
         list of files in the extra files input file
+
     """
     if extrafiles is None:
         files = None
@@ -270,6 +273,7 @@ def clean(objext, intelwin):
     Returns
     -------
     None
+
     """
     # clean things up
     print('\nCleaning up temporary source, object, and module files...')
@@ -300,6 +304,7 @@ def create_openspec():
     Returns
     -------
     None
+
     """
     files = ['openspec.inc', 'filespec.inc']
     dirs = [d[0] for d in os.walk(srcdir_temp)]
@@ -335,6 +340,7 @@ def check_out_of_date(srcfile, objfile):
     -------
     stale : bool
         boolean indicating if the object file is current
+
     """
     stale = True
     if os.path.exists(objfile):
@@ -388,6 +394,7 @@ def pymake_compile(srcfiles, target, fc, cc,
     -------
     returncode : int
         returncode
+
     """
     # initialize returncode
     returncode = 0
@@ -611,6 +618,7 @@ def create_win_batch(batchfile, fc, cc, lc, optlevel,
 
     Returns
     -------
+
     """
     # get path to compilervars batch file
     iflist = ['IFORT_COMPILER{}'.format(i) for i in range(30, 12, -1)]
@@ -1155,6 +1163,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     -------
     returncode : int
         return code
+
     """
     # initialize return code
     returncode = 0

@@ -18,6 +18,7 @@ def get_fortran_files(srcfiles, extensions=False):
     -------
     files_out : list
         list of fortran files or unique fortran file extensions
+
     """
     files_out = []
     for srcfile in srcfiles:
@@ -49,6 +50,7 @@ def get_c_files(srcfiles, extensions=False):
     -------
     files_out : list
         list of c or cpp files or uniques c and cpp file extensions
+
     """
     files_out = []
     for srcfile in srcfiles:
@@ -77,6 +79,7 @@ def get_iso_c(srcfiles):
     -------
     iso_c : bool
         flag indicating if iso_c_binding is used in any fortran file
+
     """
     iso_c = False
     for srcfile in srcfiles:
@@ -127,6 +130,7 @@ def get_ordered_srcfiles(srcdir, include_subdir=False):
     -------
     orderedsourcefiles : list
         list of ordered source files
+
     """
     # create a list of all c(pp), f and f90 source files
     templist = []

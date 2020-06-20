@@ -14,6 +14,7 @@ class pymakeZipFile(ZipFile):
     This preserves file
     attributes as described here
     https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
+
     """
 
     def extract(self, member, path=None, pwd=None):
@@ -231,6 +232,7 @@ def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
 
     Returns
     -------
+
     """
     return pymakeZipFile.compressall(path, file_pths=file_pths,
                                      dir_pths=dir_pths, patterns=patterns)
@@ -243,6 +245,7 @@ def get_default_repo():
     -------
     default_repo : str
         default github repository repo name
+
     """
     return 'MODFLOW-USGS/executables'
 
@@ -261,6 +264,7 @@ def get_default_json(tag_name=None):
     json_obj : dict
         json object (dictionary) with a tag_name and assets including
         file names and download links
+
     """
     if tag_name is None:
         tag_name = '3.0'
@@ -298,6 +302,7 @@ def get_request_json(request_url):
 
     json_obj : dict
         json object
+
     """
     import requests
     import json
@@ -334,6 +339,7 @@ def repo_json(github_repo, tag_name=None):
     json_obj : dict
         json object (dictionary) with a tag_name and assets including
         file names and download links
+
     """
     repo_url = 'https://api.github.com/repos/{}'.format(github_repo)
 
@@ -398,6 +404,7 @@ def get_repo_assets(github_repo=None, version=None):
     -------
     result_dict : dict
         dictionary of file names and links
+
     """
     if github_repo is None:
         github_repo = get_default_repo()
@@ -430,6 +437,7 @@ def repo_latest_version(github_repo=None):
     -------
     version : str
         string with the latest version/tag number
+
     """
     if github_repo is None:
         github_repo = get_default_repo()
@@ -461,6 +469,7 @@ def getmfexes(pth='.', version=None, platform=None, exes=None):
 
     exes : str or list of strings
         executable or list of executables to retain
+
     """
     # set download directory to path in case a selection of files
     download_dir = pth

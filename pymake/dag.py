@@ -3,6 +3,7 @@
 Can be used to determine the order of dependencies.  Can be used to
 determine compiling order, for example.  Topological sort pseudocode
 based on: http://en.wikipedia.org/wiki/Topological_sorting
+
 """
 
 from __future__ import print_function

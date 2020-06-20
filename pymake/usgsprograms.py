@@ -35,6 +35,7 @@ def str_to_bool(s):
 
     Returns
     -------
+
     """
     if s == 'True':
         return True
@@ -57,6 +58,7 @@ class usgs_program_data:
 
         Returns
         -------
+
         """
         pth = os.path.dirname(os.path.abspath(pymake.__file__))
         fpth = os.path.join(pth, program_data_file)
@@ -114,6 +116,7 @@ class usgs_program_data:
         -------
         program_dict : dict
             Dictionary with USGS program attributes for the specified key
+
         """
         return usgs_program_data()._target_data(key)
 
@@ -132,6 +135,7 @@ class usgs_program_data:
         -------
         keys : list
             list of USGS program targets
+
         """
 
         return usgs_program_data()._target_keys(current=current)
@@ -144,6 +148,7 @@ class usgs_program_data:
         -------
         program_dict : dict
             Dictionary with USGS program attributes for all targets
+
         """
         return usgs_program_data()._program_dict
 
@@ -160,6 +165,7 @@ class usgs_program_data:
         -------
         precision : list
             List
+
         """
         target = usgs_program_data().get_target(key)
         precision = []
@@ -182,6 +188,7 @@ class usgs_program_data:
         -------
         version : str
             current version of the specified target
+
         """
         target = usgs_program_data().get_target(key)
         return target.version
@@ -199,6 +206,7 @@ class usgs_program_data:
 
         Returns
         -------
+
         """
         targets = usgs_program_data()._target_keys(current=current)
         targets.sort()
@@ -237,6 +245,7 @@ class usgs_program_data:
 
         Returns
         -------
+
         """
         # print a message
         sel = 'all of the'
@@ -308,6 +317,7 @@ class usgs_program_data:
         -------
         json_dict : dict
             Valid USGS program database
+
         """
         try:
             with open(fpth, 'r') as f:
@@ -341,6 +351,7 @@ class usgs_program_data:
 
         Returns
         -------
+
         """
         json_dict = usgs_program_data.load_json(fpth)
 
@@ -373,6 +384,7 @@ class usgs_program_data:
 
         Returns
         -------
+
         """
         if temp_dict is not None:
             if os.path.isfile(fpth):

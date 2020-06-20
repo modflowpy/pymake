@@ -5,12 +5,8 @@ from .version import __version__, __build__, __git_commit__
 
 from .usgsprograms import usgs_program_data
 from .pymake import main, parser
-from .Popen_wrapper import process_Popen_command,\
-    process_Popen_communicate, process_Popen_stdout
-from .dag import order_source_files, order_c_source_files, get_f_nodelist
-from .compiler_switches import get_c_flags, get_fortran_flags, \
-    get_linker_flags, set_arch, set_compiler, set_debug, set_cflags, \
-    set_fflags, set_syslibs
+from .compiler_switches import set_compiler
+from .dag import order_source_files
 from .download import download_and_unzip, getmfexes, \
     repo_latest_version, get_repo_assets, zip_all
 from .visualize import make_plots

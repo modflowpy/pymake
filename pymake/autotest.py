@@ -217,9 +217,20 @@ def get_input_files(namefile):
 
 
 def get_namefiles(pth, exclude=None):
-    """Search through the path (pth) for all .nam files.
+    """Search through a path (pth) for all .nam files.
 
-    Return them all in a list.  Namefiles will have paths.
+    Parameters
+    ----------
+    pth : str
+        path to model files
+    exclude : str or lst
+        File or list of files to exclude from the search (default is None)
+
+    Returns
+    -------
+    namefiles : lst
+        List of namefiles with paths
+
     """
     namefiles = []
     for root, dirs, files in os.walk(pth):
@@ -314,6 +325,7 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None,
     :type extrafiles:
     :return:
     :rtype:
+
     """
     import shutil
 
@@ -374,6 +386,7 @@ def get_mf6_comparison(src):
 
     :param src:
     :return:
+
     """
     action = None
     # Possible comparison - the order matters
@@ -406,6 +419,7 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
     :type remove_existing:
     :return:
     :rtype:
+
     """
 
     # get the type of comparison to use (compare, mf2005, etc.)

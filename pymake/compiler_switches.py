@@ -22,6 +22,7 @@ def check_gnu_switch_available(switch, compiler='gfortran'):
     -------
     avail : bool
         boolean indicating if the compiler switch is available
+
     """
     # test if compiler is valid
     if compiler not in ['gfortran', 'gcc']:
@@ -57,6 +58,7 @@ def get_osname():
     -------
     osname : str
         lower case OS platform name
+
     """
     osname = sys.platform.lower()
     if osname == 'linux2':
@@ -78,6 +80,7 @@ def get_prepend(compiler, osname):
     -------
     str : str
         prepend string for a compiler switch for a OS
+
     """
     if compiler in ['gfortran', 'gcc', 'g++', 'clang']:
         prepend = '-'
@@ -114,6 +117,7 @@ def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
     -------
     optlevel : str
         compiler optimization switch
+
     """
     # remove target .exe extension, if necessary
     target = os.path.basename(target)
@@ -211,6 +215,7 @@ def get_fortran_flags(target, fc, fflags, debug, double=False,
     -------
     flags : str
         fortran compiler switches
+
     """
     flags = []
 
@@ -329,6 +334,7 @@ def get_c_flags(target, cc, cflags, debug, srcfiles=None,
     -------
     flags : str
         c or cpp compiler switches
+
     """
     flags = []
 
@@ -452,6 +458,7 @@ def get_linker_flags(target, fc, cc, syslibs, srcfiles,
         list of linker switches
     syslibs : list
         list of syslibs for the linker
+
     """
     # get list of unique fortran and c/c++ file extensions
     fext = get_fortran_files(srcfiles, extensions=True)
@@ -546,6 +553,7 @@ def set_compiler(target):
         string denoting the fortran compiler to use. Default is gfortran.
     cc : str
         string denoting the c compiler to use. Default is gcc.
+
     """
     fc = 'gfortran'
     if target in ['triangle', 'gridgen']:
@@ -607,6 +615,7 @@ def set_fflags(target, fc='gfortran', argv=True, osname=None):
     -------
     fflags : str
         fortran compiler flags. Default is None
+
     """
     fflags = None
 
@@ -681,6 +690,7 @@ def set_cflags(target, cc='gcc', argv=True, osname=None):
     -------
     cflags : str
         c compiler flags. Default is None
+
     """
     cflags = None
 
@@ -758,6 +768,7 @@ def set_syslibs(target, fc='gfortran', cc='gcc', argv=True, osname=None):
     -------
     syslibs : str
         linker flags. Default is None
+
     """
     # get lower case OS string
     if osname is None:
@@ -833,6 +844,7 @@ def set_debug(target):
     Returns
     -------
     debug : bool
+
     """
     debug = False
     for arg in sys.argv:
@@ -863,6 +875,7 @@ def set_arch(target):
     Returns
     -------
     arch : str
+
     """
     arch = 'intel64'
     for idx, arg in enumerate(sys.argv):
