@@ -1,6 +1,6 @@
 from __future__ import print_function
 import os
-from .pymake import get_ordered_srcfiles
+from .compiler_language_files import get_ordered_srcfiles
 from .dag import get_f_nodelist
 
 try:
