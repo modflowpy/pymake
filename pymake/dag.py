@@ -15,7 +15,6 @@ __maintainer__ = "Christian D. Langevin"
 __email__ = "langevin@usgs.gov"
 __status__ = "Production"
 
-import re
 import os
 
 
@@ -70,6 +69,19 @@ class DirectedAcyclicGraph(object):
 
 
 def get_f_nodelist(srcfiles):
+    """Get fortran DAG nodelist.
+
+    Parameters
+    ----------
+    srcfiles : list
+        list of source file paths
+
+    Returns
+    -------
+    nodelist : list
+        list of DAG nodes
+
+    """
     # create a dictionary that has module name and source file name
     # create a dictionary that has a list of modules used within each source
     # create a list of Nodes for later ordering
@@ -91,6 +103,7 @@ def get_f_nodelist(srcfiles):
             continue
         lines = f.read()
         lines = lines.decode('ascii', 'replace').splitlines()
+
         # develop a list of modules in the file
         modulelist = []  # list of modules used by this source file
         for idx, line in enumerate(lines):
@@ -104,8 +117,10 @@ def get_f_nodelist(srcfiles):
                 modulename = linelist[1].split(',')[0].upper()
                 if modulename not in modulelist:
                     modulelist.append(modulename)
+
         # update the dictionary if any entries have been found
         sourcefile_module_dict[srcfile] = modulelist
+
         # close the src file
         f.close()
 
@@ -127,23 +142,61 @@ def get_f_nodelist(srcfiles):
 
 
 def get_dag(nodelist):
-    """Create a dag from the nodelist."""
+    """Create a DAG from the nodelist.
+
+    Parameters
+    ----------
+    nodelist : list
+        list of DAG nodes
+
+    Returns
+    -------
+    dag : DirectedAcyclicGraph
+        DAG object
+
+    """
     dag = DirectedAcyclicGraph(nodelist)
     return dag
 
 
 def order_source_files(srcfiles):
-    """Use a dag and a nodelist to order the fortran source files."""
+    """Use a dag and a nodelist to order the fortran source files.
+
+    Parameters
+    ----------
+    srcfiles : list
+        list of source file paths
+
+    Returns
+    -------
+    osrcfiles : list
+        DAG ordered list of source files
+
+    """
     nodelist = get_f_nodelist(srcfiles)
     dag = get_dag(nodelist)
     orderednodes = dag.toposort()
     osrcfiles = []
     for node in orderednodes:
         osrcfiles.append(node.name)
+
     return osrcfiles
 
 
 def order_c_source_files(srcfiles):
+    """Create a ordered list of c/c++ source files.
+
+    Parameters
+    ----------
+    srcfiles : list
+        list of source file paths
+
+    Returns
+    -------
+    osrcfiles : list
+        DAG ordered list of c/c++ source files
+
+    """
     # create a dictionary that has module name and source file name
     # create a dictionary that has a list of modules used within each source
     # create a list of Nodes for later ordering
@@ -165,6 +218,7 @@ def order_c_source_files(srcfiles):
             continue
         lines = f.read()
         lines = lines.decode('ascii', 'replace').splitlines()
+
         # develop a list of modules in the file
         modulelist = []  # list of modules used by this source file
         for idx, line in enumerate(lines):
@@ -175,17 +229,21 @@ def order_c_source_files(srcfiles):
                 modulename = linelist[1].upper()
                 for cval in ['"', "'", '<', '>']:
                     modulename = modulename.replace(cval, '')
+
                 # add source file for this c(pp) file if it is the same
                 # as the include file without the extension
                 bn = os.path.basename(srcfile)
                 if os.path.splitext(modulename)[0] == \
                         os.path.splitext(bn)[0].upper():
                     module_dict[modulename] = srcfile
+
                 # add include file name
                 if modulename not in modulelist:
                     modulelist.append(modulename)
+
         # update the dictionary if any entries have been found
         sourcefile_module_dict[srcfile] = modulelist
+
         # close the src file
         f.close()
 
@@ -201,14 +259,16 @@ def order_c_source_files(srcfiles):
                         # print 'adding dependency: ', srcfile, mlocation
                         node.add_dependency(nodedict[mlocation])
         except:
-            print(
-                'order_c_source_files: {} key does not exist'.format(srcfile))
+            msg = 'order_c_source_files: ' + \
+                  '{} key does not exist'.format(srcfile)
+            print(msg)
 
     dag = get_dag(nodelist)
     orderednodes = dag.toposort()
     osrcfiles = []
     for node in orderednodes:
         osrcfiles.append(node.name)
+
     return osrcfiles
 
 

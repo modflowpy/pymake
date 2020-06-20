@@ -112,7 +112,7 @@ def run_mf6(ws):
 
     # run test models
     exe_name = os.path.abspath(epth)
-    print('running model...{}'.format(os.path.basename(d)))
+    print('running model...{}'.format(os.path.basename(ws)))
     success, buff = flopy.run_model(exe_name, None,
                                     model_ws=dst, silent=False)
     if success:
@@ -151,8 +151,8 @@ if __name__ == "__main__":
     example_dirs = get_example_dirs()
 
     # run models
-    for d in example_dirs:
-        run_mf6(d)
+    for ws in example_dirs:
+        run_mf6(ws)
 
     # build modflow 6 with a pymake generated makefile
     build_with_makefile()

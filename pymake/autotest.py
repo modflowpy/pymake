@@ -9,6 +9,20 @@ ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
 
 
 def setup(namefile, dst, remove_existing=True, extrafiles=None):
+    """Setup MODFLOW-based model files for autotests.
+
+    Parameters
+    ----------
+    namefile : str
+        path to a
+    dst
+    remove_existing
+    extrafiles
+
+    Returns
+    -------
+
+    """
     # Construct src pth from namefile or lgr file
     src = os.path.dirname(namefile)
 
@@ -155,6 +169,17 @@ def setup_comparison(namefile, dst, remove_existing=True):
 
 
 def teardown(src):
+    """Teardown a autotest directory.
+
+    Parameters
+    ----------
+    src : str
+        autotest directory to teardown
+
+    Returns
+    -------
+
+    """
     if os.path.exists(src):
         print('Removing folder ' + src)
         shutil.rmtree(src)
@@ -162,8 +187,19 @@ def teardown(src):
 
 
 def get_input_files(namefile):
-    """Return a list of all the input files in this model."""
+    """Return a list of all the input files in this model.
 
+    Parameters
+    ----------
+    namefile : str
+        path to a MODFLOW-based model name file
+
+    Returns
+    -------
+    filelist : list
+        list of MODFLOW-based model input files
+
+    """
     srcdir = os.path.dirname(namefile)
     filelist = []
     fname = os.path.join(srcdir, namefile)
@@ -252,6 +288,27 @@ def get_namefiles(pth, exclude=None):
 
 
 def get_entries_from_namefile(namefile, ftype=None, unit=None, extension=None):
+    """Get entries from a namefile. Can select using FTYPE, UNIT, or file
+    extension.
+
+    Parameters
+    ----------
+    namefile : str
+        path to a MODFLOW-based model name file
+    ftype : str
+        package type
+    unit : int
+        file unit number
+    extension : str
+        file extension
+
+    Returns
+    -------
+    entries : list of tuples
+        list of tuples containing FTYPE, UNIT, FNAME, STATUS for each
+        namefile entry that meets a user-specified value.
+
+    """
     entries = []
     f = open(namefile, 'r')
     for line in f:
@@ -288,6 +345,21 @@ def get_entries_from_namefile(namefile, ftype=None, unit=None, extension=None):
 
 
 def get_sim_name(namefiles, rootpth=None):
+    """Get simulation name.
+
+    Parameters
+    ----------
+    namefiles : str or list of strings
+        path(s) to MODFLOW-based model name files
+    rootpth : str
+        optional root directory path (default is None)
+
+    Returns
+    -------
+    simname : list
+        list of namefiles without the file extension
+
+    """
     if isinstance(namefiles, str):
         namefiles = [namefiles]
     sim_name = []
@@ -297,15 +369,18 @@ def get_sim_name(namefiles, rootpth=None):
             idx = -1
         else:
             idx = t.index(os.path.split(rootpth)[1])
-        dst = ''
+
         # build dst with everything after the rootpth and before
         # the namefile file name.
+        dst = ''
         if idx < len(t):
             for d in t[idx + 1:-1]:
                 dst += '{}_'.format(d)
+
         # add namefile basename without extension
         dst += t[-1].replace('.nam', '')
         sim_name.append(dst)
+
     return sim_name
 
 
@@ -315,16 +390,26 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None,
     """Copy all of the MODFLOW 6 input files from the src directory to the dst
     directory.
 
-    :param src:
-    :type src:
-    :param dst:
-    :type dst:
-    :param mfnamefile:
-    :type mfnamefile:
-    :param extrafiles:
-    :type extrafiles:
-    :return:
-    :rtype:
+    Parameters
+    ----------
+    src : src
+        directory path with original MODFLOW 6 input files
+    dst :
+        directory path that original MODFLOW 6 input files will be copied to
+    mfnamefile : str
+        optional MODFLOW 6 simulation name file (default is mfsim.nam)
+    extrafiles : bool
+        boolean indicating if extra files should be included (default is None)
+    remove_existing : bool
+        boolean indicating if existing file in dst should be removed (default
+        is True)
+
+    Returns
+    -------
+    mf6inp : list
+        list of MODFLOW 6 input files
+    mf6outp : list
+        list of MODFLOW 6 output files
 
     """
     import shutil
@@ -346,6 +431,7 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None,
     fname = os.path.abspath(fname)
     mf6inp, mf6outp = get_mf6_files(fname)
     files2copy = [mfnamefile] + mf6inp
+
     # determine if there are any .ex files
     exinp = []
     for f in mf6outp:
@@ -372,20 +458,29 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None,
                 os.mkdir(sf)
             except:
                 print('Could not make ' + sf)
+
         # Now copy the file
         if os.path.exists(srcf):
             print('Copy file from/to ' + srcf + ' ' + dstf)
             shutil.copy(srcf, dstf)
         else:
             print(srcf + ' does not exist')
+
     return mf6inp, mf6outp
 
 
 def get_mf6_comparison(src):
-    """Determine comparison for MODFLOW 6 simulation.
+    """Determine comparison type for MODFLOW 6 simulation.
 
-    :param src:
-    :return:
+    Parameters
+    ----------
+    src : str
+        directory path to search for comparison types
+
+    Returns
+    -------
+    action : str
+        comparison type
 
     """
     action = None
@@ -411,17 +506,22 @@ def get_mf6_comparison(src):
 def setup_mf6_comparison(src, dst, remove_existing=True):
     """Setup comparision for MODFLOW 6 simulation.
 
-    :param src:
-    :type src:
-    :param dst:
-    :type dst:
-    :param remove_existing:
-    :type remove_existing:
-    :return:
-    :rtype:
+    Parameters
+    ----------
+    src : src
+        directory path with original MODFLOW 6 input files
+    dst :
+        directory path that original MODFLOW 6 input files will be copied to
+    remove_existing : bool
+        boolean indicating if existing file in dst should be removed (default
+        is True)
+
+    Returns
+    -------
+    action : str
+        comparison type
 
     """
-
     # get the type of comparison to use (compare, mf2005, etc.)
     action = get_mf6_comparison(src)
 
@@ -483,7 +583,19 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
 
 
 def get_mf6_nper(tdisfile):
-    """Return the number of stress periods in the MODFLOW 6 model."""
+    """Return the number of stress periods in the MODFLOW 6 model.
+
+    Parameters
+    ----------
+    tdisfile : str
+        path to the TDIS file
+
+    Returns
+    -------
+    nper : int
+        number of stress periods in the simulation
+
+    """
     with open(tdisfile, 'r') as f:
         lines = f.readlines()
     line = [line for line in lines if 'NPER' in line.upper()][0]
@@ -492,6 +604,19 @@ def get_mf6_nper(tdisfile):
 
 
 def get_mf6_mshape(disfile):
+    """Return the shape of the MODFLOW 6 model.
+
+    Parameters
+    ----------
+    disfile : str
+        path to a MODFLOW 6 discretization file
+
+    Returns
+    -------
+    mshape : tuple
+        tuple with the shape of the MODFLOW 6 model.
+
+    """
     with open(disfile, 'r') as f:
         lines = f.readlines()
 
@@ -522,7 +647,21 @@ def get_mf6_mshape(disfile):
 
 
 def get_mf6_files(mfnamefile):
-    """Return a list of all the MODFLOW 6 input files in this model."""
+    """Return a list of all the MODFLOW 6 input and output files in this model.
+
+    Parameters
+    ----------
+    mfnamefile : str
+        path to the MODFLOW 6 simulation name file
+
+    Returns
+    -------
+    filelist : list
+        list of MODFLOW 6 input files in a simulation
+    outplist : list
+        list of MODFLOW 6 output files in a simulation
+
+    """
 
     srcdir = os.path.dirname(mfnamefile)
     filelist = []
@@ -605,7 +744,21 @@ def get_mf6_files(mfnamefile):
 
 
 def _get_mf6_external_files(srcdir, outplist, files):
-    """"""
+    """Get list of external files in a MODFLOW 6 simulation.
+
+    Parameters
+    ----------
+    srcdir : str
+        path to a directory containing a MODFLOW 6 simulation
+    outplist : list
+        list of output files in a MODFLOW 6 simulation
+    files : list
+        list of MODFLOW 6 name files
+
+    Returns
+    -------
+
+    """
     extfiles = []
 
     for fname in files:
@@ -691,7 +844,21 @@ def _get_mf6_external_files(srcdir, outplist, files):
 
 
 def get_mf6_ftypes(namefile, ftypekeys):
-    """Return a list of FTYPES that are in the name file and in ftypekeys."""
+    """Return a list of FTYPES that are in the name file and in ftypekeys.
+
+    Parameters
+    ----------
+    namefile : str
+        path to a MODFLOW 6 name file
+    ftypekeys : list
+        list of desired FTYPEs
+
+    Returns
+    -------
+    ftypes : list
+        list of FTYPES that match ftypekeys in namefile
+
+    """
     with open(namefile, 'r') as f:
         lines = f.readlines()
 
@@ -714,8 +881,23 @@ def get_mf6_ftypes(namefile, ftypekeys):
 
 def get_mf6_blockdata(f, blockstr):
     """Return list with all non comments between start and end of block
-    specified by blockstr."""
+    specified by blockstr.
+
+    Parameters
+    ----------
+    f : file object
+        open file object
+    blockstr : str
+        name of block to search
+
+    Returns
+    -------
+    data : list
+        list of data in specified block
+
+    """
     data = []
+
     # find beginning of block
     for line in f:
         if line[0] != '#':
@@ -735,7 +917,22 @@ def get_mf6_blockdata(f, blockstr):
 # compare functions
 def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                    outfile=None, files1=None, files2=None):
-    """Compare the results from these two simulations."""
+    """Compare the budget results from two simulations.
+
+    Parameters
+    ----------
+    namefile1
+    namefile2
+    max_cumpd
+    max_incpd
+    outfile
+    files1
+    files2
+
+    Returns
+    -------
+
+    """
     try:
         import flopy
     except:
@@ -891,7 +1088,22 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
 def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                       outfile=None, files1=None, files2=None):
-    """Compare the results from these two simulations."""
+    """Compare the SWR budget results from two simulations.
+
+    Parameters
+    ----------
+    namefile1
+    namefile2
+    max_cumpd
+    max_incpd
+    outfile
+    files1
+    files2
+
+    Returns
+    -------
+
+    """
     import numpy as np
     try:
         import flopy
@@ -1043,7 +1255,29 @@ def compare_heads(namefile1, namefile2, precision='auto',
                   htol=0.001, outfile=None, files1=None, files2=None,
                   difftol=False, verbose=False, exfile=None, exarr=None,
                   maxerr=None):
-    """Compare the results from these two simulations."""
+    """Compare the head results from two simulations.
+
+    Parameters
+    ----------
+    namefile1
+    namefile2
+    precision
+    text
+    text2
+    htol
+    outfile
+    files1
+    files2
+    difftol
+    verbose
+    exfile
+    exarr
+    maxerr
+
+    Returns
+    -------
+
+    """
     try:
         import flopy
     except:
@@ -1366,7 +1600,24 @@ def compare_heads(namefile1, namefile2, precision='auto',
 def compare_concs(namefile1, namefile2, precision='auto',
                   ctol=0.001, outfile=None, files1=None, files2=None,
                   difftol=False, verbose=False):
-    """Compare the mt3dms concentration results from these two simulations."""
+    """Compare the mt3dms concentration results from two simulations.
+
+    Parameters
+    ----------
+    namefile1
+    namefile2
+    precision
+    ctol
+    outfile
+    files1
+    files2
+    difftol
+    verbose
+
+    Returns
+    -------
+
+    """
     import numpy as np
     try:
         import flopy
@@ -1530,7 +1781,23 @@ def compare_concs(namefile1, namefile2, precision='auto',
 
 def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
                    htol=0.001, outfile=None, difftol=False, verbose=False):
-    """Compare the swr stage results from these two simulations."""
+    """Compare SWR process stage results from two simulations.
+
+    Parameters
+    ----------
+    namefile1
+    namefile2
+    files1
+    files2
+    htol
+    outfile
+    difftol
+    verbose
+
+    Returns
+    -------
+
+    """
     try:
         import flopy
     except:
@@ -1679,6 +1946,17 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
 
 
 def calculate_diffmax(v1, v2):
+    """Calculate the maximum difference between two vectors.
+
+    Parameters
+    ----------
+    v1
+    v2
+
+    Returns
+    -------
+
+    """
     import numpy as np
     if v1.ndim > 1 or v2.ndim > 1:
         v1 = v1.flatten()
@@ -1695,6 +1973,18 @@ def calculate_diffmax(v1, v2):
 
 
 def calculate_difftol(v1, v2, tol):
+    """Calculate the difference between two arrays relative to a tolerance.
+
+    Parameters
+    ----------
+    v1
+    v2
+    tol
+
+    Returns
+    -------
+
+    """
     import numpy as np
     if v1.ndim > 1 or v2.ndim > 1:
         v1 = v1.flatten()
@@ -1714,7 +2004,25 @@ def compare(namefile1, namefile2, precision='auto',
             max_cumpd=0.01, max_incpd=0.01, htol=0.001,
             outfile1=None, outfile2=None,
             files1=None, files2=None):
-    """Compare the results from two standard simulations."""
+    """Compare the results for two standard simulations.
+
+    Parameters
+    ----------
+    namefile1
+    namefile2
+    precision
+    max_cumpd
+    max_incpd
+    htol
+    outfile1
+    outfile2
+    files1
+    files2
+
+    Returns
+    -------
+
+    """
 
     # Compare budgets from the list files in namefile1 and namefile2
     success1 = compare_budget(namefile1, namefile2,
