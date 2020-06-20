@@ -17,6 +17,7 @@ if not os.path.exists(dstpth):
 mf6ver = prog_dict.version
 mf6pth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(mf6pth, 'examples')
+epth = os.path.join(dstpth, target)
 
 
 def get_example_dirs():
@@ -37,6 +38,7 @@ def compile_code():
                          include_subdirs=True,
                          download_dir=dstpth,
                          replace_function=replace_function,
+                         exe_dir=dstpth,
                          dryrun=False,
                          makefile=True)
 
@@ -44,7 +46,7 @@ def compile_code():
 def build_with_makefile():
     if os.path.isfile('makefile'):
 
-        tepth = target
+        tepth = epth
         if sys.platform.lower() == 'win32':
             tepth += '.exe'
 
@@ -91,7 +93,7 @@ def clean_up():
     print('Removing folder ' + mf6pth)
     shutil.rmtree(mf6pth)
 
-    tepth = target
+    tepth = epth
     if sys.platform == 'win32':
         tepth += '.exe'
 
@@ -101,20 +103,20 @@ def clean_up():
     return
 
 
-def run_mf6(d):
-    print('running...{}'.format(d))
+def run_mf6(ws):
+    print('running...{}'.format(ws))
     # setup
-    epth = os.path.join(expth, d)
-    testpth = os.path.join(dstpth, d)
-    pymake.setup_mf6(epth, testpth)
+    src = os.path.join(expth, ws)
+    dst = os.path.join(dstpth, ws)
+    pymake.setup_mf6(src, dst)
 
     # run test models
+    exe_name = os.path.abspath(epth)
     print('running model...{}'.format(os.path.basename(d)))
-    epth = os.path.abspath(target)
-    success, buff = flopy.run_model(epth, None,
-                                    model_ws=testpth, silent=False)
+    success, buff = flopy.run_model(exe_name, None,
+                                    model_ws=dst, silent=False)
     if success:
-        pymake.teardown(testpth)
+        pymake.teardown(dst)
     assert success is True
 
     return
@@ -129,8 +131,8 @@ def test_mf6():
     # get name files and simulation name
     example_dirs = get_example_dirs()
     # run models
-    for d in example_dirs:
-        yield run_mf6, d
+    for ws in example_dirs:
+        yield run_mf6, ws
 
 
 def test_makefile():

@@ -576,7 +576,6 @@ def pymake_compile(srcfiles, target, fc, cc,
             process_Popen_command(False, cmdlist)
 
             # run the command using Popen
-            # proc = Popen(cmdlist, shell=False, stdout=PIPE, stderr=PIPE)
             proc = process_Popen_initialize(cmdlist)
 
             # write batch file execution to terminal

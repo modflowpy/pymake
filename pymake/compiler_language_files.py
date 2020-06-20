@@ -2,6 +2,7 @@ import os
 
 from .dag import order_source_files, order_c_source_files
 
+
 def get_fortran_files(srcfiles, extensions=False):
     """
     Return a list of fortran files or unique fortran file extensions.
@@ -16,22 +17,22 @@ def get_fortran_files(srcfiles, extensions=False):
 
     Returns
     -------
-    list : list
+    files_out : list
         list of fortran files or unique fortran file extensions
     """
-    l = []
+    files_out = []
     for srcfile in srcfiles:
         ext = os.path.splitext(srcfile)[1]
         if ext.lower() in ['.f', '.for', '.f90', '.fpp']:
             if extensions:
                 # save unique extension
-                if ext not in l:
-                    l.append(ext)
+                if ext not in files_out:
+                    files_out.append(ext)
             else:
-                l.append(srcfile)
-    if len(l) < 1:
-        l = None
-    return l
+                files_out.append(srcfile)
+    if len(files_out) < 1:
+        files_out = None
+    return files_out
 
 
 def get_c_files(srcfiles, extensions=False):
@@ -48,21 +49,21 @@ def get_c_files(srcfiles, extensions=False):
 
     Returns
     -------
-    list : list
+    files_out : list
         list of c or cpp files or uniques c and cpp file extensions
     """
-    l = []
+    files_out = []
     for srcfile in srcfiles:
         ext = os.path.splitext(srcfile)[1]
         if ext.lower() in ['.c', '.cpp']:
             if extensions:
-                if ext not in l:
-                    l.append(ext)
+                if ext not in files_out:
+                    files_out.append(ext)
             else:
-                l.append(srcfile)
-    if len(l) < 1:
-        l = None
-    return l
+                files_out.append(srcfile)
+    if len(files_out) < 1:
+        files_out = None
+    return files_out
 
 
 def get_iso_c(srcfiles):
@@ -83,28 +84,35 @@ def get_iso_c(srcfiles):
     """
     iso_c = False
     for srcfile in srcfiles:
-        try:
+        if os.path.exists(srcfile):
+            # open the file
             f = open(srcfile, 'rb')
-        except:
-            print('get_f_nodelist: could not open {0}'.format(
-                os.path.basename(srcfile)))
-            continue
-        lines = f.read()
-        lines = lines.decode('ascii', 'replace').splitlines()
 
-        # develop a list of modules in the file
-        for idx, line in enumerate(lines):
-            linelist = line.strip().split()
-            if len(linelist) == 0:
-                continue
-            if linelist[0].upper() == 'USE':
-                modulename = linelist[1].split(',')[0].upper()
-                if 'ISO_C_BINDING' == modulename:
-                    iso_c = True
-                    break
-        # terminate is iso_c is True
-        if iso_c:
-            break
+            # read the file
+            lines = f.read()
+
+            # decode the file
+            lines = lines.decode('ascii', 'replace').splitlines()
+
+            # develop a list of modules in the file
+            for line in lines:
+                linelist = line.strip().split()
+                if len(linelist) == 0:
+                    continue
+                if linelist[0].upper() == 'USE':
+                    modulename = linelist[1].split(',')[0].upper()
+                    if 'ISO_C_BINDING' == modulename:
+                        iso_c = True
+                        break
+
+            # terminate file content search if iso_c is True
+            if iso_c:
+                break
+        else:
+            msg = 'get_iso_c: could not ' + \
+                  'open {}'.format(os.path.basename(srcfile))
+            raise FileNotFoundError(msg)
+
     return iso_c
 
 

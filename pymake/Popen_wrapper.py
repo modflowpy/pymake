@@ -46,7 +46,7 @@ def process_Popen_command(shellflg, cmdlist):
     return
 
 
-def process_Popen_communicate(proc):
+def process_Popen_communicate(proc, verbose=True):
     """
     Generic function to write communication information from Popen to the
     screen.
@@ -55,10 +55,16 @@ def process_Popen_communicate(proc):
     ----------
     proc : Popen
         Popen instance
+    verbose : bool
+        boolean indicating if stdout and stderr should be sent to terminal
+        (default is True)
 
     Returns
     -------
-    None
+    stdout : str
+        proc.stdout
+    stderr : str
+        proc.stderr
 
     """
     stdout, stderr = proc.communicate()
@@ -66,11 +72,13 @@ def process_Popen_communicate(proc):
     if stdout:
         if PY3:
             stdout = stdout.decode()
-        print(stdout)
+        if verbose:
+            print(stdout)
     if stderr:
         if PY3:
             stderr = stderr.decode()
-        print(stderr)
+        if verbose:
+            print(stderr)
 
     # catch non-zero return code
     if proc.returncode != 0:
@@ -78,7 +86,7 @@ def process_Popen_communicate(proc):
               '\tstatus code {}\n'.format(proc.returncode)
         print(msg)
 
-    return
+    return stderr, stdout
 
 
 def process_Popen_stdout(proc):

@@ -17,6 +17,7 @@ if not os.path.exists(dstpth):
 ver = prog_dict.version
 pth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(pth, 'examples')
+exe_name = os.path.join(dstpth, target)
 
 
 def get_example_dirs():
@@ -36,6 +37,7 @@ def compile_code():
     pymake.build_program(target=target, fc=None, cc='g++',
                          include_subdirs=True,
                          download_dir=dstpth,
+                         exe_dir=dstpth,
                          replace_function=replace_function)
 
 
@@ -49,7 +51,7 @@ def clean_up():
         ext = '.exe'
 
     print('Removing ' + target)
-    os.remove(target + ext)
+    os.remove(exe_name + ext)
     return
 
 
@@ -80,7 +82,7 @@ def run_gridgen(d):
 
     testpth = os.path.join(expth, d)
     testpth = os.path.abspath(testpth)
-    prog = os.path.abspath(target)
+    prog = os.path.abspath(exe_name)
 
     for cmd in biscayne_cmds:
         cmdlist = [prog] + cmd.split()

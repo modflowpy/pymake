@@ -2,10 +2,9 @@ import os
 import sys
 import platform
 
-from .Popen_wrapper import process_Popen_initialize, process_Popen_command
+from .Popen_wrapper import process_Popen_initialize, process_Popen_command, \
+    process_Popen_communicate
 from .compiler_language_files import get_fortran_files, get_c_files, get_iso_c
-
-PY3 = sys.version_info[0] >= 3
 
 
 def check_gnu_switch_available(switch, compiler='gfortran'):
@@ -37,9 +36,7 @@ def check_gnu_switch_available(switch, compiler='gfortran'):
     process_Popen_command(False, cmdlist)
 
     # establish communicator
-    stdout, stderr = proc.communicate()
-    if PY3:
-        stdout = stdout.decode()
+    stdout, _ = process_Popen_communicate(proc, verbose=False)
 
     # determine if flag exists
     avail = switch in stdout
@@ -570,7 +567,7 @@ def set_compiler(target):
 
     # parse command line arguments to see if user specified options
     # relative to building the target
-    for idx, arg in enumerate(sys.argv):
+    for arg in sys.argv:
         if arg.lower() == '--ifort' and fc is not None:
             fc = 'ifort'
         elif arg.lower() == '--icc':
