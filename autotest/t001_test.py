@@ -58,7 +58,7 @@ def run_mf2005(namefile, regression=True):
         testpth_reg = os.path.join(testpth, testname_reg)
         pymake.setup(namefile, testpth_reg)
         print('running regression model...{}'.format(testname_reg))
-        exe_name = os.path.abspath(target_previous)
+        # exe_name = os.path.abspath(target_previous)
         success_reg, buff = flopy.run_model(exe_name, nam,
                                             model_ws=testpth_reg,
                                             silent=False)
@@ -82,21 +82,21 @@ def run_mf2005(namefile, regression=True):
         pymake.teardown(testpth)
 
     return
-
-
-def test_compile_prev():
-    # Compile reference version of the program from the source.
-
-    # Remove the existing distribution directory if it exists
-    if os.path.isdir(testdir_previous):
-        print('Removing folder ' + testdir_previous)
-        shutil.rmtree(testdir_previous)
-
-    pymake.build_program(target=key_previous, fflags='-O3', cflags='-O3',
-                         download_dir=testdir,
-                         exe_name=target_previous)
-
-    return
+#
+#
+# def test_compile_prev():
+#     # Compile reference version of the program from the source.
+#
+#     # Remove the existing distribution directory if it exists
+#     if os.path.isdir(testdir_previous):
+#         print('Removing folder ' + testdir_previous)
+#         shutil.rmtree(testdir_previous)
+#
+#     pymake.build_program(target=key_previous, fflags='-O3', cflags='-O3',
+#                          download_dir=testdir,
+#                          exe_name=target_previous)
+#
+#     return
 
 
 def test_compile_ref():
@@ -153,7 +153,7 @@ def test_teardown():
 
 if __name__ == '__main__':
     test_compile_ref()
-    test_compile_prev()
+    # test_compile_prev()
 
     namefiles = get_namefiles(testpaths[0], exclude=exclude)
     for namefile in namefiles:
