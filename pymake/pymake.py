@@ -41,8 +41,7 @@ moddir_temp = os.path.join('.', 'mod_temp')
 
 
 def parser():
-    """
-    Construct the parser and return argument values.
+    """Construct the parser and return argument values.
 
     Parameters
     ----------
@@ -51,7 +50,6 @@ def parser():
     -------
     args : list
         command line argument list
-
     """
     description = __description__
     parser = argparse.ArgumentParser(description=description,
@@ -129,8 +127,7 @@ def parser():
 
 
 def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
-    """
-    Remove temp source directory and target, and then copy source into
+    """Remove temp source directory and target, and then copy source into
     source temp directory.
 
     Parameters
@@ -151,7 +148,6 @@ def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
     Returns
     -------
     None
-
     """
     # remove the target if it already exists
     try:
@@ -225,8 +221,7 @@ def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
 
 
 def get_extrafiles(extrafiles):
-    """
-    Get
+    """Get.
 
     Parameters
     ----------
@@ -238,7 +233,6 @@ def get_extrafiles(extrafiles):
     -------
     files : list
         list of files in the extra files input file
-
     """
     if extrafiles is None:
         files = None
@@ -262,9 +256,8 @@ def get_extrafiles(extrafiles):
 
 
 def clean(objext, intelwin):
-    """
-    Cleanup intermediate files. Remove mod and object files, and remove
-    the temporary source directory.
+    """Cleanup intermediate files. Remove mod and object files, and remove the
+    temporary source directory.
 
     Parameters
     ----------
@@ -277,7 +270,6 @@ def clean(objext, intelwin):
     Returns
     -------
     None
-
     """
     # clean things up
     print('\nCleaning up temporary source, object, and module files...')
@@ -298,11 +290,9 @@ def clean(objext, intelwin):
 
 
 def create_openspec():
-    """
-    Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
-    STREAM ACCESS. This is specific to MODFLOW and MT3D based targets.
-    Source directories are scanned and files defining file access are
-    replaced.
+    """Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
+    STREAM ACCESS. This is specific to MODFLOW and MT3D based targets. Source
+    directories are scanned and files defining file access are replaced.
 
     Parameters
     ----------
@@ -310,7 +300,6 @@ def create_openspec():
     Returns
     -------
     None
-
     """
     files = ['openspec.inc', 'filespec.inc']
     dirs = [d[0] for d in os.walk(srcdir_temp)]
@@ -332,8 +321,8 @@ def create_openspec():
 
 
 def check_out_of_date(srcfile, objfile):
-    """
-    Check if existing object files are current with the existing source files.
+    """Check if existing object files are current with the existing source
+    files.
 
     Parameters
     ----------
@@ -346,7 +335,6 @@ def check_out_of_date(srcfile, objfile):
     -------
     stale : bool
         boolean indicating if the object file is current
-
     """
     stale = True
     if os.path.exists(objfile):
@@ -361,8 +349,7 @@ def pymake_compile(srcfiles, target, fc, cc,
                    expedite, dryrun, double, debug,
                    fflags, cflags, syslibs, arch, intelwin,
                    sharedobject):
-    """
-    Standard compile method
+    """Standard compile method.
 
     Parameters
     -------
@@ -401,7 +388,6 @@ def pymake_compile(srcfiles, target, fc, cc,
     -------
     returncode : int
         returncode
-
     """
     # initialize returncode
     returncode = 0
@@ -595,8 +581,7 @@ def pymake_compile(srcfiles, target, fc, cc,
 def create_win_batch(batchfile, fc, cc, lc, optlevel,
                      fflags, cflags, lflags,
                      srcfiles, target, arch):
-    """
-    Make an intel compiler batch file for compiling on windows.
+    """Make an intel compiler batch file for compiling on windows.
 
     Parameters
     -------
@@ -626,7 +611,6 @@ def create_win_batch(batchfile, fc, cc, lc, optlevel,
 
     Returns
     -------
-
     """
     # get path to compilervars batch file
     iflist = ['IFORT_COMPILER{}'.format(i) for i in range(30, 12, -1)]
@@ -1116,8 +1100,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
          include_subdirs=False, fflags=None, cflags=None, syslibs=None,
          arch='intel64', makefile=False, srcdir2=None, extrafiles=None,
          excludefiles=None, sharedobject=False):
-    """
-    Main pymake function.
+    """Main pymake function.
 
     Parameters
     ----------
@@ -1172,7 +1155,6 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     -------
     returncode : int
         return code
-
     """
     # initialize return code
     returncode = 0

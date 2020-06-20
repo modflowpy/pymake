@@ -1,10 +1,8 @@
-"""
+"""Set of classes for building a directed acyclic graph.
 
-Set of classes for building a directed acyclic graph.  Can be used to
-determine the order of dependencies.  Can be used to determine compiling
-order, for example.  Topological sort pseudocode based on:
-http://en.wikipedia.org/wiki/Topological_sorting
-
+Can be used to determine the order of dependencies.  Can be used to
+determine compiling order, for example.  Topological sort pseudocode
+based on: http://en.wikipedia.org/wiki/Topological_sorting
 """
 
 from __future__ import print_function
@@ -27,9 +25,7 @@ class Node(object):
         return
 
     def add_dependency(self, d):
-        """
-        Add dependency if not already in list
-        """
+        """Add dependency if not already in list."""
         if d not in self.dependencies:
             self.dependencies.append(d)
         return
@@ -41,9 +37,7 @@ class DirectedAcyclicGraph(object):
         return
 
     def toposort(self):
-        """
-        Perform topological sort
-        """
+        """Perform topological sort."""
         sort_list = []  # empty list that will contain sorted elements
 
         # build a list of nodes with no dependencies
@@ -132,17 +126,13 @@ def get_f_nodelist(srcfiles):
 
 
 def get_dag(nodelist):
-    """
-    Create a dag from the nodelist
-    """
+    """Create a dag from the nodelist."""
     dag = DirectedAcyclicGraph(nodelist)
     return dag
 
 
 def order_source_files(srcfiles):
-    """
-    Use a dag and a nodelist to order the fortran source files
-    """
+    """Use a dag and a nodelist to order the fortran source files."""
     nodelist = get_f_nodelist(srcfiles)
     dag = get_dag(nodelist)
     orderednodes = dag.toposort()

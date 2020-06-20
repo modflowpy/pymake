@@ -4,8 +4,7 @@ from .dag import order_source_files, order_c_source_files
 
 
 def get_fortran_files(srcfiles, extensions=False):
-    """
-    Return a list of fortran files or unique fortran file extensions.
+    """Return a list of fortran files or unique fortran file extensions.
 
     Parameters
     -------
@@ -36,8 +35,7 @@ def get_fortran_files(srcfiles, extensions=False):
 
 
 def get_c_files(srcfiles, extensions=False):
-    """
-    Return a list of c and cpp files or unique c and cpp file extensions.
+    """Return a list of c and cpp files or unique c and cpp file extensions.
 
     Parameters
     -------
@@ -67,9 +65,8 @@ def get_c_files(srcfiles, extensions=False):
 
 
 def get_iso_c(srcfiles):
-    """
-    Determine if iso_c_binding is used so that the correct c/c++
-    compiler flags can be set. All fortran files are scanned
+    """Determine if iso_c_binding is used so that the correct c/c++ compiler
+    flags can be set. All fortran files are scanned.
 
     Parameters
     ----------
@@ -80,7 +77,6 @@ def get_iso_c(srcfiles):
     -------
     iso_c : bool
         flag indicating if iso_c_binding is used in any fortran file
-
     """
     iso_c = False
     for srcfile in srcfiles:
@@ -117,9 +113,8 @@ def get_iso_c(srcfiles):
 
 
 def get_ordered_srcfiles(srcdir, include_subdir=False):
-    """
-    Create a list of ordered source files (both fortran and c). Ordering
-    is build using a directed acyclic graph to determine module dependencies.
+    """Create a list of ordered source files (both fortran and c). Ordering is
+    build using a directed acyclic graph to determine module dependencies.
 
     Parameters
     ----------
@@ -132,7 +127,6 @@ def get_ordered_srcfiles(srcdir, include_subdir=False):
     -------
     orderedsourcefiles : list
         list of ordered source files
-
     """
     # create a list of all c(pp), f and f90 source files
     templist = []

@@ -8,9 +8,8 @@ from .compiler_language_files import get_fortran_files, get_c_files, get_iso_c
 
 
 def check_gnu_switch_available(switch, compiler='gfortran'):
-    """
-    Determine if a specified GNU compiler switch exists. Not all switches
-    will be detected, for example '-O2'  adn '-fbounds-check=on'
+    """Determine if a specified GNU compiler switch exists. Not all switches
+    will be detected, for example '-O2'  adn '-fbounds-check=on'.
 
     Parameters
     ----------
@@ -49,8 +48,7 @@ def check_gnu_switch_available(switch, compiler='gfortran'):
 
 
 def get_osname():
-    """
-    Return the lower case OS platform name.
+    """Return the lower case OS platform name.
 
     Parameters
     -------
@@ -67,8 +65,7 @@ def get_osname():
 
 
 def get_prepend(compiler, osname):
-    """
-    Return the appropriate prepend for a compiler switch for a OS.
+    """Return the appropriate prepend for a compiler switch for a OS.
 
     Parameters
     -------
@@ -93,8 +90,7 @@ def get_prepend(compiler, osname):
 
 
 def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
-    """
-    Return a compiler optimization switch.
+    """Return a compiler optimization switch.
 
     Parameters
     -------
@@ -190,8 +186,7 @@ def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
 
 def get_fortran_flags(target, fc, fflags, debug, double=False,
                       sharedobject=False, osname=None):
-    """
-    Return a list of pymake and user specified fortran compiler switches.
+    """Return a list of pymake and user specified fortran compiler switches.
 
     Parameters
     -------
@@ -310,8 +305,7 @@ def get_fortran_flags(target, fc, fflags, debug, double=False,
 
 def get_c_flags(target, cc, cflags, debug, srcfiles=None,
                 sharedobject=False, osname=None):
-    """
-    Return a list of standard and user specified c/c++ compiler switches.
+    """Return a list of standard and user specified c/c++ compiler switches.
 
     Parameters
     -------
@@ -429,8 +423,7 @@ def get_c_flags(target, cc, cflags, debug, srcfiles=None,
 
 def get_linker_flags(target, fc, cc, syslibs, srcfiles,
                      sharedobject=False, osname=None):
-    """
-    Return the compiler to use for linking and a list of pymake and user
+    """Return the compiler to use for linking and a list of pymake and user
     specified linker switches (syslibs).
 
     Parameters
@@ -459,7 +452,6 @@ def get_linker_flags(target, fc, cc, syslibs, srcfiles,
         list of linker switches
     syslibs : list
         list of syslibs for the linker
-
     """
     # get list of unique fortran and c/c++ file extensions
     fext = get_fortran_files(srcfiles, extensions=True)
@@ -540,9 +532,8 @@ def get_linker_flags(target, fc, cc, syslibs, srcfiles,
 
 
 def set_compiler(target):
-    """
-    Set fortran and c compilers based on --ifort, --mpiifort, --icc, --cl,
-    clang++, and --clang command line arguments
+    """Set fortran and c compilers based on --ifort, --mpiifort, --icc, --cl,
+    clang++, and --clang command line arguments.
 
     Parameters
     ----------
@@ -555,7 +546,6 @@ def set_compiler(target):
         string denoting the fortran compiler to use. Default is gfortran.
     cc : str
         string denoting the c compiler to use. Default is gcc.
-
     """
     fc = 'gfortran'
     if target in ['triangle', 'gridgen']:
@@ -598,8 +588,7 @@ def set_compiler(target):
 
 
 def set_fflags(target, fc='gfortran', argv=True, osname=None):
-    """
-    Set appropriate fortran compiler flags based on target.
+    """Set appropriate fortran compiler flags based on target.
 
     Parameters
     ----------
@@ -618,7 +607,6 @@ def set_fflags(target, fc='gfortran', argv=True, osname=None):
     -------
     fflags : str
         fortran compiler flags. Default is None
-
     """
     fflags = None
 
@@ -674,8 +662,7 @@ def set_fflags(target, fc='gfortran', argv=True, osname=None):
 
 
 def set_cflags(target, cc='gcc', argv=True, osname=None):
-    """
-    Set appropriate c compiler flags based on target.
+    """Set appropriate c compiler flags based on target.
 
     Parameters
     ----------
@@ -694,7 +681,6 @@ def set_cflags(target, cc='gcc', argv=True, osname=None):
     -------
     cflags : str
         c compiler flags. Default is None
-
     """
     cflags = None
 
@@ -751,8 +737,7 @@ def set_cflags(target, cc='gcc', argv=True, osname=None):
 
 
 def set_syslibs(target, fc='gfortran', cc='gcc', argv=True, osname=None):
-    """
-    Set appropriate linker flags (syslib) based on target.
+    """Set appropriate linker flags (syslib) based on target.
 
     Parameters
     ----------
@@ -773,7 +758,6 @@ def set_syslibs(target, fc='gfortran', cc='gcc', argv=True, osname=None):
     -------
     syslibs : str
         linker flags. Default is None
-
     """
     # get lower case OS string
     if osname is None:
@@ -838,8 +822,7 @@ def set_syslibs(target, fc='gfortran', cc='gcc', argv=True, osname=None):
 
 
 def set_debug(target):
-    """
-    Set boolean that defines if the target should be compiled with debug
+    """Set boolean that defines if the target should be compiled with debug
     compiler options based on -dbg or --debug command line arguments.
 
     Parameters
@@ -850,10 +833,9 @@ def set_debug(target):
     Returns
     -------
     debug : bool
-
     """
     debug = False
-    for idx, arg in enumerate(sys.argv):
+    for arg in sys.argv:
         if arg.lower() == '-dbg' or arg.lower() == '--debug':
             debug = True
             break
@@ -870,8 +852,7 @@ def set_debug(target):
 
 
 def set_arch(target):
-    """
-    Set architecture to compile target for based on --ia32 command line
+    """Set architecture to compile target for based on --ia32 command line
     argument. Default architecture is intel64 (64-bit).
 
     Parameters
@@ -882,7 +863,6 @@ def set_arch(target):
     Returns
     -------
     arch : str
-
     """
     arch = 'intel64'
     for idx, arg in enumerate(sys.argv):

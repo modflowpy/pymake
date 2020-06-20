@@ -162,10 +162,7 @@ def teardown(src):
 
 
 def get_input_files(namefile):
-    """
-    Return a list of all the input files in this model
-
-    """
+    """Return a list of all the input files in this model."""
 
     srcdir = os.path.dirname(namefile)
     filelist = []
@@ -220,10 +217,9 @@ def get_input_files(namefile):
 
 
 def get_namefiles(pth, exclude=None):
-    """
-    Search through the path (pth) for all .nam files.  Return
-    them all in a list.  Namefiles will have paths.
+    """Search through the path (pth) for all .nam files.
 
+    Return them all in a list.  Namefiles will have paths.
     """
     namefiles = []
     for root, dirs, files in os.walk(pth):
@@ -305,10 +301,8 @@ def get_sim_name(namefiles, rootpth=None):
 # modflow 6 readers and copiers
 def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None,
               remove_existing=True):
-    """
-
-    Copy all of the MODFLOW 6 input files from the src directory to
-    the dst directory.
+    """Copy all of the MODFLOW 6 input files from the src directory to the dst
+    directory.
 
     :param src:
     :type src:
@@ -376,8 +370,7 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None,
 
 
 def get_mf6_comparison(src):
-    """
-    Determine comparison for MODFLOW 6 simulation
+    """Determine comparison for MODFLOW 6 simulation.
 
     :param src:
     :return:
@@ -403,8 +396,7 @@ def get_mf6_comparison(src):
 
 
 def setup_mf6_comparison(src, dst, remove_existing=True):
-    """
-    Setup comparision for MODFLOW 6 simulation
+    """Setup comparision for MODFLOW 6 simulation.
 
     :param src:
     :type src:
@@ -477,10 +469,7 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
 
 
 def get_mf6_nper(tdisfile):
-    """
-    Return the number of stress periods in the MODFLOW 6 model
-
-    """
+    """Return the number of stress periods in the MODFLOW 6 model."""
     with open(tdisfile, 'r') as f:
         lines = f.readlines()
     line = [line for line in lines if 'NPER' in line.upper()][0]
@@ -519,10 +508,7 @@ def get_mf6_mshape(disfile):
 
 
 def get_mf6_files(mfnamefile):
-    """
-    Return a list of all the MODFLOW 6 input files in this model
-
-    """
+    """Return a list of all the MODFLOW 6 input files in this model."""
 
     srcdir = os.path.dirname(mfnamefile)
     filelist = []
@@ -605,9 +591,7 @@ def get_mf6_files(mfnamefile):
 
 
 def _get_mf6_external_files(srcdir, outplist, files):
-    """
-
-    """
+    """"""
     extfiles = []
 
     for fname in files:
@@ -693,10 +677,7 @@ def _get_mf6_external_files(srcdir, outplist, files):
 
 
 def get_mf6_ftypes(namefile, ftypekeys):
-    """
-    Return a list of FTYPES that are in the name file and in ftypekeys
-
-    """
+    """Return a list of FTYPES that are in the name file and in ftypekeys."""
     with open(namefile, 'r') as f:
         lines = f.readlines()
 
@@ -718,11 +699,8 @@ def get_mf6_ftypes(namefile, ftypekeys):
 
 
 def get_mf6_blockdata(f, blockstr):
-    """
-    Return list with all non comments between start and end of block specified
-    by blockstr
-
-    """
+    """Return list with all non comments between start and end of block
+    specified by blockstr."""
     data = []
     # find beginning of block
     for line in f:
@@ -743,10 +721,7 @@ def get_mf6_blockdata(f, blockstr):
 # compare functions
 def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                    outfile=None, files1=None, files2=None):
-    """
-    Compare the results from these two simulations.
-
-    """
+    """Compare the results from these two simulations."""
     try:
         import flopy
     except:
@@ -902,10 +877,7 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
 def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                       outfile=None, files1=None, files2=None):
-    """
-    Compare the results from these two simulations.
-
-    """
+    """Compare the results from these two simulations."""
     import numpy as np
     try:
         import flopy
@@ -1057,10 +1029,7 @@ def compare_heads(namefile1, namefile2, precision='auto',
                   htol=0.001, outfile=None, files1=None, files2=None,
                   difftol=False, verbose=False, exfile=None, exarr=None,
                   maxerr=None):
-    """
-    Compare the results from these two simulations.
-
-    """
+    """Compare the results from these two simulations."""
     try:
         import flopy
     except:
@@ -1383,10 +1352,7 @@ def compare_heads(namefile1, namefile2, precision='auto',
 def compare_concs(namefile1, namefile2, precision='auto',
                   ctol=0.001, outfile=None, files1=None, files2=None,
                   difftol=False, verbose=False):
-    """
-    Compare the mt3dms concentration results from these two simulations.
-
-    """
+    """Compare the mt3dms concentration results from these two simulations."""
     import numpy as np
     try:
         import flopy
@@ -1550,10 +1516,7 @@ def compare_concs(namefile1, namefile2, precision='auto',
 
 def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
                    htol=0.001, outfile=None, difftol=False, verbose=False):
-    """
-    Compare the swr stage results from these two simulations.
-
-    """
+    """Compare the swr stage results from these two simulations."""
     try:
         import flopy
     except:
@@ -1737,9 +1700,7 @@ def compare(namefile1, namefile2, precision='auto',
             max_cumpd=0.01, max_incpd=0.01, htol=0.001,
             outfile1=None, outfile2=None,
             files1=None, files2=None):
-    """
-    Compare the results from two standard simulations
-    """
+    """Compare the results from two standard simulations."""
 
     # Compare budgets from the list files in namefile1 and namefile2
     success1 = compare_budget(namefile1, namefile2,

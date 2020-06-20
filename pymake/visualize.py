@@ -63,10 +63,7 @@ def add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
 
 def make_plots(srcdir, outdir, include_subdir=False, level=3,
                extension='.png'):
-    """
-    Create plots of module dependencies.
-
-    """
+    """Create plots of module dependencies."""
     srcfiles = get_ordered_srcfiles(srcdir, include_subdir)
     nodelist = get_f_nodelist(srcfiles)
     for n in nodelist:

@@ -9,11 +9,11 @@ import tarfile
 
 
 class pymakeZipFile(ZipFile):
-    """
-    ZipFile file attributes are not being preserved.  This preserves file
+    """ZipFile file attributes are not being preserved.
+
+    This preserves file
     attributes as described here
     https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
-
     """
 
     def extract(self, member, path=None, pwd=None):
@@ -210,9 +210,8 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
 
 
 def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
-    """
-    compress all files in the user-provided list of file paths and directory
-    paths that match the provided file patterns
+    """compress all files in the user-provided list of file paths and directory
+    paths that match the provided file patterns.
 
     Parameters
     ----------
@@ -232,29 +231,24 @@ def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
 
     Returns
     -------
-
-
     """
     return pymakeZipFile.compressall(path, file_pths=file_pths,
                                      dir_pths=dir_pths, patterns=patterns)
 
 
 def get_default_repo():
-    """
-    Return the default repo name
+    """Return the default repo name.
 
     Returns
     -------
     default_repo : str
         default github repository repo name
-
     """
     return 'MODFLOW-USGS/executables'
 
 
 def get_default_json(tag_name=None):
-    """
-    Return a default github api json for the provided release tag_name in a
+    """Return a default github api json for the provided release tag_name in a
     github repository.
 
     Parameters
@@ -267,7 +261,6 @@ def get_default_json(tag_name=None):
     json_obj : dict
         json object (dictionary) with a tag_name and assets including
         file names and download links
-
     """
     if tag_name is None:
         tag_name = '3.0'
@@ -288,8 +281,7 @@ def get_default_json(tag_name=None):
 
 
 def get_request_json(request_url):
-    """
-    Process a url request and return a json if successful.
+    """Process a url request and return a json if successful.
 
     Parameters
     ----------
@@ -306,7 +298,6 @@ def get_request_json(request_url):
 
     json_obj : dict
         json object
-
     """
     import requests
     import json
@@ -327,9 +318,8 @@ def get_request_json(request_url):
 
 
 def repo_json(github_repo, tag_name=None):
-    """
-    Return the github api json for the latest github release in a
-    github repository.
+    """Return the github api json for the latest github release in a github
+    repository.
 
     Parameters
     ----------
@@ -344,7 +334,6 @@ def repo_json(github_repo, tag_name=None):
     json_obj : dict
         json object (dictionary) with a tag_name and assets including
         file names and download links
-
     """
     repo_url = 'https://api.github.com/repos/{}'.format(github_repo)
 
@@ -392,8 +381,7 @@ def repo_json(github_repo, tag_name=None):
 
 
 def get_repo_assets(github_repo=None, version=None):
-    """
-    Return a dictionary containing the file name and the link to the asset
+    """Return a dictionary containing the file name and the link to the asset
     contained in a github repository.
 
     Parameters
@@ -410,7 +398,6 @@ def get_repo_assets(github_repo=None, version=None):
     -------
     result_dict : dict
         dictionary of file names and links
-
     """
     if github_repo is None:
         github_repo = get_default_repo()
@@ -430,9 +417,8 @@ def get_repo_assets(github_repo=None, version=None):
 
 
 def repo_latest_version(github_repo=None):
-    """
-    Return a string of the latest version number (tag) contained in a
-    github repository release.
+    """Return a string of the latest version number (tag) contained in a github
+    repository release.
 
     Parameters
     ----------
@@ -444,7 +430,6 @@ def repo_latest_version(github_repo=None):
     -------
     version : str
         string with the latest version/tag number
-
     """
     if github_repo is None:
         github_repo = get_default_repo()
@@ -456,10 +441,9 @@ def repo_latest_version(github_repo=None):
 
 
 def getmfexes(pth='.', version=None, platform=None, exes=None):
-    """
-    Get the latest MODFLOW binary executables from a github site
-    (https://github.com/MODFLOW-USGS/executables) for the specified
-    operating system and put them in the specified path.
+    """Get the latest MODFLOW binary executables from a github site
+    (https://github.com/MODFLOW-USGS/executables) for the specified operating
+    system and put them in the specified path.
 
     Parameters
     ----------
@@ -477,7 +461,6 @@ def getmfexes(pth='.', version=None, platform=None, exes=None):
 
     exes : str or list of strings
         executable or list of executables to retain
-
     """
     # set download directory to path in case a selection of files
     download_dir = pth

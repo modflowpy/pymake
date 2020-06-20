@@ -19,8 +19,7 @@ from .usgsprograms import usgs_program_data
 
 
 def get_function_names(module, select_name=None):
-    """
-    Get a dictionary of functions available in a user-specified source file.
+    """Get a dictionary of functions available in a user-specified source file.
     This function was developed to create a dictionary of functions in this
     source file (build_program.py). Optionally, the user can get a get a
     dictionary of functions that contain a specific text string in the name.
@@ -37,7 +36,6 @@ def get_function_names(module, select_name=None):
     -------
     func : dict
         dictionary with function name keys and values set to function pointers
-
     """
     func = {}
     for key, value in module.__dict__.items():
@@ -54,8 +52,8 @@ def get_function_names(module, select_name=None):
 
 
 def set_bindir(target=None):
-    """
-    Set path for target based on --travis or --appdir command line arguments
+    """Set path for target based on --travis or --appdir command line
+    arguments.
 
     Parameters
     ----------
@@ -71,7 +69,6 @@ def set_bindir(target=None):
         set bindir to C:\\Users\\username\\.local\\bin on windows and
         /Users/username/.local/bin on Linux and OSX. Passing --appdir bindir
         command line argument will set bindir to user-defined path
-
     """
     # determine if running on Travis
     is_travis = 'TRAVIS' in os.environ
@@ -114,9 +111,8 @@ def set_download_clean(download_clean):
 
 
 def set_build(target, exe_name):
-    """
-    Set boolean that defines whether the target should be built if it
-    already exists based on --keep command line argument
+    """Set boolean that defines whether the target should be built if it
+    already exists based on --keep command line argument.
 
     Parameters
     ----------
@@ -130,7 +126,6 @@ def set_build(target, exe_name):
     Returns
     -------
     build : bool
-
     """
     # determine if running on Travis
     is_travis = 'TRAVIS' in os.environ
@@ -206,8 +201,7 @@ def set_build(target, exe_name):
 
 
 def set_extrafiles(target, download_dir):
-    """
-    Set extrafiles to compile target. Default is None.
+    """Set extrafiles to compile target. Default is None.
 
     Parameters
     ----------
@@ -220,7 +214,6 @@ def set_extrafiles(target, download_dir):
     Returns
     -------
     extra_files : str
-
     """
     extrafiles = None
     if target in ['zbud6']:
@@ -274,8 +267,7 @@ def set_extrafiles(target, download_dir):
 
 
 def set_zip():
-    """
-    Set file path for zip file
+    """Set file path for zip file.
 
     Parameters
     ----------
@@ -284,7 +276,6 @@ def set_zip():
     -------
     zip_pth : str
         path for zip file
-
     """
     zip_pth = None
     for idx, arg in enumerate(sys.argv):
@@ -302,8 +293,7 @@ def set_zip():
 
 
 def set_makefile():
-    """
-    Set boolean for whether a makefile should be created
+    """Set boolean for whether a makefile should be created.
 
     Parameters
     ----------
@@ -312,7 +302,6 @@ def set_makefile():
     -------
     makefile : bool
         boolean indicating if a makefile should be created
-
     """
     makefile = False
     for idx, arg in enumerate(sys.argv):
@@ -573,8 +562,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
 
 
 def build_targets(current=True):
-    """
-    Build a list of targets
+    """Build a list of targets.
 
     Parameters
     ----------
@@ -587,14 +575,12 @@ def build_targets(current=True):
     -------
     targets : list
         list of targets
-
     """
     return usgs_program_data.get_keys(current=current)
 
 
 def build_replace(targets):
-    """
-    Get pointers to appropriate replace_function for a target
+    """Get pointers to appropriate replace_function for a target.
 
     Parameters
     ----------
@@ -605,8 +591,6 @@ def build_replace(targets):
     replace_funcs : function pointer or list of function pointers
         None is returned as the function pointer if the target string is
         not in the function name
-
-
     """
     if isinstance(targets, str):
         targets = [targets]
@@ -632,8 +616,7 @@ def build_replace(targets):
 
 
 def build_apps(targets=None):
-    """
-    Build all of the current targets or a subset of targets
+    """Build all of the current targets or a subset of targets.
 
     Parameters
     ----------
@@ -644,7 +627,6 @@ def build_apps(targets=None):
     Returns
     -------
     returncode : int
-
     """
     start_time = datetime.now()
     if targets is None:
@@ -858,8 +840,7 @@ def compress_apps(targets=None):
 # routines for updating source files locations and to compile
 # with gfortran, gcc, and g++
 def update_triangle_files(srcdir, fc, cc, arch, double):
-    """
-    Update the triangle source files
+    """Update the triangle source files.
 
     Parameters
     ----------
@@ -870,7 +851,6 @@ def update_triangle_files(srcdir, fc, cc, arch, double):
 
     Returns
     -------
-
     """
     # move the downloaded files
     rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))
@@ -898,8 +878,7 @@ def update_triangle_files(srcdir, fc, cc, arch, double):
 
 
 def update_mt3dms_files(srcdir, fc, cc, arch, double):
-    """
-    Update the MT3D source files
+    """Update the MT3D source files.
 
     Parameters
     ----------
@@ -910,7 +889,6 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
 
     Returns
     -------
-
     """
     # move the downloaded files
     rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))
