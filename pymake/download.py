@@ -11,13 +11,31 @@ import tarfile
 class pymakeZipFile(ZipFile):
     """ZipFile file attributes are not being preserved.
 
-    This preserves file
-    attributes as described here
+    This class preserves file attributes as described on StackOverflow at
     https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
 
     """
 
     def extract(self, member, path=None, pwd=None):
+        """
+
+        Parameters
+        ----------
+        member : str
+            individual file to extract. If member does not exist, all files
+            are extracted.
+        path : str
+            directory path to extract file in a zip file (default is None,
+            which results in files being extracted in the current directory)
+        pwd : str
+            zip file password (default is None)
+
+        Returns
+        -------
+        ret_val : int
+            return value indicating status of file extraction
+
+        """
         if not isinstance(member, ZipInfo):
             member = self.getinfo(member)
 
@@ -28,9 +46,27 @@ class pymakeZipFile(ZipFile):
         attr = member.external_attr >> 16
         if attr != 0:
             os.chmod(ret_val, attr)
+
         return ret_val
 
     def extractall(self, path=None, members=None, pwd=None):
+        """Extract all files in the zipfile.
+
+        Parameters
+        ----------
+        path : str
+            directory path to extract files in a zip file (default is None,
+            which results in files being extracted in the current directory)
+        members : str
+            individual files to extract (default is None, which extracts
+            all members)
+        pwd : str
+            zip file password (default is None)
+
+        Returns
+        -------
+
+        """
         if members is None:
             members = self.namelist()
 
@@ -46,6 +82,25 @@ class pymakeZipFile(ZipFile):
 
     @staticmethod
     def compressall(path, file_pths=None, dir_pths=None, patterns=None):
+        """Compress selected files or files in selected directories.
+
+        Parameters
+        ----------
+        path : str
+            output zip file path
+        file_pths : str or list of str
+            file paths to include in the output zip file (default is None)
+        dir_pths : str or list of str
+            directory paths to include in the output zip file (default is None)
+        patterns : str or list of str
+            file patterns to include in the output zip file (default is None)
+
+        Returns
+        -------
+        success : bool
+            boolean indicating if the output zip file was created
+
+        """
 
         # create an empty list
         if file_pths is None:
@@ -112,6 +167,30 @@ class pymakeZipFile(ZipFile):
 
 def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
                        timeout=30, nattempts=10, chunk_size=2048000):
+    """Download and unzip a zip file from a url.
+
+    Parameters
+    ----------
+    url : str
+        url address for the zip file
+    pth : str
+        path where the zip file will be saved (default is the current path)
+    delete_zip : bool
+        boolean indicating if the zip file should be deleted after it is
+        unzipped (default is True)
+    verify : bool
+        boolean indicating if the url request should be verified
+    timeout : int
+        url request time out length (default is 30 seconds)
+    nattempts : int
+        number of url download request attempts (default is 10)
+    chunk_size : int
+        maximum url download request chunk size (default is 2048000 bytes)
+
+    Returns
+    -------
+
+    """
     try:
         import requests
     except Exception as e:
@@ -209,9 +288,11 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         os.remove(file_name)
     print('Done downloading and extracting...\n')
 
+    return
+
 
 def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
-    """compress all files in the user-provided list of file paths and directory
+    """Compress all files in the user-provided list of file paths and directory
     paths that match the provided file patterns.
 
     Parameters
