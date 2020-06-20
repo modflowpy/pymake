@@ -6,7 +6,6 @@ from .version import __version__, __build__, __git_commit__
 from .usgsprograms import usgs_program_data
 from .pymake import main, parser
 from .compiler_switches import set_compiler
-from .dag import order_source_files
 from .download import download_and_unzip, getmfexes, \
     repo_latest_version, get_repo_assets, zip_all
 from .visualize import make_plots

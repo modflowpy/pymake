@@ -1,6 +1,5 @@
 import os
 import sys
-import platform
 
 from .Popen_wrapper import process_Popen_initialize, process_Popen_command, \
     process_Popen_communicate
@@ -878,13 +877,13 @@ def set_arch(target):
 
     """
     arch = 'intel64'
-    for idx, arg in enumerate(sys.argv):
+    for arg in sys.argv:
         if arg.lower() == '--ia32':
             arch = 'ia32'
 
     # set arch to ia32 if building on windows
     if target == 'triangle':
-        if platform.system().lower() == 'windows':
+        if get_osname() == 'win32':
             arch = 'ia32'
 
     # write a message
