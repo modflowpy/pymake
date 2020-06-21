@@ -61,9 +61,12 @@ def build_with_makefile():
 
         # verify that MODFLOW-NWT was made
         errmsg = '{} created by makefile does not exist.'.format(target)
-        assert os.path.isfile(tepth), errmsg
+        success = os.path.isfile(tepth)
     else:
-        print('makefile does not exist...skipping build_with_make()')
+        errmsg = 'makefile does not exist...skipping build_with_make()'
+
+    assert success, errmsg
+
     return
 
 

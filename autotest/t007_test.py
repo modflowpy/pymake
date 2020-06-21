@@ -164,7 +164,7 @@ def run_modpath7(fn):
     else:
         success = False
 
-    assert success, 'could not run...{}'.format(os.path.basename(fn))
+    assert success, 'could not run...{}'.format(emp7)
     return
 
 

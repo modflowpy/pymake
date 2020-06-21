@@ -72,10 +72,13 @@ def build_with_makefile():
 
         # verify that MODFLOW 6 was made
         errmsg = '{} created by makefile does not exist.'.format(target)
-        assert os.path.isfile(tepth), errmsg
-
+        success = os.path.isfile(tepth)
     else:
-        print('makefile does not exist...skipping build_with_make()')
+        errmsg = 'makefile does not exist...skipping build_with_make()'
+        success = False
+
+    assert success, errmsg
+
     return
 
 
@@ -86,6 +89,7 @@ def clean_up():
     for fpth in files:
         if os.path.isfile(fpth):
             os.remove(fpth)
+
     dirs_temp = [os.path.join('obj_temp'),
                  os.path.join('mod_temp')]
     for d in dirs_temp:
@@ -94,7 +98,8 @@ def clean_up():
 
     # clean up
     print('Removing folder ' + mf6pth)
-    shutil.rmtree(mf6pth)
+    if os.path.isdir(mf6pth):
+        shutil.rmtree(mf6pth)
 
     tepth = epth
     if sys.platform == 'win32':
@@ -124,7 +129,8 @@ def run_mf6(ws):
 
     if success:
         pymake.teardown(dst)
-    assert success is True
+
+    assert success, 'could not run {}'.format(exe_name)
 
     return
 
