@@ -1,16 +1,19 @@
 import sys
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 
 PY3 = sys.version_info[0] >= 3
 
 
-def process_Popen_initialize(cmdlist):
+def process_Popen_initialize(cmdlist, intelwin=False):
     """Generic function to initialize a Popen process.
 
     Parameters
     ----------
     cmdlist : list
         command list passed to Popen
+    intelwin : bool
+        boolean indicating is Intel compilers are being used on Windows and
+        if stderr should be sent to the terminal
 
     Returns
     -------
@@ -18,7 +21,12 @@ def process_Popen_initialize(cmdlist):
         Popen instance
 
     """
-    return Popen(cmdlist, stdout=PIPE, stderr=PIPE, shell=False)
+    if intelwin:
+        stderr = STDOUT
+    else:
+        stderr = PIPE
+
+    return Popen(cmdlist, stdout=PIPE, stderr=stderr)
 
 
 def process_Popen_command(shellflg, cmdlist):

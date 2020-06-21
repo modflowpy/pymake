@@ -376,9 +376,9 @@ def get_c_flags(target, cc, cflags, debug, srcfiles=None,
                     flags.append('Wall')
             else:
                 pass
-        elif cc in ['icc', 'icpc', 'mpiicc', 'mpiicpc', 'icl']:
+        elif cc in ['icc', 'icpc', 'mpiicc', 'mpiicpc', 'icl', 'cl']:
             if osname == 'win32':
-                if cc == 'icl':
+                if cc in ['icl', 'cl']:
                     flags += ['nologo']
                 if debug:
                     flags.append('/debug:full')
@@ -400,9 +400,14 @@ def get_c_flags(target, cc, cflags, debug, srcfiles=None,
             ffiles = get_fortran_files(srcfiles)
             cfiles = get_c_files(srcfiles)
             if ffiles is not None:
-                use_iso_c = get_iso_c(ffiles)
-                if not use_iso_c and cfiles is not None:
-                    flags.append('D_UF')
+                iso_c_check = True
+                if osname == 'win32':
+                    if cc in ['icl', 'cl']:
+                        iso_c_check = False
+                if iso_c_check:
+                    use_iso_c = get_iso_c(ffiles)
+                    if not use_iso_c and cfiles is not None:
+                        flags.append('D_UF')
 
         # add passed c flags - assume that flags have - or / as the
         # first character. c flags starting with O are excluded
@@ -463,16 +468,18 @@ def get_linker_flags(target, fc, cc, syslibs, srcfiles,
     fext = get_fortran_files(srcfiles, extensions=True)
     cext = get_c_files(srcfiles, extensions=True)
 
+    # remove .exe extension of necessary
+    if '.exe' in fc.lower():
+        fc = fc[:-4]
+    if '.exe' in cc.lower():
+        cc = fc[:-4]
+
     # set linker compiler
     compiler = None
     if fext is not None:
         compiler = fc
     if compiler is None:
         compiler = cc
-
-    # remove compiler .exe extension, if necessary
-    if '.exe' in compiler.lower():
-        compiler = compiler[:-4]
 
     # remove target .exe extension, if necessary
     target = os.path.basename(target)
@@ -512,7 +519,7 @@ def get_linker_flags(target, fc, cc, syslibs, srcfiles,
             if fc in ['ifort', 'mpiifort']:
                 addswitch = True
         else:
-            if cc in ['icl']:
+            if cc in ['icl', 'cl']:
                 addswitch = True
         if addswitch:
             syslibs_out.append('nologo')

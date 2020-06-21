@@ -569,7 +569,7 @@ def pymake_compile(srcfiles, target, fc, cc,
             process_Popen_command(False, cmdlist)
 
             # run the command using Popen
-            proc = process_Popen_initialize(cmdlist)
+            proc = process_Popen_initialize(cmdlist, intelwin)
 
             # write batch file execution to terminal
             if intelwin:
@@ -578,8 +578,12 @@ def pymake_compile(srcfiles, target, fc, cc,
             else:
                 process_Popen_communicate(proc)
 
-            # set return code
+            # evaluate return code
             returncode = proc.returncode
+            if returncode != 0:
+                msg = "compilation failed on '{}'".format(' '.join(cmdlist))
+                print(msg)
+                break
 
     # return
     return returncode
@@ -649,6 +653,9 @@ def create_win_batch(batchfile, fc, cc, lc, optlevel,
             searchdir.append(dirname)
 
     # write commands to build object files
+    line = "echo Creating object files to create '" + \
+           os.path.basename(target) + "'\n"
+    f.write(line)
     for srcfile in srcfiles:
         if srcfile.endswith('.c') or srcfile.endswith('.cpp'):
             cmd = cc + ' ' + optlevel + ' '
@@ -673,11 +680,11 @@ def create_win_batch(batchfile, fc, cc, lc, optlevel,
             cmd += '/module:{0}\\ '.format(moddir_temp)
             cmd += '/object:{0}\\ '.format(objdir_temp)
             cmd += srcfile
-        f.write("echo compiling '" + os.path.basename(srcfile) + "'\n")
+        f.write("echo {}\n".format(cmd))
         f.write(cmd + '\n')
 
     # write commands to link
-    line = "echo Linking oject files to create '" + \
+    line = "echo Linking object files to create '" + \
            os.path.basename(target) + "'\n"
     f.write(line)
 
@@ -687,6 +694,7 @@ def create_win_batch(batchfile, fc, cc, lc, optlevel,
     for switch in lflags:
         cmd += ' ' + switch
     cmd += '\n'
+    f.write("echo {}\n".format(cmd))
     f.write(cmd)
 
     # close the batch file

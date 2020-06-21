@@ -24,10 +24,10 @@ class Node(object):
         self.dependencies = []
         return
 
-    def add_dependency(self, d):
+    def add_dependency(self, dependency):
         """Add dependency if not already in list."""
-        if d not in self.dependencies:
-            self.dependencies.append(d)
+        if dependency not in self.dependencies:
+            self.dependencies.append(dependency)
         return
 
 
