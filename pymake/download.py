@@ -211,15 +211,14 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         print(' download attempt: {}'.format(idx + 1))
 
         # open request
-        try:
-            req = requests.get(url, stream=True, verify=verify)
-        except TimeoutError:
-            continue
-        except requests.ConnectionError:
-            continue
-        except:
-            e = sys.exc_info()[0]
-            raise Exception(e)
+        req = requests.get(url, stream=True, verify=verify)
+        if req.status_code != 200:
+            if idx < nattempts - 1:
+                continue
+            else:
+                msg = 'Cannot download file:\n    {}'.format(url)
+                #raise Exception(msg)
+                req.raise_for_status()
 
         # connection established - download the file
         fs = 0
@@ -237,21 +236,26 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         try:
             req = requests.get(url, verify=verify, timeout=timeout,
                                stream=True)
-            with open(file_name, 'wb') as f:
-                for chunk in req.iter_content(chunk_size=chunk_size):
-                    if chunk:
-                        ds += len(chunk)
-                        msg = '     downloaded ' + \
-                              sbfmt.format(bfmt.format(ds)) + \
-                              ' of ' + bfmt.format(int(fs)) + ' bytes' + \
-                              ' ({:10.4%})'.format(float(ds) / float(fs))
-                        print(msg)
-                        f.write(chunk)
-            success = True
+            if req.status_code == 200:
+                with open(file_name, 'wb') as f:
+                    for chunk in req.iter_content(chunk_size=chunk_size):
+                        if chunk:
+                            ds += len(chunk)
+                            if fs > 0:
+                                msg = '     downloaded ' + \
+                                      sbfmt.format(bfmt.format(ds)) + \
+                                      ' of ' + bfmt.format(int(fs)) + \
+                                      ' bytes' + \
+                                      ' ({:10.4%})'.format(float(ds) / float(fs))
+                                print(msg)
+                            f.write(chunk)
+                success = True
+            else:
+                success = False
         except:
-            if idx + 1 == nattempts:
-                msg = 'Cannot download file:\n    {}'.format(url)
-                raise Exception(msg)
+            continue
+
+        # terminate the download attempt loop
         if success:
             break
 

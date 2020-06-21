@@ -469,10 +469,12 @@ def get_linker_flags(target, fc, cc, syslibs, srcfiles,
     cext = get_c_files(srcfiles, extensions=True)
 
     # remove .exe extension of necessary
-    if '.exe' in fc.lower():
-        fc = fc[:-4]
-    if '.exe' in cc.lower():
-        cc = fc[:-4]
+    if fc is not None:
+        if '.exe' in fc.lower():
+            fc = fc[:-4]
+    if cc is not None:
+        if '.exe' in cc.lower():
+            cc = fc[:-4]
 
     # set linker compiler
     compiler = None
