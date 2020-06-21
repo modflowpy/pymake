@@ -45,8 +45,11 @@ def run_mf2005(namefile, regression=True):
     # run test models
     print('running model...{}'.format(testname))
     exe_name = os.path.abspath(target_release)
-    success, buff = flopy.run_model(exe_name, nam, model_ws=testpth,
-                                    silent=True)
+    if os.path.exists(exe_name):
+        success, buff = flopy.run_model(exe_name, nam, model_ws=testpth,
+                                        silent=True)
+    else:
+        success = False
 
     assert success, 'base model {} '.format(nam) + 'did not run.'
 
@@ -59,23 +62,28 @@ def run_mf2005(namefile, regression=True):
         pymake.setup(namefile, testpth_reg)
         print('running regression model...{}'.format(testname_reg))
         # exe_name = os.path.abspath(target_previous)
-        success_reg, buff = flopy.run_model(exe_name, nam,
-                                            model_ws=testpth_reg,
-                                            silent=False)
+
+        if os.path.exists(exe_name):
+            success_reg, buff = flopy.run_model(exe_name, nam,
+                                                model_ws=testpth_reg,
+                                                silent=False)
+        else:
+            success_reg = False
 
         assert success_reg, 'regression model {} '.format(nam) + 'did not run.'
 
         # compare results
-        outfile1 = os.path.join(os.path.split(os.path.join(testpth, nam))[0],
-                                'bud.cmp')
-        outfile2 = os.path.join(os.path.split(os.path.join(testpth, nam))[0],
-                                'hds.cmp')
-        success_reg = pymake.compare(os.path.join(testpth, nam),
-                                     os.path.join(testpth_reg, nam),
-                                     precision='single',
-                                     max_cumpd=0.01, max_incpd=0.01,
-                                     htol=0.001,
-                                     outfile1=outfile1, outfile2=outfile2)
+        if success and success_reg:
+            fpth = os.path.split(os.path.join(testpth, nam))[0]
+            outfile1 = os.path.join(fpth, 'bud.cmp')
+            fpth = os.path.split(os.path.join(testpth, nam))[0]
+            outfile2 = os.path.join(fpth, 'hds.cmp')
+            success_reg = pymake.compare(os.path.join(testpth, nam),
+                                         os.path.join(testpth_reg, nam),
+                                         precision='single',
+                                         max_cumpd=0.01, max_incpd=0.01,
+                                         htol=0.001,
+                                         outfile1=outfile1, outfile2=outfile2)
 
     # Clean things up
     if not retain:

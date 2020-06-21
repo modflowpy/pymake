@@ -112,9 +112,13 @@ def run_mf6(ws):
 
     # run test models
     exe_name = os.path.abspath(epth)
-    print('running model...{}'.format(os.path.basename(ws)))
-    success, buff = flopy.run_model(exe_name, None,
-                                    model_ws=dst, silent=False)
+    if os.path.exists(exe_name):
+        print('running model...{}'.format(os.path.basename(ws)))
+        success, buff = flopy.run_model(exe_name, None,
+                                        model_ws=dst, silent=False)
+    else:
+        success = False
+
     if success:
         pymake.teardown(dst)
     assert success is True

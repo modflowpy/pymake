@@ -100,9 +100,13 @@ def run_mt3dusgs(temp_dir):
     # run the MT3D-USGS model
     print('running model...{}'.format(mt_nam))
     exe = mt_nam
-    success, buff = flopy.run_model(emtusgs, mt_nam,
-                                    model_ws=model_ws, silent=False,
-                                    normal_msg='Program completed.')
+    if os.path.exists(emtusgs):
+        success, buff = flopy.run_model(emtusgs, mt_nam,
+                                        model_ws=model_ws, silent=False,
+                                        normal_msg='Program completed.')
+    else:
+        success = False
+
     assert success, 'could not run...{}'.format(os.path.basename(mt_nam))
 
     return

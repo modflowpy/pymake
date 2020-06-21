@@ -88,9 +88,13 @@ def run_seawat(namepth, dst):
     edit_namefile(pth)
 
     # run test models
-    print('running model...{}'.format(os.path.basename(namepth)))
-    success, buff = flopy.run_model(epth, os.path.basename(namepth),
-                                    model_ws=testpth, silent=True)
+    if os.path.exists(epth):
+        print('running model...{}'.format(os.path.basename(namepth)))
+        success, buff = flopy.run_model(epth, os.path.basename(namepth),
+                                        model_ws=testpth, silent=True)
+    else:
+        success = False
+
     if success:
         pymake.teardown(testpth)
     assert success is True

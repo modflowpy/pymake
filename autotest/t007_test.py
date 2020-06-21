@@ -153,8 +153,13 @@ def run_modpath7(fn):
     # run the modpath model
     print('running model...{}'.format(fn))
     exe = emp7
-    fpth = os.path.basename(fn)
-    success, buff = flopy.run_model(exe, fpth, model_ws=model_ws, silent=False)
+    if os.path.exists(exe):
+        fpth = os.path.basename(fn)
+        success, buff = flopy.run_model(exe, fpth, model_ws=model_ws,
+                                        silent=False)
+    else:
+        success = False
+
     assert success, 'could not run...{}'.format(os.path.basename(fn))
     return
 

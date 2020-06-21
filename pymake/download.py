@@ -216,8 +216,8 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
             if idx < nattempts - 1:
                 continue
             else:
-                msg = 'Cannot download file:\n    {}'.format(url)
-                #raise Exception(msg)
+                msg = 'Cannot download file:\n    {}\n\n'.format(url)
+                print(msg)
                 req.raise_for_status()
 
         # connection established - download the file
@@ -249,7 +249,12 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
                                       ' ({:10.4%})'.format(float(ds) / float(fs))
                                 print(msg)
                             f.write(chunk)
-                success = True
+
+                # check that the entire file has been downloaded
+                if ds == fs:
+                    success = True
+                else:
+                    continue
             else:
                 success = False
         except:

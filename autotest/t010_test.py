@@ -85,17 +85,21 @@ def run_gridgen(d):
     prog = os.path.abspath(exe_name)
 
     for cmd in biscayne_cmds:
-        cmdlist = [prog] + cmd.split()
-        print('running ', cmdlist)
-        retcode = run_command(cmdlist, testpth)
-        success = False
-        if retcode == 0:
-            success = True
-        assert success
+        if os.path.exists(prog):
+            cmdlist = [prog] + cmd.split()
+            print('running {}'.format(' '.join(cmdlist)))
+            retcode = run_command(cmdlist, testpth)
+            success = False
+            if retcode == 0:
+                success = True
+        else:
+            success = False
+        assert success, 'could not run {}'.format(' '.join(cmdlist))
 
     if success:
         pymake.teardown(testpth)
-    assert success is True
+
+    assert success is True, 'could not teardown tests.'
 
     return
 

@@ -60,8 +60,12 @@ def run_modpath6(fn):
             os.rename(fname2, fname1)
 
     # run the model
-    print('running model...{}'.format(fn))
-    success, buff = flopy.run_model(epth, fn, model_ws=expth, silent=False)
+    if os.path.exists(epth):
+        print('running model...{}'.format(fn))
+        success, buff = flopy.run_model(epth, fn, model_ws=expth, silent=False)
+    else:
+        success = False
+
     assert success, 'could not run...{}'.format(os.path.basename(fn))
     return
 
