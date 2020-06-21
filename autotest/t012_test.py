@@ -29,54 +29,53 @@ exes = [egsflow]
 
 
 def copy_example_dir(epth):
-    src = os.path.join(expth, epth)
-    dst = os.path.join(dstpth, epth)
+    if os.path.exists(egsflow):
+        src = os.path.join(expth, epth)
+        dst = os.path.join(dstpth, epth)
 
-    # delete dst if it exists
-    if os.path.isdir(dst):
-        shutil.rmtree(dst)
+        # delete dst if it exists
+        if os.path.isdir(dst):
+            shutil.rmtree(dst)
 
-    # copy the files
-    try:
-        shutil.copytree(src, dst)
-    except:
-        msg = "could not move files from {} to '{}'".format(src, dst)
-        raise NameError(msg)
+        # copy the files
+        try:
+            shutil.copytree(src, dst)
+        except:
+            msg = "could not move files from {} to '{}'".format(src, dst)
+            raise NameError(msg)
 
-    # edit the control file for a shorter run
-    # sagehen
-    if epth == examples[0]:
-        fpth = os.path.join(dstpth, epth, 'linux', control_files[0])
-        with open(fpth) as f:
-            lines = f.readlines()
-        with open(fpth, 'w') as f:
-            idx = 0
-            while idx < len(lines):
-                line = lines[idx]
-                if 'end_time' in line:
-                    line += '6\n1\n1981\n'
-                    idx += 3
-                f.write(line)
-                idx += 1
+        # edit the control file for a shorter run
+        # sagehen
+        if epth == examples[0]:
+            fpth = os.path.join(dstpth, epth, 'linux', control_files[0])
+            with open(fpth) as f:
+                lines = f.readlines()
+            with open(fpth, 'w') as f:
+                idx = 0
+                while idx < len(lines):
+                    line = lines[idx]
+                    if 'end_time' in line:
+                        line += '6\n1\n1981\n'
+                        idx += 3
+                    f.write(line)
+                    idx += 1
     return
 
 
 def run_gsflow(example, control_file):
-    # copy files
-    copy_example_dir(example)
-
-    model_ws = os.path.join(dstpth, example, 'linux')
-
-    # run the flow model
-    msg = '{}'.format(egsflow)
-
     if os.path.exists(egsflow):
+        # copy files
+        copy_example_dir(example)
+
+        model_ws = os.path.join(dstpth, example, 'linux')
+
+        # run the flow model
         success, buff = flopy.run_model(egsflow, control_file,
                                         model_ws=model_ws, silent=False)
     else:
         success = False
 
-    assert success, 'could not run...{}'.format(msg)
+    assert success, 'could not run...{}'.format(egsflow)
 
     return
 

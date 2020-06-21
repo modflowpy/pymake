@@ -21,9 +21,12 @@ epth = os.path.join(dstpth, target)
 
 
 def get_example_dirs():
-    exdirs = [o for o in os.listdir(expth)
-              if os.path.isdir(os.path.join(expth, o))]
-    return sorted(exdirs)
+    if os.path.isdir(expth):
+        exdirs = sorted([o for o in os.listdir(expth)
+                         if os.path.isdir(os.path.join(expth, o))])
+    else:
+        exdirs = [None]
+    return exdirs
 
 
 def compile_code():
@@ -104,15 +107,15 @@ def clean_up():
 
 
 def run_mf6(ws):
-    print('running...{}'.format(ws))
-    # setup
-    src = os.path.join(expth, ws)
-    dst = os.path.join(dstpth, ws)
-    pymake.setup_mf6(src, dst)
-
-    # run test models
     exe_name = os.path.abspath(epth)
     if os.path.exists(exe_name):
+        print('running...{}'.format(ws))
+        # setup
+        src = os.path.join(expth, ws)
+        dst = os.path.join(dstpth, ws)
+        pymake.setup_mf6(src, dst)
+
+        # run test models
         print('running model...{}'.format(os.path.basename(ws)))
         success, buff = flopy.run_model(exe_name, None,
                                         model_ws=dst, silent=False)

@@ -41,19 +41,22 @@ exes = [emp7, emf2005, emfusg, emf6]
 
 
 def get_simfiles():
-    edirs = [name for name in os.listdir(expth) if
-             os.path.isdir(os.path.join(expth, name))]
-    pths = [os.path.join(expth, edir) for edir in edirs]
-    dirs = []
-    for pth in pths:
-        for name in os.listdir(pth):
-            if os.path.isdir(os.path.join(pth, name)):
-                dirs.append(os.path.join(pth, name))
-    simfiles = []
-    for d in dirs:
-        pth = os.path.join(d, 'original')
-        simfiles += [os.path.join(pth, f) for f in os.listdir(pth) if
-                     f.endswith('.mpsim')]
+    if os.path.exists(emp7):
+        edirs = [name for name in os.listdir(expth) if
+                 os.path.isdir(os.path.join(expth, name))]
+        pths = [os.path.join(expth, edir) for edir in edirs]
+        dirs = []
+        for pth in pths:
+            for name in os.listdir(pth):
+                if os.path.isdir(os.path.join(pth, name)):
+                    dirs.append(os.path.join(pth, name))
+        simfiles = []
+        for d in dirs:
+            pth = os.path.join(d, 'original')
+            simfiles += [os.path.join(pth, f) for f in os.listdir(pth) if
+                         f.endswith('.mpsim')]
+    else:
+        simfiles = [None]
     return simfiles
 
 
@@ -104,56 +107,57 @@ def set_lowercase(fpth):
 
 
 def run_modpath7(fn):
-    model_ws = os.path.dirname(fn)
-    # run the flow model
-    run = True
-    if 'modflow-2005' in fn.lower():
-        exe = emf2005
-        v = flopy.which(exe)
-        if v is None:
-            run = False
-        nam = [name for name in os.listdir(model_ws) if '.nam' in name.lower()]
-        if len(nam) > 0:
-            fpth = nam[0]
-            # read and rewrite the name file
-            set_lowercase(os.path.join(model_ws, fpth))
-        else:
+    if os.path.exists(emp7):
+        model_ws = os.path.dirname(fn)
+        # run the flow model
+        run = True
+        if 'modflow-2005' in fn.lower():
+            exe = emf2005
+            v = flopy.which(exe)
+            if v is None:
+                run = False
+            nam = [name for name in os.listdir(model_ws) if '.nam' in name.lower()]
+            if len(nam) > 0:
+                fpth = nam[0]
+                # read and rewrite the name file
+                set_lowercase(os.path.join(model_ws, fpth))
+            else:
+                fpth = None
+                run = False
+        elif 'modflow-usg' in fn.lower():
+            exe = emfusg
+            v = flopy.which(exe)
+            if v is None:
+                run = False
+            nam = [name for name in os.listdir(model_ws) if '.nam' in name.lower()]
+            if len(nam) > 0:
+                fpth = nam[0]
+            else:
+                fpth = None
+                run = False
+        elif 'modflow-6' in fn.lower():
+            exe = emf6
+            v = flopy.which(exe)
+            if v is None:
+                run = False
             fpth = None
-            run = False
-    elif 'modflow-usg' in fn.lower():
-        exe = emfusg
-        v = flopy.which(exe)
-        if v is None:
-            run = False
-        nam = [name for name in os.listdir(model_ws) if '.nam' in name.lower()]
-        if len(nam) > 0:
-            fpth = nam[0]
         else:
-            fpth = None
             run = False
-    elif 'modflow-6' in fn.lower():
-        exe = emf6
-        v = flopy.which(exe)
-        if v is None:
-            run = False
-        fpth = None
-    else:
-        run = False
-    if run:
-        # fix any known problems
-        replace_data(model_ws)
-        # run the model
-        msg = '{}'.format(exe)
-        if fpth is not None:
-            msg += ' {}'.format(os.path.basename(fpth))
-        success, buff = flopy.run_model(exe, fpth, model_ws=model_ws,
-                                        silent=False)
-        assert success, 'could not run...{}'.format(msg)
+        if run:
+            # fix any known problems
+            replace_data(model_ws)
+            # run the model
+            msg = '{}'.format(exe)
+            if fpth is not None:
+                msg += ' {}'.format(os.path.basename(fpth))
+            success, buff = flopy.run_model(exe, fpth, model_ws=model_ws,
+                                            silent=False)
+            assert success, 'could not run...{}'.format(msg)
 
-    # run the modpath model
-    print('running model...{}'.format(fn))
-    exe = emp7
-    if os.path.exists(exe):
+        # run the modpath model
+        print('running model...{}'.format(fn))
+        exe = emp7
+
         fpth = os.path.basename(fn)
         success, buff = flopy.run_model(exe, fpth, model_ws=model_ws,
                                         silent=False)

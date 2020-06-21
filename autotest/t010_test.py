@@ -21,6 +21,8 @@ exe_name = os.path.join(dstpth, target)
 
 
 def get_example_dirs():
+    prog = os.path.abspath(exe_name)
+
     exdirs = [o for o in os.listdir(expth)
               if os.path.isdir(os.path.join(expth, o))]
     return exdirs
@@ -65,8 +67,6 @@ def run_command(cmdlist, cwd):
 
 
 def run_gridgen(d):
-    print('running...{}'.format(d))
-
     biscayne_cmds = [
         'buildqtg action01_buildqtg.dfn',
         'grid02qtg-to-usgdata action02_writeusgdata.dfn',
@@ -80,26 +80,28 @@ def run_gridgen(d):
         'grid02qtg-to-vtkfile action05_vtkfile.dfn',
         'grid02qtg-to-vtkfilesv action05_vtkfile.dfn', ]
 
-    testpth = os.path.join(expth, d)
-    testpth = os.path.abspath(testpth)
     prog = os.path.abspath(exe_name)
+    if os.path.exists(prog):
+        print('running...{}'.format(d))
 
-    for cmd in biscayne_cmds:
-        if os.path.exists(prog):
+        testpth = os.path.join(expth, d)
+        testpth = os.path.abspath(testpth)
+
+        for cmd in biscayne_cmds:
             cmdlist = [prog] + cmd.split()
             print('running {}'.format(' '.join(cmdlist)))
             retcode = run_command(cmdlist, testpth)
             success = False
             if retcode == 0:
                 success = True
-        else:
-            success = False
-        assert success, 'could not run {}'.format(' '.join(cmdlist))
+            assert success, 'could not run {}'.format(' '.join(cmdlist))
 
-    if success:
-        pymake.teardown(testpth)
+        if success:
+            pymake.teardown(testpth)
+    else:
+        success = False
 
-    assert success is True, 'could not teardown tests.'
+    assert success, 'could not run {}'.format(prog)
 
     return
 

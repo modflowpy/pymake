@@ -31,46 +31,46 @@ def run_mf2005(namefile, regression=True):
     Run the simulation.
 
     """
+    if namefile is not None:
+        # Set root as the directory name where namefile is located
+        testname = pymake.get_sim_name(namefile, rootpth=testpaths[0])[0]
 
-    # Set root as the directory name where namefile is located
-    testname = pymake.get_sim_name(namefile, rootpth=testpaths[0])[0]
+        # Set nam as namefile name without path
+        nam = os.path.basename(namefile)
 
-    # Set nam as namefile name without path
-    nam = os.path.basename(namefile)
+        # Setup
+        testpth = os.path.join(testdir, testname)
+        pymake.setup(namefile, testpth)
 
-    # Setup
-    testpth = os.path.join(testdir, testname)
-    pymake.setup(namefile, testpth)
-
-    # run test models
-    print('running model...{}'.format(testname))
-    exe_name = os.path.abspath(target_release)
-    if os.path.exists(exe_name):
-        success, buff = flopy.run_model(exe_name, nam, model_ws=testpth,
-                                        silent=True)
-    else:
-        success = False
-
-    assert success, 'base model {} '.format(nam) + 'did not run.'
-
-    # If it is a regression run, then setup and run the model with the
-    # release target and the reference target
-    success_reg = True
-    if regression:
-        testname_reg = os.path.basename(target_previous)
-        testpth_reg = os.path.join(testpth, testname_reg)
-        pymake.setup(namefile, testpth_reg)
-        print('running regression model...{}'.format(testname_reg))
-        # exe_name = os.path.abspath(target_previous)
-
+        # run test models
+        print('running model...{}'.format(testname))
+        exe_name = os.path.abspath(target_release)
         if os.path.exists(exe_name):
-            success_reg, buff = flopy.run_model(exe_name, nam,
-                                                model_ws=testpth_reg,
-                                                silent=False)
+            success, buff = flopy.run_model(exe_name, nam, model_ws=testpth,
+                                            silent=True)
         else:
-            success_reg = False
+            success = False
 
-        assert success_reg, 'regression model {} '.format(nam) + 'did not run.'
+        assert success, 'base model {} '.format(nam) + 'did not run.'
+
+        # If it is a regression run, then setup and run the model with the
+        # release target and the reference target
+        success_reg = True
+        if regression:
+            testname_reg = os.path.basename(target_previous)
+            testpth_reg = os.path.join(testpth, testname_reg)
+            pymake.setup(namefile, testpth_reg)
+            print('running regression model...{}'.format(testname_reg))
+            # exe_name = os.path.abspath(target_previous)
+
+            if os.path.exists(exe_name):
+                success_reg, buff = flopy.run_model(exe_name, nam,
+                                                    model_ws=testpth_reg,
+                                                    silent=False)
+            else:
+                success_reg = False
+
+            assert success_reg, 'regression model {} '.format(nam) + 'did not run.'
 
         # compare results
         if success and success_reg:
@@ -84,10 +84,13 @@ def run_mf2005(namefile, regression=True):
                                          max_cumpd=0.01, max_incpd=0.01,
                                          htol=0.001,
                                          outfile1=outfile1, outfile2=outfile2)
+        # Clean things up
+        if not retain:
+            pymake.teardown(testpth)
+    else:
+        success = False
 
-    # Clean things up
-    if not retain:
-        pymake.teardown(testpth)
+    assert success, 'could not run {}'.format(namefile)
 
     return
 #
@@ -124,7 +127,12 @@ def test_compile_ref():
 
 
 def test_mf2005():
-    namefiles = get_namefiles(testpaths[0], exclude=exclude)
+
+    if os.path.isdir(testpaths[0]):
+        namefiles = get_namefiles(testpaths[0], exclude=exclude)
+    else:
+        namefiles = [None]
+
     for namefile in namefiles:
         yield run_mf2005, namefile
     return
@@ -163,8 +171,5 @@ if __name__ == '__main__':
     test_compile_ref()
     # test_compile_prev()
 
-    namefiles = get_namefiles(testpaths[0], exclude=exclude)
-    for namefile in namefiles:
-        run_mf2005(namefile)
-
+    test_mf2005()
     test_teardown()

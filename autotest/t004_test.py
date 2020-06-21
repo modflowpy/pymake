@@ -38,29 +38,33 @@ def compile_code():
 
 
 def get_simfiles():
-    simfiles = [f for f in os.listdir(expth) if f.endswith('.mpsim')]
+    if os.path.exists(epth):
+        simfiles = [f for f in os.listdir(expth) if f.endswith('.mpsim')]
+    else:
+        simfiles = [None]
+
     return simfiles
 
 
 def run_modpath6(fn):
-    # rename a few files for linux
-    replace_files = ['example-6', 'example-7', 'example-8']
-    for rf in replace_files:
-        if rf in fn.lower():
-            fname1 = os.path.join(expth, '{}.locations'.format(rf))
-            fname2 = os.path.join(expth, '{}_mod.locations'.format(rf))
-            print('copy {} to {}'.format(os.path.basename(fname1),
-                                         os.path.basename(fname2)))
-            shutil.copy(fname1, fname2)
-            print('deleting {}'.format(os.path.basename(fname1)))
-            os.remove(fname1)
-            fname1 = os.path.join(expth, '{}.locations'.format(rf.upper()))
-            print('renmae {} to {}'.format(os.path.basename(fname2),
-                                           os.path.basename(fname1)))
-            os.rename(fname2, fname1)
-
-    # run the model
     if os.path.exists(epth):
+        # rename a few files for linux
+        replace_files = ['example-6', 'example-7', 'example-8']
+        for rf in replace_files:
+            if rf in fn.lower():
+                fname1 = os.path.join(expth, '{}.locations'.format(rf))
+                fname2 = os.path.join(expth, '{}_mod.locations'.format(rf))
+                print('copy {} to {}'.format(os.path.basename(fname1),
+                                             os.path.basename(fname2)))
+                shutil.copy(fname1, fname2)
+                print('deleting {}'.format(os.path.basename(fname1)))
+                os.remove(fname1)
+                fname1 = os.path.join(expth, '{}.locations'.format(rf.upper()))
+                print('renmae {} to {}'.format(os.path.basename(fname2),
+                                               os.path.basename(fname1)))
+                os.rename(fname2, fname1)
+
+        # run the model
         print('running model...{}'.format(fn))
         success, buff = flopy.run_model(epth, fn, model_ws=expth, silent=False)
     else:
@@ -92,17 +96,18 @@ def test_compile():
 
 def test_modpath6():
     simfiles = get_simfiles()
+
     for fn in simfiles:
         yield run_modpath6, fn
 
 
 def test_clean_up():
-    yield clean_up
+    clean_up()
 
 
 if __name__ == "__main__":
-    compile_code()
+    test_compile()
     simfiles = get_simfiles()
     for fn in simfiles:
         run_modpath6(fn)
-    clean_up()
+    test_clean_up()

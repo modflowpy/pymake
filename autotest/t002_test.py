@@ -42,9 +42,13 @@ def edit_namefile(namefile):
 
 
 def get_namefiles():
-    exclude_tests = ('7_swtv4_ex', '6_rotation')
-    namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
-    simname = pymake.get_sim_name(namefiles, rootpth=expth)
+    if os.path.exists(epth):
+        exclude_tests = ('7_swtv4_ex', '6_rotation')
+        namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
+        simname = pymake.get_sim_name(namefiles, rootpth=expth)
+    else:
+        namefiles = [None]
+        simname = [None]
     return zip(namefiles, simname)
 
 
@@ -77,26 +81,27 @@ def clean_up():
 
 
 def run_seawat(namepth, dst):
-    print('running...{}'.format(dst))
+    if namepth is not None:
+        print('running...{}'.format(dst))
+        # setup
+        testpth = os.path.join(dstpth, dst)
+        pymake.setup(namepth, testpth)
 
-    # setup
-    testpth = os.path.join(dstpth, dst)
-    pymake.setup(namepth, testpth)
+        # edit name file
+        pth = os.path.join(testpth, os.path.basename(namepth))
+        edit_namefile(pth)
 
-    # edit name file
-    pth = os.path.join(testpth, os.path.basename(namepth))
-    edit_namefile(pth)
-
-    # run test models
-    if os.path.exists(epth):
-        print('running model...{}'.format(os.path.basename(namepth)))
-        success, buff = flopy.run_model(epth, os.path.basename(namepth),
-                                        model_ws=testpth, silent=True)
+        # run test models
+        if os.path.exists(epth):
+            print('running model...{}'.format(os.path.basename(namepth)))
+            success, buff = flopy.run_model(epth, os.path.basename(namepth),
+                                            model_ws=testpth, silent=True)
+        if success:
+            pymake.teardown(testpth)
     else:
         success = False
 
-    if success:
-        pymake.teardown(testpth)
+
     assert success is True
 
     return
