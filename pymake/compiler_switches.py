@@ -500,10 +500,23 @@ def get_linker_flags(target, fc, cc, syslibs, srcfiles,
 
     # add linker switch for a shared object
     if sharedobject:
-        if osname == 'darwin':
-            copt = 'dynamiclib'
+        gnu_compiler = True
+        if fext is not None:
+            if fc in ['ifort', 'mpiifort']:
+                gnu_compiler = False
         else:
-            copt = 'shared'
+            if cc in ['icc', 'mpiicc', 'icl', 'cl']:
+                gnu_compiler = False
+        if osname == 'win32':
+            if gnu_compiler:
+                copt = 'shared'
+            else:
+                copt = 'dll'
+        else:
+            if osname == 'darwin':
+                copt = 'dynamiclib'
+            else:
+                copt = 'shared'
         syslibs_out.append(copt)
     # add static link flags for GNU compilers
     else:
@@ -812,7 +825,7 @@ def set_syslibs(target, fc='gfortran', cc='gcc', argv=True, osname=None):
     print('\nosname:  ', osname)
     print('fc:      ', fc)
     print('cc:      ', cc)
-    print('default: ', default_syslibs)
+    print('default: {}\n'.format(default_syslibs))
 
     # set default syslibs
     if default_syslibs:

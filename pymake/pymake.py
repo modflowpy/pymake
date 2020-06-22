@@ -258,12 +258,14 @@ def get_extrafiles(extrafiles):
     return files
 
 
-def clean(intelwin):
+def clean(target, intelwin):
     """Cleanup intermediate files. Remove mod and object files, and remove the
     temporary source directory.
 
     Parameters
     ----------
+    target : str
+        path for executable to create
     intelwin : bool
         boolean indicating if pymake was used to compile source code on
         Windows using Intel compilers
@@ -286,12 +288,30 @@ def clean(intelwin):
     for f in filelist:
         for ext in delext:
             if f.endswith(ext):
+                print('    removing...{}'.format(f))
                 os.remove(f)
 
+    # shared object intermediate files
+    print('\nCleaning up intermediate shared object files...')
+    delext = ['.exp', '.lib']
+    dpth = os.path.dirname(target)
+    for f in os.listdir(dpth):
+        fpth = os.path.join(dpth, f)
+        for ext in delext:
+            if fpth.endswith(ext):
+                print("    removing...'{}'".format(fpth))
+                os.remove(fpth)
+
     # remove temporary directories
-    shutil.rmtree(srcdir_temp)
-    shutil.rmtree(objdir_temp)
-    shutil.rmtree(moddir_temp)
+    print('\nCleaning up temporary source, object, and module directories...')
+    if os.path.isdir(srcdir_temp):
+        shutil.rmtree(srcdir_temp)
+    if os.path.isdir(objdir_temp):
+        shutil.rmtree(objdir_temp)
+    if os.path.isdir(moddir_temp):
+        shutil.rmtree(moddir_temp)
+
+    # remove the windows batchfile
     if intelwin:
         os.remove('compile.bat')
     return
@@ -435,14 +455,15 @@ def pymake_compile(srcfiles, target, fc, cc,
                 cc += ext
         if ext not in lc:
             lc += ext
-        if ext not in target:
-            target += ext
 
-        # update target extension if shared object
+        # update target extension
         if sharedobject:
             program_path, ext = os.path.splitext(target)
             if ext.lower() != '.dll':
                 target = program_path + '.dll'
+        else:
+            if ext not in target:
+                target += ext
 
         # delete the batch file if it exists
         batchfile = 'compile.bat'
@@ -456,7 +477,7 @@ def pymake_compile(srcfiles, target, fc, cc,
         try:
             create_win_batch(batchfile, fc, cc, lc, optlevel,
                              tfflags, tcflags, tlflags,
-                             srcfiles, target, arch)
+                             srcfiles, target, arch, sharedobject)
 
             # build the command list for the Windows batch file
             cmdlists = [batchfile, ]
@@ -599,7 +620,7 @@ def pymake_compile(srcfiles, target, fc, cc,
 
 def create_win_batch(batchfile, fc, cc, lc, optlevel,
                      fflags, cflags, lflags,
-                     srcfiles, target, arch):
+                     srcfiles, target, arch, sharedobject):
     """Make an intel compiler batch file for compiling on windows.
 
     Parameters
@@ -1256,7 +1277,7 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
 
     # clean up temporary files
     if makeclean and returncode == 0:
-        clean(intelwin)
+        clean(target, intelwin)
 
     return returncode
 
