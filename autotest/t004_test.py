@@ -67,17 +67,21 @@ def run_modpath6(fn):
         # run the model
         print('running model...{}'.format(fn))
         success, buff = flopy.run_model(epth, fn, model_ws=expth, silent=False)
+        if not success:
+            errmsg = 'could not run...{}'.format(os.path.basename(fn))
     else:
         success = False
+        errmsg = '{} does not exist'.format(epth)
 
-    assert success, 'could not run...{}'.format(os.path.basename(fn))
+    assert success, errmsg
     return
 
 
 def clean_up():
     # clean up download directory
     print('Removing folder ' + mp6pth)
-    shutil.rmtree(mp6pth)
+    if os.path.isdir(mp6pth):
+        shutil.rmtree(mp6pth)
 
     ext = ''
     if sys.platform == 'win32':
@@ -85,7 +89,10 @@ def clean_up():
 
     # clean up executable
     print('Removing ' + target)
-    os.remove(epth + ext)
+    fpth = epth + ext
+    if os.path.isfile(fpth):
+        os.remove(fpth)
+
     return
 
 

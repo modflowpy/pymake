@@ -38,7 +38,8 @@ def compile_code():
 def clean_up():
     # clean up download directory
     print('Removing folder ' + mflgrpth)
-    shutil.rmtree(mflgrpth)
+    if os.path.isdir(mflgrpth):
+        shutil.rmtree(mflgrpth)
 
     ext = ''
     if sys.platform == 'win32':
@@ -46,8 +47,9 @@ def clean_up():
 
     # clean up the executable
     print('Removing ' + target)
-    os.remove(epth + ext)
-    return
+    fpth = epth + ext
+    if os.path.isfile(fpth):
+        os.remove(fpth)
 
     return
 

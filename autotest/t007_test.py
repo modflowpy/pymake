@@ -161,10 +161,13 @@ def run_modpath7(fn):
         fpth = os.path.basename(fn)
         success, buff = flopy.run_model(exe, fpth, model_ws=model_ws,
                                         silent=False)
+        if not success:
+            errmsg = 'could not run {}'.format(os.path.basename(fn))
     else:
         success = False
+        errmsg = 'could not run...{}'.format(emp7)
 
-    assert success, 'could not run...{}'.format(emp7)
+    assert success, errmsg
     return
 
 

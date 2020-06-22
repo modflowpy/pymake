@@ -67,7 +67,8 @@ def compile_code():
 def clean_up():
     # clean up download directory
     print('Removing folder ' + mfusgpth)
-    shutil.rmtree(mfusgpth)
+    if os.path.isdir(mfusgpth):
+        shutil.rmtree(mfusgpth)
 
     ext = ''
     if sys.platform == 'win32':
@@ -75,7 +76,10 @@ def clean_up():
 
     # clean up executable
     print('Removing ' + target)
-    os.remove(epth + ext)
+    fpth = epth + ext
+    if os.path.isfile(fpth):
+        os.remove(fpth)
+
     return
 
 
@@ -91,10 +95,13 @@ def run_mfusg(namepth, dst):
                                         model_ws=testpth, silent=True)
         if success:
             pymake.teardown(testpth)
+        else:
+            errmsg = 'could not run {}'.format(os.path.basename(namepth))
     else:
         success = False
+        errmsg = 'could not run {}'.format(epth)
 
-    assert success is True, 'could not run {}'.format(epth)
+    assert success, errmsg
 
     return
 

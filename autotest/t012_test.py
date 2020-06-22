@@ -72,10 +72,13 @@ def run_gsflow(example, control_file):
         # run the flow model
         success, buff = flopy.run_model(egsflow, control_file,
                                         model_ws=model_ws, silent=False)
+        if not success:
+            errmsg = 'could not run {}'.format(control_file)
     else:
         success = False
+        errmsg = 'could not run...{}'.format(egsflow)
 
-    assert success, 'could not run...{}'.format(egsflow)
+    assert success, errmsg
 
     return
 

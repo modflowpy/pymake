@@ -22,9 +22,11 @@ exe_name = os.path.join(dstpth, target)
 
 def get_example_dirs():
     prog = os.path.abspath(exe_name)
-
-    exdirs = [o for o in os.listdir(expth)
-              if os.path.isdir(os.path.join(expth, o))]
+    if os.path.isfile(prog):
+        exdirs = [o for o in os.listdir(expth)
+                  if os.path.isdir(os.path.join(expth, o))]
+    else:
+        exdirs = [None]
     return exdirs
 
 
@@ -46,14 +48,17 @@ def compile_code():
 def clean_up():
     # clean up
     print('Removing folder ' + pth)
-    shutil.rmtree(pth)
+    if os.path.isdir(pth):
+        shutil.rmtree(pth)
 
     ext = ''
     if sys.platform == 'win32':
         ext = '.exe'
 
     print('Removing ' + target)
-    os.remove(exe_name + ext)
+    fpth = exe_name + ext
+    if os.path.isfile(fpth):
+        os.remove(fpth)
     return
 
 

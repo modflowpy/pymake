@@ -70,7 +70,8 @@ def run_mf2005(namefile, regression=True):
             else:
                 success_reg = False
 
-            assert success_reg, 'regression model {} '.format(nam) + 'did not run.'
+            assert success_reg, 'regression model {} '.format(nam) + \
+                                'did not run.'
 
         # compare results
         if success and success_reg:
@@ -85,12 +86,17 @@ def run_mf2005(namefile, regression=True):
                                          htol=0.001,
                                          outfile1=outfile1, outfile2=outfile2)
         # Clean things up
-        if not retain:
-            pymake.teardown(testpth)
+        if success_reg:
+            if not retain:
+                pymake.teardown(testpth)
+        else:
+            success = False
+            errmsg = 'could not run...{}'.format(os.path.basename(nam))
     else:
         success = False
+        errmsg = '{} does not exist'.format(target_release)
 
-    assert success, 'could not run {}'.format(namefile)
+    assert success, errmsg
 
     return
 #
@@ -138,7 +144,7 @@ def test_mf2005():
     return
 
 
-def test_teardown():
+def test_cleanup():
     ext = ''
     if sys.platform == 'win32':
         ext = '.exe'
@@ -172,4 +178,4 @@ if __name__ == '__main__':
     # test_compile_prev()
 
     test_mf2005()
-    test_teardown()
+    test_cleanup()

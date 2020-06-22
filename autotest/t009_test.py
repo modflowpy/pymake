@@ -106,10 +106,13 @@ def run_mt3dusgs(temp_dir):
         success, buff = flopy.run_model(emtusgs, mt_nam,
                                         model_ws=model_ws, silent=False,
                                         normal_msg='Program completed.')
+        if not success:
+            errmsg = 'could not run {}'.format(mtnam)
     else:
         success = False
+        errmsg = 'could not run {}'.format(os.path.basename(emtusgs))
 
-    assert success, 'could not run...{}'.format(os.path.basename(emtusgs))
+    assert success, errmsg
 
     return
 

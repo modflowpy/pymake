@@ -72,11 +72,13 @@ def build_with_makefile():
 
 def clean_up():
     # clean up make file
+    print('Removing makefile')
     files = ['makefile', 'makedefaults']
-    print('Removing makefile and temporary build directories')
     for fpth in files:
         if os.path.isfile(fpth):
             os.remove(fpth)
+
+    print('Removing temporary build directories')
     dirs_temp = [os.path.join('obj_temp'),
                  os.path.join('mod_temp')]
     for d in dirs_temp:

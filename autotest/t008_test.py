@@ -84,12 +84,13 @@ def build_with_makefile():
 
 def clean_up():
     # clean up makefile
+    print('Removing makefile')
     files = ['makefile', 'makedefaults']
-    print('Removing makefile and temporary build directories')
     for fpth in files:
         if os.path.isfile(fpth):
             os.remove(fpth)
 
+    print('Removing temporary build directories')
     dirs_temp = [os.path.join('obj_temp'),
                  os.path.join('mod_temp')]
     for d in dirs_temp:
@@ -124,13 +125,16 @@ def run_mf6(ws):
         print('running model...{}'.format(os.path.basename(ws)))
         success, buff = flopy.run_model(exe_name, None,
                                         model_ws=dst, silent=False)
+        if not success:
+            errmsg = 'could not run {}'.format(os.path.basename(ws))
     else:
         success = False
+        errmsg = 'could not run {}'.format(exe_name)
 
     if success:
         pymake.teardown(dst)
 
-    assert success, 'could not run {}'.format(exe_name)
+    assert success, errmsg
 
     return
 
