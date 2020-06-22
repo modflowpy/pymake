@@ -7,6 +7,10 @@ import flopy
 
 # define program data
 target = 'mfusg'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -42,9 +46,14 @@ def edit_namefiles():
 
 
 def get_namefiles():
-    exclude_tests = ('7_swtv4_ex',)
-    namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
-    simname = pymake.get_sim_name(namefiles, rootpth=expth)
+    if os.path.exists(epth):
+        exclude_tests = ('7_swtv4_ex',)
+        namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
+        simname = pymake.get_sim_name(namefiles, rootpth=expth)
+    else:
+        namefiles = [None]
+        simname = [None]
+
     return zip(namefiles, simname)
 
 
@@ -62,7 +71,8 @@ def compile_code():
 def clean_up():
     # clean up download directory
     print('Removing folder ' + mfusgpth)
-    shutil.rmtree(mfusgpth)
+    if os.path.isdir(mfusgpth):
+        shutil.rmtree(mfusgpth)
 
     ext = ''
     if sys.platform == 'win32':
@@ -70,23 +80,32 @@ def clean_up():
 
     # clean up executable
     print('Removing ' + target)
-    os.remove(epth + ext)
+    fpth = epth + ext
+    if os.path.isfile(fpth):
+        os.remove(fpth)
+
     return
 
 
 def run_mfusg(namepth, dst):
-    print('running...{}'.format(dst))
-    # setup
-    testpth = os.path.join(dstpth, dst)
-    pymake.setup(namepth, testpth)
+    if os.path.exists(epth):
+        # setup
+        testpth = os.path.join(dstpth, dst)
+        pymake.setup(namepth, testpth)
 
-    # run test models
-    print('running model...{}'.format(os.path.basename(namepth)))
-    success, buff = flopy.run_model(epth, os.path.basename(namepth),
-                                    model_ws=testpth, silent=True)
-    if success:
-        pymake.teardown(testpth)
-    assert success is True
+        # run test models
+        print('running model...{}'.format(os.path.basename(namepth)))
+        success, buff = flopy.run_model(epth, os.path.basename(namepth),
+                                        model_ws=testpth, silent=True)
+        if success:
+            pymake.teardown(testpth)
+        else:
+            errmsg = 'could not run {}'.format(os.path.basename(namepth))
+    else:
+        success = False
+        errmsg = 'could not run {}'.format(epth)
+
+    assert success, errmsg
 
     return
 

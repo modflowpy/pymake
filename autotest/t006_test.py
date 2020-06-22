@@ -6,6 +6,10 @@ import pymake
 
 # define program data
 target = 'mfnwt'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -37,15 +41,10 @@ def compile_code():
 
 def build_with_makefile():
     if os.path.isfile('makefile'):
-
-        tepth = epth
-        if sys.platform.lower() == 'win32':
-            tepth += '.exe'
-
         # remove existing target
-        if os.path.isfile(target):
+        if os.path.isfile(epth):
             print('Removing ' + target)
-            os.remove(target)
+            os.remove(epth)
 
         print('Removing temporary build directories')
         dirs_temp = [os.path.join('src_temp'),
@@ -61,19 +60,24 @@ def build_with_makefile():
 
         # verify that MODFLOW-NWT was made
         errmsg = '{} created by makefile does not exist.'.format(target)
-        assert os.path.isfile(target), errmsg
+        success = os.path.isfile(epth)
     else:
-        print('makefile does not exist...skipping build_with_make()')
+        errmsg = 'makefile does not exist...skipping build_with_make()'
+
+    assert success, errmsg
+
     return
 
 
 def clean_up():
     # clean up make file
+    print('Removing makefile')
     files = ['makefile', 'makedefaults']
-    print('Removing makefile and temporary build directories')
     for fpth in files:
         if os.path.isfile(fpth):
             os.remove(fpth)
+
+    print('Removing temporary build directories')
     dirs_temp = [os.path.join('obj_temp'),
                  os.path.join('mod_temp')]
     for d in dirs_temp:
@@ -85,14 +89,10 @@ def clean_up():
         print('Removing folder ' + mfnwtpth)
         shutil.rmtree(mfnwtpth)
 
-    tepth = target
-    if sys.platform == 'win32':
-        tepth += '.exe'
-
     # clean up MODFLOW-NWT
-    if os.path.isfile(tepth):
+    if os.path.isfile(epth):
         print('Removing ' + target)
-        os.remove(tepth)
+        os.remove(epth)
 
     return
 

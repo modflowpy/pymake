@@ -7,6 +7,10 @@ import flopy
 
 # define program data
 target = 'mt3dusgs'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -28,6 +32,11 @@ temp_dict = pymake.usgs_program_data().get_target(mf6_target)
 mf6pth = os.path.join(dstpth, temp_dict.dirname)
 emf6 = os.path.abspath(os.path.join(dstpth, mf6_target))
 
+if sys.platform.lower() == 'win32':
+    emfnwt += '.exe'
+    emf6 += '.exe'
+
+
 # example path
 expth = os.path.join(mtusgspth, 'data')
 
@@ -37,73 +46,82 @@ exes = [emtusgs, emfnwt, emf6]
 
 
 def get_example_dirs():
-    exclude_dirs = ['Keating', 'Keating_UZF']
+    if os.path.exists(emtusgs):
+        exclude_dirs = ['Keating', 'Keating_UZF']
 
-    upd = pymake.usgs_program_data()
+        upd = pymake.usgs_program_data()
 
-    # exclude additional directories based on version of codes
-    # MODFLOW-NWT
-    ver = upd.get_version('mfnwt')
-    if ver == '1.2.0':
-        exclude_dirs += ['UZT_NonLin',
-                         'UZT_Disp_Lamb01_TVD',
-                         'UZT_Disp_Lamb1',
-                         'UZT_Disp_Lamb10']
+        # exclude additional directories based on version of codes
+        # MODFLOW-NWT
+        ver = upd.get_version('mfnwt')
+        if ver == '1.2.0':
+            exclude_dirs += ['UZT_NonLin',
+                             'UZT_Disp_Lamb01_TVD',
+                             'UZT_Disp_Lamb1',
+                             'UZT_Disp_Lamb10']
 
-    # create list of example directories to test
-    exdirs = [o for o in sorted(os.listdir(expth))
-              if os.path.isdir(os.path.join(expth, o)) and
-              o not in exclude_dirs]
+        # create list of example directories to test
+        exdirs = [o for o in sorted(os.listdir(expth))
+                  if os.path.isdir(os.path.join(expth, o)) and
+                  o not in exclude_dirs]
+    else:
+        exdirs = [None]
     return exdirs
 
 
 def run_mt3dusgs(temp_dir):
-    model_ws = os.path.join(expth, temp_dir)
+    if os.path.exists(emtusgs):
+        model_ws = os.path.join(expth, temp_dir)
 
-    files = [f for f in os.listdir(model_ws)
-             if os.path.isfile(os.path.join(model_ws, f))]
+        files = [f for f in os.listdir(model_ws)
+                 if os.path.isfile(os.path.join(model_ws, f))]
 
-    mf_nam = None
-    mt_nam = None
-    flow_model = None
-    for f in files:
-        if '_mf.nam' in f.lower():
-            mf_nam = f
-            flow_model = 'mfnwt'
-        if '_mt.nam' in f.lower():
-            mt_nam = f
-        if f == 'mfsim.nam':
-            mf_nam = f
-            flow_model = 'mf6'
+        mf_nam = None
+        mt_nam = None
+        flow_model = None
+        for f in files:
+            if '_mf.nam' in f.lower():
+                mf_nam = f
+                flow_model = 'mfnwt'
+            if '_mt.nam' in f.lower():
+                mt_nam = f
+            if f == 'mfsim.nam':
+                mf_nam = f
+                flow_model = 'mf6'
 
-    msg = 'A MODFLOW name file not present in {}'.format(model_ws)
-    assert mf_nam is not None, msg
+        msg = 'A MODFLOW name file not present in {}'.format(model_ws)
+        assert mf_nam is not None, msg
 
-    msg = 'A MT3D-USGS name file not present in {}'.format(model_ws)
-    assert mt_nam is not None, msg
+        msg = 'A MT3D-USGS name file not present in {}'.format(model_ws)
+        assert mt_nam is not None, msg
 
-    # run the flow model
-    msg = '{}'.format(emfnwt)
-    if mf_nam is not None:
-        msg += ' {}'.format(os.path.basename(mf_nam))
-    if flow_model == 'mfnwt':
-        nam = mf_nam
-        eapp = emfnwt
-    elif flow_model == 'mf6':
-        nam = None
-        eapp = emf6
-    success, buff = flopy.run_model(eapp, nam, model_ws=model_ws,
-                                    silent=False)
+        # run the flow model
+        msg = '{}'.format(emfnwt)
+        if mf_nam is not None:
+            msg += ' {}'.format(os.path.basename(mf_nam))
+        if flow_model == 'mfnwt':
+            nam = mf_nam
+            eapp = emfnwt
+        elif flow_model == 'mf6':
+            nam = None
+            eapp = emf6
+        success, buff = flopy.run_model(eapp, nam, model_ws=model_ws,
+                                        silent=False)
 
-    assert success, 'could not run...{}'.format(msg)
+        assert success, 'could not run...{}'.format(msg)
 
-    # run the MT3D-USGS model
-    print('running model...{}'.format(mt_nam))
-    exe = mt_nam
-    success, buff = flopy.run_model(emtusgs, mt_nam,
-                                    model_ws=model_ws, silent=False,
-                                    normal_msg='Program completed.')
-    assert success, 'could not run...{}'.format(os.path.basename(mt_nam))
+        # run the MT3D-USGS model
+        print('running model...{}'.format(mt_nam))
+        success, buff = flopy.run_model(emtusgs, mt_nam,
+                                        model_ws=model_ws, silent=False,
+                                        normal_msg='Program completed.')
+        if not success:
+            errmsg = 'could not run {}'.format(mtnam)
+    else:
+        success = False
+        errmsg = 'could not run {}'.format(os.path.basename(emtusgs))
+
+    assert success, errmsg
 
     return
 
@@ -113,9 +131,6 @@ def clean_up(pth, exe):
     if os.path.isdir(pth):
         print('Removing folder ' + pth)
         shutil.rmtree(pth)
-
-    if sys.platform == 'win32':
-        exe += '.exe'
 
     # clean up compiled executables
     if os.path.isfile(exe):

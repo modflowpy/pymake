@@ -11,7 +11,7 @@ print('pymake is installed in {}'.format(pymakepth))
 
 
 class dotdict(dict):
-    """dot.notation access to dictionary attributes"""
+    """dot.notation access to dictionary attributes."""
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
@@ -26,8 +26,7 @@ target_keys = ['version', 'current', 'url', 'dirname', 'srcdir',
 
 
 def str_to_bool(s):
-    """
-    Convert "True" and "False" strings to a boolean
+    """Convert "True" and "False" strings to a boolean.
 
     Parameters
     ----------
@@ -48,20 +47,14 @@ def str_to_bool(s):
 
 
 class usgs_program_data:
-    """
-    USGS program database class.
-
-    """
+    """USGS program database class."""
 
     def __init__(self):
-        """
-        USGS program database init
-        """
+        """USGS program database init."""
         self._program_dict = self._build_usgs_database()
 
     def _build_usgs_database(self):
-        """
-        Build the USGS program database
+        """Build the USGS program database.
 
         Returns
         -------
@@ -91,9 +84,7 @@ class usgs_program_data:
         return dotdict(program_data)
 
     def _target_data(self, key):
-        """
-        Get the dictionary for the target key
-        """
+        """Get the dictionary for the target key."""
         if key not in self._program_dict:
             msg = '"{}" key does not exist. Available keys: '.format(key)
             for idx, k in enumerate(self._program_dict.keys()):
@@ -104,9 +95,7 @@ class usgs_program_data:
         return self._program_dict[key]
 
     def _target_keys(self, current=False):
-        """
-        Get the target keys
-        """
+        """Get the target keys."""
         if current:
             keys = [key for key in self._program_dict.keys()
                     if self._program_dict[key].current]
@@ -116,8 +105,7 @@ class usgs_program_data:
 
     @staticmethod
     def get_target(key):
-        """
-        Get the dictionary for a specified target
+        """Get the dictionary for a specified target.
 
         Parameters
         ----------
@@ -129,14 +117,14 @@ class usgs_program_data:
         program_dict : dict
             Dictionary with USGS program attributes for the specified key
 
-
         """
+        if '.exe' in key.lower():
+            key = key[:-4]
         return usgs_program_data()._target_data(key)
 
     @staticmethod
     def get_keys(current=False):
-        """
-        Get target keys from the USGS program database
+        """Get target keys from the USGS program database.
 
         Parameters
         ----------
@@ -149,14 +137,14 @@ class usgs_program_data:
         -------
         keys : list
             list of USGS program targets
+
         """
 
         return usgs_program_data()._target_keys(current=current)
 
     @staticmethod
     def get_program_dict():
-        """
-        Get the complete USGS program database
+        """Get the complete USGS program database.
 
         Returns
         -------
@@ -168,8 +156,7 @@ class usgs_program_data:
 
     @staticmethod
     def get_precision(key):
-        """
-        Get the dictionary for a specified target
+        """Get the dictionary for a specified target.
 
         Parameters
         ----------
@@ -180,7 +167,6 @@ class usgs_program_data:
         -------
         precision : list
             List
-
 
         """
         target = usgs_program_data().get_target(key)
@@ -193,8 +179,7 @@ class usgs_program_data:
 
     @staticmethod
     def get_version(key):
-        """
-        Get the current version of the specified target
+        """Get the current version of the specified target.
 
         Parameters
         ----------
@@ -206,15 +191,13 @@ class usgs_program_data:
         version : str
             current version of the specified target
 
-
         """
         target = usgs_program_data().get_target(key)
         return target.version
 
     @staticmethod
     def list_targets(current=False):
-        """
-        Print a list of the available USGS program targets
+        """Print a list of the available USGS program targets.
 
         Parameters
         ----------
@@ -239,8 +222,7 @@ class usgs_program_data:
     @staticmethod
     def export_json(fpth='code.json', prog_data=None, current=False,
                     update=True):
-        """
-        Export USGS program data as a json file
+        """Export USGS program data as a json file.
 
         Parameters
         ----------
@@ -325,8 +307,7 @@ class usgs_program_data:
 
     @staticmethod
     def load_json(fpth='code.json'):
-        """
-        Load an existing code json file. Basic error checking is done to
+        """Load an existing code json file. Basic error checking is done to
         make sure the file contains the correct keys.
 
         Parameters
@@ -363,8 +344,7 @@ class usgs_program_data:
 
     @staticmethod
     def list_json(fpth='code.json'):
-        """
-        List an existing code json file.
+        """List an existing code json file.
 
         Parameters
         ----------
@@ -394,8 +374,7 @@ class usgs_program_data:
 
     @staticmethod
     def update_json(fpth='code.json', temp_dict=None):
-        """
-        UPDATE an existing code json file.
+        """UPDATE an existing code json file.
 
         Parameters
         ----------

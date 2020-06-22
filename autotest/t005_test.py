@@ -6,6 +6,10 @@ import pymake
 
 # define program data
 target = 'mflgr'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -38,16 +42,13 @@ def compile_code():
 def clean_up():
     # clean up download directory
     print('Removing folder ' + mflgrpth)
-    shutil.rmtree(mflgrpth)
-
-    ext = ''
-    if sys.platform == 'win32':
-        ext = '.exe'
+    if os.path.isdir(mflgrpth):
+        shutil.rmtree(mflgrpth)
 
     # clean up the executable
     print('Removing ' + target)
-    os.remove(epth + ext)
-    return
+    if os.path.isfile(epth):
+        os.remove(epth)
 
     return
 

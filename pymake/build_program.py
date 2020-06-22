@@ -12,13 +12,14 @@ else:
     from distutils.spawn import find_executable as which
 
 from .pymake import main
+from .compiler_switches import set_arch, set_compiler, set_debug, \
+    set_cflags, set_fflags, set_syslibs
 from .download import download_and_unzip, zip_all
 from .usgsprograms import usgs_program_data
 
 
 def get_function_names(module, select_name=None):
-    """
-    Get a dictionary of functions available in a user-specified source file.
+    """Get a dictionary of functions available in a user-specified source file.
     This function was developed to create a dictionary of functions in this
     source file (build_program.py). Optionally, the user can get a get a
     dictionary of functions that contain a specific text string in the name.
@@ -52,8 +53,8 @@ def get_function_names(module, select_name=None):
 
 
 def set_bindir(target=None):
-    """
-    Set path for target based on --travis or --appdir command line arguments
+    """Set path for target based on --travis or --appdir command line
+    arguments.
 
     Parameters
     ----------
@@ -112,9 +113,8 @@ def set_download_clean(download_clean):
 
 
 def set_build(target, exe_name):
-    """
-    Set boolean that defines whether the target should be built if it
-    already exists based on --keep command line argument
+    """Set boolean that defines whether the target should be built if it
+    already exists based on --keep command line argument.
 
     Parameters
     ----------
@@ -203,303 +203,8 @@ def set_build(target, exe_name):
     return build
 
 
-def set_compiler(target):
-    """
-    Set fortran and c compilers based on --ifort, --mpiifort, --icc, --cl,
-    clang++, and --clang command line arguments
-
-    Parameters
-    ----------
-    target : str
-        target to build
-
-    Returns
-    -------
-    fc : str
-        string denoting the fortran compiler to use. Default is gfortran.
-    cc : str
-        string denoting the c compiler to use. Default is gcc.
-
-    """
-    fc = 'gfortran'
-    if target in ['triangle', 'gridgen']:
-        fc = None
-
-    cc = 'gcc'
-    if target in ['gridgen']:
-        cc = 'g++'
-
-    # parse command line arguments to see if user specified options
-    # relative to building the target
-    for idx, arg in enumerate(sys.argv):
-        if arg.lower() == '--ifort' and fc is not None:
-            fc = 'ifort'
-        elif arg.lower() == '--icc':
-            cc = 'icc'
-        elif arg.lower() == '--icpc':
-            cc = 'icpc'
-        elif arg.lower() == '--cl':
-            cc = 'cl'
-        elif arg.lower() == '--icl':
-            cc = 'icl'
-        elif arg.lower() == '--clang':
-            cc = 'clang'
-        elif arg.lower() == '--clang++':
-            cc = 'clang++'
-
-    # reset cc for gridgen if it is specified as 'clang'
-    if target == 'gridgen':
-        if cc == 'clang':
-            cc = 'clang++'
-        elif cc == 'icc':
-            cc = 'icpc'
-
-    msg = '{} fortran code will be built with "{}".\n'.format(target, fc)
-    msg += '{} c/c++ code will be built with "{}".\n'.format(target, cc)
-    print(msg)
-
-    return fc, cc
-
-
-def set_fflags(target, fc='gfortran'):
-    """
-    Set appropriate fortran compiler flags based on target.
-
-    Parameters
-    ----------
-    target : str
-        target to build
-
-    Returns
-    -------
-    fflags : str
-        fortran compiler flags. Default is None
-
-    """
-    fflags = []
-    if target == 'mp7':
-        if fc == 'gfortran':
-            fflags.append('-ffree-line-length-512')
-    elif target == 'gsflow':
-        if fc == 'ifort':
-            if 'win32' in sys.platform.lower():
-                fflags += ['-fp:source', '-names:lowercase',
-                           '-assume:underscore']
-            else:
-                # fflags.append('-fp-model source')
-                pass
-        elif fc == 'gfortran':
-            fflags += ['-O1', '-fno-second-underscore']
-
-    # add additional fflags from the command line
-    for idx, arg in enumerate(sys.argv):
-        if '--fflags' in arg.lower():
-            s = sys.argv[idx + 1]
-            delim = ' -'
-            if ' /' in s:
-                delim = ' /'
-            fflags += s.split(delim)
-
-    # write fortran flags
-    if len(fflags) > 0:
-        msg = '{} fortran code '.format(target) + \
-              'will be built with the following predefined flags:\n'
-        msg += '    {}\n'.format(' '.join(fflags))
-        print(msg)
-    else:
-        fflags = None
-
-    return fflags
-
-
-def set_cflags(target, cc='gcc'):
-    """
-    Set appropriate c compiler flags based on target.
-
-    Parameters
-    ----------
-    target : str
-        target to build
-    cc : str
-        c compiler
-
-    Returns
-    -------
-    cflags : str
-        c compiler flags. Default is None
-
-    """
-    cflags = []
-    if target == 'triangle':
-        if 'linux' in sys.platform.lower() or 'darwin' in sys.platform.lower():
-            if cc.startswith('g'):
-                cflags += ['-lm']
-        else:
-            cflags += ['-DNO_TIMER']
-    elif target == 'gsflow':
-        if cc in ['icc', 'icpl', 'icl']:
-            if 'win32' in sys.platform.lower():
-                cflags += ['-D_CRT_SECURE_NO_WARNINGS']
-            else:
-                cflags += ['-D_UF']
-        elif cc == 'gcc':
-            cflags += ['-O1']
-
-    # add additional cflags from the command line
-    for idx, arg in enumerate(sys.argv):
-        if '--cflags' in arg.lower():
-            s = sys.argv[idx + 1]
-            delim = ' -'
-            if ' /' in s:
-                delim = ' /'
-            cflags += s.split(delim)
-
-    # write c/c++ flags
-    if len(cflags) > 0:
-        msg = '{} c/c++ code '.format(target) + \
-              'will be built with the following predefined flags:\n'
-        msg += '    {}\n'.format(' '.join(cflags))
-        print(msg)
-    else:
-        cflags = None
-
-    return cflags
-
-
-def set_syslibs(target, fc, cc):
-    """
-    Set appropriate compiler liker syslib based on target.
-
-    Parameters
-    ----------
-    target : str
-        target to build
-
-    fc : str
-        fortran compiler
-
-    cc : str
-        c compiler
-
-    Returns
-    -------
-    syslibs : str
-        fortran compiler flags. Default is None
-
-    """
-    # set osname
-    osname = sys.platform.lower()
-
-    # initialize syslibs
-    syslibs = []
-
-    # determine if default syslibs will be defined
-    default_syslibs = True
-    if osname == 'win32':
-        if fc is not None:
-            if fc in ['ifort', 'gfortran']:
-                default_syslibs = False
-        if default_syslibs:
-            if cc is not None:
-                if cc in ['cl', 'icl', 'gcc', 'g++']:
-                    default_syslibs = False
-
-    # set default syslibs
-    if default_syslibs:
-        syslibs.append('-lc')
-
-    # add additional syslibs for select programs
-    if target == 'triangle':
-        if osname in ['linux', 'darwin']:
-            if fc is None:
-                lfc = True
-            else:
-                lfc = fc.startswith('g')
-            lcc = False
-            if cc in ['gcc', 'g++', 'clang', 'clang++']:
-                lcc = True
-            if lfc and lcc:
-                syslibs += ['-lm']
-    elif target == 'gsflow':
-        if 'win32' not in osname:
-            if 'ifort' in fc:
-                syslibs += ['-nofor_main']
-
-    # write syslibs
-    msg = '{} will use the following predefined syslibs:\n'.format(target)
-    msg += '    {}\n'.format(' '.join(syslibs))
-    print(msg)
-
-    return syslibs
-
-
-def set_debug(target):
-    """
-    Set boolean that defines if the target should be compiled with debug
-    compiler options based on -dbg or --debug command line arguments.
-
-    Parameters
-    ----------
-    target : str
-        target to build
-
-    Returns
-    -------
-    debug : bool
-
-    """
-    debug = False
-    for idx, arg in enumerate(sys.argv):
-        if arg.lower() == '-dbg' or arg.lower() == '--debug':
-            debug = True
-            break
-
-    # write a message
-    if debug:
-        comptype = 'debug'
-    else:
-        comptype = 'release'
-    msg = '{} will be built as a "{}" application.\n'.format(target, comptype)
-    print(msg)
-
-    return debug
-
-
-def set_arch(target):
-    """
-    Set architecture to compile target for based on --ia32 command line
-    argument. Default architecture is intel64 (64-bit).
-
-    Parameters
-    ----------
-    target : str
-        target to build
-
-    Returns
-    -------
-    arch : str
-
-    """
-    arch = 'intel64'
-    for idx, arg in enumerate(sys.argv):
-        if arg.lower() == '--ia32':
-            arch = 'ia32'
-
-    # set arch to ia32 if building on windows
-    if target == 'triangle':
-        if platform.system().lower() == 'windows':
-            arch = 'ia32'
-
-    # write a message
-    msg = '{} will be built for "{}" architecture.\n'.format(target, arch)
-    print(msg)
-
-    return arch
-
-
 def set_extrafiles(target, download_dir):
-    """
-    Set extrafiles to compile target. Default is None.
+    """Set extrafiles to compile target. Default is None.
 
     Parameters
     ----------
@@ -566,8 +271,7 @@ def set_extrafiles(target, download_dir):
 
 
 def set_zip():
-    """
-    Set file path for zip file
+    """Set file path for zip file.
 
     Parameters
     ----------
@@ -594,8 +298,7 @@ def set_zip():
 
 
 def set_makefile():
-    """
-    Set boolean for whether a makefile should be created
+    """Set boolean for whether a makefile should be created.
 
     Parameters
     ----------
@@ -623,7 +326,7 @@ def set_makefile():
 def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                   expedite=False, dryrun=False, double=False, debug=False,
                   include_subdirs=False,
-                  fflags=None, cflags=None, syslibs='-lc',
+                  fflags=None, cflags=None, syslibs=None,
                   arch='intel64', makefile=False,
                   srcdir2=None, extrafiles=None,
                   exe_name=None, exe_dir=None,
@@ -865,8 +568,7 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
 
 
 def build_targets(current=True):
-    """
-    Build a list of targets
+    """Build a list of targets.
 
     Parameters
     ----------
@@ -885,8 +587,7 @@ def build_targets(current=True):
 
 
 def build_replace(targets):
-    """
-    Get pointers to appropriate replace_function for a target
+    """Get pointers to appropriate replace_function for a target.
 
     Parameters
     ----------
@@ -898,10 +599,14 @@ def build_replace(targets):
         None is returned as the function pointer if the target string is
         not in the function name
 
-
     """
     if isinstance(targets, str):
         targets = [targets]
+
+    # remove exe extension from targets
+    for idx, target in enumerate(targets):
+        if '.exe' in target.lower():
+            targets[idx] = target[:-4]
 
     # get a dictionary of update functions
     funcs = get_function_names(sys.modules[__name__], select_name='update_')
@@ -924,8 +629,7 @@ def build_replace(targets):
 
 
 def build_apps(targets=None):
-    """
-    Build all of the current targets or a subset of targets
+    """Build all of the current targets or a subset of targets.
 
     Parameters
     ----------
@@ -1150,8 +854,7 @@ def compress_apps(targets=None):
 # routines for updating source files locations and to compile
 # with gfortran, gcc, and g++
 def update_triangle_files(srcdir, fc, cc, arch, double):
-    """
-    Update the triangle source files
+    """Update the triangle source files.
 
     Parameters
     ----------
@@ -1190,8 +893,7 @@ def update_triangle_files(srcdir, fc, cc, arch, double):
 
 
 def update_mt3dms_files(srcdir, fc, cc, arch, double):
-    """
-    Update the MT3D source files
+    """Update the MT3D source files.
 
     Parameters
     ----------

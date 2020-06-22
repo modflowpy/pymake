@@ -8,6 +8,10 @@ import flopy
 
 # define program data
 target = 'swtv4'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -21,10 +25,6 @@ deppth = os.path.join(swtpth, 'dependencies')
 
 srcpth = os.path.join(swtpth, prog_dict.srcdir)
 epth = os.path.abspath(os.path.join(dstpth, target))
-
-# add exe for windows
-if sys.platform == 'win32':
-    epth += '.exe'
 
 
 def edit_namefile(namefile):
@@ -42,9 +42,13 @@ def edit_namefile(namefile):
 
 
 def get_namefiles():
-    exclude_tests = ('7_swtv4_ex', '6_rotation')
-    namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
-    simname = pymake.get_sim_name(namefiles, rootpth=expth)
+    if os.path.exists(epth):
+        exclude_tests = ('7_swtv4_ex', '6_rotation')
+        namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
+        simname = pymake.get_sim_name(namefiles, rootpth=expth)
+    else:
+        namefiles = [None]
+        simname = [None]
     return zip(namefiles, simname)
 
 
@@ -68,48 +72,66 @@ def compile_code():
 def clean_up():
     # clean up downloaded directory
     print('Removing folder ' + swtpth)
-    shutil.rmtree(swtpth)
+    if os.path.isdir(swtpth):
+        shutil.rmtree(swtpth)
 
     # clean up target
     print('Removing ' + target)
-    os.remove(epth)
+    if os.path.isfile(epth):
+        os.remove(epth)
+
     return
 
 
 def run_seawat(namepth, dst):
-    print('running...{}'.format(dst))
+    if namepth is not None:
+        print('running...{}'.format(dst))
+        # setup
+        testpth = os.path.join(dstpth, dst)
+        pymake.setup(namepth, testpth)
 
-    # setup
-    testpth = os.path.join(dstpth, dst)
-    pymake.setup(namepth, testpth)
+        # edit name file
+        pth = os.path.join(testpth, os.path.basename(namepth))
+        edit_namefile(pth)
 
-    # edit name file
-    pth = os.path.join(testpth, os.path.basename(namepth))
-    edit_namefile(pth)
+        # run test models
+        if os.path.exists(epth):
+            print('running model...{}'.format(os.path.basename(namepth)))
+            success, buff = flopy.run_model(epth, os.path.basename(namepth),
+                                            model_ws=testpth, silent=True)
+        if success:
+            pymake.teardown(testpth)
+        else:
+            errmsg = 'could not run...{}'.format(os.path.basename(namepth))
+    else:
+        success = False
+        errmsg = '{} does not exist'.format(epth)
 
-    # run test models
-    print('running model...{}'.format(os.path.basename(namepth)))
-    success, buff = flopy.run_model(epth, os.path.basename(namepth),
-                                    model_ws=testpth, silent=True)
-    if success:
-        pymake.teardown(testpth)
-    assert success is True
+    assert success, errmsg
 
     return
 
 
 def build_seawat_dependency_graphs():
-    # build dependencies output directory
-    if not os.path.exists(deppth):
-        os.makedirs(deppth)
+    if os.path.exists(epth):
 
-    # build dependency graphs
-    print('building dependency graphs')
-    pymake.visualize.make_plots(srcpth, deppth)
+        # build dependencies output directory
+        if not os.path.exists(deppth):
+            os.makedirs(deppth)
 
-    # test that the dependency figure for the SEAWAT main exists
-    findf = os.path.join(deppth, 'swt_v4.f.png')
-    assert os.path.isfile(findf) is True
+        # build dependency graphs
+        print('building dependency graphs')
+        pymake.visualize.make_plots(srcpth, deppth)
+
+        # test that the dependency figure for the SEAWAT main exists
+        findf = os.path.join(deppth, 'swt_v4.f.png')
+        success = os.path.isfile(findf)
+        assert success, 'could not find {}'.format(findf)
+    else:
+        success = False
+
+    assert success, 'could not build dependency graphs'
+
     return
 
 

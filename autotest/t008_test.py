@@ -7,6 +7,10 @@ import flopy
 
 # define program data
 target = 'mf6'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -17,12 +21,16 @@ if not os.path.exists(dstpth):
 mf6ver = prog_dict.version
 mf6pth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(mf6pth, 'examples')
+epth = os.path.join(dstpth, target)
 
 
 def get_example_dirs():
-    exdirs = [o for o in os.listdir(expth)
-              if os.path.isdir(os.path.join(expth, o))]
-    return sorted(exdirs)
+    if os.path.isdir(expth):
+        exdirs = sorted([o for o in os.listdir(expth)
+                         if os.path.isdir(os.path.join(expth, o))])
+    else:
+        exdirs = [None]
+    return exdirs
 
 
 def compile_code():
@@ -37,21 +45,17 @@ def compile_code():
                          include_subdirs=True,
                          download_dir=dstpth,
                          replace_function=replace_function,
+                         exe_dir=dstpth,
                          dryrun=False,
                          makefile=True)
 
 
 def build_with_makefile():
     if os.path.isfile('makefile'):
-
-        tepth = target
-        if sys.platform.lower() == 'win32':
-            tepth += '.exe'
-
         # remove existing target
-        if os.path.isfile(tepth):
+        if os.path.isfile(epth):
             print('Removing ' + target)
-            os.remove(tepth)
+            os.remove(epth)
 
         print('Removing temporary build directories')
         dirs_temp = [os.path.join('src_temp'),
@@ -67,20 +71,25 @@ def build_with_makefile():
 
         # verify that MODFLOW 6 was made
         errmsg = '{} created by makefile does not exist.'.format(target)
-        assert os.path.isfile(tepth), errmsg
-
+        success = os.path.isfile(epth)
     else:
-        print('makefile does not exist...skipping build_with_make()')
+        errmsg = 'makefile does not exist...skipping build_with_make()'
+        success = False
+
+    assert success, errmsg
+
     return
 
 
 def clean_up():
     # clean up makefile
+    print('Removing makefile')
     files = ['makefile', 'makedefaults']
-    print('Removing makefile and temporary build directories')
     for fpth in files:
         if os.path.isfile(fpth):
             os.remove(fpth)
+
+    print('Removing temporary build directories')
     dirs_temp = [os.path.join('obj_temp'),
                  os.path.join('mod_temp')]
     for d in dirs_temp:
@@ -89,33 +98,38 @@ def clean_up():
 
     # clean up
     print('Removing folder ' + mf6pth)
-    shutil.rmtree(mf6pth)
+    if os.path.isdir(mf6pth):
+        shutil.rmtree(mf6pth)
 
-    tepth = target
-    if sys.platform == 'win32':
-        tepth += '.exe'
-
-    if os.path.isfile(tepth):
+    if os.path.isfile(epth):
         print('Removing ' + target)
-        os.remove(tepth)
+        os.remove(epth)
     return
 
 
-def run_mf6(d):
-    print('running...{}'.format(d))
-    # setup
-    epth = os.path.join(expth, d)
-    testpth = os.path.join(dstpth, d)
-    pymake.setup_mf6(epth, testpth)
+def run_mf6(ws):
+    exe_name = os.path.abspath(epth)
+    if os.path.exists(exe_name):
+        print('running...{}'.format(ws))
+        # setup
+        src = os.path.join(expth, ws)
+        dst = os.path.join(dstpth, ws)
+        pymake.setup_mf6(src, dst)
 
-    # run test models
-    print('running model...{}'.format(os.path.basename(d)))
-    epth = os.path.abspath(target)
-    success, buff = flopy.run_model(epth, None,
-                                    model_ws=testpth, silent=False)
+        # run test models
+        print('running model...{}'.format(os.path.basename(ws)))
+        success, buff = flopy.run_model(exe_name, None,
+                                        model_ws=dst, silent=False)
+        if not success:
+            errmsg = 'could not run {}'.format(os.path.basename(ws))
+    else:
+        success = False
+        errmsg = 'could not run {}'.format(exe_name)
+
     if success:
-        pymake.teardown(testpth)
-    assert success is True
+        pymake.teardown(dst)
+
+    assert success, errmsg
 
     return
 
@@ -129,8 +143,8 @@ def test_mf6():
     # get name files and simulation name
     example_dirs = get_example_dirs()
     # run models
-    for d in example_dirs:
-        yield run_mf6, d
+    for ws in example_dirs:
+        yield run_mf6, ws
 
 
 def test_makefile():
@@ -149,8 +163,8 @@ if __name__ == "__main__":
     example_dirs = get_example_dirs()
 
     # run models
-    for d in example_dirs:
-        run_mf6(d)
+    for ws in example_dirs:
+        run_mf6(ws)
 
     # build modflow 6 with a pymake generated makefile
     build_with_makefile()

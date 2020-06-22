@@ -1,6 +1,6 @@
 from __future__ import print_function
 import os
-from .pymake import get_ordered_srcfiles
+from .compiler_language_files import get_ordered_srcfiles
 from .dag import get_f_nodelist
 
 try:
@@ -63,10 +63,7 @@ def add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
 
 def make_plots(srcdir, outdir, include_subdir=False, level=3,
                extension='.png'):
-    """
-    Create plots of module dependencies.
-
-    """
+    """Create plots of module dependencies."""
     srcfiles = get_ordered_srcfiles(srcdir, include_subdir)
     nodelist = get_f_nodelist(srcfiles)
     for n in nodelist:

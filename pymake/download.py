@@ -9,14 +9,33 @@ import tarfile
 
 
 class pymakeZipFile(ZipFile):
-    """
-    ZipFile file attributes are not being preserved.  This preserves file
-    attributes as described here
+    """ZipFile file attributes are not being preserved.
+
+    This class preserves file attributes as described on StackOverflow at
     https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
 
     """
 
     def extract(self, member, path=None, pwd=None):
+        """
+
+        Parameters
+        ----------
+        member : str
+            individual file to extract. If member does not exist, all files
+            are extracted.
+        path : str
+            directory path to extract file in a zip file (default is None,
+            which results in files being extracted in the current directory)
+        pwd : str
+            zip file password (default is None)
+
+        Returns
+        -------
+        ret_val : int
+            return value indicating status of file extraction
+
+        """
         if not isinstance(member, ZipInfo):
             member = self.getinfo(member)
 
@@ -27,9 +46,27 @@ class pymakeZipFile(ZipFile):
         attr = member.external_attr >> 16
         if attr != 0:
             os.chmod(ret_val, attr)
+
         return ret_val
 
     def extractall(self, path=None, members=None, pwd=None):
+        """Extract all files in the zipfile.
+
+        Parameters
+        ----------
+        path : str
+            directory path to extract files in a zip file (default is None,
+            which results in files being extracted in the current directory)
+        members : str
+            individual files to extract (default is None, which extracts
+            all members)
+        pwd : str
+            zip file password (default is None)
+
+        Returns
+        -------
+
+        """
         if members is None:
             members = self.namelist()
 
@@ -45,6 +82,25 @@ class pymakeZipFile(ZipFile):
 
     @staticmethod
     def compressall(path, file_pths=None, dir_pths=None, patterns=None):
+        """Compress selected files or files in selected directories.
+
+        Parameters
+        ----------
+        path : str
+            output zip file path
+        file_pths : str or list of str
+            file paths to include in the output zip file (default is None)
+        dir_pths : str or list of str
+            directory paths to include in the output zip file (default is None)
+        patterns : str or list of str
+            file patterns to include in the output zip file (default is None)
+
+        Returns
+        -------
+        success : bool
+            boolean indicating if the output zip file was created
+
+        """
 
         # create an empty list
         if file_pths is None:
@@ -111,6 +167,30 @@ class pymakeZipFile(ZipFile):
 
 def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
                        timeout=30, nattempts=10, chunk_size=2048000):
+    """Download and unzip a zip file from a url.
+
+    Parameters
+    ----------
+    url : str
+        url address for the zip file
+    pth : str
+        path where the zip file will be saved (default is the current path)
+    delete_zip : bool
+        boolean indicating if the zip file should be deleted after it is
+        unzipped (default is True)
+    verify : bool
+        boolean indicating if the url request should be verified
+    timeout : int
+        url request time out length (default is 30 seconds)
+    nattempts : int
+        number of url download request attempts (default is 10)
+    chunk_size : int
+        maximum url download request chunk size (default is 2048000 bytes)
+
+    Returns
+    -------
+
+    """
     try:
         import requests
     except Exception as e:
@@ -131,15 +211,14 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         print(' download attempt: {}'.format(idx + 1))
 
         # open request
-        try:
-            req = requests.get(url, stream=True, verify=verify)
-        except TimeoutError:
-            continue
-        except requests.ConnectionError:
-            continue
-        except:
-            e = sys.exc_info()[0]
-            raise Exception(e)
+        req = requests.get(url, stream=True, verify=verify)
+        if req.status_code != 200:
+            if idx < nattempts - 1:
+                continue
+            else:
+                msg = 'Cannot download file:\n    {}\n\n'.format(url)
+                print(msg)
+                req.raise_for_status()
 
         # connection established - download the file
         fs = 0
@@ -157,21 +236,31 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         try:
             req = requests.get(url, verify=verify, timeout=timeout,
                                stream=True)
-            with open(file_name, 'wb') as f:
-                for chunk in req.iter_content(chunk_size=chunk_size):
-                    if chunk:
-                        ds += len(chunk)
-                        msg = '     downloaded ' + \
-                              sbfmt.format(bfmt.format(ds)) + \
-                              ' of ' + bfmt.format(int(fs)) + ' bytes' + \
-                              ' ({:10.4%})'.format(float(ds) / float(fs))
-                        print(msg)
-                        f.write(chunk)
-            success = True
+            if req.status_code == 200:
+                with open(file_name, 'wb') as f:
+                    for chunk in req.iter_content(chunk_size=chunk_size):
+                        if chunk:
+                            ds += len(chunk)
+                            if fs > 0:
+                                msg = '     downloaded ' + \
+                                      sbfmt.format(bfmt.format(ds)) + \
+                                      ' of ' + bfmt.format(int(fs)) + \
+                                      ' bytes' + \
+                                      ' ({:10.4%})'.format(float(ds) / float(fs))
+                                print(msg)
+                            f.write(chunk)
+
+                # check that the entire file has been downloaded
+                if ds == fs:
+                    success = True
+                else:
+                    continue
+            else:
+                success = False
         except:
-            if idx + 1 == nattempts:
-                msg = 'Cannot download file:\n    {}'.format(url)
-                raise Exception(msg)
+            continue
+
+        # terminate the download attempt loop
         if success:
             break
 
@@ -208,11 +297,12 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
         os.remove(file_name)
     print('Done downloading and extracting...\n')
 
+    return
+
 
 def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
-    """
-    compress all files in the user-provided list of file paths and directory
-    paths that match the provided file patterns
+    """Compress all files in the user-provided list of file paths and directory
+    paths that match the provided file patterns.
 
     Parameters
     ----------
@@ -233,15 +323,13 @@ def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
     Returns
     -------
 
-
     """
     return pymakeZipFile.compressall(path, file_pths=file_pths,
                                      dir_pths=dir_pths, patterns=patterns)
 
 
 def get_default_repo():
-    """
-    Return the default repo name
+    """Return the default repo name.
 
     Returns
     -------
@@ -253,8 +341,7 @@ def get_default_repo():
 
 
 def get_default_json(tag_name=None):
-    """
-    Return a default github api json for the provided release tag_name in a
+    """Return a default github api json for the provided release tag_name in a
     github repository.
 
     Parameters
@@ -288,8 +375,7 @@ def get_default_json(tag_name=None):
 
 
 def get_request_json(request_url):
-    """
-    Process a url request and return a json if successful.
+    """Process a url request and return a json if successful.
 
     Parameters
     ----------
@@ -327,9 +413,8 @@ def get_request_json(request_url):
 
 
 def repo_json(github_repo, tag_name=None):
-    """
-    Return the github api json for the latest github release in a
-    github repository.
+    """Return the github api json for the latest github release in a github
+    repository.
 
     Parameters
     ----------
@@ -392,8 +477,7 @@ def repo_json(github_repo, tag_name=None):
 
 
 def get_repo_assets(github_repo=None, version=None):
-    """
-    Return a dictionary containing the file name and the link to the asset
+    """Return a dictionary containing the file name and the link to the asset
     contained in a github repository.
 
     Parameters
@@ -430,9 +514,8 @@ def get_repo_assets(github_repo=None, version=None):
 
 
 def repo_latest_version(github_repo=None):
-    """
-    Return a string of the latest version number (tag) contained in a
-    github repository release.
+    """Return a string of the latest version number (tag) contained in a github
+    repository release.
 
     Parameters
     ----------
@@ -456,10 +539,9 @@ def repo_latest_version(github_repo=None):
 
 
 def getmfexes(pth='.', version=None, platform=None, exes=None):
-    """
-    Get the latest MODFLOW binary executables from a github site
-    (https://github.com/MODFLOW-USGS/executables) for the specified
-    operating system and put them in the specified path.
+    """Get the latest MODFLOW binary executables from a github site
+    (https://github.com/MODFLOW-USGS/executables) for the specified operating
+    system and put them in the specified path.
 
     Parameters
     ----------
