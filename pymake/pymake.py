@@ -1156,7 +1156,10 @@ def pymake_compile(srcfiles, target, fc, cc,
     else:
         if sharedobject:
             ext = os.path.splitext(target)[-1].lower()
-            if ext != '.so':
+            if sys.platform == 'win32':
+                if ext != '.dll':
+                    target += '.dll'
+            elif ext != '.so':
                 target += '.so'
 
         # initialize the commands and object files list
