@@ -8,6 +8,10 @@ import flopy
 
 # define program data
 target = 'swtv4'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -21,10 +25,6 @@ deppth = os.path.join(swtpth, 'dependencies')
 
 srcpth = os.path.join(swtpth, prog_dict.srcdir)
 epth = os.path.abspath(os.path.join(dstpth, target))
-
-# add exe for windows
-if sys.platform == 'win32':
-    epth += '.exe'
 
 
 def edit_namefile(namefile):
@@ -75,15 +75,10 @@ def clean_up():
     if os.path.isdir(swtpth):
         shutil.rmtree(swtpth)
 
-    ext = ''
-    if sys.platform == 'win32':
-        ext = '.exe'
-
     # clean up target
     print('Removing ' + target)
-    fpth = epth + ext
-    if os.path.isfile(fpth):
-        os.remove(fpth)
+    if os.path.isfile(epth):
+        os.remove(epth)
 
     return
 

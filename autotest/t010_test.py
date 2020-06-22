@@ -7,6 +7,10 @@ import pymake
 
 # define program data
 target = 'gridgen'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -51,14 +55,9 @@ def clean_up():
     if os.path.isdir(pth):
         shutil.rmtree(pth)
 
-    ext = ''
-    if sys.platform == 'win32':
-        ext = '.exe'
-
     print('Removing ' + target)
-    fpth = exe_name + ext
-    if os.path.isfile(fpth):
-        os.remove(fpth)
+    if os.path.isfile(exe_name):
+        os.remove(exe_name)
     return
 
 

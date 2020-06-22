@@ -326,7 +326,7 @@ def set_makefile():
 def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                   expedite=False, dryrun=False, double=False, debug=False,
                   include_subdirs=False,
-                  fflags=None, cflags=None, syslibs='-lc',
+                  fflags=None, cflags=None, syslibs=None,
                   arch='intel64', makefile=False,
                   srcdir2=None, extrafiles=None,
                   exe_name=None, exe_dir=None,
@@ -602,6 +602,11 @@ def build_replace(targets):
     """
     if isinstance(targets, str):
         targets = [targets]
+
+    # remove exe extension from targets
+    for idx, target in enumerate(targets):
+        if '.exe' in target.lower():
+            targets[idx] = target[:-4]
 
     # get a dictionary of update functions
     funcs = get_function_names(sys.modules[__name__], select_name='update_')

@@ -8,6 +8,10 @@ import flopy
 
 # define program data
 target = 'mp6'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -18,7 +22,7 @@ if not os.path.exists(dstpth):
 mp6pth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(mp6pth, 'example-run')
 
-exe_name = 'mp6'
+exe_name = target
 srcpth = os.path.join(mp6pth, prog_dict.srcdir)
 epth = os.path.abspath(os.path.join(dstpth, target))
 
@@ -83,15 +87,10 @@ def clean_up():
     if os.path.isdir(mp6pth):
         shutil.rmtree(mp6pth)
 
-    ext = ''
-    if sys.platform == 'win32':
-        ext = '.exe'
-
     # clean up executable
     print('Removing ' + target)
-    fpth = epth + ext
-    if os.path.isfile(fpth):
-        os.remove(fpth)
+    if os.path.isfile(epth):
+        os.remove(epth)
 
     return
 

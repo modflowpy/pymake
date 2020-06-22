@@ -118,6 +118,8 @@ class usgs_program_data:
             Dictionary with USGS program attributes for the specified key
 
         """
+        if '.exe' in key.lower():
+            key = key[:-4]
         return usgs_program_data()._target_data(key)
 
     @staticmethod

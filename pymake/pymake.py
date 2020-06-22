@@ -24,8 +24,8 @@ import datetime
 
 from .Popen_wrapper import process_Popen_initialize, process_Popen_command, \
     process_Popen_stdout, process_Popen_communicate
-from .compiler_switches import get_optlevel, get_c_flags, get_fortran_flags, \
-    get_linker_flags
+from .compiler_switches import get_osname, get_optlevel, \
+    get_c_flags, get_fortran_flags, get_linker_flags
 from .compiler_language_files import get_ordered_srcfiles, get_c_files, \
     get_fortran_files
 
@@ -101,7 +101,7 @@ def parser():
                         default=None)
     parser.add_argument('-sl', '--syslibs',
                         help='''Linker system libraries.''',
-                        default='-lc',
+                        default=None,
                         choices=['-lc', '-lm'])
     parser.add_argument('-mf', '--makefile',
                         help='''Create a standard makefile.''',
@@ -258,14 +258,12 @@ def get_extrafiles(extrafiles):
     return files
 
 
-def clean(objext, intelwin):
+def clean(intelwin):
     """Cleanup intermediate files. Remove mod and object files, and remove the
     temporary source directory.
 
     Parameters
     ----------
-    objext : str
-        object file extension
     intelwin : bool
         boolean indicating if pymake was used to compile source code on
         Windows using Intel compilers
@@ -275,6 +273,12 @@ def clean(objext, intelwin):
     None
 
     """
+    # set object extension
+    if intelwin:
+        objext = '.obj'
+    else:
+        objext = '.o'
+
     # clean things up
     print('\nCleaning up temporary source, object, and module files...')
     filelist = os.listdir('.')
@@ -436,9 +440,9 @@ def pymake_compile(srcfiles, target, fc, cc,
 
         # update target extension if shared object
         if sharedobject:
-            ttarget, ext = os.path.splitext(target)
+            program_path, ext = os.path.splitext(target)
             if ext.lower() != '.dll':
-                target = ttarget + '.dll'
+                target = program_path + '.dll'
 
         # delete the batch file if it exists
         batchfile = 'compile.bat'
@@ -463,9 +467,13 @@ def pymake_compile(srcfiles, target, fc, cc,
 
     else:
         if sharedobject:
-            ext = os.path.splitext(target)[-1].lower()
-            if ext != '.so':
-                target += '.so'
+            program_path, ext = os.path.splitext(target)
+            if get_osname() == 'win32':
+                if ext.lower() != '.dll':
+                    target = program_path + '.dll'
+            else:
+                if ext.lower() != '.so':
+                    target = program_path + '.so'
 
         # initialize the commands and object files list
         cmdlists = []
@@ -706,7 +714,6 @@ def create_win_batch(batchfile, fc, cc, lc, optlevel,
 def create_makefile(target, srcdir, srcdir2, extrafiles,
                     srcfiles, debug, double,
                     fc, cc, fflags, cflags, syslibs,
-                    objext='.o',
                     makedefaults='makedefaults'):
     """
 
@@ -738,8 +745,6 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
         user provided list of c or cpp compiler flags
     syslibs : list
         user provided syslibs
-    objext : str
-        object file extension
     makedefaults : str
         name of the makedefaults file to create with makefile (default is
         makedefaults)
@@ -748,6 +753,9 @@ def create_makefile(target, srcdir, srcdir2, extrafiles,
     -------
 
     """
+    # set object extension
+    objext = '.o'
+
     # get list of unique fortran and c/c++ file extensions
     fext = get_fortran_files(srcfiles, extensions=True)
     cext = get_c_files(srcfiles, extensions=True)
@@ -1220,9 +1228,9 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     # get ordered list of files to compile
     srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
 
-    # compile with gfortran or ifort
+    # set intelwin flag to True in compiling on windows with Intel compilers
     intelwin = False
-    if 'win32' in sys.platform.lower():
+    if get_osname() == 'win32':
         if fc is not None:
             if fc in ['ifort', 'mpiifort']:
                 intelwin = True
@@ -1230,12 +1238,8 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
             if cc in ['cl', 'icl']:
                 intelwin = True
 
-    if intelwin:
-        objext = '.obj'
-    else:
-        objext = '.o'
-
-        # update openspec files
+    # update openspec files based on intelwin
+    if not intelwin:
         create_openspec()
 
     # compile the executable
@@ -1248,12 +1252,11 @@ def main(srcdir, target, fc='gfortran', cc='gcc', makeclean=True,
     if makefile:
         create_makefile(target, srcdir, srcdir2, extrafiles, srcfiles,
                         debug, double,
-                        fc, cc, fflags, cflags, syslibs,
-                        objext=objext)
+                        fc, cc, fflags, cflags, syslibs)
 
     # clean up temporary files
     if makeclean and returncode == 0:
-        clean(objext, intelwin)
+        clean(intelwin)
 
     return returncode
 

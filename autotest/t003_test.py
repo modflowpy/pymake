@@ -7,6 +7,10 @@ import flopy
 
 # define program data
 target = 'mfusg'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths

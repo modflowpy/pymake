@@ -21,9 +21,20 @@ target_release = os.path.join(testdir, key_release)
 testdir_previous = os.path.join(testdir, pd_previous.dirname)
 target_previous = os.path.join(testdir, key_previous)
 
+if sys.platform.lower() == 'win32':
+    target_release += '.exe'
+    target_previous += '.exe'
+
 exdir = 'test-run'
 testpaths = [os.path.join(testdir, pd_release.dirname, exdir)]
 exclude = ('MNW2-Fig28', 'swi2ex4sww', 'testsfr2_tab', 'UZFtest2')
+
+def mf2005_namefiles():
+    if os.path.isdir(testpaths[0]):
+        namefiles = get_namefiles(testpaths[0], exclude=exclude)
+    else:
+        namefiles = [None]
+    return namefiles
 
 
 def run_mf2005(namefile, regression=True):
@@ -43,8 +54,10 @@ def run_mf2005(namefile, regression=True):
         pymake.setup(namefile, testpth)
 
         # run test models
-        print('running model...{}'.format(testname))
         exe_name = os.path.abspath(target_release)
+        msg = 'running model...{}'.format(testname) + \
+              ' using {}'.format(exe_name)
+        print(msg)
         if os.path.exists(exe_name):
             success, buff = flopy.run_model(exe_name, nam, model_ws=testpth,
                                             silent=True)
@@ -60,8 +73,10 @@ def run_mf2005(namefile, regression=True):
             testname_reg = os.path.basename(target_previous)
             testpth_reg = os.path.join(testpth, testname_reg)
             pymake.setup(namefile, testpth_reg)
-            print('running regression model...{}'.format(testname_reg))
             # exe_name = os.path.abspath(target_previous)
+            msg = 'running regression model...{}'.format(testname_reg) + \
+                  ' using {}'.format(exe_name)
+            print(msg)
 
             if os.path.exists(exe_name):
                 success_reg, buff = flopy.run_model(exe_name, nam,
@@ -125,6 +140,7 @@ def test_compile_ref():
         shutil.rmtree(testdir_release)
 
     pymake.build_program(target=key_release,
+                         fc='gfortran', cc='gcc',
                          fflags='-O3 -fbacktrace', cflags='-O3',
                          download_dir=testdir,
                          exe_name=target_release)
@@ -133,13 +149,7 @@ def test_compile_ref():
 
 
 def test_mf2005():
-
-    if os.path.isdir(testpaths[0]):
-        namefiles = get_namefiles(testpaths[0], exclude=exclude)
-    else:
-        namefiles = [None]
-
-    for namefile in namefiles:
+    for namefile in mf2005_namefiles():
         yield run_mf2005, namefile
     return
 
@@ -176,6 +186,9 @@ def test_cleanup():
 if __name__ == '__main__':
     test_compile_ref()
     # test_compile_prev()
+
+    for namefile in mf2005_namefiles():
+        run_mf2005(namefile)
 
     test_mf2005()
     test_cleanup()

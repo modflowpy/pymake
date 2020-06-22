@@ -7,6 +7,10 @@ import flopy
 
 # define program data
 target = 'mf6'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -48,15 +52,10 @@ def compile_code():
 
 def build_with_makefile():
     if os.path.isfile('makefile'):
-
-        tepth = epth
-        if sys.platform.lower() == 'win32':
-            tepth += '.exe'
-
         # remove existing target
-        if os.path.isfile(tepth):
+        if os.path.isfile(epth):
             print('Removing ' + target)
-            os.remove(tepth)
+            os.remove(epth)
 
         print('Removing temporary build directories')
         dirs_temp = [os.path.join('src_temp'),
@@ -72,7 +71,7 @@ def build_with_makefile():
 
         # verify that MODFLOW 6 was made
         errmsg = '{} created by makefile does not exist.'.format(target)
-        success = os.path.isfile(tepth)
+        success = os.path.isfile(epth)
     else:
         errmsg = 'makefile does not exist...skipping build_with_make()'
         success = False
@@ -102,13 +101,9 @@ def clean_up():
     if os.path.isdir(mf6pth):
         shutil.rmtree(mf6pth)
 
-    tepth = epth
-    if sys.platform == 'win32':
-        tepth += '.exe'
-
-    if os.path.isfile(tepth):
+    if os.path.isfile(epth):
         print('Removing ' + target)
-        os.remove(tepth)
+        os.remove(epth)
     return
 
 

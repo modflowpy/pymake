@@ -787,6 +787,14 @@ def set_syslibs(target, fc='gfortran', cc='gcc', argv=True, osname=None):
     if '.exe' in target.lower():
         target = target[:-4]
 
+    # remove .exe extension of necessary
+    if fc is not None:
+        if '.exe' in fc.lower():
+            fc = fc[:-4]
+    if cc is not None:
+        if '.exe' in cc.lower():
+            cc = cc[:-4]
+
     # initialize syslibs
     syslibs = []
 
@@ -800,6 +808,11 @@ def set_syslibs(target, fc='gfortran', cc='gcc', argv=True, osname=None):
             if cc is not None:
                 if cc in ['cl', 'icl', 'gcc', 'g++']:
                     default_syslibs = False
+
+    print('\nosname:  ', osname)
+    print('fc:      ', fc)
+    print('cc:      ', cc)
+    print('default: ', default_syslibs)
 
     # set default syslibs
     if default_syslibs:
@@ -833,8 +846,8 @@ def set_syslibs(target, fc='gfortran', cc='gcc', argv=True, osname=None):
                 syslibs += s.split(delim)
 
     # write syslibs
-    msg = '{} will use the following predefined syslibs:\n'.format(target)
-    msg += '    {}\n'.format(' '.join(syslibs))
+    msg = "{} will use the following predefined syslibs:\n".format(target)
+    msg += "    '{}'\n".format(' '.join(syslibs))
     print(msg)
 
     return syslibs

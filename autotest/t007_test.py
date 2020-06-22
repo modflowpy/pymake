@@ -7,6 +7,10 @@ import flopy
 
 # define program data
 target = 'mp7'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -31,6 +35,12 @@ mf6_target = 'mf6'
 temp_dict = pymake.usgs_program_data.get_target(mf6_target)
 mf6pth = os.path.join(dstpth, temp_dict.dirname)
 emf6 = os.path.abspath(os.path.join(dstpth, mf6_target))
+
+if sys.platform.lower() == 'win32':
+    emf2005 += '.exe'
+    emfusg += '.exe'
+    emf6 += '.exe'
+
 
 # MODPATH 7 examples
 expth = os.path.join(mp7pth, 'examples')
@@ -176,9 +186,6 @@ def clean_up(pth, exe):
     if os.path.isdir(pth):
         print('Removing folder ' + pth)
         shutil.rmtree(pth)
-
-    if sys.platform == 'win32':
-        exe += '.exe'
 
     # clean up compiled executables
     if os.path.isfile(exe):

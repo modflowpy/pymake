@@ -7,6 +7,10 @@ import flopy
 
 # define program data
 target = 'gsflow'
+if sys.platform.lower() == 'win32':
+    target += '.exe'
+
+# get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
@@ -96,14 +100,10 @@ def clean_up():
             print('Removing example folder ' + example)
             shutil.rmtree(pth)
 
-    exe = egsflow
-    if sys.platform == 'win32':
-        exe += '.exe'
-
     # clean up compiled executables
-    if os.path.isfile(exe):
-        print('Removing ' + exe)
-        os.remove(exe)
+    if os.path.isfile(egsflow):
+        print('Removing ' + egsflow)
+        os.remove(egsflow)
     return
 
 
