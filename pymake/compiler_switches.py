@@ -239,12 +239,12 @@ def get_fortran_flags(target, fc, fflags, debug, double=False,
         # generate standard fortran flags
         if fc == 'gfortran':
             if sharedobject:
-                flags.append('fPIC')
+                if osname != 'win32':
+                    flags.append('fPIC')
             else:
-                flags.append('Bstatic')
+                if osname == 'win32':
+                    flags.append('static')
             flags.append('fbacktrace')
-            # if osname == 'win32':
-            #     flags.append('Bstatic')
             if debug:
                 flags += ['g', 'fcheck=all', 'fbounds-check', 'Wall']
                 if check_gnu_switch_available('-ffpe-trap'):
@@ -358,8 +358,11 @@ def get_c_flags(target, cc, cflags, debug, srcfiles=None,
         # generate c flags
         if cc in ['gcc', 'g++']:
             if sharedobject:
-                flags.append('fPIC')
-            flags.append('Bstatic')
+                if osname != 'win32':
+                    flags.append('fPIC')
+            else:
+                if osname == 'win32':
+                    flags.append('static')
             if debug:
                 flags += ['g']
                 if check_gnu_switch_available('-Wall', compiler='gcc'):
@@ -520,11 +523,21 @@ def get_linker_flags(target, fc, cc, syslibs, srcfiles,
         syslibs_out.append(copt)
     # add static link flags for GNU compilers
     else:
-        if fext is not None and fc in ['gfortran']:
-            syslibs_out.append('static-libgfortran')
-        if cext is not None and cc in ['gcc', 'g++']:
+        isstatic = False
+        isgfortran = False
+        if osname == 'win32':
+            if fext is not None and fc in ['gfortran']:
+                isstatic = True
+                isgfortran = True
+            if not isstatic:
+                if cext is not None and cc in ['gcc', 'g++']:
+                    isstatic = True
+        if isstatic:
+            syslibs_out.append('static')
+            if isgfortran:
+                syslibs_out.append('static-libgfortran')
             syslibs_out.append('static-libgcc')
-        if len(syslibs_out) > 0:
+            syslibs_out.append('static-libstdc++')
             syslibs_out.append('lm')
 
     # add -nologo switch for compiling on windows with intel compilers
