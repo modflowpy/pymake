@@ -39,13 +39,10 @@ jobs:
     - name: Install python packages
       run: |
         pip install --upgrade pip
-        pip install numpy
-        pip install GDAL
-        pip install -r ./requirements.travis.txt
-        pip install --no-binary rasterio
-        pip install shapely[vectorize]
-        pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install requests nose-timer
+        pip install pydotplus appdirs
+        pip install numpy matplotlib
+        pip install https://github.com/modflowpy/flopy/zipball/develop
     - name: Test with nosetests
       run: |
         nosetests -v --with-id --with-timer -w ./autotest
