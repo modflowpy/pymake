@@ -38,11 +38,11 @@ jobs:
         gfortran --version
     - name: Install python packages
       run: |
-        pip install --upgrade pip
         pip install requests nose-timer
         pip install pydotplus appdirs
         pip install numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
+        pip install .
     - name: Test with nosetests
       run: |
         nosetests -v --with-id --with-timer -w ./autotest
