@@ -3,9 +3,21 @@ import shutil
 import textwrap
 import numpy as np
 
-ignore_ext = ['.hds', '.hed', '.bud', '.cbb', '.cbc',
-              '.ddn', '.ucn', '.glo', '.lst', '.list',
-              '.gwv', '.mv', '.out']
+ignore_ext = [
+    ".hds",
+    ".hed",
+    ".bud",
+    ".cbb",
+    ".cbc",
+    ".ddn",
+    ".ucn",
+    ".glo",
+    ".lst",
+    ".list",
+    ".gwv",
+    ".mv",
+    ".out",
+]
 
 
 def setup(namefile, dst, remove_existing=True, extrafiles=None):
@@ -30,7 +42,7 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
     create_dir = False
     if os.path.exists(dst):
         if remove_existing:
-            print('Removing folder ' + dst)
+            print("Removing folder " + dst)
             shutil.rmtree(dst)
             create_dir = True
     else:
@@ -42,15 +54,15 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
     # name files out of the lgr control file
     namefiles = [namefile]
     ext = os.path.splitext(namefile)[1]
-    if '.lgr' in ext.lower():
-        lines = [line.rstrip('\n') for line in open(namefile)]
+    if ".lgr" in ext.lower():
+        lines = [line.rstrip("\n") for line in open(namefile)]
         for line in lines:
             if len(line) < 1:
                 continue
-            if line[0] == '#':
+            if line[0] == "#":
                 continue
             t = line.split()
-            if '.nam' in t[0].lower():
+            if ".nam" in t[0].lower():
                 fpth = os.path.join(src, t[0])
                 namefiles.append(fpth)
 
@@ -61,7 +73,7 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
         ext = os.path.splitext(fpth)[1]
         # copy additional files contained in the name file and
         # associated package files
-        if ext.lower() == '.nam':
+        if ext.lower() == ".nam":
             fname = os.path.abspath(fpth)
             files2copy = files2copy + get_input_files(fname)
 
@@ -83,13 +95,13 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
             try:
                 os.mkdir(sf)
             except:
-                print('Could not make ' + sf)
+                print("Could not make " + sf)
         # Now copy the file
         if os.path.exists(srcf):
-            print('Copy file from/to ' + srcf + ' ' + dstf)
+            print("Copy file from/to " + srcf + " " + dstf)
             shutil.copy(srcf, dstf)
         else:
-            print(srcf + ' does not exist')
+            print(srcf + " does not exist")
 
     return
 
@@ -100,67 +112,68 @@ def setup_comparison(namefile, dst, remove_existing=True):
     action = None
     for root, dirs, files in os.walk(src):
         dl = [d.lower() for d in dirs]
-        if any('.cmp' in s for s in dl):
+        if any(".cmp" in s for s in dl):
             idx = None
             for jdx, d in enumerate(dl):
-                if '.cmp' in d:
+                if ".cmp" in d:
                     idx = jdx
                     break
             if idx is not None:
-                if 'mf2005.cmp' in dl[idx] or 'mf2005' in dl[idx]:
+                if "mf2005.cmp" in dl[idx] or "mf2005" in dl[idx]:
                     action = dirs[idx]
-                elif 'mfnwt.cmp' in dl[idx] or 'mfnwt' in dl[idx]:
+                elif "mfnwt.cmp" in dl[idx] or "mfnwt" in dl[idx]:
                     action = dirs[idx]
-                elif 'mfusg.cmp' in dl[idx] or 'mfusg' in dl[idx]:
+                elif "mfusg.cmp" in dl[idx] or "mfusg" in dl[idx]:
                     action = dirs[idx]
-                elif 'mf6.cmp' in dl[idx] or 'mf6' in dl[idx]:
+                elif "mf6.cmp" in dl[idx] or "mf6" in dl[idx]:
                     action = dirs[idx]
-                elif 'libmf6.cmp' in dl[idx] or 'libmf6' in dl[idx]:
+                elif "libmf6.cmp" in dl[idx] or "libmf6" in dl[idx]:
                     action = dirs[idx]
                 else:
                     action = dirs[idx]
                 break
     if action is not None:
-        dst = os.path.join(dst, '{}'.format(action))
+        dst = os.path.join(dst, "{}".format(action))
         if not os.path.isdir(dst):
             try:
                 os.mkdir(dst)
             except:
-                print('Could not make ' + dst)
+                print("Could not make " + dst)
         # clean directory
         else:
-            print('cleaning...{}'.format(dst))
+            print("cleaning...{}".format(dst))
             for root, dirs, files in os.walk(dst):
                 for f in files:
                     tpth = os.path.join(root, f)
-                    print('  removing...{}'.format(tpth))
+                    print("  removing...{}".format(tpth))
                     os.remove(tpth)
                 for d in dirs:
                     tdir = os.path.join(root, d)
-                    print('  removing...{}'.format(tdir))
+                    print("  removing...{}".format(tdir))
                     shutil.rmtree(tdir)
         # copy files
         cmppth = os.path.join(src, action)
         files = os.listdir(cmppth)
         files2copy = []
-        if action.lower() == '.cmp':
+        if action.lower() == ".cmp":
             for file in files:
-                if '.cmp' in os.path.splitext(file)[1].lower():
+                if ".cmp" in os.path.splitext(file)[1].lower():
                     files2copy.append(os.path.join(cmppth, file))
             for srcf in files2copy:
                 f = os.path.basename(srcf)
                 dstf = os.path.join(dst, f)
                 # Now copy the file
                 if os.path.exists(srcf):
-                    print('Copy file from/to ' + srcf + ' ' + dstf)
+                    print("Copy file from/to " + srcf + " " + dstf)
                     shutil.copy(srcf, dstf)
                 else:
-                    print(srcf + ' does not exist')
+                    print(srcf + " does not exist")
         else:
             for file in files:
-                if '.nam' in os.path.splitext(file)[1].lower():
+                if ".nam" in os.path.splitext(file)[1].lower():
                     files2copy.append(
-                        os.path.join(cmppth, os.path.basename(file)))
+                        os.path.join(cmppth, os.path.basename(file))
+                    )
                     nf = os.path.join(src, action, os.path.basename(file))
                     setup(nf, dst, remove_existing=remove_existing)
                     break
@@ -181,7 +194,7 @@ def teardown(src):
 
     """
     if os.path.exists(src):
-        print('Removing folder ' + src)
+        print("Removing folder " + src)
         shutil.rmtree(src)
     return
 
@@ -203,19 +216,19 @@ def get_input_files(namefile):
     srcdir = os.path.dirname(namefile)
     filelist = []
     fname = os.path.join(srcdir, namefile)
-    with open(fname, 'r') as f:
+    with open(fname, "r") as f:
         lines = f.readlines()
 
     for line in lines:
         ll = line.strip().split()
         if len(ll) < 2:
             continue
-        if line.strip()[0] in ['#', '!']:
+        if line.strip()[0] in ["#", "!"]:
             continue
         ext = os.path.splitext(ll[2])[1]
         if ext.lower() not in ignore_ext:
             if len(ll) > 3:
-                if 'replace' in ll[3].lower():
+                if "replace" in ll[3].lower():
                     continue
             filelist.append(ll[2])
 
@@ -226,26 +239,26 @@ def get_input_files(namefile):
     for fname in filelist:
         fname = os.path.join(srcdir, fname)
         try:
-            f = open(fname, 'r')
+            f = open(fname, "r")
             for line in f:
 
                 # Skip invalid lines
                 ll = line.strip().split()
                 if len(ll) < 2:
                     continue
-                if line.strip()[0] in ['#', '!']:
+                if line.strip()[0] in ["#", "!"]:
                     continue
 
-                if 'OPEN/CLOSE' in line.upper():
+                if "OPEN/CLOSE" in line.upper():
                     for i, s in enumerate(ll):
-                        if 'OPEN/CLOSE' in s.upper():
+                        if "OPEN/CLOSE" in s.upper():
                             stmp = ll[i + 1]
-                            stmp = stmp.replace('"', '')
-                            stmp = stmp.replace("'", '')
+                            stmp = stmp.replace('"', "")
+                            stmp = stmp.replace("'", "")
                             otherfiles.append(stmp)
                             break
         except:
-            print(fname + ' does not exist')
+            print(fname + " does not exist")
 
     filelist = filelist + otherfiles
 
@@ -270,8 +283,9 @@ def get_namefiles(pth, exclude=None):
     """
     namefiles = []
     for root, dirs, files in os.walk(pth):
-        namefiles += [os.path.join(root, file)
-                      for file in files if file.endswith('.nam')]
+        namefiles += [
+            os.path.join(root, file) for file in files if file.endswith(".nam")
+        ]
     if exclude is not None:
         if isinstance(exclude, str):
             exclude = [exclude]
@@ -310,16 +324,16 @@ def get_entries_from_namefile(namefile, ftype=None, unit=None, extension=None):
 
     """
     entries = []
-    f = open(namefile, 'r')
+    f = open(namefile, "r")
     for line in f:
-        if line.strip() == '':
+        if line.strip() == "":
             continue
-        if line[0] == '#':
+        if line[0] == "#":
             continue
         ll = line.strip().split()
         if len(ll) < 3:
             continue
-        status = 'UNKNOWN'
+        status = "UNKNOWN"
         if len(ll) > 3:
             status = ll[3].upper()
         if ftype is not None:
@@ -334,7 +348,7 @@ def get_entries_from_namefile(namefile, ftype=None, unit=None, extension=None):
             filename = os.path.join(os.path.split(namefile)[0], ll[2])
             ext = os.path.splitext(filename)[1]
             if len(ext) > 0:
-                if ext[0] == '.':
+                if ext[0] == ".":
                     ext = ext[1:]
                 if extension.lower() == ext.lower():
                     entries.append((filename, ll[0], ll[1], status))
@@ -372,21 +386,22 @@ def get_sim_name(namefiles, rootpth=None):
 
         # build dst with everything after the rootpth and before
         # the namefile file name.
-        dst = ''
+        dst = ""
         if idx < len(t):
-            for d in t[idx + 1:-1]:
-                dst += '{}_'.format(d)
+            for d in t[idx + 1 : -1]:
+                dst += "{}_".format(d)
 
         # add namefile basename without extension
-        dst += t[-1].replace('.nam', '')
+        dst += t[-1].replace(".nam", "")
         sim_name.append(dst)
 
     return sim_name
 
 
 # modflow 6 readers and copiers
-def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None,
-              remove_existing=True):
+def setup_mf6(
+    src, dst, mfnamefile="mfsim.nam", extrafiles=None, remove_existing=True
+):
     """Copy all of the MODFLOW 6 input files from the src directory to the dst
     directory.
 
@@ -418,7 +433,7 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None,
     create_dir = False
     if os.path.exists(dst):
         if remove_existing:
-            print('Removing folder ' + dst)
+            print("Removing folder " + dst)
             shutil.rmtree(dst)
             create_dir = True
     else:
@@ -436,10 +451,10 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None,
     exinp = []
     for f in mf6outp:
         ext = os.path.splitext(f)[1]
-        if ext.lower() == '.hds':
-            pth = os.path.join(src, f + '.ex')
+        if ext.lower() == ".hds":
+            pth = os.path.join(src, f + ".ex")
             if os.path.isfile(pth):
-                exinp.append(f + '.ex')
+                exinp.append(f + ".ex")
     if len(exinp) > 0:
         files2copy += exinp
     if extrafiles is not None:
@@ -457,14 +472,14 @@ def setup_mf6(src, dst, mfnamefile='mfsim.nam', extrafiles=None,
             try:
                 os.mkdir(sf)
             except:
-                print('Could not make ' + sf)
+                print("Could not make " + sf)
 
         # Now copy the file
         if os.path.exists(srcf):
-            print('Copy file from/to ' + srcf + ' ' + dstf)
+            print("Copy file from/to " + srcf + " " + dstf)
             shutil.copy(srcf, dstf)
         else:
-            print(srcf + ' does not exist')
+            print(srcf + " does not exist")
 
     return mf6inp, mf6outp
 
@@ -485,13 +500,22 @@ def get_mf6_comparison(src):
     """
     action = None
     # Possible comparison - the order matters
-    optcomp = ['compare', '.cmp',
-               'mf2005', 'mf2005.cmp',
-               'mfnwt', 'mfnwt.cmp',
-               'mfusg', 'mfusg.cmp',
-               'mflgr', 'mflgr.cmp',
-               'libmf6', 'libmf6.cmp',
-               'mf6', 'mf6.cmp']
+    optcomp = [
+        "compare",
+        ".cmp",
+        "mf2005",
+        "mf2005.cmp",
+        "mfnwt",
+        "mfnwt.cmp",
+        "mfusg",
+        "mfusg.cmp",
+        "mflgr",
+        "mflgr.cmp",
+        "libmf6",
+        "libmf6.cmp",
+        "mf6",
+        "mf6.cmp",
+    ]
     # Construct src pth from namefile
     action = None
     for root, dirs, files in os.walk(src):
@@ -526,45 +550,45 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
     action = get_mf6_comparison(src)
 
     if action is not None:
-        dst = os.path.join(dst, '{}'.format(action))
+        dst = os.path.join(dst, "{}".format(action))
         if not os.path.isdir(dst):
             try:
                 os.mkdir(dst)
             except:
-                print('Could not make ' + dst)
+                print("Could not make " + dst)
         # clean directory
         else:
-            print('cleaning...{}'.format(dst))
+            print("cleaning...{}".format(dst))
             for root, dirs, files in os.walk(dst):
                 for f in files:
                     tpth = os.path.join(root, f)
-                    print('  removing...{}'.format(tpth))
+                    print("  removing...{}".format(tpth))
                     os.remove(tpth)
                 for d in dirs:
                     tdir = os.path.join(root, d)
-                    print('  removing...{}'.format(tdir))
+                    print("  removing...{}".format(tdir))
                     shutil.rmtree(tdir)
         # copy files
         cmppth = os.path.join(src, action)
         files = os.listdir(cmppth)
         files2copy = []
-        if action.lower() == 'compare' or action.lower() == '.cmp':
+        if action.lower() == "compare" or action.lower() == ".cmp":
             for file in files:
-                if '.cmp' in os.path.splitext(file)[1].lower():
+                if ".cmp" in os.path.splitext(file)[1].lower():
                     files2copy.append(os.path.join(cmppth, file))
             for srcf in files2copy:
                 f = os.path.basename(srcf)
                 dstf = os.path.join(dst, f)
                 # Now copy the file
                 if os.path.exists(srcf):
-                    print('Copy file from/to ' + srcf + ' ' + dstf)
+                    print("Copy file from/to " + srcf + " " + dstf)
                     shutil.copy(srcf, dstf)
                 else:
-                    print(srcf + ' does not exist')
+                    print(srcf + " does not exist")
         else:
-            if 'mf6' in action.lower():
+            if "mf6" in action.lower():
                 for file in files:
-                    if 'mfsim.nam' in file.lower():
+                    if "mfsim.nam" in file.lower():
                         srcf = os.path.join(cmppth, os.path.basename(file))
                         files2copy.append(srcf)
                         srcdir = os.path.join(src, action)
@@ -572,7 +596,7 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
                         break
             else:
                 for file in files:
-                    if '.nam' in os.path.splitext(file)[1].lower():
+                    if ".nam" in os.path.splitext(file)[1].lower():
                         srcf = os.path.join(cmppth, os.path.basename(file))
                         files2copy.append(srcf)
                         nf = os.path.join(src, action, os.path.basename(file))
@@ -596,9 +620,9 @@ def get_mf6_nper(tdisfile):
         number of stress periods in the simulation
 
     """
-    with open(tdisfile, 'r') as f:
+    with open(tdisfile, "r") as f:
         lines = f.readlines()
-    line = [line for line in lines if 'NPER' in line.upper()][0]
+    line = [line for line in lines if "NPER" in line.upper()][0]
     nper = line.strip().split()[1]
     return nper
 
@@ -617,7 +641,7 @@ def get_mf6_mshape(disfile):
         tuple with the shape of the MODFLOW 6 model.
 
     """
-    with open(disfile, 'r') as f:
+    with open(disfile, "r") as f:
         lines = f.readlines()
 
     d = {}
@@ -627,22 +651,22 @@ def get_mf6_mshape(disfile):
         ll = line.strip().split()
         if len(ll) < 2:
             continue
-        if line.strip()[0] in ['#', '!']:
+        if line.strip()[0] in ["#", "!"]:
             continue
 
-        for key in ['NODES', 'NCPL', 'NLAY', 'NROW', 'NCOL']:
+        for key in ["NODES", "NCPL", "NLAY", "NROW", "NCOL"]:
             if ll[0].upper() in key:
                 d[key] = int(ll[1])
 
-    if 'NODES' in d:
-        mshape = (d['NODES'],)
-    elif 'NCPL' in d:
-        mshape = (d['NLAY'], d['NCPL'])
-    elif 'NLAY' in d:
-        mshape = (d['NLAY'], d['NROW'], d['NCOL'])
+    if "NODES" in d:
+        mshape = (d["NODES"],)
+    elif "NCPL" in d:
+        mshape = (d["NLAY"], d["NCPL"])
+    elif "NLAY" in d:
+        mshape = (d["NLAY"], d["NROW"], d["NCOL"])
     else:
         print(d)
-        raise Exception('Could not determine model shape')
+        raise Exception("Could not determine model shape")
     return mshape
 
 
@@ -667,9 +691,8 @@ def get_mf6_files(mfnamefile):
     filelist = []
     outplist = []
 
-    filekeys = ['TDIS6', 'GWF6', 'GWT', 'GWF6-GWF6', 'GWF-GWT',
-                'IMS6']
-    namefilekeys = ['GWF6', 'GWT']
+    filekeys = ["TDIS6", "GWF6", "GWT", "GWF6-GWF6", "GWF-GWT", "IMS6"]
+    namefilekeys = ["GWF6", "GWT"]
     namefiles = []
 
     with open(mfnamefile) as f:
@@ -683,7 +706,7 @@ def get_mf6_files(mfnamefile):
         ll = line.strip().split()
         if len(ll) < 2:
             continue
-        if line.strip()[0] in ['#', '!']:
+        if line.strip()[0] in ["#", "!"]:
             continue
 
         for key in filekeys:
@@ -699,7 +722,7 @@ def get_mf6_files(mfnamefile):
     # Go through name files and get files
     for namefile in namefiles:
         fname = os.path.join(srcdir, namefile)
-        with open(fname, 'r') as f:
+        with open(fname, "r") as f:
             lines = f.readlines()
         insideblock = False
 
@@ -707,17 +730,17 @@ def get_mf6_files(mfnamefile):
             ll = line.upper().strip().split()
             if len(ll) < 2:
                 continue
-            if ll[0] in 'BEGIN' and ll[1] in 'PACKAGES':
+            if ll[0] in "BEGIN" and ll[1] in "PACKAGES":
                 insideblock = True
                 continue
-            if ll[0] in 'END' and ll[1] in 'PACKAGES':
+            if ll[0] in "END" and ll[1] in "PACKAGES":
                 insideblock = False
 
             if insideblock:
                 ll = line.strip().split()
                 if len(ll) < 2:
                     continue
-                if line.strip()[0] in ['#', '!']:
+                if line.strip()[0] in ["#", "!"]:
                     continue
                 filelist.append(ll[1])
 
@@ -764,76 +787,76 @@ def _get_mf6_external_files(srcdir, outplist, files):
     for fname in files:
         fname = os.path.join(srcdir, fname)
         try:
-            f = open(fname, 'r')
+            f = open(fname, "r")
             for line in f:
 
                 # Skip invalid lines
                 ll = line.strip().split()
                 if len(ll) < 2:
                     continue
-                if line.strip()[0] in ['#', '!']:
+                if line.strip()[0] in ["#", "!"]:
                     continue
 
-                if 'OPEN/CLOSE' in line.upper():
+                if "OPEN/CLOSE" in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'OPEN/CLOSE':
+                        if s.upper() == "OPEN/CLOSE":
                             stmp = ll[i + 1]
-                            stmp = stmp.replace('"', '')
-                            stmp = stmp.replace("'", '')
+                            stmp = stmp.replace('"', "")
+                            stmp = stmp.replace("'", "")
                             extfiles.append(stmp)
                             break
 
-                if 'TS6' in line.upper():
+                if "TS6" in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'FILEIN':
+                        if s.upper() == "FILEIN":
                             stmp = ll[i + 1]
-                            stmp = stmp.replace('"', '')
-                            stmp = stmp.replace("'", '')
+                            stmp = stmp.replace('"', "")
+                            stmp = stmp.replace("'", "")
                             extfiles.append(stmp)
                             break
 
-                if 'TAS6' in line.upper():
+                if "TAS6" in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'FILEIN':
+                        if s.upper() == "FILEIN":
                             stmp = ll[i + 1]
-                            stmp = stmp.replace('"', '')
-                            stmp = stmp.replace("'", '')
+                            stmp = stmp.replace('"', "")
+                            stmp = stmp.replace("'", "")
                             extfiles.append(stmp)
                             break
 
-                if 'OBS6' in line.upper():
+                if "OBS6" in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'FILEIN':
+                        if s.upper() == "FILEIN":
                             stmp = ll[i + 1]
-                            stmp = stmp.replace('"', '')
-                            stmp = stmp.replace("'", '')
+                            stmp = stmp.replace('"', "")
+                            stmp = stmp.replace("'", "")
                             extfiles.append(stmp)
                             break
 
-                if 'EXTERNAL' in line.upper():
+                if "EXTERNAL" in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'EXTERNAL':
+                        if s.upper() == "EXTERNAL":
                             stmp = ll[i + 1]
-                            stmp = stmp.replace('"', '')
-                            stmp = stmp.replace("'", '')
+                            stmp = stmp.replace('"', "")
+                            stmp = stmp.replace("'", "")
                             extfiles.append(stmp)
                             break
 
-                if 'FILE' in line.upper():
+                if "FILE" in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'FILEIN':
+                        if s.upper() == "FILEIN":
                             stmp = ll[i + 1]
-                            stmp = stmp.replace('"', '')
-                            stmp = stmp.replace("'", '')
+                            stmp = stmp.replace('"', "")
+                            stmp = stmp.replace("'", "")
                             extfiles.append(stmp)
                             break
 
-                if 'FILE' in line.upper():
+                if "FILE" in line.upper():
                     for i, s in enumerate(ll):
-                        if s.upper() == 'FILEOUT':
+                        if s.upper() == "FILEOUT":
                             stmp = ll[i + 1]
-                            stmp = stmp.replace('"', '')
-                            stmp = stmp.replace("'", '')
+                            stmp = stmp.replace('"', "")
+                            stmp = stmp.replace("'", "")
                             outplist.append(stmp)
                             break
 
@@ -859,7 +882,7 @@ def get_mf6_ftypes(namefile, ftypekeys):
         list of FTYPES that match ftypekeys in namefile
 
     """
-    with open(namefile, 'r') as f:
+    with open(namefile, "r") as f:
         lines = f.readlines()
 
     ftypes = []
@@ -869,7 +892,7 @@ def get_mf6_ftypes(namefile, ftypekeys):
         ll = line.strip().split()
         if len(ll) < 2:
             continue
-        if line.strip()[0] in ['#', '!']:
+        if line.strip()[0] in ["#", "!"]:
             continue
 
         for key in ftypekeys:
@@ -900,14 +923,14 @@ def get_mf6_blockdata(f, blockstr):
 
     # find beginning of block
     for line in f:
-        if line[0] != '#':
+        if line[0] != "#":
             t = line.split()
-            if t[0].lower() == 'begin' and t[1].lower() == blockstr.lower():
+            if t[0].lower() == "begin" and t[1].lower() == blockstr.lower():
                 break
     for line in f:
-        if line[0] != '#':
+        if line[0] != "#":
             t = line.split()
-            if t[0].lower() == 'end' and t[1].lower() == blockstr.lower():
+            if t[0].lower() == "end" and t[1].lower() == blockstr.lower():
                 break
             else:
                 data.append(line.rstrip())
@@ -915,8 +938,15 @@ def get_mf6_blockdata(f, blockstr):
 
 
 # compare functions
-def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
-                   outfile=None, files1=None, files2=None):
+def compare_budget(
+    namefile1,
+    namefile2,
+    max_cumpd=0.01,
+    max_incpd=0.01,
+    outfile=None,
+    files1=None,
+    files2=None,
+):
     """Compare the budget results from two simulations.
 
     Parameters
@@ -936,49 +966,53 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     try:
         import flopy
     except:
-        msg = 'flopy not available - cannot use compare_budget'
+        msg = "flopy not available - cannot use compare_budget"
         raise ValueError(msg)
 
     # headers
-    headers = ('INCREMENTAL', 'CUMULATIVE')
-    dir = ('IN', 'OUT')
+    headers = ("INCREMENTAL", "CUMULATIVE")
+    dir = ("IN", "OUT")
 
     # Get name of list files
     list1 = None
     if files1 is None:
-        list = get_entries_from_namefile(namefile1, 'list')
+        list = get_entries_from_namefile(namefile1, "list")
         list1 = list[0][0]
     else:
         if isinstance(files1, str):
             files1 = [files1]
         for file in files1:
-            if 'list' in os.path.basename(
-                    file).lower() or 'lst' in os.path.basename(file).lower():
+            if (
+                "list" in os.path.basename(file).lower()
+                or "lst" in os.path.basename(file).lower()
+            ):
                 list1 = file
                 break
     list2 = None
     if files2 is None:
-        list = get_entries_from_namefile(namefile2, 'list')
+        list = get_entries_from_namefile(namefile2, "list")
         list2 = list[0][0]
     else:
         if isinstance(files2, str):
             files2 = [files2]
         for file in files2:
-            if 'list' in os.path.basename(
-                    file).lower() or 'lst' in os.path.basename(file).lower():
+            if (
+                "list" in os.path.basename(file).lower()
+                or "lst" in os.path.basename(file).lower()
+            ):
                 list2 = file
                 break
     # Determine if there are two files to compare
     if list1 is None or list2 is None:
-        print('list1 or list2 is None')
-        print('list1: {}'.format(list1))
-        print('list2: {}'.format(list2))
+        print("list1 or list2 is None")
+        print("list1: {}".format(list1))
+        print("list2: {}".format(list2))
         return True
 
     # Open output file
     if outfile is not None:
-        f = open(outfile, 'w')
-        f.write('Created by pymake.autotest.compare\n')
+        f = open(outfile, "w")
+        f.write("Created by pymake.autotest.compare\n")
 
     # Initialize SWR budget objects
     lst1obj = flopy.utils.MfusgListBudget(list1)
@@ -1009,13 +1043,13 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
             max_pd = max_cumpd
         else:
             max_pd = max_incpd
-        kper = lst1[idx]['stress_period']
-        kstp = lst1[idx]['time_step']
+        kper = lst1[idx]["stress_period"]
+        kstp = lst1[idx]["time_step"]
 
         # Process each time step
         for jdx in range(kper.shape[0]):
 
-            err[:] = 0.
+            err[:] = 0.0
             t0 = lst1[idx][jdx]
             t1 = lst2[idx][jdx]
 
@@ -1025,55 +1059,62 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                 for colname in t0.dtype.names:
                     maxcolname = max(maxcolname, len(colname))
 
-                s = 2 * '\n'
-                s += 'STRESS PERIOD: {} TIME STEP: {}'.format(kper[jdx] + 1,
-                                                              kstp[jdx] + 1)
+                s = 2 * "\n"
+                s += "STRESS PERIOD: {} TIME STEP: {}".format(
+                    kper[jdx] + 1, kstp[jdx] + 1
+                )
                 f.write(s)
 
                 if idx == 0:
-                    f.write('\nINCREMENTAL BUDGET\n')
+                    f.write("\nINCREMENTAL BUDGET\n")
                 else:
-                    f.write('\nCUMULATIVE BUDGET\n')
+                    f.write("\nCUMULATIVE BUDGET\n")
 
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
-                        s = '{:<21} {:>21} {:>21} {:>21}\n'.format(
-                            'Budget Entry',
-                            'Model 1',
-                            'Model 2',
-                            'Difference')
+                        s = "{:<21} {:>21} {:>21} {:>21}\n".format(
+                            "Budget Entry", "Model 1", "Model 2", "Difference"
+                        )
                         f.write(s)
-                        s = 87 * '-' + '\n'
+                        s = 87 * "-" + "\n"
                         f.write(s)
                     diff = t0[colname] - t1[colname]
-                    s = '{:<21} {:>21} {:>21} {:>21}\n'.format(colname,
-                                                               t0[colname],
-                                                               t1[colname],
-                                                               diff)
+                    s = "{:<21} {:>21} {:>21} {:>21}\n".format(
+                        colname, t0[colname], t1[colname], diff
+                    )
                     f.write(s)
 
-            v0[0] = t0['TOTAL_IN']
-            v1[0] = t1['TOTAL_IN']
-            if v0[0] > 0.:
-                err[0] = 100. * (v1[0] - v0[0]) / v0[0]
-            v0[1] = t0['TOTAL_OUT']
-            v1[1] = t1['TOTAL_OUT']
-            if v0[1] > 0.:
-                err[1] = 100. * (v1[1] - v0[1]) / v0[1]
+            v0[0] = t0["TOTAL_IN"]
+            v1[0] = t1["TOTAL_IN"]
+            if v0[0] > 0.0:
+                err[0] = 100.0 * (v1[0] - v0[0]) / v0[0]
+            v0[1] = t0["TOTAL_OUT"]
+            v1[1] = t1["TOTAL_OUT"]
+            if v0[1] > 0.0:
+                err[1] = 100.0 * (v1[1] - v0[1]) / v0[1]
             for kdx, t in enumerate(err):
                 if abs(t) > max_pd:
                     icnt += 1
                     if outfile is not None:
-                        e = '"{} {}" percent difference ({})'.format(
-                            headers[idx], dir[kdx], t) + \
-                            ' for stress period {} and time step {} > {}.'.format(
-                                kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
-                            ' Reference value = {}. Simulated value = {}.'.format(
-                                v0[kdx], v1[kdx])
-                        e = textwrap.fill(e, width=70, initial_indent='    ',
-                                          subsequent_indent='    ')
-                        f.write('{}\n'.format(e))
-                        f.write('\n')
+                        e = (
+                            '"{} {}" percent difference ({})'.format(
+                                headers[idx], dir[kdx], t
+                            )
+                            + " for stress period {} and time step {} > {}.".format(
+                                kper[jdx] + 1, kstp[jdx] + 1, max_pd
+                            )
+                            + " Reference value = {}. Simulated value = {}.".format(
+                                v0[kdx], v1[kdx]
+                            )
+                        )
+                        e = textwrap.fill(
+                            e,
+                            width=70,
+                            initial_indent="    ",
+                            subsequent_indent="    ",
+                        )
+                        f.write("{}\n".format(e))
+                        f.write("\n")
 
     # Close output file
     if outfile is not None:
@@ -1086,8 +1127,15 @@ def compare_budget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     return success
 
 
-def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
-                      outfile=None, files1=None, files2=None):
+def compare_swrbudget(
+    namefile1,
+    namefile2,
+    max_cumpd=0.01,
+    max_incpd=0.01,
+    outfile=None,
+    files1=None,
+    files2=None,
+):
     """Compare the SWR budget results from two simulations.
 
     Parameters
@@ -1104,36 +1152,39 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     -------
 
     """
-    import numpy as np
     try:
         import flopy
     except:
-        msg = 'flopy not available - cannot use compare_swrbudget'
+        msg = "flopy not available - cannot use compare_swrbudget"
         raise ValueError(msg)
 
     # headers
-    headers = ('INCREMENTAL', 'CUMULATIVE')
-    dir = ('IN', 'OUT')
+    headers = ("INCREMENTAL", "CUMULATIVE")
+    dir = ("IN", "OUT")
 
     # Get name of list files
     list1 = None
     if files1 is None:
-        lst = get_entries_from_namefile(namefile1, 'list')
+        lst = get_entries_from_namefile(namefile1, "list")
         list1 = lst[0][0]
     else:
         for file in files1:
-            if 'list' in os.path.basename(
-                    file).lower() or 'lst' in os.path.basename(file).lower():
+            if (
+                "list" in os.path.basename(file).lower()
+                or "lst" in os.path.basename(file).lower()
+            ):
                 list1 = file
                 break
     list2 = None
     if files2 is None:
-        lst = get_entries_from_namefile(namefile2, 'list')
+        lst = get_entries_from_namefile(namefile2, "list")
         list2 = lst[0][0]
     else:
         for file in files2:
-            if 'list' in os.path.basename(
-                    file).lower() or 'lst' in os.path.basename(file).lower():
+            if (
+                "list" in os.path.basename(file).lower()
+                or "lst" in os.path.basename(file).lower()
+            ):
                 list2 = file
                 break
     # Determine if there are two files to compare
@@ -1165,8 +1216,8 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
 
     # Open output file
     if outfile is not None:
-        f = open(outfile, 'w')
-        f.write('Created by pymake.autotest.compare\n')
+        f = open(outfile, "w")
+        f.write("Created by pymake.autotest.compare\n")
 
     # Process cumulative and incremental
     for idx in range(2):
@@ -1174,13 +1225,13 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
             max_pd = max_cumpd
         else:
             max_pd = max_incpd
-        kper = lst1[idx]['stress_period']
-        kstp = lst1[idx]['time_step']
+        kper = lst1[idx]["stress_period"]
+        kstp = lst1[idx]["time_step"]
 
         # Process each time step
         for jdx in range(kper.shape[0]):
 
-            err[:] = 0.
+            err[:] = 0.0
             t0 = lst1[idx][jdx]
             t1 = lst2[idx][jdx]
 
@@ -1190,54 +1241,61 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
                 for colname in t0.dtype.names:
                     maxcolname = max(maxcolname, len(colname))
 
-                s = 2 * '\n'
-                s += 'STRESS PERIOD: {} TIME STEP: {}'.format(kper[jdx] + 1,
-                                                              kstp[jdx] + 1)
+                s = 2 * "\n"
+                s += "STRESS PERIOD: {} TIME STEP: {}".format(
+                    kper[jdx] + 1, kstp[jdx] + 1
+                )
                 f.write(s)
 
                 if idx == 0:
-                    f.write('\nINCREMENTAL BUDGET\n')
+                    f.write("\nINCREMENTAL BUDGET\n")
                 else:
-                    f.write('\nCUMULATIVE BUDGET\n')
+                    f.write("\nCUMULATIVE BUDGET\n")
 
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
-                        s = '{:<21} {:>21} {:>21} {:>21}\n'.format(
-                            'Budget Entry',
-                            'Model 1',
-                            'Model 2',
-                            'Difference')
+                        s = "{:<21} {:>21} {:>21} {:>21}\n".format(
+                            "Budget Entry", "Model 1", "Model 2", "Difference"
+                        )
                         f.write(s)
-                        s = 87 * '-' + '\n'
+                        s = 87 * "-" + "\n"
                         f.write(s)
                     diff = t0[colname] - t1[colname]
-                    s = '{:<21} {:>21} {:>21} {:>21}\n'.format(colname,
-                                                               t0[colname],
-                                                               t1[colname],
-                                                               diff)
+                    s = "{:<21} {:>21} {:>21} {:>21}\n".format(
+                        colname, t0[colname], t1[colname], diff
+                    )
                     f.write(s)
 
-            v0[0] = t0['TOTAL_IN']
-            v1[0] = t1['TOTAL_IN']
-            if v0[0] > 0.:
-                err[0] = 100. * (v1[0] - v0[0]) / v0[0]
-            v0[1] = t0['TOTAL_OUT']
-            v1[1] = t1['TOTAL_OUT']
-            if v0[1] > 0.:
-                err[1] = 100. * (v1[1] - v0[1]) / v0[1]
+            v0[0] = t0["TOTAL_IN"]
+            v1[0] = t1["TOTAL_IN"]
+            if v0[0] > 0.0:
+                err[0] = 100.0 * (v1[0] - v0[0]) / v0[0]
+            v0[1] = t0["TOTAL_OUT"]
+            v1[1] = t1["TOTAL_OUT"]
+            if v0[1] > 0.0:
+                err[1] = 100.0 * (v1[1] - v0[1]) / v0[1]
             for kdx, t in enumerate(err):
                 if abs(t) > max_pd:
                     icnt += 1
-                    e = '"{} {}" percent difference ({})'.format(headers[idx],
-                                                                 dir[kdx], t) + \
-                        ' for stress period {} and time step {} > {}.'.format(
-                            kper[jdx] + 1, kstp[jdx] + 1, max_pd) + \
-                        ' Reference value = {}. Simulated value = {}.'.format(
-                            v0[kdx], v1[kdx])
-                    e = textwrap.fill(e, width=70, initial_indent='    ',
-                                      subsequent_indent='    ')
-                    f.write('{}\n'.format(e))
-                    f.write('\n')
+                    e = (
+                        '"{} {}" percent difference ({})'.format(
+                            headers[idx], dir[kdx], t
+                        )
+                        + " for stress period {} and time step {} > {}.".format(
+                            kper[jdx] + 1, kstp[jdx] + 1, max_pd
+                        )
+                        + " Reference value = {}. Simulated value = {}.".format(
+                            v0[kdx], v1[kdx]
+                        )
+                    )
+                    e = textwrap.fill(
+                        e,
+                        width=70,
+                        initial_indent="    ",
+                        subsequent_indent="    ",
+                    )
+                    f.write("{}\n".format(e))
+                    f.write("\n")
 
     # Close output file
     if outfile is not None:
@@ -1250,11 +1308,22 @@ def compare_swrbudget(namefile1, namefile2, max_cumpd=0.01, max_incpd=0.01,
     return success
 
 
-def compare_heads(namefile1, namefile2, precision='auto',
-                  text='head', text2=None,
-                  htol=0.001, outfile=None, files1=None, files2=None,
-                  difftol=False, verbose=False, exfile=None, exarr=None,
-                  maxerr=None):
+def compare_heads(
+    namefile1,
+    namefile2,
+    precision="auto",
+    text="head",
+    text2=None,
+    htol=0.001,
+    outfile=None,
+    files1=None,
+    files2=None,
+    difftol=False,
+    verbose=False,
+    exfile=None,
+    exarr=None,
+    maxerr=None,
+):
     """Compare the head results from two simulations.
 
     Parameters
@@ -1281,28 +1350,29 @@ def compare_heads(namefile1, namefile2, precision='auto',
     try:
         import flopy
     except:
-        msg = 'flopy not available - cannot use compare_heads'
+        msg = "flopy not available - cannot use compare_heads"
         raise ValueError(msg)
 
     if text2 is None:
         text2 = text
 
-    dbs = 'DATA(BINARY)'
+    dbs = "DATA(BINARY)"
 
     # Get head info for namefile1
     hfpth1 = None
     status1 = dbs
     if files1 is None:
         # Get oc info, and return if OC not included in models
-        ocf1 = get_entries_from_namefile(namefile1, 'OC')
+        ocf1 = get_entries_from_namefile(namefile1, "OC")
         if ocf1[0][0] is None:
             return True
 
         hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(
-            ocf1[0][0])
-        if text.lower() == 'head':
+            ocf1[0][0]
+        )
+        if text.lower() == "head":
             iut = hu1
-        elif text.lower() == 'drawdown':
+        elif text.lower() == "drawdown":
             iut = du1
         if iut != 0:
             entries = get_entries_from_namefile(namefile1, unit=abs(iut))
@@ -1312,17 +1382,19 @@ def compare_heads(namefile1, namefile2, precision='auto',
         if isinstance(files1, str):
             files1 = [files1]
         for file in files1:
-            if text.lower() == 'head':
-                if 'hds' in os.path.basename(file).lower() or \
-                        'hed' in os.path.basename(file).lower():
+            if text.lower() == "head":
+                if (
+                    "hds" in os.path.basename(file).lower()
+                    or "hed" in os.path.basename(file).lower()
+                ):
                     hfpth1 = file
                     break
-            elif text.lower() == 'drawdown':
-                if 'ddn' in os.path.basename(file).lower():
+            elif text.lower() == "drawdown":
+                if "ddn" in os.path.basename(file).lower():
                     hfpth1 = file
                     break
-            elif text.lower() == 'concentration':
-                if 'ucn' in os.path.basename(file).lower():
+            elif text.lower() == "concentration":
+                if "ucn" in os.path.basename(file).lower():
                     hfpth1 = file
                     break
             else:
@@ -1334,15 +1406,16 @@ def compare_heads(namefile1, namefile2, precision='auto',
     status2 = dbs
     if files2 is None:
         # Get oc info, and return if OC not included in models
-        ocf2 = get_entries_from_namefile(namefile2, 'OC')
+        ocf2 = get_entries_from_namefile(namefile2, "OC")
         if ocf2[0][0] is None:
             return True
 
         hu2, hfpth2, du2, dfpth2 = flopy.modflow.ModflowOc.get_ocoutput_units(
-            ocf2[0][0])
-        if text.lower() == 'head':
+            ocf2[0][0]
+        )
+        if text.lower() == "head":
             iut = hu2
-        elif text.lower() == 'drawdown':
+        elif text.lower() == "drawdown":
             iut = du2
         if iut != 0:
             entries = get_entries_from_namefile(namefile2, unit=abs(iut))
@@ -1351,17 +1424,19 @@ def compare_heads(namefile1, namefile2, precision='auto',
         if isinstance(files2, str):
             files2 = [files2]
         for file in files2:
-            if text2.lower() == 'head':
-                if 'hds' in os.path.basename(file).lower() or \
-                        'hed' in os.path.basename(file).lower():
+            if text2.lower() == "head":
+                if (
+                    "hds" in os.path.basename(file).lower()
+                    or "hed" in os.path.basename(file).lower()
+                ):
                     hfpth2 = file
                     break
-            elif text2.lower() == 'drawdown':
-                if 'ddn' in os.path.basename(file).lower():
+            elif text2.lower() == "drawdown":
+                if "ddn" in os.path.basename(file).lower():
                     hfpth2 = file
                     break
-            elif text2.lower() == 'concentration':
-                if 'ucn' in os.path.basename(file).lower():
+            elif text2.lower() == "concentration":
+                if "ucn" in os.path.basename(file).lower():
                     hfpth2 = file
                     break
             else:
@@ -1370,42 +1445,45 @@ def compare_heads(namefile1, namefile2, precision='auto',
 
     # confirm that there are two files to compare
     if hfpth1 is None or hfpth2 is None:
-        print('hfpth1 or hfpth2 is None')
-        print('hfpth1: {}'.format(hfpth1))
-        print('hfpth2: {}'.format(hfpth2))
+        print("hfpth1 or hfpth2 is None")
+        print("hfpth1: {}".format(hfpth1))
+        print("hfpth2: {}".format(hfpth2))
         return True
 
     # make sure the file paths exist
     if not os.path.isfile(hfpth1) or not os.path.isfile(hfpth2):
-        print('hfpth1 or hfpth2 is not a file')
-        print('hfpth1 isfile: {}'.format(os.path.isfile(hfpth1)))
-        print('hfpth2 isfile: {}'.format(os.path.isfile(hfpth2)))
+        print("hfpth1 or hfpth2 is not a file")
+        print("hfpth1 isfile: {}".format(os.path.isfile(hfpth1)))
+        print("hfpth2 isfile: {}".format(os.path.isfile(hfpth2)))
         return False
 
     # Open output file
     if outfile is not None:
-        f = open(outfile, 'w')
-        f.write('Created by pymake.autotest.compare\n')
-        f.write('Performing {} to {} comparison\n'.format(text.upper(),
-                                                          text2.upper()))
+        f = open(outfile, "w")
+        f.write("Created by pymake.autotest.compare\n")
+        f.write(
+            "Performing {} to {} comparison\n".format(
+                text.upper(), text2.upper()
+            )
+        )
 
         if exfile is not None:
-            f.write('Using exclusion file {}\n'.format(exfile))
+            f.write("Using exclusion file {}\n".format(exfile))
         if exarr is not None:
-            f.write('Using exclusion array\n')
+            f.write("Using exclusion array\n")
 
-        msg = '{} is a '.format(hfpth1)
+        msg = "{} is a ".format(hfpth1)
         if status1 == dbs:
-            msg += 'binary file.'
+            msg += "binary file."
         else:
-            msg += 'ascii file.'
-        f.write(msg + '\n')
-        msg = '{} is a '.format(hfpth2)
+            msg += "ascii file."
+        f.write(msg + "\n")
+        msg = "{} is a ".format(hfpth2)
         if status2 == dbs:
-            msg += 'binary file.'
+            msg += "binary file."
         else:
-            msg += 'ascii file.'
-        f.write(msg + '\n')
+            msg += "ascii file."
+        f.write(msg + "\n")
 
     # Process exclusion data
     exd = None
@@ -1416,12 +1494,13 @@ def compare_heads(namefile1, namefile2, precision='auto',
             try:
                 exd = np.genfromtxt(exfile).flatten()
             except:
-                e = 'Could not read exclusion ' + \
-                    'file {}'.format(os.path.basename(exfile))
+                e = "Could not read exclusion " + "file {}".format(
+                    os.path.basename(exfile)
+                )
                 print(e)
                 return False
         else:
-            e = 'exfile is not a valid file path'
+            e = "exfile is not a valid file path"
             print(e)
             return False
 
@@ -1434,7 +1513,7 @@ def compare_heads(namefile1, namefile2, precision='auto',
             else:
                 exd += exarr.flatten()
         else:
-            e = 'exarr is not a numpy array'
+            e = "exarr is not a numpy array"
             print(e)
             return False
 
@@ -1442,54 +1521,63 @@ def compare_heads(namefile1, namefile2, precision='auto',
     status1 = status1.upper()
     unstructured1 = False
     if status1 == dbs:
-        headobj1 = flopy.utils.HeadFile(hfpth1, precision=precision,
-                                        verbose=verbose, text=text)
-        txt = headobj1.recordarray['text'][0]
+        headobj1 = flopy.utils.HeadFile(
+            hfpth1, precision=precision, verbose=verbose, text=text
+        )
+        txt = headobj1.recordarray["text"][0]
         if isinstance(txt, bytes):
-            txt = txt.decode('utf-8')
-        if 'HEADU' in txt:
+            txt = txt.decode("utf-8")
+        if "HEADU" in txt:
             unstructured1 = True
-            headobj1 = flopy.utils.HeadUFile(hfpth1, precision=precision,
-                                             verbose=verbose)
+            headobj1 = flopy.utils.HeadUFile(
+                hfpth1, precision=precision, verbose=verbose
+            )
     else:
-        headobj1 = flopy.utils.FormattedHeadFile(hfpth1, verbose=verbose,
-                                                 text=text)
+        headobj1 = flopy.utils.FormattedHeadFile(
+            hfpth1, verbose=verbose, text=text
+        )
 
     status2 = status2.upper()
     unstructured2 = False
     if status2 == dbs:
-        headobj2 = flopy.utils.HeadFile(hfpth2, precision=precision,
-                                        verbose=verbose, text=text2)
-        txt = headobj2.recordarray['text'][0]
+        headobj2 = flopy.utils.HeadFile(
+            hfpth2, precision=precision, verbose=verbose, text=text2
+        )
+        txt = headobj2.recordarray["text"][0]
         if isinstance(txt, bytes):
-            txt = txt.decode('utf-8')
-        if 'HEADU' in txt:
+            txt = txt.decode("utf-8")
+        if "HEADU" in txt:
             unstructured2 = True
-            headobj2 = flopy.utils.HeadUFile(hfpth2, precision=precision,
-                                             verbose=verbose)
+            headobj2 = flopy.utils.HeadUFile(
+                hfpth2, precision=precision, verbose=verbose
+            )
     else:
-        headobj2 = flopy.utils.FormattedHeadFile(hfpth2, verbose=verbose,
-                                                 text=text2)
+        headobj2 = flopy.utils.FormattedHeadFile(
+            hfpth2, verbose=verbose, text=text2
+        )
 
     # get times
     times1 = headobj1.get_times()
     times2 = headobj2.get_times()
     for (t1, t2) in zip(times1, times2):
-        assert np.allclose([t1], [t2]), 'times in two head files are not ' + \
-                                        'equal ({},{})'.format(t1, t2)
+        assert np.allclose(
+            [t1], [t2]
+        ), "times in two head files are not " + "equal ({},{})".format(t1, t2)
 
     kstpkper = headobj1.get_kstpkper()
 
-    header = '{:>15s} {:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', 'MAXIMUM',
-                                                        'EXCEEDS') + \
-             '{:>15s} {:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD',
-                                                        'TIME STEP',
-                                                        'HEAD DIFFERENCE',
-                                                        'CRITERIA') + \
-             '{0:>15s} {0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
+    header = (
+        "{:>15s} {:>15s} {:>15s} {:>15s}\n".format(
+            " ", " ", "MAXIMUM", "EXCEEDS"
+        )
+        + "{:>15s} {:>15s} {:>15s} {:>15s}\n".format(
+            "STRESS PERIOD", "TIME STEP", "HEAD DIFFERENCE", "CRITERIA"
+        )
+        + "{0:>15s} {0:>15s} {0:>15s} {0:>15s}\n".format(15 * "-")
+    )
 
     if verbose:
-        print('Comparing results for {} times'.format(len(times1)))
+        print("Comparing results for {} times".format(len(times1)))
 
     icnt = 0
     # Process cumulative and incremental
@@ -1510,16 +1598,18 @@ def compare_heads(namefile1, namefile2, precision='auto',
         if exd is not None:
             # reshape exd to the shape of the head arrays
             if idx == 0:
-                e = 'shape of exclusion data ({})'.format(exd.shape) + \
-                    'can not be reshaped to the size of the ' + \
-                    'head arrays ({})'.format(h1.shape)
+                e = (
+                    "shape of exclusion data ({})".format(exd.shape)
+                    + "can not be reshaped to the size of the "
+                    + "head arrays ({})".format(h1.shape)
+                )
                 assert h1.flatten().shape == exd.shape, e
                 exd = exd.reshape(h1.shape)
                 iexd = exd > 0
 
             # reset h1 and h2 to the same value in the excluded area
-            h1[iexd] = 0.
-            h2[iexd] = 0.
+            h1[iexd] = 0.0
+            h2[iexd] = 0.0
 
         if difftol:
             diffmax, indices = calculate_difftol(h1, h2, htol)
@@ -1530,37 +1620,47 @@ def compare_heads(namefile1, namefile2, precision='auto',
             if idx < 1:
                 f.write(header)
             if diffmax > htol:
-                sexceed = '*'
+                sexceed = "*"
             else:
-                sexceed = ''
+                sexceed = ""
             kk1 = kstpkper[idx][1] + 1
             kk0 = kstpkper[idx][0] + 1
-            f.write('{:15d} {:15d} {:15.6g} {:15s}\n'.format(kk1, kk0,
-                                                             diffmax,
-                                                             sexceed))
+            f.write(
+                "{:15d} {:15d} {:15.6g} {:15s}\n".format(
+                    kk1, kk0, diffmax, sexceed
+                )
+            )
 
         if diffmax >= htol:
             icnt += 1
             if outfile is not None:
                 if difftol:
-                    ee = 'Maximum absolute head difference ' + \
-                         '({}) -- '.format(diffmax) + \
-                         '{} tolerance exceeded at '.format(htol) + \
-                         '{} node location(s)'.format(indices[0].shape[0])
+                    ee = (
+                        "Maximum absolute head difference "
+                        + "({}) -- ".format(diffmax)
+                        + "{} tolerance exceeded at ".format(htol)
+                        + "{} node location(s)".format(indices[0].shape[0])
+                    )
                 else:
-                    ee = 'Maximum absolute head difference ' + \
-                         '({}) exceeded '.format(diffmax) + \
-                         'at {} node location(s)'.format(indices[0].shape[0])
-                e = textwrap.fill(ee + ':', width=70, initial_indent='  ',
-                                  subsequent_indent='  ')
+                    ee = (
+                        "Maximum absolute head difference "
+                        + "({}) exceeded ".format(diffmax)
+                        + "at {} node location(s)".format(indices[0].shape[0])
+                    )
+                e = textwrap.fill(
+                    ee + ":",
+                    width=70,
+                    initial_indent="  ",
+                    subsequent_indent="  ",
+                )
 
                 if verbose:
-                    f.write('{}\n'.format(ee))
-                    print(ee + ' at time {}'.format(times1[idx]))
+                    f.write("{}\n".format(ee))
+                    print(ee + " at time {}".format(times1[idx]))
 
-                e = ''
+                e = ""
                 ncells = h1.flatten().shape[0]
-                fmtn = '{:' + '{}'.format(len(str(ncells))) + 'd}'
+                fmtn = "{:" + "{}".format(len(str(ncells))) + "d}"
                 for itupe in indices:
                     for jdx, ind in enumerate(itupe):
                         iv = np.unravel_index(ind, h1.shape)
@@ -1570,21 +1670,21 @@ def compare_heads(namefile1, namefile2, precision='auto',
                         d12 = v1 - v2
                         # e += '    ' + fmtn.format(jdx + 1) + ' node: '
                         # e += fmtn.format(ind + 1)  # convert to one-based
-                        e += '    ' + fmtn.format(jdx + 1)
-                        e += ' {}'.format(iv)
-                        e += ' -- '
-                        e += 'h1: {:20} '.format(v1)
-                        e += 'h2: {:20} '.format(v2)
-                        e += 'diff: {:20}\n'.format(d12)
+                        e += "    " + fmtn.format(jdx + 1)
+                        e += " {}".format(iv)
+                        e += " -- "
+                        e += "h1: {:20} ".format(v1)
+                        e += "h2: {:20} ".format(v2)
+                        e += "diff: {:20}\n".format(d12)
                         if isinstance(maxerr, int):
                             if jdx + 1 >= maxerr:
                                 break
                     if verbose:
-                        f.write('{}\n'.format(e))
+                        f.write("{}\n".format(e))
                 # Write header again, unless it is the last record
                 if verbose:
                     if idx + 1 < len(times1):
-                        f.write('\n{}'.format(header))
+                        f.write("\n{}".format(header))
 
     # Close output file
     if outfile is not None:
@@ -1597,9 +1697,17 @@ def compare_heads(namefile1, namefile2, precision='auto',
     return success
 
 
-def compare_concs(namefile1, namefile2, precision='auto',
-                  ctol=0.001, outfile=None, files1=None, files2=None,
-                  difftol=False, verbose=False):
+def compare_concs(
+    namefile1,
+    namefile2,
+    precision="auto",
+    ctol=0.001,
+    outfile=None,
+    files1=None,
+    files2=None,
+    difftol=False,
+    verbose=False,
+):
     """Compare the mt3dms concentration results from two simulations.
 
     Parameters
@@ -1618,15 +1726,14 @@ def compare_concs(namefile1, namefile2, precision='auto',
     -------
 
     """
-    import numpy as np
     try:
         import flopy
     except:
-        msg = 'flopy not available - cannot use compare_concs'
+        msg = "flopy not available - cannot use compare_concs"
         raise ValueError(msg)
 
     # list of valid extensions
-    valid_ext = ['ucn']
+    valid_ext = ["ucn"]
 
     # Get info for first ucn file
     ufpth1 = None
@@ -1638,7 +1745,7 @@ def compare_concs(namefile1, namefile2, precision='auto',
                 ufpth1 = ufpth
                 break
         if ufpth1 is None:
-            ufpth1 = os.path.join(os.path.dirname(namefile1), 'MT3D001.UCN')
+            ufpth1 = os.path.join(os.path.dirname(namefile1), "MT3D001.UCN")
     else:
         if isinstance(files1, str):
             files1 = [files1]
@@ -1658,7 +1765,7 @@ def compare_concs(namefile1, namefile2, precision='auto',
                 ufpth2 = ufpth
                 break
         if ufpth2 is None:
-            ufpth2 = os.path.join(os.path.dirname(namefile2), 'MT3D001.UCN')
+            ufpth2 = os.path.join(os.path.dirname(namefile2), "MT3D001.UCN")
     else:
         if isinstance(files2, str):
             files2 = [files2]
@@ -1671,22 +1778,22 @@ def compare_concs(namefile1, namefile2, precision='auto',
     # confirm that there are two files to compare
     if ufpth1 is None or ufpth2 is None:
         if ufpth1 is None:
-            print('  UCN file 1 not set')
+            print("  UCN file 1 not set")
         if ufpth2 is None:
-            print('  UCN file 2 not set')
+            print("  UCN file 2 not set")
         return True
 
     if not os.path.isfile(ufpth1) or not os.path.isfile(ufpth2):
         if not os.path.isfile(ufpth1):
-            print('  {} does not exist'.format(ufpth1))
+            print("  {} does not exist".format(ufpth1))
         if not os.path.isfile(ufpth2):
-            print('  {} does not exist'.format(ufpth2))
+            print("  {} does not exist".format(ufpth2))
         return True
 
     # Open output file
     if outfile is not None:
-        f = open(outfile, 'w')
-        f.write('Created by pymake.autotest.compare_concs\n')
+        f = open(outfile, "w")
+        f.write("Created by pymake.autotest.compare_concs\n")
 
     # Get stage objects
     uobj1 = flopy.utils.UcnFile(ufpth1, precision=precision, verbose=verbose)
@@ -1700,21 +1807,25 @@ def compare_concs(namefile1, namefile2, precision='auto',
     nt = min(nt1, nt2)
 
     for (t1, t2) in zip(times1, times2):
-        assert np.allclose([t1], [t2]), 'times in two ucn files are not ' + \
-                                        'equal ({},{})'.format(t1, t2)
+        assert np.allclose(
+            [t1], [t2]
+        ), "times in two ucn files are not " + "equal ({},{})".format(t1, t2)
 
     if nt == nt1:
         kstpkper = uobj1.get_kstpkper()
     else:
         kstpkper = uobj2.get_kstpkper()
 
-    header = '{:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', 'MAXIMUM') + \
-             '{:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD', 'TIME STEP',
-                                                'CONC DIFFERENCE') + \
-             '{0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
+    header = (
+        "{:>15s} {:>15s} {:>15s}\n".format(" ", " ", "MAXIMUM")
+        + "{:>15s} {:>15s} {:>15s}\n".format(
+            "STRESS PERIOD", "TIME STEP", "CONC DIFFERENCE"
+        )
+        + "{0:>15s} {0:>15s} {0:>15s}\n".format(15 * "-")
+    )
 
     if verbose:
-        print('Comparing results for {} times'.format(len(times1)))
+        print("Comparing results for {} times".format(len(times1)))
 
     icnt = 0
     # Process cumulative and incremental
@@ -1731,41 +1842,57 @@ def compare_concs(namefile1, namefile2, precision='auto',
             if outfile is not None:
                 if idx < 1:
                     f.write(header)
-                f.write('{:15d} {:15d} {:15.6g}\n'.format(kstpkper[idx][1] + 1,
-                                                          kstpkper[idx][0] + 1,
-                                                          diffmax))
+                f.write(
+                    "{:15d} {:15d} {:15.6g}\n".format(
+                        kstpkper[idx][1] + 1, kstpkper[idx][0] + 1, diffmax
+                    )
+                )
 
             if diffmax >= ctol:
                 icnt += 1
                 if outfile is not None:
                     if difftol:
-                        ee = 'Maximum concentration difference ({})'.format(
-                            diffmax) + \
-                             ' -- {} tolerance exceeded at '.format(ctol) + \
-                             '{} node location(s)'.format(indices[0].shape[0])
+                        ee = (
+                            "Maximum concentration difference ({})".format(
+                                diffmax
+                            )
+                            + " -- {} tolerance exceeded at ".format(ctol)
+                            + "{} node location(s)".format(indices[0].shape[0])
+                        )
                     else:
-                        ee = 'Maximum concentration difference ' + \
-                             '({}) exceeded '.format(diffmax) + \
-                             'at {} node location(s)'.format(
-                                 indices[0].shape[0])
-                    e = textwrap.fill(ee + ':', width=70, initial_indent='  ',
-                                      subsequent_indent='  ')
-                    f.write('{}\n'.format(e))
+                        ee = (
+                            "Maximum concentration difference "
+                            + "({}) exceeded ".format(diffmax)
+                            + "at {} node location(s)".format(
+                                indices[0].shape[0]
+                            )
+                        )
+                    e = textwrap.fill(
+                        ee + ":",
+                        width=70,
+                        initial_indent="  ",
+                        subsequent_indent="  ",
+                    )
+                    f.write("{}\n".format(e))
                     if verbose:
-                        print(ee + ' at time {}'.format(time))
-                    e = ''
+                        print(ee + " at time {}".format(time))
+                    e = ""
                     for itupe in indices:
                         for ind in itupe:
-                            e += '{} '.format(ind + 1)  # convert to one-based
-                    e = textwrap.fill(e, width=70, initial_indent='    ',
-                                      subsequent_indent='    ')
-                    f.write('{}\n'.format(e))
+                            e += "{} ".format(ind + 1)  # convert to one-based
+                    e = textwrap.fill(
+                        e,
+                        width=70,
+                        initial_indent="    ",
+                        subsequent_indent="    ",
+                    )
+                    f.write("{}\n".format(e))
                     # Write header again, unless it is the last record
                     if idx + 1 < len(times1):
-                        f.write('\n{}'.format(header))
+                        f.write("\n{}".format(header))
         except:
-            print('  could not process time={}'.format(time))
-            print('  terminating ucn processing...')
+            print("  could not process time={}".format(time))
+            print("  terminating ucn processing...")
             break
 
     # Close output file
@@ -1779,8 +1906,16 @@ def compare_concs(namefile1, namefile2, precision='auto',
     return success
 
 
-def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
-                   htol=0.001, outfile=None, difftol=False, verbose=False):
+def compare_stages(
+    namefile1=None,
+    namefile2=None,
+    files1=None,
+    files2=None,
+    htol=0.001,
+    outfile=None,
+    difftol=False,
+    verbose=False,
+):
     """Compare SWR process stage results from two simulations.
 
     Parameters
@@ -1801,11 +1936,11 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
     try:
         import flopy
     except:
-        msg = 'flopy not available - cannot use compare_stages'
+        msg = "flopy not available - cannot use compare_stages"
         raise ValueError(msg)
 
     # list of valid extensions
-    valid_ext = ['stg']
+    valid_ext = ["stg"]
 
     # Get info for first stage file
     sfpth1 = None
@@ -1845,21 +1980,21 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
 
     # confirm that there are two files to compare
     if sfpth1 is None or sfpth2 is None:
-        print('spth1 or spth2 is None')
-        print('spth1: {}'.format(sfpth1))
-        print('spth2: {}'.format(sfpth2))
+        print("spth1 or spth2 is None")
+        print("spth1: {}".format(sfpth1))
+        print("spth2: {}".format(sfpth2))
         return False
 
     if not os.path.isfile(sfpth1) or not os.path.isfile(sfpth2):
-        print('spth1 or spth2 is not a file')
-        print('spth1 isfile: {}'.format(os.path.isfile(sfpth1)))
-        print('spth2 isfile: {}'.format(os.path.isfile(sfpth2)))
+        print("spth1 or spth2 is not a file")
+        print("spth1 isfile: {}".format(os.path.isfile(sfpth1)))
+        print("spth2 isfile: {}".format(os.path.isfile(sfpth2)))
         return False
 
     # Open output file
     if outfile is not None:
-        f = open(outfile, 'w')
-        f.write('Created by pymake.autotest.compare_stages\n')
+        f = open(outfile, "w")
+        f.write("Created by pymake.autotest.compare_stages\n")
 
     # Get stage objects
     sobj1 = flopy.utils.SwrStage(sfpth1, verbose=verbose)
@@ -1871,16 +2006,16 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
     # get kswr, kstp, and kper
     kk = sobj1.get_kswrkstpkper()
 
-    header = '{:>15s} {:>15s} {:>15s} {:>15s}\n'.format(' ', ' ', ' ',
-                                                        'MAXIMUM') + \
-             '{:>15s} {:>15s} {:>15s} {:>15s}\n'.format('STRESS PERIOD',
-                                                        'TIME STEP',
-                                                        'SWR TIME STEP',
-                                                        'STAGE DIFFERENCE') + \
-             '{0:>15s} {0:>15s} {0:>15s} {0:>15s}\n'.format(15 * '-')
+    header = (
+        "{:>15s} {:>15s} {:>15s} {:>15s}\n".format(" ", " ", " ", "MAXIMUM")
+        + "{:>15s} {:>15s} {:>15s} {:>15s}\n".format(
+            "STRESS PERIOD", "TIME STEP", "SWR TIME STEP", "STAGE DIFFERENCE"
+        )
+        + "{0:>15s} {0:>15s} {0:>15s} {0:>15s}\n".format(15 * "-")
+    )
 
     if verbose:
-        print('Comparing results for {} times'.format(len(times1)))
+        print("Comparing results for {} times".format(len(times1)))
 
     icnt = 0
     # Process stage data
@@ -1891,8 +2026,8 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
         if s1 is None or s2 is None:
             continue
 
-        s1 = s1['stage']
-        s2 = s2['stage']
+        s1 = s1["stage"]
+        s2 = s2["stage"]
 
         if difftol:
             diffmax, indices = calculate_difftol(s1, s2, htol)
@@ -1902,37 +2037,50 @@ def compare_stages(namefile1=None, namefile2=None, files1=None, files2=None,
         if outfile is not None:
             if idx < 1:
                 f.write(header)
-            f.write('{:15d} {:15d} {:15d} {:15.6g}\n'.format(kon[2] + 1,
-                                                             kon[1] + 1,
-                                                             kon[0] + 1,
-                                                             diffmax))
+            f.write(
+                "{:15d} {:15d} {:15d} {:15.6g}\n".format(
+                    kon[2] + 1, kon[1] + 1, kon[0] + 1, diffmax
+                )
+            )
 
         if diffmax >= htol:
             icnt += 1
             if outfile is not None:
                 if difftol:
-                    ee = 'Maximum head difference ({}) -- '.format(diffmax) + \
-                         '{} tolerance exceeded at '.format(htol) + \
-                         '{} node location(s)'.format(indices[0].shape[0])
+                    ee = (
+                        "Maximum head difference ({}) -- ".format(diffmax)
+                        + "{} tolerance exceeded at ".format(htol)
+                        + "{} node location(s)".format(indices[0].shape[0])
+                    )
                 else:
-                    ee = 'Maximum head difference ' + \
-                         '({}) exceeded '.format(diffmax) + \
-                         'at {} node location(s):'.format(indices[0].shape[0])
-                e = textwrap.fill(ee + ':', width=70, initial_indent='  ',
-                                  subsequent_indent='  ')
-                f.write('{}\n'.format(e))
+                    ee = (
+                        "Maximum head difference "
+                        + "({}) exceeded ".format(diffmax)
+                        + "at {} node location(s):".format(indices[0].shape[0])
+                    )
+                e = textwrap.fill(
+                    ee + ":",
+                    width=70,
+                    initial_indent="  ",
+                    subsequent_indent="  ",
+                )
+                f.write("{}\n".format(e))
                 if verbose:
-                    print(ee + ' at time {}'.format(time))
-                e = ''
+                    print(ee + " at time {}".format(time))
+                e = ""
                 for itupe in indices:
                     for ind in itupe:
-                        e += '{} '.format(ind + 1)  # convert to one-based
-                e = textwrap.fill(e, width=70, initial_indent='    ',
-                                  subsequent_indent='    ')
-                f.write('{}\n'.format(e))
+                        e += "{} ".format(ind + 1)  # convert to one-based
+                e = textwrap.fill(
+                    e,
+                    width=70,
+                    initial_indent="    ",
+                    subsequent_indent="    ",
+                )
+                f.write("{}\n".format(e))
                 # Write header again, unless it is the last record
                 if idx + 1 < len(times1):
-                    f.write('\n{}'.format(header))
+                    f.write("\n{}".format(header))
 
     # Close output file
     if outfile is not None:
@@ -1957,13 +2105,13 @@ def calculate_diffmax(v1, v2):
     -------
 
     """
-    import numpy as np
     if v1.ndim > 1 or v2.ndim > 1:
         v1 = v1.flatten()
         v2 = v2.flatten()
     if v1.size != v2.size:
-        err = 'Error: calculate_difference v1 size ({}) '.format(
-            v1.size) + 'is not equal to v2 size ({})'.format(v2.size)
+        err = "Error: calculate_difference v1 size ({}) ".format(
+            v1.size
+        ) + "is not equal to v2 size ({})".format(v2.size)
         raise Exception(err)
 
     diff = abs(v1 - v2)
@@ -1985,13 +2133,13 @@ def calculate_difftol(v1, v2, tol):
     -------
 
     """
-    import numpy as np
     if v1.ndim > 1 or v2.ndim > 1:
         v1 = v1.flatten()
         v2 = v2.flatten()
     if v1.size != v2.size:
-        err = 'Error: calculate_difference v1 size ({}) '.format(
-            v1.size) + 'is not equal to v2 size ({})'.format(v2.size)
+        err = "Error: calculate_difference v1 size ({}) ".format(
+            v1.size
+        ) + "is not equal to v2 size ({})".format(v2.size)
         raise Exception(err)
 
     diff = abs(v1 - v2)
@@ -2000,10 +2148,18 @@ def calculate_difftol(v1, v2, tol):
     return diffmax, indices
 
 
-def compare(namefile1, namefile2, precision='auto',
-            max_cumpd=0.01, max_incpd=0.01, htol=0.001,
-            outfile1=None, outfile2=None,
-            files1=None, files2=None):
+def compare(
+    namefile1,
+    namefile2,
+    precision="auto",
+    max_cumpd=0.01,
+    max_incpd=0.01,
+    htol=0.001,
+    outfile1=None,
+    outfile2=None,
+    files1=None,
+    files2=None,
+):
     """Compare the results for two standard simulations.
 
     Parameters
@@ -2025,13 +2181,24 @@ def compare(namefile1, namefile2, precision='auto',
     """
 
     # Compare budgets from the list files in namefile1 and namefile2
-    success1 = compare_budget(namefile1, namefile2,
-                              max_cumpd=max_cumpd, max_incpd=max_incpd,
-                              outfile=outfile1,
-                              files1=files1, files2=files2)
-    success2 = compare_heads(namefile1, namefile2, precision=precision,
-                             htol=htol, outfile=outfile2,
-                             files1=files1, files2=files2)
+    success1 = compare_budget(
+        namefile1,
+        namefile2,
+        max_cumpd=max_cumpd,
+        max_incpd=max_incpd,
+        outfile=outfile1,
+        files1=files1,
+        files2=files2,
+    )
+    success2 = compare_heads(
+        namefile1,
+        namefile2,
+        precision=precision,
+        htol=htol,
+        outfile=outfile2,
+        files1=files1,
+        files2=files2,
+    )
     success = False
     if success1 and success2:
         success = True

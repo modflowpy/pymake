@@ -73,7 +73,7 @@ class pymakeZipFile(ZipFile):
         if path is None:
             path = os.getcwd()
         else:
-            if hasattr(os, 'fspath'):
+            if hasattr(os, "fspath"):
                 # introduced in python 3.6 and above
                 path = os.fspath(path)
 
@@ -148,7 +148,7 @@ class pymakeZipFile(ZipFile):
         # write the zipfile
         success = True
         if len(file_pths) > 0:
-            zf = ZipFile(path, 'w', ZIP_DEFLATED)
+            zf = ZipFile(path, "w", ZIP_DEFLATED)
 
             # write files to zip file
             for file_pth in file_pths:
@@ -158,15 +158,22 @@ class pymakeZipFile(ZipFile):
             # close the zip file
             zf.close()
         else:
-            msg = 'No files to add to the zip file'
+            msg = "No files to add to the zip file"
             print(msg)
             success = False
 
         return success
 
 
-def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
-                       timeout=30, nattempts=10, chunk_size=2048000):
+def download_and_unzip(
+    url,
+    pth="./",
+    delete_zip=True,
+    verify=True,
+    timeout=30,
+    nattempts=10,
+    chunk_size=2048000,
+):
     """Download and unzip a zip file from a url.
 
     Parameters
@@ -194,21 +201,20 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     try:
         import requests
     except Exception as e:
-        msg = "pymake.download_and_unzip() error import requests: " + \
-              str(e)
+        msg = "pymake.download_and_unzip() error import requests: " + str(e)
         raise Exception(msg)
     if not os.path.exists(pth):
-        print('Creating the directory:\n    {}'.format(pth))
+        print("Creating the directory:\n    {}".format(pth))
         os.makedirs(pth)
 
-    print('Attempting to download the file:\n    {}'.format(url))
-    file_name = os.path.join(pth, url.split('/')[-1])
+    print("Attempting to download the file:\n    {}".format(url))
+    file_name = os.path.join(pth, url.split("/")[-1])
 
     # download the file
     success = False
     tic = timeit.default_timer()
     for idx in range(nattempts):
-        print(' download attempt: {}'.format(idx + 1))
+        print(" download attempt: {}".format(idx + 1))
 
         # open request
         req = requests.get(url, stream=True, verify=verify)
@@ -216,37 +222,43 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
             if idx < nattempts - 1:
                 continue
             else:
-                msg = 'Cannot download file:\n    {}\n\n'.format(url)
+                msg = "Cannot download file:\n    {}\n\n".format(url)
                 print(msg)
                 req.raise_for_status()
 
         # connection established - download the file
         fs = 0
         lenfs = 0
-        if 'Content-length' in req.headers:
-            fs = req.headers['Content-length']
+        if "Content-length" in req.headers:
+            fs = req.headers["Content-length"]
             lenfs = len(fs)
             fs = int(fs)
         if fs > 0:
-            bfmt = '{:' + '{}'.format(lenfs) + ',d}'
-            sbfmt = '{:>' + '{}'.format(len(bfmt.format(int(fs)))) + 's} bytes'
-            msg = '   file size: {}'.format(sbfmt.format(bfmt.format(int(fs))))
+            bfmt = "{:" + "{}".format(lenfs) + ",d}"
+            sbfmt = "{:>" + "{}".format(len(bfmt.format(int(fs)))) + "s} bytes"
+            msg = "   file size: {}".format(sbfmt.format(bfmt.format(int(fs))))
             print(msg)
         ds = 0
         try:
-            req = requests.get(url, verify=verify, timeout=timeout,
-                               stream=True)
+            req = requests.get(
+                url, verify=verify, timeout=timeout, stream=True
+            )
             if req.status_code == 200:
-                with open(file_name, 'wb') as f:
+                with open(file_name, "wb") as f:
                     for chunk in req.iter_content(chunk_size=chunk_size):
                         if chunk:
                             ds += len(chunk)
                             if fs > 0:
-                                msg = '     downloaded ' + \
-                                      sbfmt.format(bfmt.format(ds)) + \
-                                      ' of ' + bfmt.format(int(fs)) + \
-                                      ' bytes' + \
-                                      ' ({:10.4%})'.format(float(ds) / float(fs))
+                                msg = (
+                                    "     downloaded "
+                                    + sbfmt.format(bfmt.format(ds))
+                                    + " of "
+                                    + bfmt.format(int(fs))
+                                    + " bytes"
+                                    + " ({:10.4%})".format(
+                                        float(ds) / float(fs)
+                                    )
+                                )
                                 print(msg)
                             f.write(chunk)
 
@@ -267,35 +279,36 @@ def download_and_unzip(url, pth='./', delete_zip=True, verify=True,
     # write the total download time
     toc = timeit.default_timer()
     tsec = toc - tic
-    print('\ntotal download time: {} seconds'.format(tsec))
+    print("\ntotal download time: {} seconds".format(tsec))
     if success:
         if fs > 0:
-            print('download speed:      {} MB/s'.format(fs / (1e6 * tsec)))
+            print("download speed:      {} MB/s".format(fs / (1e6 * tsec)))
     else:
-        msg = 'could not download...{}'.format(url)
+        msg = "could not download...{}".format(url)
         raise ConnectionError(msg)
 
     # Unzip the file, and delete zip file if successful.
-    if 'zip' in os.path.basename(file_name) or \
-            'exe' in os.path.basename(file_name):
+    if "zip" in os.path.basename(file_name) or "exe" in os.path.basename(
+        file_name
+    ):
         z = pymakeZipFile(file_name)
         try:
-            print('Extracting the zipfile...')
+            print("Extracting the zipfile...")
             z.extractall(pth)
         except:
-            p = 'Could not unzip the file.  Stopping.'
+            p = "Could not unzip the file.  Stopping."
             raise Exception(p)
         z.close()
-    elif 'tar' in os.path.basename(file_name):
+    elif "tar" in os.path.basename(file_name):
         ar = tarfile.open(file_name)
         ar.extractall(path=pth)
         ar.close()
 
     # delete the zipfile
     if delete_zip:
-        print('Deleting the zipfile...')
+        print("Deleting the zipfile...")
         os.remove(file_name)
-    print('Done downloading and extracting...\n')
+    print("Done downloading and extracting...\n")
 
     return
 
@@ -324,8 +337,9 @@ def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
     -------
 
     """
-    return pymakeZipFile.compressall(path, file_pths=file_pths,
-                                     dir_pths=dir_pths, patterns=patterns)
+    return pymakeZipFile.compressall(
+        path, file_pths=file_pths, dir_pths=dir_pths, patterns=patterns
+    )
 
 
 def get_default_repo():
@@ -337,7 +351,7 @@ def get_default_repo():
         default github repository repo name
 
     """
-    return 'MODFLOW-USGS/executables'
+    return "MODFLOW-USGS/executables"
 
 
 def get_default_json(tag_name=None):
@@ -357,19 +371,20 @@ def get_default_json(tag_name=None):
 
     """
     if tag_name is None:
-        tag_name = '3.0'
-    url = ('https://github.com/{}/'.format(get_default_repo()) +
-           'releases/download/{}/'.format(tag_name))
-    json_obj = {'tag_name': tag_name}
+        tag_name = "4.0"
+    url = "https://github.com/{}/".format(
+        get_default_repo()
+    ) + "releases/download/{}/".format(tag_name)
+    json_obj = {"tag_name": tag_name}
 
     # define asset names and paths for assets
-    names = ['mac.zip', 'linux.zip', 'win32.zip', 'win64.zip']
+    names = ["mac.zip", "linux.zip", "win32.zip", "win64.zip"]
     paths = [url + p for p in names]
 
     assets_list = []
     for name, path in zip(names, paths):
-        assets_list.append({'name': name, 'browser_download_url': path})
-    json_obj['assets'] = assets_list
+        assets_list.append({"name": name, "browser_download_url": path})
+    json_obj["assets"] = assets_list
 
     return json_obj
 
@@ -412,7 +427,7 @@ def get_request_json(request_url):
     return success, r, json_obj
 
 
-def repo_json(github_repo, tag_name=None):
+def repo_json(github_repo, tag_name=None, error_return=False):
     """Return the github api json for the latest github release in a github
     repository.
 
@@ -420,9 +435,11 @@ def repo_json(github_repo, tag_name=None):
     ----------
     github_repo : str
         Repository name, such as MODFLOW-USGS/modflow6
-
     tag_name : str
         github repository release tag
+    error_return : bool
+        boolean indicating if None will be returned if there are GitHub API
+        issues
 
     Returns
     -------
@@ -431,26 +448,36 @@ def repo_json(github_repo, tag_name=None):
         file names and download links
 
     """
-    repo_url = 'https://api.github.com/repos/{}'.format(github_repo)
+    repo_url = "https://api.github.com/repos/{}".format(github_repo)
 
     if tag_name is None:
-        request_url = '{}/releases/latest'.format(repo_url)
+        request_url = "{}/releases/latest".format(repo_url)
     else:
-        request_url = '{}/releases'.format(repo_url)
+        request_url = "{}/releases".format(repo_url)
         success, r, json_cat = get_request_json(request_url)
         if success:
             request_url = None
             for release in json_cat:
-                if release['tag_name'] == tag_name:
-                    request_url = release['url']
+                if release["tag_name"] == tag_name:
+                    request_url = release["url"]
                     break
             if request_url is None:
-                msg = "Could not find tag_name ('{}') ".format(tag_name) + \
-                      "in release catalog"
-                raise Exception(msg)
+                msg = (
+                    "Could not find tag_name ('{}') ".format(tag_name)
+                    + "in release catalog"
+                )
+                if error_return:
+                    print(msg)
+                    return None
+                else:
+                    raise Exception(msg)
         else:
-            msg = 'Could not get release catalog from ' + request_url
-            raise Exception(msg)
+            msg = "Could not get release catalog from " + request_url
+            if error_return:
+                print(msg)
+                return None
+            else:
+                raise Exception(msg)
 
     msg = "Requesting asset data "
     if tag_name is not None:
@@ -464,19 +491,22 @@ def repo_json(github_repo, tag_name=None):
     # evaluate request errors
     if not success:
         if github_repo == get_default_repo():
-            msg = 'will use dafault values for {}'.format(github_repo)
+            msg = "will use dafault values for {}".format(github_repo)
             print(msg)
             json_obj = get_default_json(tag_name)
         else:
-            msg = 'Could not find json from ' + request_url
+            msg = "Could not find json from " + request_url
             print(msg)
-            r.raise_for_status()
+            if error_return:
+                json_obj = None
+            else:
+                r.raise_for_status()
 
     # return json object
     return json_obj
 
 
-def get_repo_assets(github_repo=None, version=None):
+def get_repo_assets(github_repo=None, version=None, error_return=False):
     """Return a dictionary containing the file name and the link to the asset
     contained in a github repository.
 
@@ -485,10 +515,11 @@ def get_repo_assets(github_repo=None, version=None):
     github_repo : str
         Repository name, such as MODFLOW-USGS/modflow6. If github_repo is
         None set to 'MODFLOW-USGS/executables'
-
     version : str
         github repository release tag
-
+    error_return : bool
+        boolean indicating if None will be returned if there are GitHub API
+        issues
 
     Returns
     -------
@@ -500,15 +531,20 @@ def get_repo_assets(github_repo=None, version=None):
         github_repo = get_default_repo()
 
     # get json and extract assets
-    json_obj = repo_json(github_repo, tag_name=version)
-    assets = json_obj['assets']
+    json_obj = repo_json(
+        github_repo, tag_name=version, error_return=error_return
+    )
+    if json_obj is None:
+        result_dict = None
+    else:
+        assets = json_obj["assets"]
 
-    # build simple assets dictionary
-    result_dict = {}
-    for asset in assets:
-        k = asset['name']
-        v = asset['browser_download_url']
-        result_dict[k] = v
+        # build simple assets dictionary
+        result_dict = {}
+        for asset in assets:
+            k = asset["name"]
+            v = asset["browser_download_url"]
+            result_dict[k] = v
 
     return result_dict
 
@@ -535,10 +571,10 @@ def repo_latest_version(github_repo=None):
     # get json
     json_obj = repo_json(github_repo)
 
-    return json_obj['tag_name']
+    return json_obj["tag_name"]
 
 
-def getmfexes(pth='.', version=None, platform=None, exes=None):
+def getmfexes(pth=".", version=None, platform=None, exes=None):
     """Get the latest MODFLOW binary executables from a github site
     (https://github.com/MODFLOW-USGS/executables) for the specified operating
     system and put them in the specified path.
@@ -566,46 +602,47 @@ def getmfexes(pth='.', version=None, platform=None, exes=None):
 
     # Determine the platform in order to construct the zip file name
     if platform is None:
-        if sys.platform.lower() == 'darwin':
-            platform = 'mac'
-        elif sys.platform.lower().startswith('linux'):
-            platform = 'linux'
-        elif 'win' in sys.platform.lower():
+        if sys.platform.lower() == "darwin":
+            platform = "mac"
+        elif sys.platform.lower().startswith("linux"):
+            platform = "linux"
+        elif "win" in sys.platform.lower():
             is_64bits = sys.maxsize > 2 ** 32
             if is_64bits:
-                platform = 'win64'
+                platform = "win64"
             else:
-                platform = 'win32'
+                platform = "win32"
         else:
-            errmsg = ('Could not determine platform'
-                      '.  sys.platform is {}'.format(sys.platform))
+            errmsg = (
+                "Could not determine platform"
+                ".  sys.platform is {}".format(sys.platform)
+            )
             raise Exception(errmsg)
     else:
-        msg = 'unknown platform detected ({})'.format(platform)
-        success = platform in ['mac', 'linux', 'win32', 'win64']
+        msg = "unknown platform detected ({})".format(platform)
+        success = platform in ["mac", "linux", "win32", "win64"]
         if not success:
             raise ValueError(msg)
-    zipname = '{}.zip'.format(platform)
+    zipname = "{}.zip".format(platform)
 
     # Evaluate exes keyword
     if exes is not None:
-        download_dir = os.path.join('.', 'download_dir')
+        download_dir = os.path.join(".", "download_dir")
         if isinstance(exes, str):
             exes = tuple(exes)
         elif isinstance(exes, (int, float)):
-            msg = 'exes keyword must be a string or a list/tuple of strings'
+            msg = "exes keyword must be a string or a list/tuple of strings"
             raise TypeError(msg)
 
     # Determine path for file download and then download and unzip
-    assets = get_repo_assets(github_repo=get_default_repo(),
-                             version=version)
+    assets = get_repo_assets(github_repo=get_default_repo(), version=version)
     download_url = assets[zipname]
     download_and_unzip(download_url, download_dir)
 
     if exes is not None:
         # make sure pth exists
         if not os.path.exists(pth):
-            print('Creating the directory:\n    {}'.format(pth))
+            print("Creating the directory:\n    {}".format(pth))
             os.makedirs(pth)
 
         # move select files to pth
@@ -619,7 +656,7 @@ def getmfexes(pth='.', version=None, platform=None, exes=None):
 
         # remove the download directory
         if os.path.isdir(download_dir):
-            print('Removing folder ' + download_dir)
+            print("Removing folder " + download_dir)
             shutil.rmtree(download_dir)
 
     return

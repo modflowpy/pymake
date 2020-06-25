@@ -23,7 +23,7 @@ def get_fortran_files(srcfiles, extensions=False):
     files_out = []
     for srcfile in srcfiles:
         ext = os.path.splitext(srcfile)[1]
-        if ext.lower() in ['.f', '.for', '.f90', '.fpp']:
+        if ext.lower() in [".f", ".for", ".f90", ".fpp"]:
             if extensions:
                 # save unique extension
                 if ext not in files_out:
@@ -55,7 +55,7 @@ def get_c_files(srcfiles, extensions=False):
     files_out = []
     for srcfile in srcfiles:
         ext = os.path.splitext(srcfile)[1]
-        if ext.lower() in ['.c', '.cpp']:
+        if ext.lower() in [".c", ".cpp"]:
             if extensions:
                 if ext not in files_out:
                     files_out.append(ext)
@@ -85,22 +85,22 @@ def get_iso_c(srcfiles):
     for srcfile in srcfiles:
         if os.path.exists(srcfile):
             # open the file
-            f = open(srcfile, 'rb')
+            f = open(srcfile, "rb")
 
             # read the file
             lines = f.read()
 
             # decode the file
-            lines = lines.decode('ascii', 'replace').splitlines()
+            lines = lines.decode("ascii", "replace").splitlines()
 
             # develop a list of modules in the file
             for line in lines:
                 linelist = line.strip().split()
                 if len(linelist) == 0:
                     continue
-                if linelist[0].upper() == 'USE':
-                    modulename = linelist[1].split(',')[0].upper()
-                    if 'ISO_C_BINDING' == modulename:
+                if linelist[0].upper() == "USE":
+                    modulename = linelist[1].split(",")[0].upper()
+                    if "ISO_C_BINDING" == modulename:
                         iso_c = True
                         break
 
@@ -108,8 +108,9 @@ def get_iso_c(srcfiles):
             if iso_c:
                 break
         else:
-            msg = 'get_iso_c: could not ' + \
-                  'open {}'.format(os.path.basename(srcfile))
+            msg = "get_iso_c: could not " + "open {}".format(
+                os.path.basename(srcfile)
+            )
             raise FileNotFoundError(msg)
 
     return iso_c
@@ -144,10 +145,14 @@ def get_ordered_srcfiles(srcdir, include_subdir=False):
     cfiles = []  # mja
     srcfiles = []
     for f in templist:
-        if f.lower().endswith('.f') or f.lower().endswith('.f90') \
-                or f.lower().endswith('.for') or f.lower().endswith('.fpp'):
+        if (
+            f.lower().endswith(".f")
+            or f.lower().endswith(".f90")
+            or f.lower().endswith(".for")
+            or f.lower().endswith(".fpp")
+        ):
             srcfiles.append(f)
-        elif f.lower().endswith('.c') or f.lower().endswith('.cpp'):  # mja
+        elif f.lower().endswith(".c") or f.lower().endswith(".cpp"):  # mja
             cfiles.append(f)  # mja
 
     srcfileswithpath = []

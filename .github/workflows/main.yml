@@ -1,0 +1,79 @@
+name: pymake continuous integration
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        os: [ubuntu-latest]
+        include:
+          - os: macos-latest
+            python-version: 3.8
+          - os: windows-latest
+            python-version: 3.8
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup Graphviz
+      uses: ts-graphviz/setup-graphviz@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install and print system dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
+        gfortran --version
+    - name: Install and print system dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        gfortran --version
+    - name: Install and print system dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        gfortran --version
+    - name: Install python packages
+      run: |
+        pip install requests nose-timer
+        pip install pydotplus appdirs
+        pip install numpy matplotlib
+        pip install https://github.com/modflowpy/flopy/zipball/develop
+        pip install .
+    - name: Run nosetests
+      run: |
+        nosetests -v --with-id --with-timer -w ./autotest
+      env:
+        repo-token: ${{secrets.GITHUB_TOKEN}}
+
+
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Setup Graphviz
+      uses: ts-graphviz/setup-graphviz@v1
+    - name: Install packages
+      run: |
+        pip install requests pydotplus appdirs numpy matplotlib
+        pip install https://github.com/modflowpy/flopy/zipball/develop
+        pip install pylint flake8 black
+    - name: Run black
+      run: black --check --line-length 79 ./pymake
+    - name: Run flake8
+      run: flake8 --count --show-source ./pymake
+    - name: Run pylint
+      run: pylint --jobs=0 --errors-only ./pymake

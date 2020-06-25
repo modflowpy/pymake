@@ -6,12 +6,12 @@ from .dag import get_f_nodelist
 try:
     import pydotplus.graphviz as pydot
 except:
-    print('pymake graphing capabilities not available.\n')
+    print("pymake graphing capabilities not available.\n")
 
 
-def to_pydot(dag, filename='mygraph.png'):
+def to_pydot(dag, filename="mygraph.png"):
     # Create the graph
-    graph = pydot.Dot(graph_type='digraph')
+    graph = pydot.Dot(graph_type="digraph")
 
     # Add the nodes
     node_dict = {}
@@ -61,43 +61,44 @@ def add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
     return
 
 
-def make_plots(srcdir, outdir, include_subdir=False, level=3,
-               extension='.png'):
+def make_plots(
+    srcdir, outdir, include_subdir=False, level=3, extension=".png"
+):
     """Create plots of module dependencies."""
     srcfiles = get_ordered_srcfiles(srcdir, include_subdir)
     nodelist = get_f_nodelist(srcfiles)
     for n in nodelist:
         print(os.path.basename(n.name))
         for m in n.dependencies:
-            print('  ' + os.path.basename(m.name))
-        print('')
+            print("  " + os.path.basename(m.name))
+        print("")
 
     if not os.path.isdir(outdir):
-        raise Exception('output directory does not exist')
+        raise Exception("output directory does not exist")
 
     for n in nodelist:
         filename = os.path.join(outdir, os.path.basename(n.name) + extension)
-        print('Creating ' + filename)
-        graph = pydot.Dot(graph_type='digraph')
+        print("Creating " + filename)
+        graph = pydot.Dot(graph_type="digraph")
         node_dict = {}
         ilev = 0
         add_pydot_nodes(graph, node_dict, n, ilev, level)
         edge_set = set()
         ilev = 1
         add_pydot_edges(graph, node_dict, edge_set, n, ilev, level)
-        if extension == '.png':
+        if extension == ".png":
             graph.write_png(filename)
-        elif extension == '.pdf':
+        elif extension == ".pdf":
             graph.write_pdf(filename)
-        elif extension == '.dot':
+        elif extension == ".dot":
             graph.write_dot(filename)
         else:
-            raise Exception('unknown file extension: {}'.format(extension))
+            raise Exception("unknown file extension: {}".format(extension))
 
     return
 
 
 if __name__ == "__main__":
-    srcdir = 'src'
-    outdir = 'img'
+    srcdir = "src"
+    outdir = "img"
     make_plots(srcdir, outdir)

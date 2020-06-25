@@ -6,6 +6,6 @@ minor = 1
 micro = 144
 commit = 329
 
-__version__ = '{:d}.{:d}'.format(major, minor)
-__build__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)
-__git_commit__ = '{:d}'.format(commit)
+__version__ = "{:d}.{:d}".format(major, minor)
+__build__ = "{:d}.{:d}.{:d}".format(major, minor, micro)
+__git_commit__ = "{:d}".format(commit)
