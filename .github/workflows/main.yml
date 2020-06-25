@@ -71,9 +71,9 @@ jobs:
         pip install requests pydotplus appdirs numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install pylint flake8 black
-    - name: Run pylint
-      run: pylint --jobs=0 --errors-only ./pymake
+    - name: Run black
+      run: black --check --line-length 79 ./pymake
     - name: Run flake8
       run: flake8 --exit-zero
-    - name: Run black
-      run: black --check --linelength 79 ./pymake
+    - name: Run pylint
+      run: pylint --jobs=0 --errors-only ./pymake
