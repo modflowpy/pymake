@@ -50,11 +50,9 @@ jobs:
         pip install numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install .
-    - name: Test with nosetests
-      with:
-        repo-token: ${{secrets.GITHUB_TOKEN}}
-      run: |
-        nosetests -v --with-id --with-timer -w ./autotest
+      uses: ./.github/actions/run-tests
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
 
   lint:

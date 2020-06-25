@@ -1,0 +1,4 @@
+name: Test with nosetests
+run: |
+  nosetests -v --with-id --with-timer -w ./autotest
+
