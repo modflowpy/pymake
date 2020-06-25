@@ -13,14 +13,11 @@ jobs:
       matrix:
         python-version: [3.6, 3.7, 3.8]
         os: [ubuntu-latest]
-        experimental: [false]
         include:
           - os: macos-latest
             python-version: 3.8
-            experimental: true
           - os: windows-latest
             python-version: 3.8
-            experimental: true
 
     steps:
     - uses: actions/checkout@v1
@@ -54,7 +51,7 @@ jobs:
       run: |
         nosetests -v --with-id --with-timer -w ./autotest
       env:
-        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        repo-token: ${{secrets.GITHUB_TOKEN}}
 
 
   lint:
@@ -69,14 +66,14 @@ jobs:
       uses: ts-graphviz/setup-graphviz@v1
     - name: Install packages
       run: |
-        pip install requests
-        pip install pydotplus appdirs
-        pip install numpy matplotlib
-        pip install https://github.com/modflowpy/flopy/zipball/develop
-        pip install flake8 pylint pylint-exit black
-    - name: Run pylint
-      run: pylint --jobs=2 --errors-only ./pymake
+        pip install flake8 black
     - name: Run flake8
       run: flake8
     - name: Run black
       run: black --check
+    - name: GitHub Action for pylint
+      uses: cclauss/GitHub-Action-for-pylint@0.7.0
+    - name: GitHub Action for Flake8
+      uses: cclauss/GitHub-Action-for-Flake8@v0.5.0
+    - name: Black Code Formatter
+      uses: lgeiger/black-action@v1.0.1

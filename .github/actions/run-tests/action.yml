@@ -1,4 +1,0 @@
-name: ./.github/actions/run-tests
-run: |
-  nosetests -v --with-id --with-timer -w ./autotest
-
