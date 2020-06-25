@@ -48,7 +48,7 @@ def process_Popen_command(shellflg, cmdlist):
         if isinstance(cmdlist, str):
             print(cmdlist)
         elif isinstance(cmdlist, list):
-            print(' '.join(cmdlist))
+            print(" ".join(cmdlist))
     return
 
 
@@ -87,8 +87,9 @@ def process_Popen_communicate(proc, verbose=True):
 
     # catch non-zero return code
     if proc.returncode != 0:
-        msg = '{} failed\n'.format(' '.join(proc.args)) + \
-              '\tstatus code {}\n'.format(proc.returncode)
+        msg = "{} failed\n".format(
+            " ".join(proc.args)
+        ) + "\tstatus code {}\n".format(proc.returncode)
         print(msg)
 
     return stderr, stdout
@@ -110,10 +111,10 @@ def process_Popen_stdout(proc):
     # write stdout to the terminal
     while True:
         line = proc.stdout.readline()
-        c = line.decode('utf-8')
-        if c != '':
-            c = c.rstrip('\r\n')
-            print('{}'.format(c))
+        c = line.decode("utf-8")
+        if c != "":
+            c = c.rstrip("\r\n")
+            print("{}".format(c))
         else:
             break
 

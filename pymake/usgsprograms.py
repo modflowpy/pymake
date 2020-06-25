@@ -7,22 +7,30 @@ import pymake
 # write installation location for pymake
 thisfilepath = os.path.dirname(os.path.abspath(__file__))
 pymakepth = os.path.abspath(os.path.join(thisfilepath))
-print('pymake is installed in {}'.format(pymakepth))
+print("pymake is installed in {}".format(pymakepth))
 
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes."""
+
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
 
 # data file containing the USGS program data
-program_data_file = 'usgsprograms.txt'
+program_data_file = "usgsprograms.txt"
 
 # keys to create for each target
-target_keys = ['version', 'current', 'url', 'dirname', 'srcdir',
-               'standard_switch', 'double_switch']
+target_keys = [
+    "version",
+    "current",
+    "url",
+    "dirname",
+    "srcdir",
+    "standard_switch",
+    "double_switch",
+]
 
 
 def str_to_bool(s):
@@ -37,9 +45,9 @@ def str_to_bool(s):
     -------
 
     """
-    if s == 'True':
+    if s == "True":
         return True
-    elif s == 'False':
+    elif s == "False":
         return False
     else:
         msg = 'Invalid string passed - "{}"'.format(s)
@@ -62,7 +70,7 @@ class usgs_program_data:
         """
         pth = os.path.dirname(os.path.abspath(pymake.__file__))
         fpth = os.path.join(pth, program_data_file)
-        url_in = open(fpth, 'r').read().split('\n')
+        url_in = open(fpth, "r").read().split("\n")
 
         program_data = OrderedDict()
         for line in url_in[1:]:
@@ -73,7 +81,7 @@ class usgs_program_data:
             d = OrderedDict()
             for idx, key in enumerate(target_keys):
                 v = t[idx + 1]
-                if key in ['current', 'standard_switch', 'double_switch']:
+                if key in ["current", "standard_switch", "double_switch"]:
                     v = str_to_bool(v)
                 d[key] = v
 
@@ -89,7 +97,7 @@ class usgs_program_data:
             msg = '"{}" key does not exist. Available keys: '.format(key)
             for idx, k in enumerate(self._program_dict.keys()):
                 if idx > 0:
-                    msg += ', '
+                    msg += ", "
                 msg += '"{}"'.format(k)
             raise KeyError(msg)
         return self._program_dict[key]
@@ -97,8 +105,11 @@ class usgs_program_data:
     def _target_keys(self, current=False):
         """Get the target keys."""
         if current:
-            keys = [key for key in self._program_dict.keys()
-                    if self._program_dict[key].current]
+            keys = [
+                key
+                for key in self._program_dict.keys()
+                if self._program_dict[key].current
+            ]
         else:
             keys = list(self._program_dict.keys())
         return keys
@@ -118,7 +129,7 @@ class usgs_program_data:
             Dictionary with USGS program attributes for the specified key
 
         """
-        if '.exe' in key.lower():
+        if ".exe" in key.lower():
             key = key[:-4]
         return usgs_program_data()._target_data(key)
 
@@ -212,16 +223,17 @@ class usgs_program_data:
         """
         targets = usgs_program_data()._target_keys(current=current)
         targets.sort()
-        msg = 'Available targets:\n'
+        msg = "Available targets:\n"
         for idx, target in enumerate(targets):
-            msg += '    {:02d} {}\n'.format(idx + 1, target)
+            msg += "    {:02d} {}\n".format(idx + 1, target)
         print(msg)
 
         return
 
     @staticmethod
-    def export_json(fpth='code.json', prog_data=None, current=False,
-                    update=True):
+    def export_json(
+        fpth="code.json", prog_data=None, current=False, update=True
+    ):
         """Export USGS program data as a json file.
 
         Parameters
@@ -250,18 +262,20 @@ class usgs_program_data:
 
         """
         # print a message
-        sel = 'all of the'
+        sel = "all of the"
         if prog_data is not None:
-            sel = 'select'
+            sel = "select"
         elif current:
-            sel = 'the current'
-        print('writing a json file ("{}") '.format(fpth) +
-              'of {} USGS programs\n'.format(sel) +
-              'in the "{}" database.'.format(program_data_file))
+            sel = "the current"
+        print(
+            'writing a json file ("{}") '.format(fpth)
+            + "of {} USGS programs\n".format(sel)
+            + 'in the "{}" database.'.format(program_data_file)
+        )
         if prog_data is not None:
             for idx, key in enumerate(prog_data.keys()):
-                print('    {:>2d}: {}'.format(idx + 1, key))
-        print('\n')
+                print("    {:>2d}: {}".format(idx + 1, key))
+        print("\n")
 
         # get usgs program data
         udata = usgs_program_data.get_program_dict()
@@ -286,27 +300,27 @@ class usgs_program_data:
 
         # export file
         try:
-            with open(fpth, 'w') as f:
+            with open(fpth, "w") as f:
                 json.dump(prog_data, f, indent=4)
         except:
             msg = 'could not export json file "{}"'.format(fpth)
             raise IOError(msg)
 
         # determine if running on Travis
-        is_travis = 'TRAVIS' in os.environ
+        is_travis = "TRAVIS" in os.environ
 
         # export code.json to --appdir directory, if the
         # command line argument was specified. Only done if not travis
         bindir = pymake.set_bindir()
-        if bindir != '.' and not is_travis:
+        if bindir != "." and not is_travis:
             dst = os.path.join(bindir, fpth)
-            with open(dst, 'w') as f:
+            with open(dst, "w") as f:
                 json.dump(prog_data, f, indent=4)
 
         return
 
     @staticmethod
-    def load_json(fpth='code.json'):
+    def load_json(fpth="code.json"):
         """Load an existing code json file. Basic error checking is done to
         make sure the file contains the correct keys.
 
@@ -322,7 +336,7 @@ class usgs_program_data:
 
         """
         try:
-            with open(fpth, 'r') as f:
+            with open(fpth, "r") as f:
                 json_dict = json.load(f)
             for key, value in json_dict.items():
                 json_dict[key] = dotdict(value)
@@ -343,7 +357,7 @@ class usgs_program_data:
         return json_dict
 
     @staticmethod
-    def list_json(fpth='code.json'):
+    def list_json(fpth="code.json"):
         """List an existing code json file.
 
         Parameters
@@ -360,20 +374,20 @@ class usgs_program_data:
         if json_dict is not None:
             print('Data in "{}"'.format(fpth))
             for key, value in json_dict.items():
-                print('  target: {}'.format(key))
+                print("  target: {}".format(key))
                 for kkey, vvalue in value.items():
-                    print('    {}: {}'.format(kkey, vvalue))
+                    print("    {}: {}".format(kkey, vvalue))
         else:
             msg = 'could not load json file "{}".'.format(fpth)
             raise IOError(msg)
 
         # print continuation line
-        print('\n')
+        print("\n")
 
         return
 
     @staticmethod
-    def update_json(fpth='code.json', temp_dict=None):
+    def update_json(fpth="code.json", temp_dict=None):
         """UPDATE an existing code json file.
 
         Parameters

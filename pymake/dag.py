@@ -48,7 +48,7 @@ class DirectedAcyclicGraph(object):
         if len(tset) == 0:
             for node in self.nodelist:
                 print(node.name, [nn.name for nn in node.dependencies])
-            raise Exception('All nodes have dependencies')
+            raise Exception("All nodes have dependencies")
 
         # build up the list
         while len(tset) > 0:
@@ -63,7 +63,7 @@ class DirectedAcyclicGraph(object):
         # check to make sure no remaining dependencies
         for node in sort_list:
             if len(node.dependencies) > 0:
-                raise Exception('Graph has at least one cycle')
+                raise Exception("Graph has at least one cycle")
 
         return sort_list
 
@@ -95,14 +95,17 @@ def get_f_nodelist(srcfiles):
         nodelist.append(node)
         nodedict[srcfile] = node
         try:
-            f = open(srcfile, 'rb')
+            f = open(srcfile, "rb")
         except:
-            print('get_f_nodelist: could not open {}'.format(
-                os.path.basename(srcfile)))
+            print(
+                "get_f_nodelist: could not open {}".format(
+                    os.path.basename(srcfile)
+                )
+            )
             sourcefile_module_dict[srcfile] = []
             continue
         lines = f.read()
-        lines = lines.decode('ascii', 'replace').splitlines()
+        lines = lines.decode("ascii", "replace").splitlines()
 
         # develop a list of modules in the file
         modulelist = []  # list of modules used by this source file
@@ -110,11 +113,11 @@ def get_f_nodelist(srcfiles):
             linelist = line.strip().split()
             if len(linelist) == 0:
                 continue
-            if linelist[0].upper() in ['MODULE', 'SUBMODULE']:
+            if linelist[0].upper() in ["MODULE", "SUBMODULE"]:
                 modulename = linelist[1].upper()
                 module_dict[modulename] = srcfile
-            if linelist[0].upper() == 'USE':
-                modulename = linelist[1].split(',')[0].upper()
+            if linelist[0].upper() == "USE":
+                modulename = linelist[1].split(",")[0].upper()
                 if modulename not in modulelist:
                     modulelist.append(modulename)
 
@@ -136,7 +139,7 @@ def get_f_nodelist(srcfiles):
                         # print 'adding dependency: ', srcfile, mlocation
                         node.add_dependency(nodedict[mlocation])
         except:
-            print('get_f_nodelist: {} key does not exist'.format(srcfile))
+            print("get_f_nodelist: {} key does not exist".format(srcfile))
 
     return nodelist
 
@@ -210,14 +213,17 @@ def order_c_source_files(srcfiles):
         nodelist.append(node)
         nodedict[srcfile] = node
         try:
-            f = open(srcfile, 'rb')
+            f = open(srcfile, "rb")
         except:
-            print('order_c_source_files: could not open {}'.format(
-                os.path.basename(srcfile)))
+            print(
+                "order_c_source_files: could not open {}".format(
+                    os.path.basename(srcfile)
+                )
+            )
             sourcefile_module_dict[srcfile] = []
             continue
         lines = f.read()
-        lines = lines.decode('ascii', 'replace').splitlines()
+        lines = lines.decode("ascii", "replace").splitlines()
 
         # develop a list of modules in the file
         modulelist = []  # list of modules used by this source file
@@ -225,16 +231,18 @@ def order_c_source_files(srcfiles):
             linelist = line.strip().split()
             if len(linelist) == 0:
                 continue
-            if linelist[0].upper() == '#INCLUDE':
+            if linelist[0].upper() == "#INCLUDE":
                 modulename = linelist[1].upper()
-                for cval in ['"', "'", '<', '>']:
-                    modulename = modulename.replace(cval, '')
+                for cval in ['"', "'", "<", ">"]:
+                    modulename = modulename.replace(cval, "")
 
                 # add source file for this c(pp) file if it is the same
                 # as the include file without the extension
                 bn = os.path.basename(srcfile)
-                if os.path.splitext(modulename)[0] == \
-                        os.path.splitext(bn)[0].upper():
+                if (
+                    os.path.splitext(modulename)[0]
+                    == os.path.splitext(bn)[0].upper()
+                ):
                     module_dict[modulename] = srcfile
 
                 # add include file name
@@ -259,8 +267,9 @@ def order_c_source_files(srcfiles):
                         # print 'adding dependency: ', srcfile, mlocation
                         node.add_dependency(nodedict[mlocation])
         except:
-            msg = 'order_c_source_files: ' + \
-                  '{} key does not exist'.format(srcfile)
+            msg = "order_c_source_files: " + "{} key does not exist".format(
+                srcfile
+            )
             print(msg)
 
     dag = get_dag(nodelist)
@@ -272,11 +281,11 @@ def order_c_source_files(srcfiles):
     return osrcfiles
 
 
-if __name__ == '__main__':
-    a = Node('a')
-    b = Node('b')
-    c = Node('c')
-    d = Node('d')
+if __name__ == "__main__":
+    a = Node("a")
+    b = Node("b")
+    c = Node("c")
+    d = Node("d")
 
     a.add_dependency(b)
     a.add_dependency(c)
@@ -287,7 +296,7 @@ if __name__ == '__main__':
 
     dag = DirectedAcyclicGraph(nodelist)
     ordered = dag.toposort()
-    print('length of output: ', len(ordered))
+    print("length of output: ", len(ordered))
 
     for n in ordered:
         print(n.name)

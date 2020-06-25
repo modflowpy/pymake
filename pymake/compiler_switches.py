@@ -1,12 +1,15 @@
 import os
 import sys
 
-from .Popen_wrapper import process_Popen_initialize, process_Popen_command, \
-    process_Popen_communicate
+from .Popen_wrapper import (
+    process_Popen_initialize,
+    process_Popen_command,
+    process_Popen_communicate,
+)
 from .compiler_language_files import get_fortran_files, get_c_files, get_iso_c
 
 
-def check_gnu_switch_available(switch, compiler='gfortran'):
+def check_gnu_switch_available(switch, compiler="gfortran"):
     """Determine if a specified GNU compiler switch exists. Not all switches
     will be detected, for example '-O2'  adn '-fbounds-check=on'.
 
@@ -24,12 +27,12 @@ def check_gnu_switch_available(switch, compiler='gfortran'):
 
     """
     # test if compiler is valid
-    if compiler not in ['gfortran', 'gcc']:
+    if compiler not in ["gfortran", "gcc"]:
         msg = "compiler must be 'gfortran' or 'gcc'."
         raise ValueError(msg)
 
     # determine the gfortran command line flags available
-    cmdlist = [compiler, '--help', '-v']
+    cmdlist = [compiler, "--help", "-v"]
     # proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE, shell=False)
     proc = process_Popen_initialize(cmdlist)
     process_Popen_command(False, cmdlist)
@@ -41,7 +44,7 @@ def check_gnu_switch_available(switch, compiler='gfortran'):
     avail = switch in stdout
 
     # write a message
-    msg = '  {} switch available: {}'.format(switch, avail)
+    msg = "  {} switch available: {}".format(switch, avail)
     print(msg)
 
     return avail
@@ -60,8 +63,8 @@ def get_osname():
 
     """
     osname = sys.platform.lower()
-    if osname == 'linux2':
-        osname = 'linux'
+    if osname == "linux2":
+        osname = "linux"
     return osname
 
 
@@ -81,13 +84,13 @@ def get_prepend(compiler, osname):
         prepend string for a compiler switch for a OS
 
     """
-    if compiler in ['gfortran', 'gcc', 'g++', 'clang']:
-        prepend = '-'
+    if compiler in ["gfortran", "gcc", "g++", "clang"]:
+        prepend = "-"
     else:
-        if osname in ['linux', 'darwin']:
-            prepend = '-'
+        if osname in ["linux", "darwin"]:
+            prepend = "-"
         else:
-            prepend = '/'
+            prepend = "/"
     return prepend
 
 
@@ -120,7 +123,7 @@ def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
     """
     # remove target .exe extension, if necessary
     target = os.path.basename(target)
-    if '.exe' in target.lower():
+    if ".exe" in target.lower():
         target = target[:-4]
 
     # get lower case OS string
@@ -129,10 +132,10 @@ def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
 
     # remove .exe extension from compiler if necessary
     if fc is not None:
-        if '.exe' in fc.lower():
+        if ".exe" in fc.lower():
             fc = fc[:-4]
     if cc is not None:
-        if '.exe' in cc.lower():
+        if ".exe" in cc.lower():
             cc = cc[:-4]
 
     compiler = None
@@ -146,23 +149,23 @@ def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
 
     # set basic optimization level
     if debug:
-        if osname == 'win32':
-            optlevel = 'Od'
+        if osname == "win32":
+            optlevel = "Od"
         else:
-            optlevel = 'O0'
+            optlevel = "O0"
     else:
-        optlevel = 'O2'
+        optlevel = "O2"
 
     # look for optimization levels in fflags
     for flag in fflags:
-        if flag[:2] == '-O' or flag == '-fast':
+        if flag[:2] == "-O" or flag == "-fast":
             if not debug:
                 optlevel = flag[1:]
             break  # after first optimization (O) flag
 
     # look for optimization levels in cflags
     for flag in cflags:
-        if flag[:2] == '-O':
+        if flag[:2] == "-O":
             if not debug:
                 optlevel = flag[1:]
             break  # after first optimization (O) flag
@@ -176,7 +179,7 @@ def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
     # look for for optimization levels in compiler flags from setters
     if tval is not None:
         for flag in tval:
-            if flag[:2] == '-O':
+            if flag[:2] == "-O":
                 if not debug:
                     optlevel = flag[1:]
                 break  # after first optimization (O) flag
@@ -187,8 +190,9 @@ def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
     return optlevel
 
 
-def get_fortran_flags(target, fc, fflags, debug, double=False,
-                      sharedobject=False, osname=None):
+def get_fortran_flags(
+    target, fc, fflags, debug, double=False, sharedobject=False, osname=None
+):
     """Return a list of pymake and user specified fortran compiler switches.
 
     Parameters
@@ -221,12 +225,12 @@ def get_fortran_flags(target, fc, fflags, debug, double=False,
     # define fortran flags
     if fc is not None:
         # remove .exe extension of necessary
-        if '.exe' in fc.lower():
+        if ".exe" in fc.lower():
             fc = fc[:-4]
 
         # remove target .exe extension, if necessary
         target = os.path.basename(target)
-        if '.exe' in target.lower():
+        if ".exe" in target.lower():
             target = target[:-4]
 
         # get lower case OS string
@@ -237,58 +241,58 @@ def get_fortran_flags(target, fc, fflags, debug, double=False,
         prepend = get_prepend(fc, osname)
 
         # generate standard fortran flags
-        if fc == 'gfortran':
+        if fc == "gfortran":
             if sharedobject:
-                if osname != 'win32':
-                    flags.append('fPIC')
+                if osname != "win32":
+                    flags.append("fPIC")
             else:
-                if osname == 'win32':
-                    flags.append('static')
-            flags.append('fbacktrace')
+                if osname == "win32":
+                    flags.append("static")
+            flags.append("fbacktrace")
             if debug:
-                flags += ['g', 'fcheck=all', 'fbounds-check', 'Wall']
-                if check_gnu_switch_available('-ffpe-trap'):
-                    flags.append('ffpe-trap=overflow,zero,invalid,denormal')
+                flags += ["g", "fcheck=all", "fbounds-check", "Wall"]
+                if check_gnu_switch_available("-ffpe-trap"):
+                    flags.append("ffpe-trap=overflow,zero,invalid,denormal")
             else:
-                if check_gnu_switch_available('-ffpe-summary'):
-                    flags.append('ffpe-summary=overflow')
-                if check_gnu_switch_available('-ffpe-trap'):
-                    flags.append('ffpe-trap=overflow,zero,invalid')
+                if check_gnu_switch_available("-ffpe-summary"):
+                    flags.append("ffpe-summary=overflow")
+                if check_gnu_switch_available("-ffpe-trap"):
+                    flags.append("ffpe-trap=overflow,zero,invalid")
             if double:
-                flags += ['fdefault-real-8', 'fdefault-double-8']
+                flags += ["fdefault-real-8", "fdefault-double-8"]
             # define the OS macro for gfortran
-            if osname == 'win32':
-                os_macro = 'D_WIN32'
-            elif osname == 'darwin':
-                os_macro = 'D__APPLE__'
-            elif 'linux' in osname:
-                os_macro = 'D__linux__'
-            elif 'bsd' in osname:
-                os_macro = 'D__unix__'
+            if osname == "win32":
+                os_macro = "D_WIN32"
+            elif osname == "darwin":
+                os_macro = "D__APPLE__"
+            elif "linux" in osname:
+                os_macro = "D__linux__"
+            elif "bsd" in osname:
+                os_macro = "D__unix__"
             else:
                 os_macro = None
             if os_macro is not None:
                 flags.append(os_macro)
-        elif fc in ['ifort', 'mpiifort']:
-            if osname == 'win32':
-                flags += ['heap-arrays:0', 'fpe:0', 'traceback', 'nologo']
+        elif fc in ["ifort", "mpiifort"]:
+            if osname == "win32":
+                flags += ["heap-arrays:0", "fpe:0", "traceback", "nologo"]
                 if debug:
-                    flags += ['debug:full', 'Zi']
+                    flags += ["debug:full", "Zi"]
                 if double:
-                    flags += ['real-size:64', 'double-size:64']
+                    flags += ["real-size:64", "double-size:64"]
             else:
                 if sharedobject:
-                    flags.append('fPIC')
+                    flags.append("fPIC")
                 if debug:
-                    flags += ['g']
-                flags += ['no-heap-arrays', 'fpe0', 'traceback']
+                    flags += ["g"]
+                flags += ["no-heap-arrays", "fpe0", "traceback"]
                 if double:
-                    flags += ['real-size 64', 'double-size 64']
+                    flags += ["real-size 64", "double-size 64"]
 
         # Add passed fortran flags - assume that flags have - or / as the
         # first character. fortran flags starting with O are excluded
         for flag in fflags:
-            if flag[1] != 'O':
+            if flag[1] != "O":
                 if flag[1:] not in flags:
                     flags.append(flag[1:])
 
@@ -296,7 +300,7 @@ def get_fortran_flags(target, fc, fflags, debug, double=False,
         tlist = set_fflags(target, fc=fc, argv=False, osname=osname)
         if tlist is not None:
             for flag in tlist:
-                if flag[1] != 'O':
+                if flag[1] != "O":
                     if flag[1:] not in flags:
                         flags.append(flag[1:])
 
@@ -307,8 +311,9 @@ def get_fortran_flags(target, fc, fflags, debug, double=False,
     return flags
 
 
-def get_c_flags(target, cc, cflags, debug, srcfiles=None,
-                sharedobject=False, osname=None):
+def get_c_flags(
+    target, cc, cflags, debug, srcfiles=None, sharedobject=False, osname=None
+):
     """Return a list of standard and user specified c/c++ compiler switches.
 
     Parameters
@@ -340,12 +345,12 @@ def get_c_flags(target, cc, cflags, debug, srcfiles=None,
     # define c flags
     if cc is not None:
         # remove .exe extension of necessary
-        if '.exe' in cc.lower():
+        if ".exe" in cc.lower():
             cc = cc[:-4]
 
         # remove target .exe extension, if necessary
         target = os.path.basename(target)
-        if '.exe' in target.lower():
+        if ".exe" in target.lower():
             target = target[:-4]
 
         # get lower case OS string
@@ -356,44 +361,44 @@ def get_c_flags(target, cc, cflags, debug, srcfiles=None,
         prepend = get_prepend(cc, osname)
 
         # generate c flags
-        if cc in ['gcc', 'g++']:
+        if cc in ["gcc", "g++"]:
             if sharedobject:
-                if osname != 'win32':
-                    flags.append('fPIC')
+                if osname != "win32":
+                    flags.append("fPIC")
             else:
-                if osname == 'win32':
-                    flags.append('static')
+                if osname == "win32":
+                    flags.append("static")
             if debug:
-                flags += ['g']
-                if check_gnu_switch_available('-Wall', compiler='gcc'):
-                    flags.append('Wall')
+                flags += ["g"]
+                if check_gnu_switch_available("-Wall", compiler="gcc"):
+                    flags.append("Wall")
             else:
                 pass
-        elif cc in ['clang', 'clang++']:
+        elif cc in ["clang", "clang++"]:
             if sharedobject:
-                msg = 'shared library not implement fo clang'
+                msg = "shared library not implement fo clang"
                 raise NotImplementedError(msg)
             if debug:
-                flags += ['g']
-                if check_gnu_switch_available('-Wall', compiler='clang'):
-                    flags.append('Wall')
+                flags += ["g"]
+                if check_gnu_switch_available("-Wall", compiler="clang"):
+                    flags.append("Wall")
             else:
                 pass
-        elif cc in ['icc', 'icpc', 'mpiicc', 'mpiicpc', 'icl', 'cl']:
-            if osname == 'win32':
-                if cc in ['icl', 'cl']:
-                    flags += ['nologo']
+        elif cc in ["icc", "icpc", "mpiicc", "mpiicpc", "icl", "cl"]:
+            if osname == "win32":
+                if cc in ["icl", "cl"]:
+                    flags += ["nologo"]
                 if debug:
-                    flags.append('/debug:full')
+                    flags.append("/debug:full")
             else:
                 if sharedobject:
-                    flags.append('fpic')
+                    flags.append("fpic")
                 if debug:
-                    flags += ['debug full']
-        elif cc in ['cl']:
-            if osname == 'win32':
+                    flags += ["debug full"]
+        elif cc in ["cl"]:
+            if osname == "win32":
                 if debug:
-                    flags.append('Zi')
+                    flags.append("Zi")
 
         # Add -D-UF flag for C code if ISO_C_BINDING is not used in Fortran
         # code that is linked to C/C++ code. Only needed if there are
@@ -404,18 +409,18 @@ def get_c_flags(target, cc, cflags, debug, srcfiles=None,
             cfiles = get_c_files(srcfiles)
             if ffiles is not None:
                 iso_c_check = True
-                if osname == 'win32':
-                    if cc in ['icl', 'cl']:
+                if osname == "win32":
+                    if cc in ["icl", "cl"]:
                         iso_c_check = False
                 if iso_c_check:
                     use_iso_c = get_iso_c(ffiles)
                     if not use_iso_c and cfiles is not None:
-                        flags.append('D_UF')
+                        flags.append("D_UF")
 
         # add passed c flags - assume that flags have - or / as the
         # first character. c flags starting with O are excluded
         for flag in cflags:
-            if flag[1] != 'O':
+            if flag[1] != "O":
                 if flag[1:] not in flags:
                     flags.append(flag[1:])
 
@@ -423,7 +428,7 @@ def get_c_flags(target, cc, cflags, debug, srcfiles=None,
         tlist = set_cflags(target, cc=cc, argv=False, osname=osname)
         if tlist is not None:
             for flag in tlist:
-                if flag[1] != 'O':
+                if flag[1] != "O":
                     if flag[1:] not in flags:
                         flags.append(flag[1:])
 
@@ -434,8 +439,9 @@ def get_c_flags(target, cc, cflags, debug, srcfiles=None,
     return flags
 
 
-def get_linker_flags(target, fc, cc, syslibs, srcfiles,
-                     sharedobject=False, osname=None):
+def get_linker_flags(
+    target, fc, cc, syslibs, srcfiles, sharedobject=False, osname=None
+):
     """Return the compiler to use for linking and a list of pymake and user
     specified linker switches (syslibs).
 
@@ -473,10 +479,10 @@ def get_linker_flags(target, fc, cc, syslibs, srcfiles,
 
     # remove .exe extension of necessary
     if fc is not None:
-        if '.exe' in fc.lower():
+        if ".exe" in fc.lower():
             fc = fc[:-4]
     if cc is not None:
-        if '.exe' in cc.lower():
+        if ".exe" in cc.lower():
             cc = fc[:-4]
 
     # set linker compiler
@@ -488,7 +494,7 @@ def get_linker_flags(target, fc, cc, syslibs, srcfiles,
 
     # remove target .exe extension, if necessary
     target = os.path.basename(target)
-    if '.exe' in target.lower():
+    if ".exe" in target.lower():
         target = target[:-4]
 
     # get lower case OS string
@@ -505,52 +511,52 @@ def get_linker_flags(target, fc, cc, syslibs, srcfiles,
     if sharedobject:
         gnu_compiler = True
         if fext is not None:
-            if fc in ['ifort', 'mpiifort']:
+            if fc in ["ifort", "mpiifort"]:
                 gnu_compiler = False
         else:
-            if cc in ['icc', 'mpiicc', 'icl', 'cl']:
+            if cc in ["icc", "mpiicc", "icl", "cl"]:
                 gnu_compiler = False
-        if osname == 'win32':
+        if osname == "win32":
             if gnu_compiler:
-                copt = 'shared'
+                copt = "shared"
             else:
-                copt = 'dll'
+                copt = "dll"
         else:
-            if osname == 'darwin':
-                copt = 'dynamiclib'
+            if osname == "darwin":
+                copt = "dynamiclib"
             else:
-                copt = 'shared'
+                copt = "shared"
         syslibs_out.append(copt)
     # add static link flags for GNU compilers
     else:
         isstatic = False
         isgfortran = False
-        if osname == 'win32':
-            if fext is not None and fc in ['gfortran']:
+        if osname == "win32":
+            if fext is not None and fc in ["gfortran"]:
                 isstatic = True
                 isgfortran = True
             if not isstatic:
-                if cext is not None and cc in ['gcc', 'g++']:
+                if cext is not None and cc in ["gcc", "g++"]:
                     isstatic = True
         if isstatic:
-            syslibs_out.append('static')
+            syslibs_out.append("static")
             if isgfortran:
-                syslibs_out.append('static-libgfortran')
-            syslibs_out.append('static-libgcc')
-            syslibs_out.append('static-libstdc++')
-            syslibs_out.append('lm')
+                syslibs_out.append("static-libgfortran")
+            syslibs_out.append("static-libgcc")
+            syslibs_out.append("static-libstdc++")
+            syslibs_out.append("lm")
 
     # add -nologo switch for compiling on windows with intel compilers
-    if osname == 'win32':
+    if osname == "win32":
         addswitch = False
         if fext is not None:
-            if fc in ['ifort', 'mpiifort']:
+            if fc in ["ifort", "mpiifort"]:
                 addswitch = True
         else:
-            if cc in ['icl', 'cl']:
+            if cc in ["icl", "cl"]:
                 addswitch = True
         if addswitch:
-            syslibs_out.append('nologo')
+            syslibs_out.append("nologo")
 
     # add passed syslibs switches - assume that flags have - or / as the
     # first character.
@@ -589,38 +595,38 @@ def set_compiler(target):
         string denoting the c compiler to use. Default is gcc.
 
     """
-    fc = 'gfortran'
-    if target in ['triangle', 'gridgen']:
+    fc = "gfortran"
+    if target in ["triangle", "gridgen"]:
         fc = None
 
-    cc = 'gcc'
-    if target in ['gridgen']:
-        cc = 'g++'
+    cc = "gcc"
+    if target in ["gridgen"]:
+        cc = "g++"
 
     # parse command line arguments to see if user specified options
     # relative to building the target
     for arg in sys.argv:
-        if arg.lower() == '--ifort' and fc is not None:
-            fc = 'ifort'
-        elif arg.lower() == '--icc':
-            cc = 'icc'
-        elif arg.lower() == '--icpc':
-            cc = 'icpc'
-        elif arg.lower() == '--cl':
-            cc = 'cl'
-        elif arg.lower() == '--icl':
-            cc = 'icl'
-        elif arg.lower() == '--clang':
-            cc = 'clang'
-        elif arg.lower() == '--clang++':
-            cc = 'clang++'
+        if arg.lower() == "--ifort" and fc is not None:
+            fc = "ifort"
+        elif arg.lower() == "--icc":
+            cc = "icc"
+        elif arg.lower() == "--icpc":
+            cc = "icpc"
+        elif arg.lower() == "--cl":
+            cc = "cl"
+        elif arg.lower() == "--icl":
+            cc = "icl"
+        elif arg.lower() == "--clang":
+            cc = "clang"
+        elif arg.lower() == "--clang++":
+            cc = "clang++"
 
     # reset cc for gridgen if it is specified as 'clang'
-    if target == 'gridgen':
-        if cc == 'clang':
-            cc = 'clang++'
-        elif cc == 'icc':
-            cc = 'icpc'
+    if target == "gridgen":
+        if cc == "clang":
+            cc = "clang++"
+        elif cc == "icc":
+            cc = "icpc"
 
     msg = '{} fortran code will be built with "{}".\n'.format(target, fc)
     msg += '{} c/c++ code will be built with "{}".\n'.format(target, cc)
@@ -629,7 +635,7 @@ def set_compiler(target):
     return fc, cc
 
 
-def set_fflags(target, fc='gfortran', argv=True, osname=None):
+def set_fflags(target, fc="gfortran", argv=True, osname=None):
     """Set appropriate fortran compiler flags based on target.
 
     Parameters
@@ -661,42 +667,47 @@ def set_fflags(target, fc='gfortran', argv=True, osname=None):
 
         # remove target .exe extension, if necessary
         target = os.path.basename(target)
-        if '.exe' in target.lower():
+        if ".exe" in target.lower():
             target = target[:-4]
 
         # remove .exe extension if necessary
-        if '.exe' in fc.lower():
+        if ".exe" in fc.lower():
             fc = fc[:-4]
 
-        if target == 'mp7':
-            if fc == 'gfortran':
-                fflags.append('-ffree-line-length-512')
-        elif target == 'gsflow':
-            if fc == 'ifort':
-                if osname == 'win32':
-                    fflags += ['-fp:source', '-names:lowercase',
-                               '-assume:underscore']
+        if target == "mp7":
+            if fc == "gfortran":
+                fflags.append("-ffree-line-length-512")
+        elif target == "gsflow":
+            if fc == "ifort":
+                if osname == "win32":
+                    fflags += [
+                        "-fp:source",
+                        "-names:lowercase",
+                        "-assume:underscore",
+                    ]
                 else:
                     # fflags.append('-fp-model source')
                     pass
-            elif fc == 'gfortran':
-                fflags += ['-O1', '-fno-second-underscore']
+            elif fc == "gfortran":
+                fflags += ["-O1", "-fno-second-underscore"]
 
         # add additional fflags from the command line
         if argv:
             for idx, arg in enumerate(sys.argv):
-                if '--fflags' in arg.lower():
+                if "--fflags" in arg.lower():
                     s = sys.argv[idx + 1]
-                    delim = ' -'
-                    if ' /' in s:
-                        delim = ' /'
+                    delim = " -"
+                    if " /" in s:
+                        delim = " /"
                     fflags += s.split(delim)
 
         # write fortran flags
         if len(fflags) > 0:
-            msg = '{} fortran code '.format(target) + \
-                  'will be built with the following predefined flags:\n'
-            msg += '    {}\n'.format(' '.join(fflags))
+            msg = (
+                "{} fortran code ".format(target)
+                + "will be built with the following predefined flags:\n"
+            )
+            msg += "    {}\n".format(" ".join(fflags))
             print(msg)
         else:
             fflags = None
@@ -704,7 +715,7 @@ def set_fflags(target, fc='gfortran', argv=True, osname=None):
     return fflags
 
 
-def set_cflags(target, cc='gcc', argv=True, osname=None):
+def set_cflags(target, cc="gcc", argv=True, osname=None):
     """Set appropriate c compiler flags based on target.
 
     Parameters
@@ -736,43 +747,45 @@ def set_cflags(target, cc='gcc', argv=True, osname=None):
 
         # remove target .exe extension, if necessary
         target = os.path.basename(target)
-        if '.exe' in target.lower():
+        if ".exe" in target.lower():
             target = target[:-4]
 
         # remove .exe extension of necessary
-        if '.exe' in cc.lower():
+        if ".exe" in cc.lower():
             cc = cc[:-4]
 
-        if target == 'triangle':
-            if osname in ['linux', 'darwin']:
-                if cc.startswith('g'):
-                    cflags += ['-lm']
+        if target == "triangle":
+            if osname in ["linux", "darwin"]:
+                if cc.startswith("g"):
+                    cflags += ["-lm"]
             else:
-                cflags += ['-DNO_TIMER']
-        elif target == 'gsflow':
-            if cc in ['icc', 'icpl', 'icl']:
-                if osname == 'win32':
-                    cflags += ['-D_CRT_SECURE_NO_WARNINGS']
+                cflags += ["-DNO_TIMER"]
+        elif target == "gsflow":
+            if cc in ["icc", "icpl", "icl"]:
+                if osname == "win32":
+                    cflags += ["-D_CRT_SECURE_NO_WARNINGS"]
                 else:
-                    cflags += ['-D_UF']
-            elif cc == 'gcc':
-                cflags += ['-O1']
+                    cflags += ["-D_UF"]
+            elif cc == "gcc":
+                cflags += ["-O1"]
 
         # add additional cflags from the command line
         if argv:
             for idx, arg in enumerate(sys.argv):
-                if '--cflags' in arg.lower():
+                if "--cflags" in arg.lower():
                     s = sys.argv[idx + 1]
-                    delim = ' -'
-                    if ' /' in s:
-                        delim = ' /'
+                    delim = " -"
+                    if " /" in s:
+                        delim = " /"
                     cflags += s.split(delim)
 
         # write c/c++ flags
         if len(cflags) > 0:
-            msg = '{} c/c++ code '.format(target) + \
-                  'will be built with the following predefined flags:\n'
-            msg += '    {}\n'.format(' '.join(cflags))
+            msg = (
+                "{} c/c++ code ".format(target)
+                + "will be built with the following predefined flags:\n"
+            )
+            msg += "    {}\n".format(" ".join(cflags))
             print(msg)
         else:
             cflags = None
@@ -780,7 +793,7 @@ def set_cflags(target, cc='gcc', argv=True, osname=None):
     return cflags
 
 
-def set_syslibs(target, fc='gfortran', cc='gcc', argv=True, osname=None):
+def set_syslibs(target, fc="gfortran", cc="gcc", argv=True, osname=None):
     """Set appropriate linker flags (syslib) based on target.
 
     Parameters
@@ -810,15 +823,15 @@ def set_syslibs(target, fc='gfortran', cc='gcc', argv=True, osname=None):
 
     # remove target .exe extension, if necessary
     target = os.path.basename(target)
-    if '.exe' in target.lower():
+    if ".exe" in target.lower():
         target = target[:-4]
 
     # remove .exe extension of necessary
     if fc is not None:
-        if '.exe' in fc.lower():
+        if ".exe" in fc.lower():
             fc = fc[:-4]
     if cc is not None:
-        if '.exe' in cc.lower():
+        if ".exe" in cc.lower():
             cc = cc[:-4]
 
     # initialize syslibs
@@ -826,54 +839,54 @@ def set_syslibs(target, fc='gfortran', cc='gcc', argv=True, osname=None):
 
     # determine if default syslibs will be defined
     default_syslibs = True
-    if osname == 'win32':
+    if osname == "win32":
         if fc is not None:
-            if fc in ['ifort', 'gfortran']:
+            if fc in ["ifort", "gfortran"]:
                 default_syslibs = False
         if default_syslibs:
             if cc is not None:
-                if cc in ['cl', 'icl', 'gcc', 'g++']:
+                if cc in ["cl", "icl", "gcc", "g++"]:
                     default_syslibs = False
 
-    print('\nosname:  ', osname)
-    print('fc:      ', fc)
-    print('cc:      ', cc)
-    print('default: {}\n'.format(default_syslibs))
+    print("\nosname:  ", osname)
+    print("fc:      ", fc)
+    print("cc:      ", cc)
+    print("default: {}\n".format(default_syslibs))
 
     # set default syslibs
     if default_syslibs:
-        syslibs.append('-lc')
+        syslibs.append("-lc")
 
     # add additional syslibs for select programs
-    if target == 'triangle':
-        if osname in ['linux', 'darwin']:
+    if target == "triangle":
+        if osname in ["linux", "darwin"]:
             if fc is None:
                 lfc = True
             else:
-                lfc = fc.startswith('g')
+                lfc = fc.startswith("g")
             lcc = False
-            if cc in ['gcc', 'g++', 'clang', 'clang++']:
+            if cc in ["gcc", "g++", "clang", "clang++"]:
                 lcc = True
             if lfc and lcc:
-                syslibs += ['-lm']
-    elif target == 'gsflow':
-        if 'win32' not in osname:
-            if 'ifort' in fc:
-                syslibs += ['-nofor_main']
+                syslibs += ["-lm"]
+    elif target == "gsflow":
+        if "win32" not in osname:
+            if "ifort" in fc:
+                syslibs += ["-nofor_main"]
 
     # add additional syslibs from the command line
     if argv:
         for idx, arg in enumerate(sys.argv):
-            if '--syslibs' in arg.lower():
+            if "--syslibs" in arg.lower():
                 s = sys.argv[idx + 1]
-                delim = ' -'
-                if ' /' in s:
-                    delim = ' /'
+                delim = " -"
+                if " /" in s:
+                    delim = " /"
                 syslibs += s.split(delim)
 
     # write syslibs
     msg = "{} will use the following predefined syslibs:\n".format(target)
-    msg += "    '{}'\n".format(' '.join(syslibs))
+    msg += "    '{}'\n".format(" ".join(syslibs))
     print(msg)
 
     return syslibs
@@ -895,15 +908,15 @@ def set_debug(target):
     """
     debug = False
     for arg in sys.argv:
-        if arg.lower() == '-dbg' or arg.lower() == '--debug':
+        if arg.lower() == "-dbg" or arg.lower() == "--debug":
             debug = True
             break
 
     # write a message
     if debug:
-        comptype = 'debug'
+        comptype = "debug"
     else:
-        comptype = 'release'
+        comptype = "release"
     msg = '{} will be built as a "{}" application.\n'.format(target, comptype)
     print(msg)
 
@@ -924,15 +937,15 @@ def set_arch(target):
     arch : str
 
     """
-    arch = 'intel64'
+    arch = "intel64"
     for arg in sys.argv:
-        if arg.lower() == '--ia32':
-            arch = 'ia32'
+        if arg.lower() == "--ia32":
+            arch = "ia32"
 
     # set arch to ia32 if building on windows
-    if target == 'triangle':
-        if get_osname() == 'win32':
-            arch = 'ia32'
+    if target == "triangle":
+        if get_osname() == "win32":
+            arch = "ia32"
 
     # write a message
     msg = '{} will be built for "{}" architecture.\n'.format(target, arch)

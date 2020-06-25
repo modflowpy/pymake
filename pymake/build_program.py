@@ -12,8 +12,14 @@ else:
     from distutils.spawn import find_executable as which
 
 from .pymake import main
-from .compiler_switches import set_arch, set_compiler, set_debug, \
-    set_cflags, set_fflags, set_syslibs
+from .compiler_switches import (
+    set_arch,
+    set_compiler,
+    set_debug,
+    set_cflags,
+    set_fflags,
+    set_syslibs,
+)
 from .download import download_and_unzip, zip_all
 from .usgsprograms import usgs_program_data
 
@@ -73,41 +79,43 @@ def set_bindir(target=None):
 
     """
     # determine if running on Travis
-    is_travis = 'TRAVIS' in os.environ
+    is_travis = "TRAVIS" in os.environ
 
     # set bindir
     bindir = None
     for idx, arg in enumerate(sys.argv):
-        if '--travis' in arg.lower() or is_travis:
-            bindir = os.path.join(os.path.expanduser('~'), '.local', 'bin')
+        if "--travis" in arg.lower() or is_travis:
+            bindir = os.path.join(os.path.expanduser("~"), ".local", "bin")
             bindir = os.path.abspath(bindir)
-        elif '--appdir' in arg.lower():
+        elif "--appdir" in arg.lower():
             bindir = sys.argv[idx + 1]
             if not os.path.isdir(bindir):
                 os.mkdir(bindir)
 
     # set default directory to current directory
     if bindir is None:
-        bindir = '.'
+        bindir = "."
 
     # write message
     if target is not None:
-        print('{} will be placed in the directory:\n'.format(target) +
-              '    "{}"\n'.format(bindir))
+        print(
+            "{} will be placed in the directory:\n".format(target)
+            + '    "{}"\n'.format(bindir)
+        )
 
     return bindir
 
 
 def set_download(download):
     for idx, arg in enumerate(sys.argv):
-        if '--nodownload' in arg.lower():
+        if "--nodownload" in arg.lower():
             download = False
     return download
 
 
 def set_download_clean(download_clean):
     for idx, arg in enumerate(sys.argv):
-        if '--nodownload_clean' in arg.lower():
+        if "--nodownload_clean" in arg.lower():
             download_clean = False
     return download_clean
 
@@ -131,20 +139,20 @@ def set_build(target, exe_name):
 
     """
     # determine if running on Travis
-    is_travis = 'TRAVIS' in os.environ
+    is_travis = "TRAVIS" in os.environ
 
     keep = False
     for idx, arg in enumerate(sys.argv):
-        if '--keep' in arg.lower() or is_travis:
+        if "--keep" in arg.lower() or is_travis:
             keep = True
 
     build = True
     exe_name = os.path.basename(exe_name)
     if keep:
-        print('Determining if {} needs to be built'.format(exe_name))
+        print("Determining if {} needs to be built".format(exe_name))
 
         bindir = set_bindir()
-        if bindir != '.':
+        if bindir != ".":
             fpth = os.path.join(bindir, exe_name)
             exe_exists = which(fpth)
         else:
@@ -152,7 +160,7 @@ def set_build(target, exe_name):
 
         # determine if it is in the current directory
         if exe_exists is None:
-            exe_exists = which('./' + exe_name)
+            exe_exists = which("./" + exe_name)
 
         # evaluate if the available version is the same as the
         # source code version
@@ -160,7 +168,7 @@ def set_build(target, exe_name):
             # check for code.json in exe_pth
             exe_pth = os.path.dirname(exe_exists)
 
-            jpth = 'code.json'
+            jpth = "code.json"
             if jpth in os.listdir(exe_pth):
                 fpth = os.path.join(exe_pth, jpth)
                 json_dict = usgs_program_data.load_json(fpth=fpth)
@@ -178,15 +186,17 @@ def set_build(target, exe_name):
                         existing_version = json_dict[target].version
 
                         # write a message
-                        msg = 'Source code version of {} '.format(target) + \
-                              'is "{}"'.format(source_version)
-                        print(4 * ' ' + msg)
-                        msg = 'Current code version of {} '.format(target) + \
-                              'is "{}"\n'.format(existing_version)
-                        print(4 * ' ' + msg)
+                        msg = "Source code version of {} ".format(
+                            target
+                        ) + 'is "{}"'.format(source_version)
+                        print(4 * " " + msg)
+                        msg = "Current code version of {} ".format(
+                            target
+                        ) + 'is "{}"\n'.format(existing_version)
+                        print(4 * " " + msg)
 
-                        prog_version = source_version.split('.')
-                        json_version = existing_version.split('.')
+                        prog_version = source_version.split(".")
+                        json_version = existing_version.split(".")
 
                         # evaluate major, minor, etc. version numbers
                         for sp, sj in zip(prog_version, json_version):
@@ -196,8 +206,10 @@ def set_build(target, exe_name):
 
         if exe_exists is not None:
             build = False
-            print('No need to build {}'.format(exe_name) +
-                  ' since it exists in the current path')
+            print(
+                "No need to build {}".format(exe_name)
+                + " since it exists in the current path"
+            )
             print('    "{}"\n'.format(os.path.abspath(exe_exists)))
 
     return build
@@ -220,29 +232,31 @@ def set_extrafiles(target, download_dir):
 
     """
     extrafiles = None
-    if target in ['zbud6']:
-        extrafiles = ['../../../src/Utilities/ArrayHandlers.f90',
-                      '../../../src/Utilities/ArrayReaders.f90',
-                      '../../../src/Utilities/BlockParser.f90',
-                      '../../../src/Utilities/Budget.f90',
-                      '../../../src/Utilities/Constants.f90',
-                      '../../../src/Utilities/genericutils.f90',
-                      '../../../src/Utilities/InputOutput.f90',
-                      '../../../src/Utilities/kind.f90',
-                      '../../../src/Utilities/OpenSpec.f90',
-                      '../../../src/Utilities/sort.f90',
-                      '../../../src/Utilities/Message.f90',
-                      '../../../src/Utilities/defmacro.fpp',
-                      '../../../src/Utilities/Sim.f90',
-                      '../../../src/Utilities/SimVariables.f90',
-                      '../../../src/Utilities/version.f90']
+    if target in ["zbud6"]:
+        extrafiles = [
+            "../../../src/Utilities/ArrayHandlers.f90",
+            "../../../src/Utilities/ArrayReaders.f90",
+            "../../../src/Utilities/BlockParser.f90",
+            "../../../src/Utilities/Budget.f90",
+            "../../../src/Utilities/Constants.f90",
+            "../../../src/Utilities/genericutils.f90",
+            "../../../src/Utilities/InputOutput.f90",
+            "../../../src/Utilities/kind.f90",
+            "../../../src/Utilities/OpenSpec.f90",
+            "../../../src/Utilities/sort.f90",
+            "../../../src/Utilities/Message.f90",
+            "../../../src/Utilities/defmacro.fpp",
+            "../../../src/Utilities/Sim.f90",
+            "../../../src/Utilities/SimVariables.f90",
+            "../../../src/Utilities/version.f90",
+        ]
 
     # process extrafiles
     if extrafiles:
         prog_dict = usgs_program_data.get_target(target)
-        srcdir = os.path.abspath(os.path.join(download_dir,
-                                              prog_dict.dirname,
-                                              prog_dict.srcdir))
+        srcdir = os.path.abspath(
+            os.path.join(download_dir, prog_dict.dirname, prog_dict.srcdir)
+        )
         if isinstance(extrafiles, list):
             for idx, value in enumerate(extrafiles):
                 fpth = os.path.join(srcdir, value)
@@ -251,21 +265,22 @@ def set_extrafiles(target, download_dir):
             fpth = os.path.join(srcdir, extrafiles)
             extrafiles = os.path.normpath(fpth)
         else:
-            msg = 'invalid extrafiles format - must be a list or string'
+            msg = "invalid extrafiles format - must be a list or string"
             raise ValueError(msg)
 
         # write a message
-        msg = 'extra files are being read '
+        msg = "extra files are being read "
         if isinstance(extrafiles, list):
-            msg += 'from a list:\n'
+            msg += "from a list:\n"
             for value in extrafiles:
-                msg += '  {}\n'.format(os.path.relpath(value, download_dir))
+                msg += "  {}\n".format(os.path.relpath(value, download_dir))
         elif isinstance(extrafiles, str):
-            msg += 'from a file "{}"\n'.format(os.path.relpath(extrafiles,
-                                                               download_dir))
+            msg += 'from a file "{}"\n'.format(
+                os.path.relpath(extrafiles, download_dir)
+            )
     else:
-        msg = 'extra files are not being read'
-    print('{}\n'.format(msg))
+        msg = "extra files are not being read"
+    print("{}\n".format(msg))
 
     return extrafiles
 
@@ -284,14 +299,14 @@ def set_zip():
     """
     zip_pth = None
     for idx, arg in enumerate(sys.argv):
-        if arg.lower() == '--zip':
+        if arg.lower() == "--zip":
             if idx < len(sys.argv) - 1:
                 zip_pth = sys.argv[idx + 1]
 
     # write c/c++ flags
     if zip_pth is not None:
-        msg = 'compiled executibles will be compressed to:\n'
-        msg += '    {}\n'.format(zip_pth)
+        msg = "compiled executibles will be compressed to:\n"
+        msg += "    {}\n".format(zip_pth)
         print(msg)
 
     return zip_pth
@@ -311,28 +326,46 @@ def set_makefile():
     """
     makefile = False
     for idx, arg in enumerate(sys.argv):
-        if arg.lower() == '--makefile':
+        if arg.lower() == "--makefile":
             makefile = True
             break
 
     # write c/c++ flags
     if makefile:
-        msg = 'a GNU make makefile will be created:\n'
+        msg = "a GNU make makefile will be created:\n"
         print(msg)
 
     return makefile
 
 
-def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
-                  expedite=False, dryrun=False, double=False, debug=False,
-                  include_subdirs=False,
-                  fflags=None, cflags=None, syslibs=None,
-                  arch='intel64', makefile=False,
-                  srcdir2=None, extrafiles=None,
-                  exe_name=None, exe_dir=None,
-                  replace_function=None, verify=True, modify_exe_name=True,
-                  download_dir=None, download=True,
-                  download_clean=False, download_verify=True, timeout=30):
+def build_program(
+    target="mf2005",
+    fc="gfortran",
+    cc="gcc",
+    makeclean=True,
+    expedite=False,
+    dryrun=False,
+    double=False,
+    debug=False,
+    include_subdirs=False,
+    fflags=None,
+    cflags=None,
+    syslibs=None,
+    arch="intel64",
+    makefile=False,
+    srcdir2=None,
+    extrafiles=None,
+    exe_name=None,
+    exe_dir=None,
+    replace_function=None,
+    verify=True,
+    modify_exe_name=True,
+    download_dir=None,
+    download=True,
+    download_clean=False,
+    download_verify=True,
+    timeout=30,
+):
     """
 
     Parameters
@@ -436,32 +469,32 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
     if exe_name is None:
         exe_name = target
 
-    msg = 'float variable precision: '
+    msg = "float variable precision: "
     if double:
-        msg += '{}'.format('double')
+        msg += "{}".format("double")
     else:
-        msg += '{}'.format('single')
+        msg += "{}".format("single")
     print(msg)
 
     if modify_exe_name:
         if double:
             filename, file_extension = os.path.splitext(exe_name)
-            if 'dbl' not in filename.lower():
-                exe_name = filename + 'dbl' + file_extension
+            if "dbl" not in filename.lower():
+                exe_name = filename + "dbl" + file_extension
         if debug:
             filename, file_extension = os.path.splitext(exe_name)
-            if filename.lower()[-1] != 'd':
-                exe_name = filename + 'd' + file_extension
+            if filename.lower()[-1] != "d":
+                exe_name = filename + "d" + file_extension
 
     # if a user-defined replace_function has not been provided then
     # use the standard replace function, if one is available
     if replace_function is None:
         replace_function = build_replace(target)
 
-    if platform.system().lower() == 'windows':
+    if platform.system().lower() == "windows":
         filename, file_extension = os.path.splitext(exe_name)
-        if file_extension.lower() != '.exe':
-            exe_name += '.exe'
+        if file_extension.lower() != ".exe":
+            exe_name += ".exe"
 
     # determine if the target should be built
     build = set_build(target, exe_name)
@@ -480,8 +513,8 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         # Set dir name
         dirname = prog_dict.dirname
         if download_dir is None:
-            dirname = './'
-            download_dir = './'
+            dirname = "./"
+            download_dir = "./"
         else:
             dirname = os.path.join(download_dir, dirname)
 
@@ -496,39 +529,52 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
         # Download the distribution (can be overridden with --nodownload)
         download = set_download(download)
         if download:
-            download_and_unzip(url, pth=download_dir, verify=download_verify,
-                               timeout=timeout)
+            download_and_unzip(
+                url, pth=download_dir, verify=download_verify, timeout=timeout
+            )
 
         if replace_function is not None:
-            print('replacing select source files for {}\n'.format(target))
+            print("replacing select source files for {}\n".format(target))
             replace_function(srcdir, fc, cc, arch, double)
 
         # compile code
-        print('compiling...{}'.format(os.path.relpath(exe_name)))
-        returncode = main(srcdir, exe_name, fc=fc, cc=cc, makeclean=makeclean,
-                          expedite=expedite, dryrun=dryrun,
-                          double=double, debug=debug,
-                          include_subdirs=include_subdirs,
-                          fflags=fflags, cflags=cflags, syslibs=syslibs,
-                          arch=arch, makefile=makefile, srcdir2=srcdir2,
-                          extrafiles=extrafiles)
+        print("compiling...{}".format(os.path.relpath(exe_name)))
+        returncode = main(
+            srcdir,
+            exe_name,
+            fc=fc,
+            cc=cc,
+            makeclean=makeclean,
+            expedite=expedite,
+            dryrun=dryrun,
+            double=double,
+            debug=debug,
+            include_subdirs=include_subdirs,
+            fflags=fflags,
+            cflags=cflags,
+            syslibs=syslibs,
+            arch=arch,
+            makefile=makefile,
+            srcdir2=srcdir2,
+            extrafiles=extrafiles,
+        )
 
         app = os.path.relpath(exe_name)
-        msg = 'failure to build {}.'.format(app)
+        msg = "failure to build {}.".format(app)
         assert returncode == 0, msg
 
         if verify and not dryrun:
-            msg = '{} build failure.'.format(app)
+            msg = "{} build failure.".format(app)
             assert os.path.isfile(exe_name), msg
 
         # remove *.exp and *.lib from windows builds
-        if target in ['gsflow', 'mfnwt']:
-            if fc == 'ifort':
-                if 'win32' in sys.platform.lower():
-                    fpth = exe_name.replace('.exe', '.exp')
+        if target in ["gsflow", "mfnwt"]:
+            if fc == "ifort":
+                if "win32" in sys.platform.lower():
+                    fpth = exe_name.replace(".exe", ".exp")
                     if os.path.exists(fpth):
                         os.remove(fpth)
-                    fpth = exe_name.replace('.exe', '.lib')
+                    fpth = exe_name.replace(".exe", ".lib")
                     if os.path.exists(fpth):
                         os.remove(fpth)
 
@@ -539,16 +585,16 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
             ddir = os.path.abspath(download_dir)
             if edir != ddir:
                 if os.path.isdir(ddir):
-                    msg = 'deleting {}'.format(ddir)
+                    msg = "deleting {}".format(ddir)
                     print(msg)
                     ntries = 10
                     for itries in range(ntries):
-                        msg = '    removal attempt {:>2d} '.format(itries + 1)
-                        msg += 'of {:>2d}'.format(ntries)
+                        msg = "    removal attempt {:>2d} ".format(itries + 1)
+                        msg += "of {:>2d}".format(ntries)
                         print(msg)
 
                         # wait to delete on windows
-                        if platform.system().lower() == 'windows':
+                        if platform.system().lower() == "windows":
                             time.sleep(3)
 
                         # remove the directory
@@ -558,10 +604,10 @@ def build_program(target='mf2005', fc='gfortran', cc='gcc', makeclean=True,
                         except:
                             pass
 
-                    print('\n')
+                    print("\n")
 
                     # wait prior to returning on windows
-                    if platform.system().lower() == 'windows':
+                    if platform.system().lower() == "windows":
                         time.sleep(6)
 
     return returncode
@@ -605,11 +651,11 @@ def build_replace(targets):
 
     # remove exe extension from targets
     for idx, target in enumerate(targets):
-        if '.exe' in target.lower():
+        if ".exe" in target.lower():
             targets[idx] = target[:-4]
 
     # get a dictionary of update functions
-    funcs = get_function_names(sys.modules[__name__], select_name='update_')
+    funcs = get_function_names(sys.modules[__name__], select_name="update_")
 
     # generate a list of available functions
     replace_funcs = []
@@ -657,15 +703,17 @@ def build_apps(targets=None):
         code_dict[target] = usgs_program_data.get_target(target)
 
         # write system information
-        print('{} will be built '.format(target) +
-              'for the "{}" operating system\n'.format(sys.platform))
+        print(
+            "{} will be built ".format(target)
+            + 'for the "{}" operating system\n'.format(sys.platform)
+        )
 
         # set bindir
         bindir = set_bindir(target)
 
         # set double precision flag and whether the executable name
         # can be modified
-        if target == 'swtv4':
+        if target == "swtv4":
             modify_exe_name = False
         else:
             modify_exe_name = True
@@ -674,7 +722,7 @@ def build_apps(targets=None):
         debug = set_debug(target)
 
         # set
-        if target in ['swtv4']:
+        if target in ["swtv4"]:
             modify_exe_name = False
 
         # set compiler
@@ -693,7 +741,7 @@ def build_apps(targets=None):
         arch = set_arch(target)
 
         # set include_subdirs
-        if target in ['mf6', 'gridgen', 'mf6beta', 'gsflow']:
+        if target in ["mf6", "gridgen", "mf6beta", "gsflow"]:
             include_subdirs = True
         else:
             include_subdirs = False
@@ -704,29 +752,29 @@ def build_apps(targets=None):
         # set download information
         download_now = True
         download_clean = True
-        download_dir = 'temp'
+        download_dir = "temp"
 
         # modify download if mf6 and also building zonbud6
-        if target == 'mf6':
+        if target == "mf6":
             if idt + 1 < len(targets):
-                if targets[idt + 1] == 'zbud6':
+                if targets[idt + 1] == "zbud6":
                     download_clean = False
-        elif target == 'zbud6':
+        elif target == "zbud6":
             if idt > 0:
-                if targets[idt - 1] == 'mf6':
+                if targets[idt - 1] == "mf6":
                     download_now = False
 
         # modify download if mfusg and also building zonbudusg
-        if target == 'mfusg':
+        if target == "mfusg":
             if idt + 1 < len(targets):
-                if targets[idt + 1] == 'zonbudusg':
+                if targets[idt + 1] == "zonbudusg":
                     download_clean = False
-        elif target == 'zonbudusg':
+        elif target == "zonbudusg":
             if idt > 0:
-                if targets[idt - 1] == 'mfusg':
+                if targets[idt - 1] == "mfusg":
                     download_now = False
 
-        if target in ['mt3dms', 'triangle', 'mf6beta']:
+        if target in ["mt3dms", "triangle", "mf6beta"]:
             download_verify = False
             timeout = 10
         else:
@@ -760,44 +808,48 @@ def build_apps(targets=None):
                 makefile = set_makefile()
 
             # print download information
-            msg = 'downloading file:         {}\n'.format(download)
-            msg += 'verified download:        {}\n'.format(download_verify)
-            msg += 'download timeout:         {} sec.\n'.format(timeout)
-            msg += 'create GNU make makefile: {}\n'.format(makefile)
-            msg += 'cleaning extracted files: {}\n'.format(clean)
+            msg = "downloading file:         {}\n".format(download)
+            msg += "verified download:        {}\n".format(download_verify)
+            msg += "download timeout:         {} sec.\n".format(timeout)
+            msg += "create GNU make makefile: {}\n".format(makefile)
+            msg += "cleaning extracted files: {}\n".format(clean)
             print(msg)
 
             # build the code
-            returncode = build_program(target=target,
-                                       fc=fc,
-                                       cc=cc,
-                                       double=double,
-                                       debug=debug,
-                                       fflags=fflags,
-                                       cflags=cflags,
-                                       syslibs=syslibs,
-                                       arch=arch,
-                                       include_subdirs=include_subdirs,
-                                       extrafiles=extrafiles,
-                                       replace_function=replace_function,
-                                       modify_exe_name=modify_exe_name,
-                                       exe_dir=bindir,
-                                       download=download,
-                                       download_dir=download_dir,
-                                       download_clean=clean,
-                                       download_verify=download_verify,
-                                       timeout=timeout,
-                                       makefile=makefile)
+            returncode = build_program(
+                target=target,
+                fc=fc,
+                cc=cc,
+                double=double,
+                debug=debug,
+                fflags=fflags,
+                cflags=cflags,
+                syslibs=syslibs,
+                arch=arch,
+                include_subdirs=include_subdirs,
+                extrafiles=extrafiles,
+                replace_function=replace_function,
+                modify_exe_name=modify_exe_name,
+                exe_dir=bindir,
+                download=download,
+                download_dir=download_dir,
+                download_clean=clean,
+                download_verify=download_verify,
+                timeout=timeout,
+                makefile=makefile,
+            )
 
         # calculate download and compile time
         end_downcomp = datetime.now()
         elapsed = end_downcomp - start_downcomp
-        print('elapsed download and compile time (hh:mm:ss.ms): ' +
-              '{}\n'.format(elapsed))
+        print(
+            "elapsed download and compile time (hh:mm:ss.ms): "
+            + "{}\n".format(elapsed)
+        )
 
     end_time = datetime.now()
     elapsed = end_time - start_time
-    print('elapsed time (hh:mm:ss.ms): {}\n'.format(elapsed))
+    print("elapsed time (hh:mm:ss.ms): {}\n".format(elapsed))
 
     return returncode
 
@@ -827,8 +879,8 @@ def compress_apps(targets=None):
             targets = build_targets()
 
         # add code.json
-        if 'code.json' not in targets:
-            targets.append('code.json')
+        if "code.json" not in targets:
+            targets.append("code.json")
 
         # delete the zip file if it exists
         if os.path.exists(zip_pth):
@@ -839,8 +891,9 @@ def compress_apps(targets=None):
         bindir = set_bindir()
 
         # compress the compiled executables
-        msg = "Compressing files in '{}' ".format(bindir) + \
-              "directory to zip file '{}'".format(zip_pth)
+        msg = "Compressing files in '{}' ".format(
+            bindir
+        ) + "directory to zip file '{}'".format(zip_pth)
         print(msg)
         success = zip_all(zip_pth, dir_pths=bindir, patterns=targets)
 
@@ -869,7 +922,7 @@ def update_triangle_files(srcdir, fc, cc, arch, double):
     """
     # move the downloaded files
     rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))
-    prog_dict = usgs_program_data().get_target('triangle')
+    prog_dict = usgs_program_data().get_target("triangle")
     dirname = prog_dict.dirname
     dstpth = os.path.join(rootdir, dirname)
 
@@ -882,11 +935,11 @@ def update_triangle_files(srcdir, fc, cc, arch, double):
         os.makedirs(srcdir)
 
     # move the source files
-    src = os.path.join(rootdir, 'triangle.c')
-    dst = os.path.join(srcdir, 'triangle.c')
+    src = os.path.join(rootdir, "triangle.c")
+    dst = os.path.join(srcdir, "triangle.c")
     shutil.move(src, dst)
-    src = os.path.join(rootdir, 'triangle.h')
-    dst = os.path.join(srcdir, 'triangle.h')
+    src = os.path.join(rootdir, "triangle.h")
+    dst = os.path.join(srcdir, "triangle.h")
     shutil.move(src, dst)
 
     return
@@ -908,17 +961,17 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
     """
     # move the downloaded files
     rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))
-    prog_dict = usgs_program_data().get_target('mt3dms')
+    prog_dict = usgs_program_data().get_target("mt3dms")
     dirname = prog_dict.dirname
     dstpth = os.path.join(rootdir, dirname)
 
     # Clean up unneeded files
-    for f in ['ReadMe_MT3DMS.pdf', 'upgrade.pdf']:
+    for f in ["ReadMe_MT3DMS.pdf", "upgrade.pdf"]:
         print('Removing..."{}"'.format(f))
         os.remove(os.path.join(rootdir, f))
 
     # remove some unneeded folders
-    dir_list = ['bin', 'doc', 'examples', 'utility']
+    dir_list = ["bin", "doc", "examples", "utility"]
     for d in dir_list:
         dname = os.path.join(rootdir, d)
         if os.path.isdir(dname):
@@ -937,7 +990,7 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
         if src_dir is rootdir:
             continue
         else:
-            dst_dir = src_dir.replace(rootdir + os.path.sep, '')
+            dst_dir = src_dir.replace(rootdir + os.path.sep, "")
             dst_dir = os.path.join(dstpth, dst_dir)
         if not os.path.exists(dst_dir):
             os.mkdir(dst_dir)
@@ -946,18 +999,18 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
             dst_file = os.path.join(dst_dir, file_)
             if os.path.exists(dst_file):
                 os.remove(dst_file)
-            print('{} -> {}'.format(src_file, dst_dir))
+            print("{} -> {}".format(src_file, dst_dir))
             # shutil.copy(src_file, dst_dir)
             shutil.move(src_file, dst_file)
 
     # remove the original source directory
-    dname = os.path.join(rootdir, 'src')
+    dname = os.path.join(rootdir, "src")
     if os.path.isdir(dname):
         print('Removing..."{}"'.format(dname))
         shutil.rmtree(dname)
 
     # remove some unneeded files
-    file_list = ['automake.fig', 'mt3dms5b.exe']
+    file_list = ["automake.fig", "mt3dms5b.exe"]
     for f in file_list:
         dname = os.path.join(srcdir, f)
         if os.path.isfile(dname):
@@ -965,39 +1018,42 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
             os.remove(dname)
 
     # Replace the getcl command with getarg
-    f1 = open(os.path.join(srcdir, 'mt3dms5.for'), 'r')
-    f2 = open(os.path.join(srcdir, 'mt3dms5.for.tmp'), 'w')
+    f1 = open(os.path.join(srcdir, "mt3dms5.for"), "r")
+    f2 = open(os.path.join(srcdir, "mt3dms5.for.tmp"), "w")
     for line in f1:
-        f2.write(line.replace('CALL GETCL(FLNAME)', 'CALL GETARG(1,FLNAME)'))
+        f2.write(line.replace("CALL GETCL(FLNAME)", "CALL GETARG(1,FLNAME)"))
     f1.close()
     f2.close()
-    os.remove(os.path.join(srcdir, 'mt3dms5.for'))
-    shutil.move(os.path.join(srcdir, 'mt3dms5.for.tmp'),
-                os.path.join(srcdir, 'mt3dms5.for'))
+    os.remove(os.path.join(srcdir, "mt3dms5.for"))
+    shutil.move(
+        os.path.join(srcdir, "mt3dms5.for.tmp"),
+        os.path.join(srcdir, "mt3dms5.for"),
+    )
 
     # Need to initialize the V array in SADV5B
     # see here: https://github.com/MODFLOW-USGS/mt3d-usgs/pull/46
-    f1 = open(os.path.join(srcdir, 'mt_adv5.for'), 'r')
-    f2 = open(os.path.join(srcdir, 'mt_adv5.for.tmp'), 'w')
-    sfind = 'C--SET DT TO NEGATIVE FOR BACKWARD TRACKING'
-    sreplace = 'C--INITIALIZE\n      V(:)=0.\nC\n' + sfind
+    f1 = open(os.path.join(srcdir, "mt_adv5.for"), "r")
+    f2 = open(os.path.join(srcdir, "mt_adv5.for.tmp"), "w")
+    sfind = "C--SET DT TO NEGATIVE FOR BACKWARD TRACKING"
+    sreplace = "C--INITIALIZE\n      V(:)=0.\nC\n" + sfind
     for line in f1:
         f2.write(line.replace(sfind, sreplace))
     f1.close()
     f2.close()
-    os.remove(os.path.join(srcdir, 'mt_adv5.for'))
-    shutil.move(os.path.join(srcdir, 'mt_adv5.for.tmp'),
-                os.path.join(srcdir, 'mt_adv5.for'))
+    os.remove(os.path.join(srcdir, "mt_adv5.for"))
+    shutil.move(
+        os.path.join(srcdir, "mt_adv5.for.tmp"),
+        os.path.join(srcdir, "mt_adv5.for"),
+    )
 
-    for file_list in ['mt_btn5.for', 'mt_utl5.for']:
+    for file_list in ["mt_btn5.for", "mt_utl5.for"]:
         fpth = os.path.join(srcdir, file_list)
         with open(fpth) as f:
             lines = f.readlines()
-        f = open(fpth, 'w')
+        f = open(fpth, "w")
         for line in lines:
             if "'FILESPEC.INC'" in line:
-                line = line.replace("'FILESPEC.INC'",
-                                    "'filespec.inc'")
+                line = line.replace("'FILESPEC.INC'", "'filespec.inc'")
             f.write(line)
         f.close()
 
@@ -1006,7 +1062,7 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
 
 def update_swtv4_files(srcdir, fc, cc, arch, double):
     # Remove the parallel and serial folders from the source directory
-    dlist = ['parallel', 'serial']
+    dlist = ["parallel", "serial"]
     for d in dlist:
         dname = os.path.join(srcdir, d)
         if os.path.isdir(dname):
@@ -1019,35 +1075,50 @@ def update_swtv4_files(srcdir, fc, cc, arch, double):
     for filename in srcfiles:
         src = os.path.join(srcdir, filename)
         dst = os.path.join(srcdir, filename.lower())
-        if 'linux' in sys.platform.lower() or 'darwin' in sys.platform.lower():
+        if "linux" in sys.platform.lower() or "darwin" in sys.platform.lower():
             os.rename(src, dst)
 
-    if 'linux' in sys.platform.lower() or 'darwin' in sys.platform.lower():
+    if "linux" in sys.platform.lower() or "darwin" in sys.platform.lower():
         updfile = False
-        if cc in ['icc', 'clang', 'gcc']:
+        if cc in ["icc", "clang", "gcc"]:
             updfile = True
         if updfile:
-            fpth = os.path.join(srcdir, 'gmg1.f')
+            fpth = os.path.join(srcdir, "gmg1.f")
             lines = [line.rstrip() for line in open(fpth)]
-            f = open(fpth, 'w')
+            f = open(fpth, "w")
             for line in lines:
-                if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
-                    line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                f.write('{}\n'.format(line))
+                if (
+                    "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
+                    in line
+                ):
+                    line = (
+                        "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
+                    )
+                f.write("{}\n".format(line))
             f.close()
     else:
         # must be windows
-        if arch == 'intel64':
-            fpth = os.path.join(srcdir, 'gmg1.f')
+        if arch == "intel64":
+            fpth = os.path.join(srcdir, "gmg1.f")
             lines = [line.rstrip() for line in open(fpth)]
-            f = open(fpth, 'w')
+            f = open(fpth, "w")
             for line in lines:
                 # comment out the 32 bit one and activate the 64 bit line
-                if "C      !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT" in line:
-                    line = "       !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
-                if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
-                    line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                f.write('{}\n'.format(line))
+                if (
+                    "C      !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
+                    in line
+                ):
+                    line = (
+                        "       !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
+                    )
+                if (
+                    "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
+                    in line
+                ):
+                    line = (
+                        "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
+                    )
+                f.write("{}\n".format(line))
             f.close()
 
     return
@@ -1055,92 +1126,92 @@ def update_swtv4_files(srcdir, fc, cc, arch, double):
 
 def update_mf2005_files(srcdir, fc, cc, arch, double):
     # update utl7.f
-    tag = 'IBINARY=0'
-    fpth = os.path.join(srcdir, 'utl7.f')
+    tag = "IBINARY=0"
+    fpth = os.path.join(srcdir, "utl7.f")
     with open(fpth) as f:
         lines = f.readlines()
-    f = open(fpth, 'w')
+    f = open(fpth, "w")
     for line in lines:
         if tag in line:
             indent = len(line) - len(line.lstrip())
-            line += indent * ' ' + 'JAUX=0\n'
+            line += indent * " " + "JAUX=0\n"
         f.write(line)
     f.close()
 
     # update gwf2swi27.f
-    tag = 'INTEGER, PARAMETER :: VERSIZE ='
+    tag = "INTEGER, PARAMETER :: VERSIZE ="
     prec = 4
     if double:
         prec = 8
-    fpth = os.path.join(srcdir, 'gwf2swi27.f')
+    fpth = os.path.join(srcdir, "gwf2swi27.f")
     with open(fpth) as f:
         lines = f.readlines()
-    f = open(fpth, 'w')
+    f = open(fpth, "w")
     for line in lines:
-        if line.lower()[0] not in ['!', 'c']:
+        if line.lower()[0] not in ["!", "c"]:
             if tag in line:
                 indent = len(line) - len(line.lstrip())
-                line = indent * ' ' + tag + ' {}\n'.format(prec)
+                line = indent * " " + tag + " {}\n".format(prec)
         f.write(line)
     f.close()
 
     # update gwf2swt7.f
-    tag = 'EST(J,I,N)=0.0'
-    fpth = os.path.join(srcdir, 'gwf2swt7.f')
+    tag = "EST(J,I,N)=0.0"
+    fpth = os.path.join(srcdir, "gwf2swt7.f")
     with open(fpth) as f:
         lines = f.readlines()
-    f = open(fpth, 'w')
+    f = open(fpth, "w")
     for line in lines:
         if tag in line:
             indent = len(line) - len(line.lstrip())
-            line += indent * ' ' + 'PCS(J,I,N)=0.0\n'
+            line += indent * " " + "PCS(J,I,N)=0.0\n"
         f.write(line)
     f.close()
 
 
 def update_mfnwt_files(srcdir, fc, cc, arch, double):
     # update utl7.f
-    fpth = os.path.join(srcdir, 'utl7.f')
-    tag = 'IBINARY=0'
+    fpth = os.path.join(srcdir, "utl7.f")
+    tag = "IBINARY=0"
     with open(fpth) as f:
         lines = f.readlines()
-    f = open(fpth, 'w')
+    f = open(fpth, "w")
     for line in lines:
         if tag in line:
             indent = len(line) - len(line.lstrip())
-            line += indent * ' ' + 'JAUX=0\n'
+            line += indent * " " + "JAUX=0\n"
         f.write(line)
     f.close()
 
     # update gwf2swt7.f
-    tag = 'EST(J,I,N)=0.0'
-    fpth = os.path.join(srcdir, 'gwf2swt7.f')
+    tag = "EST(J,I,N)=0.0"
+    fpth = os.path.join(srcdir, "gwf2swt7.f")
     if os.path.exists(fpth):
         with open(fpth) as f:
             lines = f.readlines()
-        f = open(fpth, 'w')
+        f = open(fpth, "w")
         for line in lines:
             if tag in line:
                 indent = len(line) - len(line.lstrip())
-                line += indent * ' ' + 'PCS(J,I,N)=0.0\n'
+                line += indent * " " + "PCS(J,I,N)=0.0\n"
             f.write(line)
         f.close()
 
     # remove lrestart.f
-    fpth = os.path.join(srcdir, 'Irestart.f')
+    fpth = os.path.join(srcdir, "Irestart.f")
     if os.path.exists(fpth):
         os.remove(fpth)
 
     # update gwf2swi27.f or gwf2swi27.f
-    fpth = os.path.join(srcdir, 'gwf2swi27.f')
+    fpth = os.path.join(srcdir, "gwf2swi27.f")
     if not os.path.exists(fpth):
-        fpth = os.path.join(srcdir, 'gwf2swi27.fpp')
+        fpth = os.path.join(srcdir, "gwf2swi27.fpp")
     if os.path.exists(fpth):
-        tag = '(i,csolver(i),i=1,3)'
-        new_tag = '(i,csolver(i),i=1,2)'
+        tag = "(i,csolver(i),i=1,3)"
+        new_tag = "(i,csolver(i),i=1,2)"
         with open(fpth) as f:
             lines = f.readlines()
-        f = open(fpth, 'w')
+        f = open(fpth, "w")
         for line in lines:
             if tag in line:
                 line = line.replace(tag, new_tag)
@@ -1150,28 +1221,28 @@ def update_mfnwt_files(srcdir, fc, cc, arch, double):
 
 def update_gsflow_files(srcdir, fc, cc, arch, double):
     # update gwf2swt7.f
-    tag = 'EST(J,I,N)=0.0'
-    fpth = os.path.join(srcdir, 'modflow', 'gwf2swt7.f')
+    tag = "EST(J,I,N)=0.0"
+    fpth = os.path.join(srcdir, "modflow", "gwf2swt7.f")
     with open(fpth) as f:
         lines = f.readlines()
-    f = open(fpth, 'w')
+    f = open(fpth, "w")
     for line in lines:
         if tag in line:
             indent = len(line) - len(line.lstrip())
-            line += indent * ' ' + 'PCS(J,I,N)=0.0\n'
+            line += indent * " " + "PCS(J,I,N)=0.0\n"
         f.write(line)
     f.close()
 
     # update gwf2swi27.f or gwf2swi27.fpp
-    fpth = os.path.join(srcdir, 'modflow', 'gwf2swi27.f')
+    fpth = os.path.join(srcdir, "modflow", "gwf2swi27.f")
     if not os.path.exists(fpth):
-        fpth = os.path.join(srcdir, 'modflow', 'gwf2swi27.fpp')
+        fpth = os.path.join(srcdir, "modflow", "gwf2swi27.fpp")
     if os.path.exists(fpth):
-        tag = '(i,csolver(i),i=1,3)'
-        new_tag = '(i,csolver(i),i=1,2)'
+        tag = "(i,csolver(i),i=1,3)"
+        new_tag = "(i,csolver(i),i=1,2)"
         with open(fpth) as f:
             lines = f.readlines()
-        f = open(fpth, 'w')
+        f = open(fpth, "w")
         for line in lines:
             if tag in line:
                 line = line.replace(tag, new_tag)
@@ -1179,42 +1250,49 @@ def update_gsflow_files(srcdir, fc, cc, arch, double):
         f.close()
 
     # remove merge and lib directories
-    pths = [os.path.join(srcdir, 'merge'), os.path.join(srcdir, 'lib')]
+    pths = [os.path.join(srcdir, "merge"), os.path.join(srcdir, "lib")]
     for pth in pths:
         if os.path.isdir(pth):
             shutil.rmtree(pth)
 
     # remove existing *.mod, *.o, and *.a (if any are left) files
-    dpths = [os.path.join(srcdir, o) for o in os.listdir(srcdir)
-             if os.path.isdir(os.path.join(srcdir, o))]
+    dpths = [
+        os.path.join(srcdir, o)
+        for o in os.listdir(srcdir)
+        if os.path.isdir(os.path.join(srcdir, o))
+    ]
 
     for dpth in dpths:
         for f in os.listdir(dpth):
             ext = os.path.splitext(f)[1]
             fpth = os.path.join(dpth, f)
-            if ext in ['.mod', '.o', '.a']:
+            if ext in [".mod", ".o", ".a"]:
                 os.remove(fpth)
 
     # edit and remove os specific files
-    if sys.platform.lower() == 'win32':
-        if 'ifort' not in fc:
+    if sys.platform.lower() == "win32":
+        if "ifort" not in fc:
             tag = "FORM='BINARY'"
             new_tag = "FORM='UNFORMATTED', ACCESS='STREAM'"
-            fpth = os.path.join(srcdir, 'prms', 'utils_prms_windows.f90')
+            fpth = os.path.join(srcdir, "prms", "utils_prms_windows.f90")
             with open(fpth) as f:
                 lines = f.readlines()
-            f = open(fpth, 'w')
+            f = open(fpth, "w")
             for line in lines:
                 if tag in line:
                     line = line.replace(tag, new_tag)
                 f.write(line)
             f.close()
 
-        fpths = [os.path.join(srcdir, 'prms', 'utils_prms_linux.f90'),
-                 os.path.join(srcdir, 'prms', 'utils_prms.f90')]
+        fpths = [
+            os.path.join(srcdir, "prms", "utils_prms_linux.f90"),
+            os.path.join(srcdir, "prms", "utils_prms.f90"),
+        ]
     else:
-        fpths = [os.path.join(srcdir, 'prms', 'utils_prms_linux.f90'),
-                 os.path.join(srcdir, 'prms', 'utils_prms_windows.f90')]
+        fpths = [
+            os.path.join(srcdir, "prms", "utils_prms_linux.f90"),
+            os.path.join(srcdir, "prms", "utils_prms_windows.f90"),
+        ]
     for fpth in fpths:
         os.remove(fpth)
 
@@ -1223,7 +1301,7 @@ def update_gsflow_files(srcdir, fc, cc, arch, double):
 
 def update_mf2000_files(srcdir, fc, cc, arch, double):
     # Remove six src folders
-    dlist = ['beale2k', 'hydprgm', 'mf96to2k', 'mfpto2k', 'resan2k', 'ycint2k']
+    dlist = ["beale2k", "hydprgm", "mf96to2k", "mfpto2k", "resan2k", "ycint2k"]
     for d in dlist:
         dname = os.path.join(srcdir, d)
         if os.path.isdir(dname):
@@ -1231,26 +1309,28 @@ def update_mf2000_files(srcdir, fc, cc, arch, double):
             shutil.rmtree(os.path.join(srcdir, d))
 
     # Move src files and serial src file to src directory
-    tpth = os.path.join(srcdir, 'mf2k')
-    files = [f for f in os.listdir(tpth) if
-             os.path.isfile(os.path.join(tpth, f))]
+    tpth = os.path.join(srcdir, "mf2k")
+    files = [
+        f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))
+    ]
     for f in files:
         shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
-    tpth = os.path.join(srcdir, 'mf2k', 'serial')
-    files = [f for f in os.listdir(tpth) if
-             os.path.isfile(os.path.join(tpth, f))]
+    tpth = os.path.join(srcdir, "mf2k", "serial")
+    files = [
+        f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))
+    ]
     for f in files:
         shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
 
     # Remove mf2k directory in source directory
-    tpth = os.path.join(srcdir, 'mf2k')
+    tpth = os.path.join(srcdir, "mf2k")
     shutil.rmtree(tpth)
 
     # modify the openspec.inc file to use binary instead of unformatted
-    fname = os.path.join(srcdir, 'openspec.inc')
+    fname = os.path.join(srcdir, "openspec.inc")
     with open(fname) as f:
         lines = f.readlines()
-    with open(fname, 'w') as f:
+    with open(fname, "w") as f:
         for line in lines:
             if "      DATA FORM/'UNFORMATTED'/" in line:
                 line = "C     DATA FORM/'UNFORMATTED'/\n"
@@ -1262,40 +1342,41 @@ def update_mf2000_files(srcdir, fc, cc, arch, double):
 
 def update_mflgr_files(srcdir, fc, cc, arch, double):
     # update gwf2swt7.f
-    tag = 'EST(J,I,N)=0.0'
-    fpth = os.path.join(srcdir, 'gwf2swt7.f')
+    tag = "EST(J,I,N)=0.0"
+    fpth = os.path.join(srcdir, "gwf2swt7.f")
     with open(fpth) as f:
         lines = f.readlines()
-    f = open(fpth, 'w')
+    f = open(fpth, "w")
     for line in lines:
         if tag in line:
             indent = len(line) - len(line.lstrip())
-            line += indent * ' ' + 'PCS(J,I,N)=0.0\n'
+            line += indent * " " + "PCS(J,I,N)=0.0\n"
         f.write(line)
     f.close()
 
 
 def update_mp6_files(srcdir, fc, cc, arch, double):
-    fname1 = os.path.join(srcdir, 'MP6Flowdata.for')
-    f = open(fname1, 'r')
+    fname1 = os.path.join(srcdir, "MP6Flowdata.for")
+    f = open(fname1, "r")
 
-    fname2 = os.path.join(srcdir, 'MP6Flowdata_mod.for')
-    f2 = open(fname2, 'w')
+    fname2 = os.path.join(srcdir, "MP6Flowdata_mod.for")
+    f2 = open(fname2, "w")
     for line in f:
-        line = line.replace('CD.QX2', 'CD%QX2')
+        line = line.replace("CD.QX2", "CD%QX2")
         f2.write(line)
     f.close()
     f2.close()
     os.remove(fname1)
 
-    fname1 = os.path.join(srcdir, 'MP6MPBAS1.for')
-    f = open(fname1, 'r')
+    fname1 = os.path.join(srcdir, "MP6MPBAS1.for")
+    f = open(fname1, "r")
 
-    fname2 = os.path.join(srcdir, 'MP6MPBAS1_mod.for')
-    f2 = open(fname2, 'w')
+    fname2 = os.path.join(srcdir, "MP6MPBAS1_mod.for")
+    f2 = open(fname2, "w")
     for line in f:
-        line = line.replace('MPBASDAT(IGRID)%NCPPL=NCPPL',
-                            'MPBASDAT(IGRID)%NCPPL=>NCPPL')
+        line = line.replace(
+            "MPBASDAT(IGRID)%NCPPL=NCPPL", "MPBASDAT(IGRID)%NCPPL=>NCPPL"
+        )
         f2.write(line)
     f.close()
     f2.close()
@@ -1303,12 +1384,12 @@ def update_mp6_files(srcdir, fc, cc, arch, double):
 
 
 def update_mp7_files(srcdir, fc, cc, arch, double):
-    fpth = os.path.join(srcdir, 'StartingLocationReader.f90')
+    fpth = os.path.join(srcdir, "StartingLocationReader.f90")
     with open(fpth) as f:
         lines = f.readlines()
-    f = open(fpth, 'w')
+    f = open(fpth, "w")
     for line in lines:
-        if 'pGroup%Particles(n)%InitialFace = 0' in line:
+        if "pGroup%Particles(n)%InitialFace = 0" in line:
             continue
         f.write(line)
     f.close()
@@ -1316,24 +1397,26 @@ def update_mp7_files(srcdir, fc, cc, arch, double):
 
 def update_vs2dt_files(srcdir, fc, cc, arch, double):
     # move the main source into the source directory
-    f1 = os.path.join(srcdir, '..', 'vs2dt3_3.f')
+    f1 = os.path.join(srcdir, "..", "vs2dt3_3.f")
     f1 = os.path.abspath(f1)
     assert os.path.isfile(f1)
-    f2 = os.path.join(srcdir, 'vs2dt3_3.f')
+    f2 = os.path.join(srcdir, "vs2dt3_3.f")
     f2 = os.path.abspath(f2)
     shutil.move(f1, f2)
     assert os.path.isfile(f2)
 
-    f1 = open(os.path.join(srcdir, 'vs2dt3_3.f'), 'r')
-    f2 = open(os.path.join(srcdir, 'vs2dt3_3.f.tmp'), 'w')
+    f1 = open(os.path.join(srcdir, "vs2dt3_3.f"), "r")
+    f2 = open(os.path.join(srcdir, "vs2dt3_3.f.tmp"), "w")
     for line in f1:
         srctxt = "     `POSITION='REWIND')"
         rpctxt = "     `POSITION='REWIND',ACCESS='STREAM')"
         f2.write(line.replace(srctxt, rpctxt))
     f1.close()
     f2.close()
-    os.remove(os.path.join(srcdir, 'vs2dt3_3.f'))
-    shutil.move(os.path.join(srcdir, 'vs2dt3_3.f.tmp'),
-                os.path.join(srcdir, 'vs2dt3_3.f'))
+    os.remove(os.path.join(srcdir, "vs2dt3_3.f"))
+    shutil.move(
+        os.path.join(srcdir, "vs2dt3_3.f.tmp"),
+        os.path.join(srcdir, "vs2dt3_3.f"),
+    )
 
     return

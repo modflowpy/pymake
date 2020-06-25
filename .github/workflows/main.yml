@@ -56,6 +56,8 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
@@ -66,14 +68,13 @@ jobs:
       uses: ts-graphviz/setup-graphviz@v1
     - name: Install packages
       run: |
-        pip install flake8 black
+        pip install pydotplus appdirs
+        pip install numpy matplotlib
+        pip install https://github.com/modflowpy/flopy/zipball/develop
+        pip install pylint flake8 black
+    - name: Run pylint
+      run: pylint --jobs=2 --errors-only ./pymake
     - name: Run flake8
-      run: flake8
+      run: flake8 --exit-zero
     - name: Run black
-      run: black --check
-    - name: GitHub Action for pylint
-      uses: cclauss/GitHub-Action-for-pylint@0.7.0
-    - name: GitHub Action for Flake8
-      uses: cclauss/GitHub-Action-for-Flake8@v0.5.0
-    - name: Black Code Formatter
-      uses: lgeiger/black-action@v1.0.1
+      run: black --check --linelength 79 ./pymake

@@ -61,13 +61,15 @@ def test_previous_assets():
 
     mfexes_repo_name = 'MODFLOW-USGS/modflow6'
     version = '6.1.0'
-    assets = pymake.get_repo_assets(mfexes_repo_name, version=version)
+    assets = pymake.get_repo_assets(mfexes_repo_name, version=version,
+                                    error_return=True)
     msg = "failed to get release {} ".format(version) + \
           "from the '{}' repo".format(mfexes_repo_name)
     if allow_failure:
         assert isinstance(assets, dict), msg
     else:
         if not isinstance(assets, dict):
+            print('assets = {}'.format(assets))
             print(msg)
     return
 
