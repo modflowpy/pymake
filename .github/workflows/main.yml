@@ -30,7 +30,6 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-        github-token: ${{secrets.GITHUB_TOKEN}}
     - name: Install and print system dependencies (Linux)
       if: runner.os == 'Linux'
       run: |
@@ -52,6 +51,8 @@ jobs:
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install .
     - name: Test with nosetests
+      with:
+        repo-token: ${{secrets.GITHUB_TOKEN}}
       run: |
         nosetests -v --with-id --with-timer -w ./autotest
 
@@ -64,8 +65,12 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: 3.8
+    - name: Setup Graphviz
+      uses: ts-graphviz/setup-graphviz@v1
     - name: Install packages
       run: |
+        pip install requests pydotplus
+        pip install numpy flopy
         pip install flake8 pylint pylint-exit black
     - name: Run pylint
       run: pylint --jobs=2 --errors-only ./pymake
