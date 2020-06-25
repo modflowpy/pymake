@@ -28,6 +28,10 @@ jobs:
     - name: Setup Graphviz
       uses: ts-graphviz/setup-graphviz@v1
     - uses: actions/checkout@v2
+    - name: Install Protoc for GitHub API
+      uses: arduino/setup-protoc@master
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
