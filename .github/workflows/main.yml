@@ -50,6 +50,7 @@ jobs:
         pip install numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install .
+    - name: Run nosetests
       uses: ./.github/actions/run-tests
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
