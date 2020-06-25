@@ -38,7 +38,7 @@ def check_gnu_switch_available(switch, compiler="gfortran"):
     process_Popen_command(False, cmdlist)
 
     # establish communicator
-    stdout, _ = process_Popen_communicate(proc, verbose=False)
+    _, stdout = process_Popen_communicate(proc, verbose=False)
 
     # determine if flag exists
     avail = switch in stdout
