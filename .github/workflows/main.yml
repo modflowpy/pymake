@@ -68,8 +68,7 @@ jobs:
       uses: ts-graphviz/setup-graphviz@v1
     - name: Install packages
       run: |
-        pip install pydotplus appdirs
-        pip install numpy matplotlib
+        pip install requests pydotplus appdirs numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install pylint flake8 black
     - name: Run pylint
