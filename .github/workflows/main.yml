@@ -51,7 +51,8 @@ jobs:
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install .
     - name: Run nosetests
-      uses: ./.github/actions/run-tests
+      run: |
+        nosetests -v --with-id --with-timer -w ./autotest
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
@@ -68,8 +69,10 @@ jobs:
       uses: ts-graphviz/setup-graphviz@v1
     - name: Install packages
       run: |
-        pip install requests pydotplus
-        pip install numpy flopy
+        pip install requests
+        pip install pydotplus appdirs
+        pip install numpy matplotlib
+        pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install flake8 pylint pylint-exit black
     - name: Run pylint
       run: pylint --jobs=2 --errors-only ./pymake
