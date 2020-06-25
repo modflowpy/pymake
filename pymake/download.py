@@ -357,7 +357,7 @@ def get_default_json(tag_name=None):
 
     """
     if tag_name is None:
-        tag_name = '3.0'
+        tag_name = '4.0'
     url = ('https://github.com/{}/'.format(get_default_repo()) +
            'releases/download/{}/'.format(tag_name))
     json_obj = {'tag_name': tag_name}

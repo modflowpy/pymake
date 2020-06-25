@@ -13,6 +13,11 @@ jobs:
       matrix:
         python-version: [3.6, 3.7, 3.8]
         os: [ubuntu-latest, macos-latest, windows-latest]
+        exclude:
+          - os: macos-latest
+            python-version: [3.6, 3.7]
+          - os: windows-latest
+            python-version: [3.6, 3.7]
 
     steps:
     - uses: actions/checkout@v1
@@ -38,14 +43,11 @@ jobs:
         gfortran --version
     - name: Install python packages
       run: |
-        pip install .
-        pip install --upgrade pip
-        pip install -r ./requirements.travis.txt
-        pip install --no-binary rasterio rasterio
-        pip install --upgrade numpy
-        pip install shapely[vectorize]
-        pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install requests nose-timer
+        pip install pydotplus appdirs
+        pip install numpy matplotlib
+        pip install https://github.com/modflowpy/flopy/zipball/develop
+        pip install .
     - name: Test with nosetests
       run: |
         nosetests -v --with-id --with-timer -w ./autotest
