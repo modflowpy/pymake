@@ -72,7 +72,7 @@ jobs:
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install pylint flake8 black
     - name: Run pylint
-      run: pylint --jobs=2 --errors-only ./pymake
+      run: pylint --jobs=0 --errors-only ./pymake
     - name: Run flake8
       run: flake8 --exit-zero
     - name: Run black
