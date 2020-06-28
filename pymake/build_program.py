@@ -11,7 +11,7 @@ if sys.version_info >= (3, 3):
 else:
     from distutils.spawn import find_executable as which
 
-from .pymake import main
+from .pymake_base import main
 from .compiler_switches import (
     set_arch,
     set_compiler,

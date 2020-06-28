@@ -3,8 +3,9 @@ __name__ = "pymake"
 __author__ = "Christian D. Langevin, Joseph Hughes"
 from .version import __version__, __build__, __git_commit__
 
+from .pymake import Pymake
 from .usgsprograms import usgs_program_data
-from .pymake import main, parser
+from .pymake_base import main, parser
 from .compiler_switches import set_compiler
 from .download import (
     download_and_unzip,
