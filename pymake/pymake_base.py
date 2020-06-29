@@ -1,26 +1,12 @@
 #! /usr/bin/env python
-"""Make a binary executable for a FORTRAN program, such as MODFLOW."""
-from __future__ import print_function
-
-__author__ = "Christian D. Langevin"
-__date__ = "October 26, 2014"
-__version__ = "1.1.0"
-__maintainer__ = "Christian D. Langevin"
-__email__ = "langevin@usgs.gov"
-__status__ = "Production"
-__description__ = """
-This is the pymake program for compiling fortran source files, such as
-the source files that come with MODFLOW. The program works by building
-a directed acyclic graph of the module dependencies and then compiling
-the source files in the proper order.
-"""
-
 import os
 import sys
 import traceback
 import shutil
 import argparse
 import datetime
+
+from .pymake import __description__
 
 from .Popen_wrapper import (
     process_Popen_initialize,
@@ -73,10 +59,8 @@ def parser():
                                      source directory will be built and
                                      linked.""",
     )
-    parser.add_argument("srcdir",
-                        help="Location of source directory")
-    parser.add_argument("target",
-                        help="Name of target to create")
+    parser.add_argument("srcdir", help="Location of source directory")
+    parser.add_argument("target", help="Name of target to create")
     parser.add_argument(
         "-fc",
         help="Fortran compiler to use (default is gfortran)",
@@ -1309,7 +1293,7 @@ def main(
     srcdir2=None,
     extrafiles=None,
     excludefiles=None,
-    sharedobject=False
+    sharedobject=False,
 ):
     """Main pymake function.
 

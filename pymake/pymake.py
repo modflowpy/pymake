@@ -1,3 +1,17 @@
+"""Make a binary executable for a FORTRAN program, such as MODFLOW."""
+__author__ = "Christian D. Langevin"
+__date__ = "October 26, 2014"
+__version__ = "1.1.0"
+__maintainer__ = "Christian D. Langevin"
+__email__ = "langevin@usgs.gov"
+__status__ = "Production"
+__description__ = """
+This is the pymake program for compiling fortran source files, such as
+the source files that come with MODFLOW. The program works by building
+a directed acyclic graph of the module dependencies and then compiling
+the source files in the proper order.
+"""
+
 import os
 import time
 import shutil
@@ -53,7 +67,11 @@ class Pymake:
                 # remove the directory
                 try:
                     shutil.rmtree(self.download_dir)
-                    print("removing download directory...'{}'".format(self.download_dir))
+                    print(
+                        "removing download directory...'{}'".format(
+                            self.download_dir
+                        )
+                    )
                     break
                 except:
                     msg = "    removal attempt {:>2d} ".format(itries + 1)
@@ -101,9 +119,7 @@ class Pymake:
         """
         prog_dict = usgs_program_data.get_target(target)
         if srcdir is None:
-            srcdir = os.path.join(
-                self.download_dir, prog_dict.srcdir
-            )
+            srcdir = os.path.join(self.download_dir, prog_dict.srcdir)
         self.srcdir = srcdir
 
         if fc is None or cc is None:
