@@ -42,7 +42,7 @@ jobs:
       run: |
         sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
 
-    - name: Print gfortran version (Windows)
+    - name: Print gfortran version
       run: |
         gfortran --version
 
