@@ -11,7 +11,7 @@ if sys.version_info >= (3, 3):
 else:
     from distutils.spawn import find_executable as which
 
-from .pymake import main
+from .pymake_base import main
 from .compiler_switches import (
     set_arch,
     set_compiler,
@@ -222,7 +222,6 @@ def set_extrafiles(target, download_dir):
     ----------
     target : str
         target to build
-
     download_dir : str
         path downloaded files will be placed in
 
@@ -283,6 +282,34 @@ def set_extrafiles(target, download_dir):
     print("{}\n".format(msg))
 
     return extrafiles
+
+
+def set_include_subdirs(target):
+    """
+    Determine if sub-directories in the source directory should be included.
+
+    Parameters
+    ----------
+    target : str
+        target to build
+
+    Returns
+    -------
+    include_subdirs : bool
+        boolean indicating if subdirectories should be included
+
+    """
+    # strip .exe extension if necessary
+    if ".exe" in target.lower():
+        target = target[:-4]
+
+    # determine if source subdirectories should be included
+    if target in ["mf6", "gridgen", "mf6beta", "gsflow"]:
+        include_subdirs = True
+    else:
+        include_subdirs = False
+
+    return include_subdirs
 
 
 def set_zip():
@@ -741,10 +768,7 @@ def build_apps(targets=None):
         arch = set_arch(target)
 
         # set include_subdirs
-        if target in ["mf6", "gridgen", "mf6beta", "gsflow"]:
-            include_subdirs = True
-        else:
-            include_subdirs = False
+        include_subdirs = set_include_subdirs(target)
 
         # set replace function
         replace_function = build_replace(target)
@@ -784,7 +808,7 @@ def build_apps(targets=None):
         # set extrafiles
         extrafiles = set_extrafiles(target, download_dir)
 
-        # determine the
+        # determine if single, double, or both should be built
         precision = usgs_program_data.get_precision(target)
 
         for idx, double in enumerate(precision):

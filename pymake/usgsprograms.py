@@ -4,11 +4,6 @@ from collections import OrderedDict
 
 import pymake
 
-# write installation location for pymake
-thisfilepath = os.path.dirname(os.path.abspath(__file__))
-pymakepth = os.path.abspath(os.path.join(thisfilepath))
-print("pymake is installed in {}".format(pymakepth))
-
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes."""
@@ -68,7 +63,8 @@ class usgs_program_data:
         -------
 
         """
-        pth = os.path.dirname(os.path.abspath(pymake.__file__))
+        # pth = os.path.dirname(os.path.abspath(pymake.__file__))
+        pth = os.path.dirname(os.path.abspath(__file__))
         fpth = os.path.join(pth, program_data_file)
         url_in = open(fpth, "r").read().split("\n")
 

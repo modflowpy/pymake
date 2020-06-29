@@ -214,8 +214,6 @@ def download_and_unzip(
     success = False
     tic = timeit.default_timer()
     for idx in range(nattempts):
-        print(" download attempt: {}".format(idx + 1))
-
         # open request
         req = requests.get(url, stream=True, verify=verify)
         if req.status_code != 200:
@@ -225,6 +223,9 @@ def download_and_unzip(
                 msg = "Cannot download file:\n    {}\n\n".format(url)
                 print(msg)
                 req.raise_for_status()
+
+        # print download attempt message
+        print(" download attempt: {}".format(idx + 1))
 
         # connection established - download the file
         fs = 0
@@ -310,7 +311,7 @@ def download_and_unzip(
         os.remove(file_name)
     print("Done downloading and extracting...\n")
 
-    return
+    return success
 
 
 def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
