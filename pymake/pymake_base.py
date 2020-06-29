@@ -73,12 +73,10 @@ def parser():
                                      source directory will be built and
                                      linked.""",
     )
-    parser.add_argument("srcdir", help="Location of source directory")
-    parser.add_argument("target", help="Name of target to create")
-    parser.add_argument("-ad",
-                        "--appdir",
-                        help="Name of directory for target",
-                        default=None)
+    parser.add_argument("srcdir",
+                        help="Location of source directory")
+    parser.add_argument("target",
+                        help="Name of target to create")
     parser.add_argument(
         "-fc",
         help="Fortran compiler to use (default is gfortran)",
@@ -1293,8 +1291,8 @@ def create_makefile(
 
 
 def main(
-    srcdir,
-    target,
+    srcdir=None,
+    target=None,
     fc="gfortran",
     cc="gcc",
     makeclean=True,
@@ -1311,8 +1309,7 @@ def main(
     srcdir2=None,
     extrafiles=None,
     excludefiles=None,
-    sharedobject=False,
-    appdir=None
+    sharedobject=False
 ):
     """Main pymake function.
 
@@ -1363,8 +1360,6 @@ def main(
         to exclude from the build
     sharedobject : bool
         boolean indicating a shared object (.so or .dll) will be built
-    appdir : str
-        directory path for the target (default is None)
 
     Returns
     -------
@@ -1375,109 +1370,108 @@ def main(
     # initialize return code
     returncode = 0
 
-    # set fc and cc to None if they are passed as 'none'
-    if fc == "none":
-        fc = None
-    if cc == "none":
-        cc = None
-    if fc is None and cc is None:
-        msg = (
-            "Nothing to do the fortran (-fc) and c/c++ compilers (-cc)"
-            + "are both None."
-        )
-        raise ValueError(msg)
+    if srcdir is not None and target is not None:
 
-    # convert fflags, cflags, and syslibs to lists
-    if fflags is None:
-        fflags = []
-    elif isinstance(fflags, str):
-        fflags = fflags.split()
-    if cflags is None:
-        cflags = []
-    elif isinstance(cflags, str):
-        cflags = cflags.split()
-    if syslibs is None:
-        syslibs = []
-    elif isinstance(syslibs, str):
-        syslibs = syslibs.split()
+        # set fc and cc to None if they are passed as 'none'
+        if fc == "none":
+            fc = None
+        if cc == "none":
+            cc = None
+        if fc is None and cc is None:
+            msg = (
+                "Nothing to do the fortran (-fc) and c/c++ compilers (-cc)"
+                + "are both None."
+            )
+            raise ValueError(msg)
 
-    # process target
-    if appdir is not None:
-        if appdir != ".":
-            target = os.path.join(appdir, os.path.basename(target))
+        # convert fflags, cflags, and syslibs to lists
+        if fflags is None:
+            fflags = []
+        elif isinstance(fflags, str):
+            fflags = fflags.split()
+        if cflags is None:
+            cflags = []
+        elif isinstance(cflags, str):
+            cflags = cflags.split()
+        if syslibs is None:
+            syslibs = []
+        elif isinstance(syslibs, str):
+            syslibs = syslibs.split()
 
-    # write summary information
-    print("\nsource files are in:\n    {}\n".format(srcdir))
-    print("executable name to be created:\n    {}\n".format(target))
-    if srcdir2 is not None:
-        print("additional source files are in:\n     {}\n".format(srcdir2))
+        # write summary information
+        print("\nsource files are in:\n    {}\n".format(srcdir))
+        print("executable name to be created:\n    {}\n".format(target))
+        if srcdir2 is not None:
+            print("additional source files are in:\n     {}\n".format(srcdir2))
 
-    # make sure the path for the target exists
-    pth = os.path.dirname(target)
-    if pth == "":
-        pth = "."
-    if not os.path.exists(pth):
-        print("creating target path - {}\n".format(pth))
-        os.makedirs(pth)
+        # make sure the path for the target exists
+        pth = os.path.dirname(target)
+        if pth == "":
+            pth = "."
+        if not os.path.exists(pth):
+            print("creating target path - {}\n".format(pth))
+            os.makedirs(pth)
 
-    # initialize
-    pymake_initialize(srcdir, target, srcdir2, extrafiles, excludefiles)
+        # initialize
+        pymake_initialize(srcdir, target, srcdir2, extrafiles, excludefiles)
 
-    # get ordered list of files to compile
-    srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
+        # get ordered list of files to compile
+        srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
 
-    # set intelwin flag to True in compiling on windows with Intel compilers
-    intelwin = False
-    if get_osname() == "win32":
-        if fc is not None:
-            if fc in ["ifort", "mpiifort"]:
-                intelwin = True
-        if cc is not None:
-            if cc in ["cl", "icl"]:
-                intelwin = True
+        # set intelwin flag to True in compiling on windows with Intel compilers
+        intelwin = False
+        if get_osname() == "win32":
+            if fc is not None:
+                if fc in ["ifort", "mpiifort"]:
+                    intelwin = True
+            if cc is not None:
+                if cc in ["cl", "icl"]:
+                    intelwin = True
 
-    # update openspec files based on intelwin
-    if not intelwin:
-        create_openspec()
+        # update openspec files based on intelwin
+        if not intelwin:
+            create_openspec()
 
-    # compile the executable
-    returncode = pymake_compile(
-        srcfiles,
-        target,
-        fc,
-        cc,
-        expedite,
-        dryrun,
-        double,
-        debug,
-        fflags,
-        cflags,
-        syslibs,
-        arch,
-        intelwin,
-        sharedobject,
-    )
-
-    # create makefile
-    if makefile:
-        create_makefile(
-            target,
-            srcdir,
-            srcdir2,
-            extrafiles,
+        # compile the executable
+        returncode = pymake_compile(
             srcfiles,
-            debug,
-            double,
+            target,
             fc,
             cc,
+            expedite,
+            dryrun,
+            double,
+            debug,
             fflags,
             cflags,
             syslibs,
+            arch,
+            intelwin,
+            sharedobject,
         )
 
-    # clean up temporary files
-    if makeclean and returncode == 0:
-        clean(target, intelwin)
+        # create makefile
+        if makefile:
+            create_makefile(
+                target,
+                srcdir,
+                srcdir2,
+                extrafiles,
+                srcfiles,
+                debug,
+                double,
+                fc,
+                cc,
+                fflags,
+                cflags,
+                syslibs,
+            )
+
+        # clean up temporary files
+        if makeclean and returncode == 0:
+            clean(target, intelwin)
+    else:
+        returncode = 1
 
     return returncode
 

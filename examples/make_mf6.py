@@ -3,11 +3,13 @@ from pymake import Pymake
 
 # Download and compile the MODFLOW 6 distribution
 def make_mf6():
-    # pymake.build_apps(['mf6', 'zbud6'])
     pm = Pymake()
-    parser = pm.get_parser()
-    parser.appdir = 'build'
-    pm.build(['mf6', 'zbud6'])
+    pm.download_target("mf6")
+    pm.build("mf6")
+    pm.build("zbud6")
+    pm.download_cleanup()
+
+    return
 
 
 

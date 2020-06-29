@@ -285,6 +285,14 @@ def set_extrafiles(target, download_dir):
     return extrafiles
 
 
+def set_include_subdirs(target):
+    if target in ["mf6", "gridgen", "mf6beta", "gsflow"]:
+        include_subdirs = True
+    else:
+        include_subdirs = False
+    return include_subdirs
+
+
 def set_zip():
     """Set file path for zip file.
 
@@ -741,10 +749,7 @@ def build_apps(targets=None):
         arch = set_arch(target)
 
         # set include_subdirs
-        if target in ["mf6", "gridgen", "mf6beta", "gsflow"]:
-            include_subdirs = True
-        else:
-            include_subdirs = False
+        include_subdirs = set_include_subdirs(target)
 
         # set replace function
         replace_function = build_replace(target)
@@ -784,7 +789,7 @@ def build_apps(targets=None):
         # set extrafiles
         extrafiles = set_extrafiles(target, download_dir)
 
-        # determine the
+        # determine if single, double, or both should be built
         precision = usgs_program_data.get_precision(target)
 
         for idx, double in enumerate(precision):
