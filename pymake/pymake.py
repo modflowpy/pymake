@@ -24,12 +24,29 @@ from .usgsprograms import usgs_program_data
 
 
 class Pymake:
+    """
+    Pymake class for interacting with pymake functionality. This is essentially
+    a wrapper for all of the pymake functions needed to download and build
+    a target.
+
+    """
     def __init__(self, name="pymake"):
         self.name = name
-        self.targets = []
+        self.url = None
+        self.download_path = None
+        self.download_dir = None
+        self.srcdir = None
+        self.returncode = 0
+        self.build_targets = []
 
     def clean_targets(self):
-        for target in self.targets:
+        """
+
+        Returns
+        -------
+
+        """
+        for target in self.build_targets:
             if os.path.exists(target):
                 msg = "removing '{}'".format(target)
                 os.remove(target)
@@ -41,6 +58,20 @@ class Pymake:
     def download_target(
         self, target, url=None, download_path=".", verify=True, timeout=30
     ):
+        """
+
+        Parameters
+        ----------
+        target
+        url
+        download_path
+        verify
+        timeout
+
+        Returns
+        -------
+
+        """
         prog_dict = usgs_program_data.get_target(target)
 
         # set url
@@ -57,6 +88,12 @@ class Pymake:
         )
 
     def download_cleanup(self):
+        """
+
+        Returns
+        -------
+
+        """
         if os.path.exists(self.download_dir):
             ntries = 10
             for itries in range(ntries):
@@ -142,8 +179,8 @@ class Pymake:
             target = os.path.join(".", os.path.basename(target))
 
         # add target to list of targets
-        if os.path.abspath(target) not in self.targets:
-            self.targets.append(os.path.abspath(target))
+        if os.path.abspath(target) not in self.build_targets:
+            self.build_targets.append(os.path.abspath(target))
 
         self.returncode = main(
             srcdir=self.srcdir,
