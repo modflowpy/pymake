@@ -222,7 +222,6 @@ def set_extrafiles(target, download_dir):
     ----------
     target : str
         target to build
-
     download_dir : str
         path downloaded files will be placed in
 
@@ -286,10 +285,30 @@ def set_extrafiles(target, download_dir):
 
 
 def set_include_subdirs(target):
+    """
+    Determine if sub-directories in the source directory should be included.
+
+    Parameters
+    ----------
+    target : str
+        target to build
+
+    Returns
+    -------
+    include_subdirs : bool
+        boolean indicating if subdirectories should be included
+
+    """
+    # strip .exe extension if necessary
+    if ".exe" in target.lower():
+        target = target[:-4]
+
+    # determine if source subdirectories should be included
     if target in ["mf6", "gridgen", "mf6beta", "gsflow"]:
         include_subdirs = True
     else:
         include_subdirs = False
+
     return include_subdirs
 
 

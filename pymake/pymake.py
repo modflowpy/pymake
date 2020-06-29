@@ -30,6 +30,7 @@ class Pymake:
     a target.
 
     """
+
     def __init__(self, name="pymake"):
         self.name = name
         self.url = None
