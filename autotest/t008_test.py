@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os
 import sys
+import time
 import shutil
 import pymake
 import flopy
@@ -28,6 +29,7 @@ pm = pymake.Pymake()
 
 def get_example_dirs():
     exclude_dir = []
+    # remove after MODFLOW 6 v6.1.2 release
     if sys.platform.lower() == 'win32':
         exclude_dir = ['ex34-csub-sub01']
     if os.path.isdir(expth):
@@ -56,10 +58,9 @@ def compile_code():
 
 def build_with_makefile():
     if os.path.isfile("makefile"):
-        # remove existing target
-        if os.path.isfile(epth):
-            print("Removing " + target)
-            os.remove(epth)
+        # wait to delete on windows
+        if sys.platform.lower() == "win32":
+            time.sleep(6)
 
         print("Removing temporary build directories")
         dirs_temp = [
@@ -70,6 +71,10 @@ def build_with_makefile():
         for d in dirs_temp:
             if os.path.isdir(d):
                 shutil.rmtree(d)
+
+        # clean prior to make
+        print("clean {} with makefile".format(target))
+        os.system("make clean")
 
         # build MODFLOW 6 with makefile
         print("build {} with makefile".format(target))
@@ -172,9 +177,9 @@ if __name__ == "__main__":
     # get name files and simulation name
     example_dirs = get_example_dirs()
 
-    # run models
-    for ws in example_dirs:
-        run_mf6(ws)
+    # # run models
+    # for ws in example_dirs:
+    #     run_mf6(ws)
 
     # build modflow 6 with a pymake generated makefile
     build_with_makefile()
