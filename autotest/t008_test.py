@@ -27,14 +27,13 @@ pm = pymake.Pymake()
 
 
 def get_example_dirs():
+    exclude_dir = []
+    if sys.platform.lower() == 'win32':
+        exclude_dir = ['ex34-csub-sub01']
     if os.path.isdir(expth):
-        exdirs = sorted(
-            [
-                o
-                for o in os.listdir(expth)
-                if os.path.isdir(os.path.join(expth, o))
-            ]
-        )
+        exdirs = sorted([o for o in os.listdir(expth)
+                         if os.path.isdir(os.path.join(expth, o)) and
+                         o not in exclude_dir])
     else:
         exdirs = [None]
     return exdirs

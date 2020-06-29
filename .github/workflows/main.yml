@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  PymakeLinuxMacOS:
+  pymakeCI:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -15,6 +15,8 @@ jobs:
         os: [ubuntu-latest]
         include:
           - os: macos-latest
+            python-version: 3.8
+          - os: windows-latest
             python-version: 3.8
 
     steps:
@@ -44,6 +46,11 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         gfortran --version
+    - name: IPrint gfortran version (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        gfortran --version
+
     - name: Run nosetests
       run: |
         nosetests -v --with-id --with-timer -w ./autotest
@@ -51,47 +58,7 @@ jobs:
         repo-token: ${{secrets.GITHUB_TOKEN}}
 
 
-  PymakeWindows:
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [3.8]
-
-    steps:
-    - uses: actions/checkout@v1
-    - name: Setup Graphviz
-      uses: ts-graphviz/setup-graphviz@v1
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install python packages
-      run: |
-        pip install requests nose-timer
-        pip install pydotplus appdirs
-        pip install numpy matplotlib
-        pip install https://github.com/modflowpy/flopy/zipball/develop
-        pip install .
-
-    - name: Setup Msys2 environment
-      uses: numworks/setup-msys2@v1
-
-    - name: Print gfortran version (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        msys2do gfortran --version
-
-    - name: Run nosetests on Windows
-      if: runner.os == 'Windows'
-      run: |
-        msys2do nosetests -v --with-id --with-timer -w ./autotest
-      env:
-        repo-token: ${{secrets.GITHUB_TOKEN}}
-
-
-  Pymakelint:
+  pymake_lint:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
