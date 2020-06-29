@@ -6,7 +6,7 @@ import shutil
 import argparse
 import datetime
 
-from .pymake import __description__
+from .pymake import __description__, __version__
 
 from .Popen_wrapper import (
     process_Popen_initialize,
