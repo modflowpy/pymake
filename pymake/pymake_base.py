@@ -343,7 +343,7 @@ def clean(target, intelwin):
     # shared object intermediate files
     print("\nCleaning up intermediate shared object files...")
     delext = [".exp", ".lib"]
-    dpth = os.path.dirname(target)
+    dpth = os.path.dirname(os.path.abspath(target))
     for f in os.listdir(dpth):
         fpth = os.path.join(dpth, f)
         for ext in delext:
