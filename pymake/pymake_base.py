@@ -166,6 +166,7 @@ def parser():
         "--sharedobject",
         help="Create shared object",
         action="store_false",
+        default=False,
     )
     args = parser.parse_args()
     return args
@@ -506,7 +507,8 @@ def pymake_compile(
 
     # clean exe prior to build so that test for exe below can return a
     # non-zero error code
-    if which(target) is not None:
+    if os.path.isfile(target):
+        print('removing existing target with same name: {}'.format(target))
         os.remove(target)
 
     if intelwin:
