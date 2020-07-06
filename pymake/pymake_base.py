@@ -508,7 +508,7 @@ def pymake_compile(
     # clean exe prior to build so that test for exe below can return a
     # non-zero error code
     if os.path.isfile(target):
-        print('removing existing target with same name: {}'.format(target))
+        print("removing existing target with same name: {}".format(target))
         os.remove(target)
 
     if intelwin:
