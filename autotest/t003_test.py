@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import sys
 import shutil
@@ -6,48 +5,55 @@ import pymake
 import flopy
 
 # define program data
-target = 'mfusg'
-if sys.platform.lower() == 'win32':
-    target += '.exe'
+target = "mfusg"
+if sys.platform.lower() == "win32":
+    target += ".exe"
 
 # get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
-dstpth = os.path.join('temp')
+dstpth = os.path.join("temp")
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
 
 mfusgpth = os.path.join(dstpth, prog_dict.dirname)
-expth = os.path.join(mfusgpth, 'test')
+expth = os.path.join(mfusgpth, "test")
 
 srcpth = os.path.join(mfusgpth, prog_dict.srcdir)
 epth = os.path.abspath(os.path.join(dstpth, target))
+
+pm = pymake.Pymake(verbose=True)
+pm.target = target
+pm.appdir = dstpth
 
 
 def edit_namefiles():
     namefiles = pymake.get_namefiles(expth)
     for namefile in namefiles:
         # read existing namefile
-        f = open(namefile, 'r')
+        f = open(namefile, "r")
         lines = f.read().splitlines()
         f.close()
         # convert file extensions to lower case
-        f = open(namefile, 'w')
+        f = open(namefile, "w")
         for line in lines:
             t = line.split()
             fn, ext = os.path.splitext(t[2])
-            f.write('{:15s} {:3s} {} '.format(t[0], t[1],
-                                              '{}{}'.format(fn, ext.lower())))
+            f.write(
+                "{:15s} {:3s} {} ".format(
+                    t[0], t[1], "{}{}".format(fn, ext.lower())
+                )
+            )
             if len(t) > 3:
-                f.write('{}'.format(t[3]))
-            f.write('\n')
+                f.write("{}".format(t[3]))
+            f.write("\n")
         f.close()
 
 
 def get_namefiles():
     if os.path.exists(epth):
-        exclude_tests = ('7_swtv4_ex',)
+        exclude_tests = ("7_swtv4_ex",)
         namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
         simname = pymake.get_sim_name(namefiles, rootpth=expth)
     else:
@@ -57,32 +63,28 @@ def get_namefiles():
     return zip(namefiles, simname)
 
 
-def compile_code():
-    # Remove the existing mfusg directory if it exists
+def download_src():
+    # Remove the existing mf2005 directory if it exists
     if os.path.isdir(mfusgpth):
         shutil.rmtree(mfusgpth)
 
-    # compile MODFLOW-USG
-    pymake.build_program(target=target,
-                         download_dir=dstpth,
-                         exe_dir=dstpth)
+    # download the modflow 2005 release
+    pm.download_target(target, download_path=dstpth)
 
 
 def clean_up():
-    # clean up download directory
-    print('Removing folder ' + mfusgpth)
-    if os.path.isdir(mfusgpth):
-        shutil.rmtree(mfusgpth)
+    print("Removing temporary build directories")
+    dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp")]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
 
-    ext = ''
-    if sys.platform == 'win32':
-        ext = '.exe'
+    # remove download directory
+    pm.download_cleanup()
 
-    # clean up executable
-    print('Removing ' + target)
-    fpth = epth + ext
-    if os.path.isfile(fpth):
-        os.remove(fpth)
+    if os.path.isfile(epth):
+        print("Removing " + target)
+        os.remove(epth)
 
     return
 
@@ -94,25 +96,31 @@ def run_mfusg(namepth, dst):
         pymake.setup(namepth, testpth)
 
         # run test models
-        print('running model...{}'.format(os.path.basename(namepth)))
-        success, buff = flopy.run_model(epth, os.path.basename(namepth),
-                                        model_ws=testpth, silent=True)
+        print("running model...{}".format(os.path.basename(namepth)))
+        success, buff = flopy.run_model(
+            epth, os.path.basename(namepth), model_ws=testpth, silent=True
+        )
         if success:
             pymake.teardown(testpth)
         else:
-            errmsg = 'could not run {}'.format(os.path.basename(namepth))
+            errmsg = "could not run {}".format(os.path.basename(namepth))
     else:
         success = False
-        errmsg = 'could not run {}'.format(epth)
+        errmsg = "could not run {}".format(epth)
 
     assert success, errmsg
 
     return
 
 
+def test_download():
+    download_src()
+
+
 def test_compile():
-    # compile MODFLOW-USG
-    compile_code()
+    pm.build()
+
+    return
 
 
 def test_mfusg():
@@ -130,8 +138,9 @@ def test_clean_up():
 
 
 if __name__ == "__main__":
-    # compile MODFLOW-USG
-    compile_code()
+    test_download()
+
+    test_compile()
 
     # edit namefiles
     edit_namefiles()
@@ -144,4 +153,4 @@ if __name__ == "__main__":
         run_mfusg(namepth, dst)
 
     # clean up
-    clean_up()
+    test_clean_up()

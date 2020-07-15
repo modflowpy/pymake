@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os
 import sys
 import shutil
@@ -173,6 +171,7 @@ def download_and_unzip(
     timeout=30,
     nattempts=10,
     chunk_size=2048000,
+    verbose=False,
 ):
     """Download and unzip a zip file from a url.
 
@@ -193,6 +192,8 @@ def download_and_unzip(
         number of url download request attempts (default is 10)
     chunk_size : int
         maximum url download request chunk size (default is 2048000 bytes)
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
 
     Returns
     -------
@@ -204,10 +205,14 @@ def download_and_unzip(
         msg = "pymake.download_and_unzip() error import requests: " + str(e)
         raise Exception(msg)
     if not os.path.exists(pth):
-        print("Creating the directory:\n    {}".format(pth))
+        if verbose:
+            print("Creating the directory:\n    {}".format(pth))
         os.makedirs(pth)
 
-    print("Attempting to download the file:\n    {}".format(url))
+    if verbose:
+        print("Attempting to download the file:\n    {}".format(url))
+
+    # define the filename
     file_name = os.path.join(pth, url.split("/")[-1])
 
     # download the file
@@ -225,7 +230,8 @@ def download_and_unzip(
                 req.raise_for_status()
 
         # print download attempt message
-        print(" download attempt: {}".format(idx + 1))
+        if verbose:
+            print(" download attempt: {}".format(idx + 1))
 
         # connection established - download the file
         fs = 0
@@ -238,7 +244,8 @@ def download_and_unzip(
             bfmt = "{:" + "{}".format(lenfs) + ",d}"
             sbfmt = "{:>" + "{}".format(len(bfmt.format(int(fs)))) + "s} bytes"
             msg = "   file size: {}".format(sbfmt.format(bfmt.format(int(fs))))
-            print(msg)
+            if verbose:
+                print(msg)
         ds = 0
         try:
             req = requests.get(
@@ -260,7 +267,11 @@ def download_and_unzip(
                                         float(ds) / float(fs)
                                     )
                                 )
-                                print(msg)
+                                if verbose:
+                                    print(msg)
+                                else:
+                                    sys.stdout.write(".")
+                                    sys.stdout.flush()
                             f.write(chunk)
 
                 # check that the entire file has been downloaded
@@ -280,10 +291,13 @@ def download_and_unzip(
     # write the total download time
     toc = timeit.default_timer()
     tsec = toc - tic
-    print("\ntotal download time: {} seconds".format(tsec))
+    if verbose:
+        print("\ntotal download time: {} seconds".format(tsec))
+
     if success:
         if fs > 0:
-            print("download speed:      {} MB/s".format(fs / (1e6 * tsec)))
+            if verbose:
+                print("download speed:      {} MB/s".format(fs / (1e6 * tsec)))
     else:
         msg = "could not download...{}".format(url)
         raise ConnectionError(msg)
@@ -294,7 +308,12 @@ def download_and_unzip(
     ):
         z = pymakeZipFile(file_name)
         try:
-            print("Extracting the zipfile...")
+            # write a message
+            if not verbose:
+                sys.stdout.write("\n")
+            print("uncompressing...'{}'".format(file_name))
+
+            # extract the files
             z.extractall(pth)
         except:
             p = "Could not unzip the file.  Stopping."
@@ -307,9 +326,12 @@ def download_and_unzip(
 
     # delete the zipfile
     if delete_zip:
-        print("Deleting the zipfile...")
+        if verbose:
+            print("Deleting the zipfile...")
         os.remove(file_name)
-    print("Done downloading and extracting...\n")
+
+    if verbose:
+        print("Done downloading and extracting...\n")
 
     return success
 
@@ -428,7 +450,7 @@ def get_request_json(request_url):
     return success, r, json_obj
 
 
-def repo_json(github_repo, tag_name=None, error_return=False):
+def repo_json(github_repo, tag_name=None, error_return=False, verbose=False):
     """Return the github api json for the latest github release in a github
     repository.
 
@@ -441,6 +463,8 @@ def repo_json(github_repo, tag_name=None, error_return=False):
     error_return : bool
         boolean indicating if None will be returned if there are GitHub API
         issues
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
 
     Returns
     -------
@@ -475,7 +499,8 @@ def repo_json(github_repo, tag_name=None, error_return=False):
         else:
             msg = "Could not get release catalog from " + request_url
             if error_return:
-                print(msg)
+                if verbose:
+                    print(msg)
                 return None
             else:
                 raise Exception(msg)
@@ -484,7 +509,8 @@ def repo_json(github_repo, tag_name=None, error_return=False):
     if tag_name is not None:
         msg += "for tag_name '{}' ".format(tag_name)
     msg += "from: {}".format(request_url)
-    print(msg)
+    if verbose:
+        print(msg)
 
     # process the request
     success, r, json_obj = get_request_json(request_url)
@@ -492,12 +518,14 @@ def repo_json(github_repo, tag_name=None, error_return=False):
     # evaluate request errors
     if not success:
         if github_repo == get_default_repo():
-            msg = "will use dafault values for {}".format(github_repo)
-            print(msg)
+            msg = "will use default values for {}".format(github_repo)
+            if verbose:
+                print(msg)
             json_obj = get_default_json(tag_name)
         else:
             msg = "Could not find json from " + request_url
-            print(msg)
+            if verbose:
+                print(msg)
             if error_return:
                 json_obj = None
             else:
@@ -575,7 +603,7 @@ def repo_latest_version(github_repo=None):
     return json_obj["tag_name"]
 
 
-def getmfexes(pth=".", version=None, platform=None, exes=None):
+def getmfexes(pth=".", version=None, platform=None, exes=None, verbose=False):
     """Get the latest MODFLOW binary executables from a github site
     (https://github.com/MODFLOW-USGS/executables) for the specified operating
     system and put them in the specified path.
@@ -584,18 +612,17 @@ def getmfexes(pth=".", version=None, platform=None, exes=None):
     ----------
     pth : str
         Location to put the executables (default is current working directory)
-
     version : str
         Version of the MODFLOW-USGS/executables release to use. If version is
         None the github repo will be queried for the version number.
-
     platform : str
         Platform that will run the executables.  Valid values include mac,
         linux, win32 and win64.  If platform is None, then routine will
         download the latest asset from the github repository.
-
     exes : str or list of strings
         executable or list of executables to retain
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
 
     """
     # set download directory to path in case a selection of files
@@ -638,12 +665,13 @@ def getmfexes(pth=".", version=None, platform=None, exes=None):
     # Determine path for file download and then download and unzip
     assets = get_repo_assets(github_repo=get_default_repo(), version=version)
     download_url = assets[zipname]
-    download_and_unzip(download_url, download_dir)
+    download_and_unzip(download_url, download_dir, verbose=verbose)
 
     if exes is not None:
         # make sure pth exists
         if not os.path.exists(pth):
-            print("Creating the directory:\n    {}".format(pth))
+            if verbose:
+                print("Creating the directory:\n    {}".format(pth))
             os.makedirs(pth)
 
         # move select files to pth
@@ -657,7 +685,8 @@ def getmfexes(pth=".", version=None, platform=None, exes=None):
 
         # remove the download directory
         if os.path.isdir(download_dir):
-            print("Removing folder " + download_dir)
+            if verbose:
+                print("Removing folder " + download_dir)
             shutil.rmtree(download_dir)
 
     return

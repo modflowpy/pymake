@@ -1,7 +1,7 @@
 import pymake
 
 
-# Download and compile the CRT distribution
+# Download and compile the GSFLOW distribution
 def make_app():
     pymake.build_apps(['gsflow'])
 

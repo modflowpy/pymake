@@ -98,7 +98,7 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
                 print("Could not make " + sf)
         # Now copy the file
         if os.path.exists(srcf):
-            print("Copy file from/to " + srcf + " " + dstf)
+            print("Copy file '" + srcf + "' -> '" + dstf + "'")
             shutil.copy(srcf, dstf)
         else:
             print(srcf + " does not exist")
@@ -164,7 +164,7 @@ def setup_comparison(namefile, dst, remove_existing=True):
                 dstf = os.path.join(dst, f)
                 # Now copy the file
                 if os.path.exists(srcf):
-                    print("Copy file from/to " + srcf + " " + dstf)
+                    print("Copy file '" + srcf + "' -> '" + dstf + "'")
                     shutil.copy(srcf, dstf)
                 else:
                     print(srcf + " does not exist")
@@ -476,7 +476,7 @@ def setup_mf6(
 
         # Now copy the file
         if os.path.exists(srcf):
-            print("Copy file from/to " + srcf + " " + dstf)
+            print("Copy file '" + srcf + "' -> '" + dstf + "'")
             shutil.copy(srcf, dstf)
         else:
             print(srcf + " does not exist")
@@ -581,7 +581,7 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
                 dstf = os.path.join(dst, f)
                 # Now copy the file
                 if os.path.exists(srcf):
-                    print("Copy file from/to " + srcf + " " + dstf)
+                    print("Copy file '" + srcf + "' -> '" + dstf + "'")
                     shutil.copy(srcf, dstf)
                 else:
                     print(srcf + " does not exist")

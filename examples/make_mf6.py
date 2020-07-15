@@ -1,17 +1,11 @@
-from pymake import Pymake
+from pymake import build_apps
 
 
 # Download and compile the MODFLOW 6 distribution
 def make_mf6():
-    pm = Pymake()
-    pm.download_target("mf6")
-    pm.build("mf6")
-    pm.build("zbud6")
-    pm.download_cleanup()
+    build_apps(["mf6", "zbud6"])
 
     return
-
-
 
 
 if __name__ == "__main__":

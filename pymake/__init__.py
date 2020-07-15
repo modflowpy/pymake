@@ -3,6 +3,7 @@ from .pymake import Pymake, __version__
 from .usgsprograms import usgs_program_data
 from .pymake_base import main, parser
 from .compiler_switches import set_compiler
+from .build_apps import build_apps
 from .download import (
     download_and_unzip,
     getmfexes,
@@ -29,11 +30,4 @@ from .autotest import (
     setup_mf6_comparison,
     get_mf6_comparison,
     get_mf6_files,
-)
-from .build_program import (
-    build_program,
-    build_apps,
-    build_replace,
-    set_bindir,
-    compress_apps,
 )

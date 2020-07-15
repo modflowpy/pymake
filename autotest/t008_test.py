@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import sys
 import time
@@ -24,18 +23,27 @@ mf6pth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(mf6pth, "examples")
 epth = os.path.join(dstpth, target)
 
-pm = pymake.Pymake()
+pm = pymake.Pymake(verbose=True)
+pm.target = target
+pm.appdir = dstpth
+pm.dryrun = False
+pm.makefile = True
 
 
 def get_example_dirs():
     exclude_dir = []
     # remove after MODFLOW 6 v6.1.2 release
-    if sys.platform.lower() == 'win32':
-        exclude_dir = ['ex34-csub-sub01']
+    if sys.platform.lower() == "win32":
+        exclude_dir = ["ex34-csub-sub01"]
     if os.path.isdir(expth):
-        exdirs = sorted([o for o in os.listdir(expth)
-                         if os.path.isdir(os.path.join(expth, o)) and
-                         o not in exclude_dir])
+        exdirs = sorted(
+            [
+                o
+                for o in os.listdir(expth)
+                if os.path.isdir(os.path.join(expth, o))
+                and o not in exclude_dir
+            ]
+        )
     else:
         exdirs = [None]
     return exdirs
@@ -48,12 +56,6 @@ def download_mf6():
 
     # download the modflow 6 release
     pm.download_target(target, download_path=dstpth)
-
-
-def compile_code():
-    # compile MODFLOW 6
-    pymake.usgs_program_data().list_targets(current=True)
-    pm.build(target=target, appdir=dstpth, dryrun=False, makefile=True)
 
 
 def build_with_makefile():
@@ -148,7 +150,7 @@ def test_download():
 
 
 def test_compile():
-    compile_code()
+    pm.build()
 
 
 def test_mf6():
@@ -164,25 +166,13 @@ def test_makefile():
 
 
 def test_clean_up():
-    yield clean_up
+    clean_up()
 
 
 if __name__ == "__main__":
-    # download MODFLOW 6
-    download_mf6()
-
-    # compile MODFLOW 6
-    compile_code()
-
-    # get name files and simulation name
-    example_dirs = get_example_dirs()
-
-    # # run models
-    # for ws in example_dirs:
-    #     run_mf6(ws)
-
-    # build modflow 6 with a pymake generated makefile
+    test_download()
+    test_compile()
+    for ws in get_example_dirs():
+        run_mf6(ws)
     build_with_makefile()
-
-    # clean up
-    clean_up()
+    test_clean_up()

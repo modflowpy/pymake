@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 import os
-import sys
 import traceback
 import shutil
 import argparse
 import datetime
+import inspect
 
 from .pymake import __description__, __version__
 
@@ -27,15 +27,225 @@ from .compiler_language_files import (
     get_fortran_files,
 )
 
-if sys.version_info >= (3, 3):
-    from shutil import which
-else:
-    from distutils.spawn import find_executable as which
+# if sys.version_info >= (3, 3):
+#     from shutil import which
+# else:
+#     from distutils.spawn import find_executable as which
 
 # define temporary directories
 srcdir_temp = os.path.join(".", "src_temp")
 objdir_temp = os.path.join(".", "obj_temp")
 moddir_temp = os.path.join(".", "mod_temp")
+
+
+def get_arg_dict():
+    return {
+        "srcdir": {
+            "tag": ("srcdir",),
+            "help": "Location of source directory",
+            "default": None,
+            "choices": None,
+            "action": None,
+        },
+        "target": {
+            "tag": ("target",),
+            "help": "Name of target to create (can include path)",
+            "default": None,
+            "choices": None,
+            "action": None,
+        },
+        "fc": {
+            "tag": ("-fc",),
+            "help": "Fortran compiler to use (default is gfortran)",
+            "default": "gfortran",
+            "choices": ["ifort", "mpiifort", "gfortran", "none"],
+            "action": None,
+        },
+        "cc": {
+            "tag": ("-cc",),
+            "help": "C/C++ compiler to use (default is gcc)",
+            "default": "gcc",
+            "choices": [
+                "gcc",
+                "clang",
+                "clang++",
+                "icc",
+                "icl",
+                "mpiicc",
+                "g++",
+                "cl",
+                "none",
+            ],
+            "action": None,
+        },
+        "arch": {
+            "tag": ("-ar", "--arch"),
+            "help": "Architecture to use for ifort (default is intel64)",
+            "default": "intel64",
+            "choices": ["ia32", "ia32_intel64", "intel64"],
+            "action": None,
+        },
+        "makeclean": {
+            "tag": ("-mc", "--makeclean"),
+            "help": "Clean files when done (default is True)",
+            "default": True,
+            "choices": None,
+            "action": "store_true",
+        },
+        "double": {
+            "tag": ("-dbl", "--double"),
+            "help": "Force double precision (default is False)",
+            "default": False,
+            "choices": None,
+            "action": "store_false",
+        },
+        "debug": {
+            "tag": ("-dbg", "--debug"),
+            "help": "Create debug version (default is False)",
+            "default": False,
+            "choices": None,
+            "action": "store_false",
+        },
+        "expedite": {
+            "tag": ("-e", "--expedite"),
+            "help": """Only compile out of date source files.
+                         Clean must not have been used on previous build.
+                         Does not work yet for ifort. (default is False)""",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
+        },
+        "dryrun": {
+            "tag": ("-dr", "--dryrun"),
+            "help": """Do not actually compile.  Files will be
+                         deleted, if --makeclean is used.
+                         Does not work yet for ifort. (default is False)""",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
+        },
+        "include_subdirs": {
+            "tag": ("-sd", "--subdirs"),
+            "help": """Include source files in srcdir subdirectories. 
+                         (default is None)""",
+            "default": None,
+            "choices": None,
+            "action": "store_true",
+        },
+        "fflags": {
+            "tag": ("-ff", "--fflags"),
+            "help": "Additional fortran compiler flags (default is None)",
+            "default": None,
+            "choices": None,
+            "action": None,
+        },
+        "cflags": {
+            "tag": ("-cf", "--cflags"),
+            "help": "Additional C/C++ compiler flags (default is None)",
+            "default": None,
+            "choices": None,
+            "action": None,
+        },
+        "syslibs": {
+            "tag": ("-sl", "--syslibs"),
+            "help": "Linker system libraries (default is None)",
+            "default": None,
+            "choices": ["-lc", "-lm"],
+            "action": None,
+        },
+        "makefile": {
+            "tag": ("-mf", "--makefile"),
+            "help": "Create a standard makefile (default is False)",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
+        },
+        "srcdir2": {
+            "tag": ("-cs", "--commonsrc"),
+            "help": """Additional directory with common source files.
+                         (default is None)""",
+            "default": None,
+            "choices": None,
+            "action": None,
+        },
+        "extrafiles": {
+            "tag": ("-ef", "--extrafiles"),
+            "help": """List of extra source files to include in the
+                         compilation.  extrafiles can be either a list of files
+                         or the name of a text file that contains a list of
+                         files.  (default is None)""",
+            "default": None,
+            "choices": None,
+            "action": None,
+        },
+        "excludefiles": {
+            "tag": ("-exf", "--excludefiles"),
+            "help": """List of extra source files to exclude from the
+                         compilation.  excludefiles can be either a list of
+                         files or the name of a text file that contains a list
+                         of files.  (default is None)""",
+            "default": None,
+            "choices": None,
+            "action": None,
+        },
+        "sharedobject": {
+            "tag": ("-so", "--sharedobject"),
+            "help": "Create shared object (default is False)",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
+        },
+        "appdir": {
+            "tag": ("-ad", "--appdir"),
+            "help": "Target path (default is None)",
+            "default": None,
+            "choices": None,
+            "action": None,
+        },
+        "verbose": {
+            "tag": ("-v", "--verbose"),
+            "help": "Verbose output to terminal (default is False)",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
+        },
+        "keep": {
+            "tag": ("--keep",),
+            "help": "Keep existing executable (default is False)",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
+        },
+        "zip": {
+            "tag": ("--zip",),
+            "help": "Zip built executable (default is False)",
+            "default": None,
+            "choices": None,
+            "action": None,
+        },
+    }
+
+
+def parser_setup(p, value, reset_default=False):
+    if reset_default:
+        default = None
+    else:
+        default = value["default"]
+    if value["action"] is None:
+        p.add_argument(
+            *value["tag"],
+            help=value["help"],
+            default=default,
+            choices=value["choices"],
+        )
+    else:
+        p.add_argument(
+            *value["tag"],
+            help=value["help"],
+            default=default,
+            action=value["action"],
+        )
+    return p
 
 
 def parser():
@@ -59,115 +269,9 @@ def parser():
                                      source directory will be built and
                                      linked.""",
     )
-    parser.add_argument("srcdir", help="Location of source directory")
-    parser.add_argument("target", help="Name of target to create")
-    parser.add_argument(
-        "-fc",
-        help="Fortran compiler to use (default is gfortran)",
-        default="gfortran",
-        choices=["ifort", "mpiifort", "gfortran", "none"],
-    )
-    parser.add_argument(
-        "-cc",
-        help="C compiler to use (default is gcc)",
-        default="gcc",
-        choices=["gcc", "clang", "icc", "mpiicc", "g++", "cl", "none"],
-    )
-    parser.add_argument(
-        "-ar",
-        "--arch",
-        help="Architecture to use for ifort (default is intel64)",
-        default="intel64",
-        choices=["ia32", "ia32_intel64", "intel64"],
-    )
-    parser.add_argument(
-        "-mc", "--makeclean", help="Clean files when done", action="store_true"
-    )
-    parser.add_argument(
-        "-dbl", "--double", help="Force double precision", action="store_true"
-    )
-    parser.add_argument(
-        "-dbg", "--debug", help="Create debug version", action="store_true"
-    )
-    parser.add_argument(
-        "-e",
-        "--expedite",
-        help="""Only compile out of date source files.
-                        Clean must not have been used on previous build.
-                        Does not work yet for ifort.""",
-        action="store_true",
-    )
-    parser.add_argument(
-        "-dr",
-        "--dryrun",
-        help="""Do not actually compile.  Files will be
-                        deleted, if --makeclean is used.
-                        Does not work yet for ifort.""",
-        action="store_true",
-    )
-    parser.add_argument(
-        "-sd",
-        "--subdirs",
-        help="""Include source files in srcdir
-                        subdirectories.""",
-        action="store_true",
-    )
-    parser.add_argument(
-        "-ff",
-        "--fflags",
-        help="""Additional fortran compiler flags.""",
-        default=None,
-    )
-    parser.add_argument(
-        "-cf",
-        "--cflags",
-        help="""Additional c compiler flags.""",
-        default=None,
-    )
-    parser.add_argument(
-        "-sl",
-        "--syslibs",
-        help="""Linker system libraries.""",
-        default=None,
-        choices=["-lc", "-lm"],
-    )
-    parser.add_argument(
-        "-mf",
-        "--makefile",
-        help="""Create a standard makefile.""",
-        action="store_true",
-    )
-    parser.add_argument(
-        "-cs",
-        "--commonsrc",
-        help="""Additional directory with common source files.""",
-        default=None,
-    )
-    parser.add_argument(
-        "-ef",
-        "--extrafiles",
-        help="""List of extra source files to include in the
-                        compilation.  extrafiles can be either a list of files
-                        or the name of a text file that contains a list of
-                        files.""",
-        default=None,
-    )
-    parser.add_argument(
-        "-exf",
-        "--excludefiles",
-        help="""List of extra source files to exclude from the
-                        compilation.  excludefiles can be either a list of 
-                        files or the name of a text file that contains a list
-                        of files.""",
-        default=None,
-    )
-    parser.add_argument(
-        "-so",
-        "--sharedobject",
-        help="Create shared object",
-        action="store_false",
-        default=False,
-    )
+
+    for _, value in get_arg_dict().items():
+        parser = parser_setup(parser, value)
     args = parser.parse_args()
     return args
 
@@ -307,7 +411,7 @@ def get_extrafiles(extrafiles):
     return files
 
 
-def clean(target, intelwin):
+def clean(target, intelwin, verbose=False):
     """Cleanup intermediate files. Remove mod and object files, and remove the
     temporary source directory.
 
@@ -331,28 +435,37 @@ def clean(target, intelwin):
         objext = ".o"
 
     # clean things up
-    print("\nCleaning up temporary source, object, and module files...")
+    if verbose:
+        print("\nCleaning up temporary source, object, and module files...")
     filelist = os.listdir(".")
     delext = [".mod", objext]
     for f in filelist:
         for ext in delext:
             if f.endswith(ext):
-                print("    removing...{}".format(f))
+                if verbose:
+                    print("    removing...{}".format(f))
                 os.remove(f)
 
     # shared object intermediate files
-    print("\nCleaning up intermediate shared object files...")
+    if verbose:
+        print("\nCleaning up intermediate shared object files...")
     delext = [".exp", ".lib"]
     dpth = os.path.dirname(os.path.abspath(target))
     for f in os.listdir(dpth):
         fpth = os.path.join(dpth, f)
         for ext in delext:
             if fpth.endswith(ext):
-                print("    removing...'{}'".format(fpth))
+                if verbose:
+                    print("    removing...'{}'".format(fpth))
                 os.remove(fpth)
 
     # remove temporary directories
-    print("\nCleaning up temporary source, object, and module directories...")
+    if verbose:
+        msg = (
+            "\nCleaning up temporary source, object, "
+            + "and module directories..."
+        )
+        print(msg)
     if os.path.isdir(srcdir_temp):
         shutil.rmtree(srcdir_temp)
     if os.path.isdir(objdir_temp):
@@ -366,7 +479,7 @@ def clean(target, intelwin):
     return
 
 
-def create_openspec():
+def create_openspec(verbose):
     """Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
     STREAM ACCESS. This is specific to MODFLOW and MT3D based targets. Source
     directories are scanned and files defining file access are replaced.
@@ -385,7 +498,8 @@ def create_openspec():
         for file in files:
             fpth = os.path.join(d, file)
             if os.path.isfile(fpth):
-                print('replacing..."{}"'.format(fpth))
+                if verbose:
+                    print('replacing..."{}"'.format(fpth))
                 f = open(fpth, "w")
                 line = (
                     "c -- created by pymake_base.py\n"
@@ -441,6 +555,7 @@ def pymake_compile(
     arch,
     intelwin,
     sharedobject,
+    verbose,
 ):
     """Standard compile method.
 
@@ -476,6 +591,10 @@ def pymake_compile(
     intelwin : bool
         boolean indicating if pymake was used to compile source code on
         Windows using Intel compilers
+    sharedobject : bool
+        boolean indicating a shared object (.so or .dll) will be built
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
 
     Returns
     -------
@@ -483,6 +602,20 @@ def pymake_compile(
         returncode
 
     """
+    if verbose:
+        msg = (
+            "\nPymake settings in {}\n".format(pymake_compile.__name__)
+            + 40 * "-"
+        )
+        print(msg)
+        frame = inspect.currentframe()
+        args, _, _, values = inspect.getargvalues(frame)
+        for arg in args:
+            value = values[arg]
+            if isinstance(value, list):
+                value = " ".join(value)
+            print(" {}={}".format(arg, value))
+
     # initialize returncode
     returncode = 0
 
@@ -490,25 +623,47 @@ def pymake_compile(
     ilink = 0
 
     # set optimization levels
-    optlevel = get_optlevel(target, fc, cc, debug, fflags, cflags)
+    optlevel = get_optlevel(
+        target, fc, cc, debug, fflags, cflags, verbose=verbose
+    )
 
     # get fortran and c compiler switches
     tfflags = get_fortran_flags(
-        target, fc, fflags, debug, double, sharedobject=sharedobject
+        target,
+        fc,
+        fflags,
+        debug,
+        double,
+        sharedobject=sharedobject,
+        verbose=verbose,
     )
     tcflags = get_c_flags(
-        target, cc, cflags, debug, srcfiles, sharedobject=sharedobject
+        target,
+        cc,
+        cflags,
+        debug,
+        srcfiles,
+        sharedobject=sharedobject,
+        verbose=verbose,
     )
 
     # get linker flags and syslibs
     lc, tlflags = get_linker_flags(
-        target, fc, cc, syslibs, srcfiles, sharedobject=sharedobject
+        target,
+        fc,
+        cc,
+        syslibs,
+        srcfiles,
+        sharedobject=sharedobject,
+        verbose=verbose,
     )
 
     # clean exe prior to build so that test for exe below can return a
     # non-zero error code
     if os.path.isfile(target):
-        print("removing existing target with same name: {}".format(target))
+        if verbose:
+            msg = "removing existing target with same name: {}".format(target)
+            print(msg)
         os.remove(target)
 
     if intelwin:
@@ -538,7 +693,8 @@ def pymake_compile(
             try:
                 os.remove(batchfile)
             except:
-                print("could not remove '{}'".format(batchfile))
+                if verbose:
+                    print("could not remove '{}'".format(batchfile))
 
         # Create target using a batch file on Windows
         try:
@@ -697,6 +853,9 @@ def pymake_compile(
                 print(msg)
                 break
 
+    # print blank line separator after all commands in cmdlist are executed
+    print("")
+
     # return
     return returncode
 
@@ -846,6 +1005,7 @@ def create_makefile(
     fflags,
     cflags,
     syslibs,
+    verbose,
     makedefaults="makedefaults",
 ):
     """
@@ -886,6 +1046,11 @@ def create_makefile(
     -------
 
     """
+    # write a message
+    if verbose:
+        msg = "\nWriting makefile and {}".format(makedefaults)
+        print(msg)
+
     # set object extension
     objext = ".o"
 
@@ -1097,7 +1262,9 @@ def create_makefile(
         f.write(line)
 
     # optimization level
-    optlevel = get_optlevel(target, fc, cc, debug, fflags, cflags)
+    optlevel = get_optlevel(
+        target, fc, cc, debug, fflags, cflags, verbose=verbose
+    )
     line = "# set the optimization level (OPTLEVEL) if not defined\n"
     line += "OPTLEVEL ?= {}\n\n".format(optlevel)
     f.write(line)
@@ -1108,7 +1275,13 @@ def create_makefile(
         line += "ifeq ($(detected_OS), Windows)\n"
         line += "\tifeq ($(FC), gfortran)\n"
         tfflags = get_fortran_flags(
-            target, "gfortran", fflags, debug, double, osname="win32"
+            target,
+            "gfortran",
+            fflags,
+            debug,
+            double,
+            osname="win32",
+            verbose=verbose,
         )
         for idx, flag in enumerate(tfflags):
             if "-D_" in flag:
@@ -1118,7 +1291,13 @@ def create_makefile(
         line += "else\n"
         line += "\tifeq ($(FC), gfortran)\n"
         tfflags = get_fortran_flags(
-            target, "gfortran", fflags, debug, double, osname="linux"
+            target,
+            "gfortran",
+            fflags,
+            debug,
+            double,
+            osname="linux",
+            verbose=verbose,
         )
         for idx, flag in enumerate(tfflags):
             if "-D__" in flag:
@@ -1127,7 +1306,13 @@ def create_makefile(
         line += "\tendif\n"
         line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
         tfflags = get_fortran_flags(
-            target, "ifort", fflags, debug, double, osname="linux"
+            target,
+            "ifort",
+            fflags,
+            debug,
+            double,
+            osname="linux",
+            verbose=verbose,
         )
         line += "\t\tFFLAGS ?= {}\n".format(" ".join(tfflags))
         line += "\t\tMODSWITCH = -module $(MODDIR)\n"
@@ -1141,32 +1326,62 @@ def create_makefile(
         line += "ifeq ($(detected_OS), Windows)\n"
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
         tcflags = get_c_flags(
-            target, "gcc", fflags, debug, srcfiles, osname="win32"
+            target,
+            "gcc",
+            fflags,
+            debug,
+            srcfiles,
+            osname="win32",
+            verbose=verbose,
         )
         line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
         line += "\tendif\n"
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
         tcflags = get_c_flags(
-            target, "clang", fflags, debug, srcfiles, osname="win32"
+            target,
+            "clang",
+            fflags,
+            debug,
+            srcfiles,
+            osname="win32",
+            verbose=verbose,
         )
         line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
         line += "\tendif\n"
         line += "else\n"
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
         tcflags = get_c_flags(
-            target, "gcc", fflags, debug, srcfiles, osname="linux"
+            target,
+            "gcc",
+            fflags,
+            debug,
+            srcfiles,
+            osname="linux",
+            verbose=verbose,
         )
         line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
         line += "\tendif\n"
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
         tcflags = get_c_flags(
-            target, "clang", fflags, debug, srcfiles, osname="linux"
+            target,
+            "clang",
+            fflags,
+            debug,
+            srcfiles,
+            osname="linux",
+            verbose=verbose,
         )
         line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
         line += "\tendif\n"
         line += "\tifeq ($(CC), $(filter $(CC), icc mpiicc icpc))\n"
         tcflags = get_c_flags(
-            target, "icc", fflags, debug, srcfiles, osname="linux"
+            target,
+            "icc",
+            fflags,
+            debug,
+            srcfiles,
+            osname="linux",
+            verbose=verbose,
         )
         line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
         line += "\tendif\n"
@@ -1180,13 +1395,25 @@ def create_makefile(
     # c/c++ compiler used for linking
     if fext is None:
         _, tsyslibs = get_linker_flags(
-            target, None, "gcc", syslibs, srcfiles, osname="win32"
+            target,
+            None,
+            "gcc",
+            syslibs,
+            srcfiles,
+            osname="win32",
+            verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
         line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
         line += "\tendif\n"
         _, tsyslibs = get_linker_flags(
-            target, None, "clang", syslibs, srcfiles, osname="win32"
+            target,
+            None,
+            "clang",
+            syslibs,
+            srcfiles,
+            osname="win32",
+            verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
         line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
@@ -1194,7 +1421,13 @@ def create_makefile(
     # fortran compiler used for linking
     else:
         _, tsyslibs = get_linker_flags(
-            target, "gfortran", "gcc", syslibs, srcfiles, osname="win32"
+            target,
+            "gfortran",
+            "gcc",
+            syslibs,
+            srcfiles,
+            osname="win32",
+            verbose=verbose,
         )
         line += "\tifeq ($(FC), $(filter $(FC), gfortran))\n"
         line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
@@ -1204,13 +1437,25 @@ def create_makefile(
     # c/c++ compiler used for linking
     if fext is None:
         _, tsyslibs = get_linker_flags(
-            target, None, "gcc", syslibs, srcfiles, osname="linux"
+            target,
+            None,
+            "gcc",
+            syslibs,
+            srcfiles,
+            osname="linux",
+            verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
         line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
         line += "\tendif\n"
         _, tsyslibs = get_linker_flags(
-            target, None, "clang", syslibs, srcfiles, osname="linux"
+            target,
+            None,
+            "clang",
+            syslibs,
+            srcfiles,
+            osname="linux",
+            verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
         line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
@@ -1220,14 +1465,26 @@ def create_makefile(
         # gfortran compiler
         line += "\tifeq ($(FC), gfortran)\n"
         _, tsyslibs = get_linker_flags(
-            target, "gfortran", "gcc", syslibs, srcfiles, osname="linux"
+            target,
+            "gfortran",
+            "gcc",
+            syslibs,
+            srcfiles,
+            osname="linux",
+            verbose=verbose,
         )
         line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
         line += "\tendif\n"
         # ifort compiler
         line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
         _, tsyslibs = get_linker_flags(
-            target, "ifort", "icc", syslibs, srcfiles, osname="linux"
+            target,
+            "ifort",
+            "icc",
+            syslibs,
+            srcfiles,
+            osname="linux",
+            verbose=verbose,
         )
         line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
         line += "\tendif\n"
@@ -1296,6 +1553,8 @@ def main(
     extrafiles=None,
     excludefiles=None,
     sharedobject=False,
+    appdir=None,
+    verbose=False,
 ):
     """Main pymake function.
 
@@ -1346,6 +1605,10 @@ def main(
         to exclude from the build
     sharedobject : bool
         boolean indicating a shared object (.so or .dll) will be built
+    appdir : str
+        path for executable
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
 
     Returns
     -------
@@ -1353,10 +1616,18 @@ def main(
         return code
 
     """
-    # initialize return code
-    returncode = 0
 
     if srcdir is not None and target is not None:
+
+        # process appdir
+        if appdir is not None:
+            target = os.path.join(appdir, target)
+
+            # make appdir if it does not exist
+            if not os.path.isdir(appdir):
+                os.makedirs(appdir)
+        else:
+            target = os.path.join(".", target)
 
         # set fc and cc to None if they are passed as 'none'
         if fc == "none":
@@ -1366,7 +1637,7 @@ def main(
         if fc is None and cc is None:
             msg = (
                 "Nothing to do the fortran (-fc) and c/c++ compilers (-cc)"
-                + "are both None."
+                + "are both 'none'."
             )
             raise ValueError(msg)
 
@@ -1385,10 +1656,14 @@ def main(
             syslibs = syslibs.split()
 
         # write summary information
-        print("\nsource files are in:\n    {}\n".format(srcdir))
-        print("executable name to be created:\n    {}\n".format(target))
-        if srcdir2 is not None:
-            print("additional source files are in:\n     {}\n".format(srcdir2))
+        if verbose:
+            print("\nsource files are in:\n    {}\n".format(srcdir))
+            print("executable name to be created:\n    {}\n".format(target))
+            if srcdir2 is not None:
+                msg = "additional source files are in:\n" + "     {}\n".format(
+                    srcdir2
+                )
+                print(msg)
 
         # make sure the path for the target exists
         pth = os.path.dirname(target)
@@ -1416,7 +1691,7 @@ def main(
 
         # update openspec files based on intelwin
         if not intelwin:
-            create_openspec()
+            create_openspec(verbose)
 
         # compile the executable
         returncode = pymake_compile(
@@ -1434,6 +1709,7 @@ def main(
             arch,
             intelwin,
             sharedobject,
+            verbose,
         )
 
         # create makefile
@@ -1451,38 +1727,18 @@ def main(
                 fflags,
                 cflags,
                 syslibs,
+                verbose,
             )
 
         # clean up temporary files
         if makeclean and returncode == 0:
-            clean(target, intelwin)
+            clean(target, intelwin, verbose)
     else:
-        returncode = 1
+        msg = (
+            "Nothing to do, the srcdir ({}) ".format(srcdir)
+            + "and/or target ({}) ".format(target)
+            + "are not specified."
+        )
+        raise ValueError(msg)
 
     return returncode
-
-
-if __name__ == "__main__":
-    # get the arguments
-    args = parser()
-
-    # call main -- note that this form allows main to be called
-    # from python as a function.
-    main(
-        args.srcdir,
-        args.target,
-        fc=args.fc,
-        cc=args.cc,
-        makeclean=args.makeclean,
-        expedite=args.expedite,
-        dryrun=args.dryrun,
-        double=args.double,
-        debug=args.debug,
-        include_subdirs=args.subdirs,
-        fflags=args.fflags,
-        cflags=args.cflags,
-        arch=args.arch,
-        makefile=args.makefile,
-        srcdir2=args.commonsrc,
-        extrafiles=args.extrafiles,
-    )

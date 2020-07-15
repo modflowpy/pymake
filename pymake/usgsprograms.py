@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 from collections import OrderedDict
 
@@ -302,14 +303,24 @@ class usgs_program_data:
             msg = 'could not export json file "{}"'.format(fpth)
             raise IOError(msg)
 
-        # determine if running on Travis
-        is_travis = "TRAVIS" in os.environ
+        # determine if running on Travis, GitHub actions, or other
+        # CI environment
+        is_CI = "CI" in os.environ
 
         # export code.json to --appdir directory, if the
         # command line argument was specified. Only done if not travis
-        bindir = pymake.set_bindir()
-        if bindir != "." and not is_travis:
-            dst = os.path.join(bindir, fpth)
+        appdir = "."
+        for idx, argv in enumerate(sys.argv):
+            if argv in ("--appdir", "-ad"):
+                appdir = sys.argv[idx + 1]
+
+        # make appdir if it does not already exist
+        if not os.path.isdir(appdir):
+            os.makedirs(appdir)
+
+        # write code.json
+        if appdir != "." and not is_CI:
+            dst = os.path.join(appdir, fpth)
             with open(dst, "w") as f:
                 json.dump(prog_data, f, indent=4)
 
