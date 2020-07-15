@@ -58,15 +58,12 @@ class Pymake:
         if "test" not in sys.argv[0].lower():
             self.arg_parser()
 
-        # determine if running on Travis or GitHub actions
-        self.is_CI = "CI" in os.environ
-
         # reset select variables using passed variables
         if verbose is not None:
             self.verbose = verbose
 
     def print_settings(self):
-        """
+        """Print settings defined by command line arguments
 
         Returns
         -------
@@ -176,11 +173,16 @@ class Pymake:
 
         Parameters
         ----------
-        target
-        url
-        download_path
-        verify
-        timeout
+        target : str
+            target name
+        url : str
+            url of asset
+        download_path : str
+            path where the asset will be saved
+        verify : bool
+            boolean defining ssl verification
+        timeout : int
+            download timeout in seconds (default is 30)
 
         Returns
         -------
@@ -212,14 +214,21 @@ class Pymake:
 
         Parameters
         ----------
-        target
-        url
-        download_path
-        verify
-        timeout
+        target : str
+            target name
+        url : str
+            url of asset
+        download_path : str
+            path where the asset will be saved
+        verify : bool
+            boolean defining ssl verification
+        timeout : int
+            download timeout in seconds (default is 30)
 
         Returns
         -------
+        success : bool
+            boolean flag indicating download success
 
         """
         # setup the download
@@ -239,7 +248,7 @@ class Pymake:
         Returns
         -------
         success : bool
-            boolean flag indicating
+            boolean flag indicating download success
 
         """
         if not self.download:
@@ -307,26 +316,8 @@ class Pymake:
 
         return
 
-    def set_appdir(self):
-        """Set path for target based on environment variable.
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-
-        """
-
-        if self.is_CI:
-            home = os.path.expanduser("~")
-            self.appdir = os.path.abspath(os.path.join(home, ".local", "bin"))
-
-        return
-
     def set_include_subdirs(self):
-        """
-        Determine if sub-directories in the source directory should be
+        """Determine if sub-directories in the source directory should be
         included.
 
         Parameters
@@ -437,7 +428,11 @@ class Pymake:
 
         Parameters
         ----------
-        target
+        target : str
+        srcdir : str
+            path to directory with source files
+        modify_exe_name : bool
+            boolean that determines
 
         Returns
         -------
@@ -453,9 +448,6 @@ class Pymake:
         prog_dict = usgs_program_data.get_target(self.target)
         if self.srcdir is None:
             self.srcdir = os.path.join(self.download_dir, prog_dict.srcdir)
-
-        # reset appdir if running on CI environment
-        self.set_appdir()
 
         # set include_subdirs for known targets
         self.set_include_subdirs()
@@ -514,7 +506,7 @@ class Pymake:
             )
 
         self.target = self.update_target(
-            self.target, modify_exe_name=modify_exe_name
+            self.target, modify_target=modify_exe_name
         )
 
         build_target = self.set_build_target_bool()
@@ -579,17 +571,22 @@ class Pymake:
 
         return self.returncode
 
-    def update_target(self, target, modify_exe_name=False):
-        """
+    def update_target(self, target, modify_target=False):
+        """Update target name with executable extension on Windows and
+        based on pymake settings.
 
         Parameters
         ----------
         target : str
-
-        modify_exe_name : bool
+            target name
+        modify_target : bool
+            boolean indicating if the target name can be modified based
+            on pymake double and debug settings (default is False)
 
         Returns
         -------
+        target : str
+            updated target name
 
         """
         # add exe extension to target on windows
@@ -599,7 +596,7 @@ class Pymake:
                 target += ".exe"
 
         # add double and debug to target name
-        if modify_exe_name:
+        if modify_target:
             if self.double:
                 filename, file_extension = os.path.splitext(target)
                 if "dbl" not in filename.lower():

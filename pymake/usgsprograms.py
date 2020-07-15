@@ -237,16 +237,13 @@ class usgs_program_data:
         ----------
         fpth : str
             Path for the json file to be created. Default is "code.json"
-
         prog_data : dict
             User-specified program database. If prog_data is None, it will
             be created from the USGS program database
-
         current : bool
             If False, all USGS program targets are listed. If True,
             only USGS program targets that are defined as current are
             listed. Default is False.
-
         update : bool
             If True, existing targets in the user-specified program database
             with values in the USGS program database. If False, existing
@@ -303,10 +300,6 @@ class usgs_program_data:
             msg = 'could not export json file "{}"'.format(fpth)
             raise IOError(msg)
 
-        # determine if running on Travis, GitHub actions, or other
-        # CI environment
-        is_CI = "CI" in os.environ
-
         # export code.json to --appdir directory, if the
         # command line argument was specified. Only done if not travis
         appdir = "."
@@ -319,7 +312,7 @@ class usgs_program_data:
             os.makedirs(appdir)
 
         # write code.json
-        if appdir != "." and not is_CI:
+        if appdir != ".":
             dst = os.path.join(appdir, fpth)
             with open(dst, "w") as f:
                 json.dump(prog_data, f, indent=4)

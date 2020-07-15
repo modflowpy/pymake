@@ -39,6 +39,14 @@ moddir_temp = os.path.join(".", "mod_temp")
 
 
 def get_arg_dict():
+    """Get command line argument dictionary
+
+    Returns
+    -------
+    return : dict
+        Dictionary of command line argument options
+
+    """
     return {
         "srcdir": {
             "tag": ("srcdir",),
@@ -227,6 +235,23 @@ def get_arg_dict():
 
 
 def parser_setup(p, value, reset_default=False):
+    """Add argument to argparse object
+
+    Parameters
+    ----------
+    p : object
+        argparse object
+    value : dict
+        argparse settings
+    reset_default : bool
+        boolean that defines if default values should be used
+
+    Returns
+    -------
+    p : object
+        updated argparse object
+
+    """
     if reset_default:
         default = None
     else:
@@ -374,7 +399,7 @@ def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
 
 
 def get_extrafiles(extrafiles):
-    """Get.
+    """Get extrafiles to include in compilation from a file or a list.
 
     Parameters
     ----------

@@ -47,6 +47,7 @@ def build_replace(targets):
     ----------
     targets : str or list of str
         targets to determine replace_function function pointers.
+
     Returns
     -------
     replace_funcs : function pointer or list of function pointers
@@ -85,14 +86,21 @@ def build_replace(targets):
 # routines for updating source files locations and to compile
 # with gfortran, gcc, and g++
 def update_triangle_files(srcdir, fc, cc, arch, double):
-    """Update the triangle source files.
+    """Update triangle source files.
 
     Parameters
     ----------
     srcdir : str
+        path to directory with source files
     fc : str
+        fortran compiler
     cc : str
+        c/c++ compiler
     arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
 
     Returns
     -------
@@ -124,14 +132,21 @@ def update_triangle_files(srcdir, fc, cc, arch, double):
 
 
 def update_mt3dms_files(srcdir, fc, cc, arch, double):
-    """Update the MT3D source files.
+    """Update MT3DMS source files.
 
     Parameters
     ----------
     srcdir : str
+        path to directory with source files
     fc : str
+        fortran compiler
     cc : str
+        c/c++ compiler
     arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
 
     Returns
     -------
@@ -239,6 +254,26 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
 
 
 def update_swtv4_files(srcdir, fc, cc, arch, double):
+    """Update SEAWAT source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
     # Remove the parallel and serial folders from the source directory
     dlist = ["parallel", "serial"]
     for d in dlist:
@@ -303,6 +338,26 @@ def update_swtv4_files(srcdir, fc, cc, arch, double):
 
 
 def update_mf2005_files(srcdir, fc, cc, arch, double):
+    """Update MODFLOW2005 source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
     # update utl7.f
     tag = "IBINARY=0"
     fpth = os.path.join(srcdir, "utl7.f")
@@ -348,6 +403,26 @@ def update_mf2005_files(srcdir, fc, cc, arch, double):
 
 
 def update_mfnwt_files(srcdir, fc, cc, arch, double):
+    """Update MODFLOW-NWT source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
     # update utl7.f
     fpth = os.path.join(srcdir, "utl7.f")
     tag = "IBINARY=0"
@@ -398,6 +473,26 @@ def update_mfnwt_files(srcdir, fc, cc, arch, double):
 
 
 def update_gsflow_files(srcdir, fc, cc, arch, double):
+    """Update GSFLOW source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
     # update gwf2swt7.f
     tag = "EST(J,I,N)=0.0"
     fpth = os.path.join(srcdir, "modflow", "gwf2swt7.f")
@@ -478,6 +573,26 @@ def update_gsflow_files(srcdir, fc, cc, arch, double):
 
 
 def update_mf2000_files(srcdir, fc, cc, arch, double):
+    """Update MODFLOW-2000 source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
     # Remove six src folders
     dlist = ["beale2k", "hydprgm", "mf96to2k", "mfpto2k", "resan2k", "ycint2k"]
     for d in dlist:
@@ -519,6 +634,26 @@ def update_mf2000_files(srcdir, fc, cc, arch, double):
 
 
 def update_mflgr_files(srcdir, fc, cc, arch, double):
+    """Update MODFLOW-LGR source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
     # update gwf2swt7.f
     tag = "EST(J,I,N)=0.0"
     fpth = os.path.join(srcdir, "gwf2swt7.f")
@@ -534,6 +669,26 @@ def update_mflgr_files(srcdir, fc, cc, arch, double):
 
 
 def update_mp6_files(srcdir, fc, cc, arch, double):
+    """Update MODPATH 6 source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
     fname1 = os.path.join(srcdir, "MP6Flowdata.for")
     f = open(fname1, "r")
 
@@ -562,6 +717,26 @@ def update_mp6_files(srcdir, fc, cc, arch, double):
 
 
 def update_mp7_files(srcdir, fc, cc, arch, double):
+    """Update MODPATH 7 source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
     fpth = os.path.join(srcdir, "StartingLocationReader.f90")
     with open(fpth) as f:
         lines = f.readlines()
@@ -574,6 +749,26 @@ def update_mp7_files(srcdir, fc, cc, arch, double):
 
 
 def update_vs2dt_files(srcdir, fc, cc, arch, double):
+    """Update VS2DT source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
     # move the main source into the source directory
     f1 = os.path.join(srcdir, "..", "vs2dt3_3.f")
     f1 = os.path.abspath(f1)

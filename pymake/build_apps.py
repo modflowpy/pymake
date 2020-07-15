@@ -96,9 +96,9 @@ def build_apps(
         # set double precision flag and whether the executable name
         # can be modified
         if target in ["swtv4"]:
-            modify_exe_name = False
+            update_target_name = False
         else:
-            modify_exe_name = True
+            update_target_name = True
 
         # set download information
         download_now = True
@@ -148,7 +148,7 @@ def build_apps(
             # determine if the target should be built
             build_target = pmobj.set_build_target_bool(
                 target=pmobj.update_target(
-                    target, modify_exe_name=modify_exe_name
+                    target, modify_target=update_target_name
                 )
             )
 
@@ -178,7 +178,7 @@ def build_apps(
 
             # build the code
             if build_target:
-                pmobj.build(modify_exe_name=modify_exe_name)
+                pmobj.build(modify_exe_name=update_target_name)
 
             # clean up the download
             if clean:
