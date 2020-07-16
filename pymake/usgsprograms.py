@@ -1,8 +1,7 @@
 import os
+import sys
 import json
 from collections import OrderedDict
-
-import pymake
 
 
 class dotdict(dict):
@@ -236,16 +235,13 @@ class usgs_program_data:
         ----------
         fpth : str
             Path for the json file to be created. Default is "code.json"
-
         prog_data : dict
             User-specified program database. If prog_data is None, it will
             be created from the USGS program database
-
         current : bool
             If False, all USGS program targets are listed. If True,
             only USGS program targets that are defined as current are
             listed. Default is False.
-
         update : bool
             If True, existing targets in the user-specified program database
             with values in the USGS program database. If False, existing
@@ -302,14 +298,20 @@ class usgs_program_data:
             msg = 'could not export json file "{}"'.format(fpth)
             raise IOError(msg)
 
-        # determine if running on Travis
-        is_travis = "TRAVIS" in os.environ
-
         # export code.json to --appdir directory, if the
         # command line argument was specified. Only done if not travis
-        bindir = pymake.set_bindir()
-        if bindir != "." and not is_travis:
-            dst = os.path.join(bindir, fpth)
+        appdir = "."
+        for idx, argv in enumerate(sys.argv):
+            if argv in ("--appdir", "-ad"):
+                appdir = sys.argv[idx + 1]
+
+        # make appdir if it does not already exist
+        if not os.path.isdir(appdir):
+            os.makedirs(appdir)
+
+        # write code.json
+        if appdir != ".":
+            dst = os.path.join(appdir, fpth)
             with open(dst, "w") as f:
                 json.dump(prog_data, f, indent=4)
 

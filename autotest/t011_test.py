@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import sys
 import shutil
@@ -8,7 +7,7 @@ import pymake
 
 from nose.tools import *
 
-cpth = os.path.join('temp', 't011')
+cpth = os.path.join("temp", "t011")
 # make the directory if it does not exist
 if not os.path.isdir(cpth):
     os.makedirs(cpth)
@@ -21,7 +20,7 @@ def test_usgsprograms():
 
     get_keys = pymake.usgs_program_data.get_keys()
 
-    msg = 'the keys from program_dict are not equal to .get_keys()'
+    msg = "the keys from program_dict are not equal to .get_keys()"
     assert all_keys == get_keys, msg
 
     return
@@ -29,7 +28,7 @@ def test_usgsprograms():
 
 @raises(KeyError)
 def test_target_key_error():
-    pymake.usgs_program_data.get_target('error')
+    pymake.usgs_program_data.get_target("error")
 
 
 def test_target_keys():
@@ -39,36 +38,40 @@ def test_target_keys():
         target_dict = pymake.usgs_program_data.get_target(target)
         test_dict = prog_dict[target]
 
-        msg = 'dictionary from {} '.format(target) + \
-              'does not match dictionary from .get_target()'
+        msg = (
+            "dictionary from {} ".format(target)
+            + "does not match dictionary from .get_target()"
+        )
         assert target_dict == test_dict, msg
 
     return
 
 
 def test_usgsprograms_export_json():
-    fpth = os.path.join(cpth, 'code.test.json')
+    fpth = os.path.join(cpth, "code.test.json")
     pymake.usgs_program_data.export_json(fpth=fpth, current=True)
 
     # check that the json file was made
-    msg = 'did not make...{}'.format(fpth)
+    msg = "did not make...{}".format(fpth)
     assert os.path.isfile(fpth), msg
 
     # test the json export
-    with open(fpth, 'r') as f:
+    with open(fpth, "r") as f:
         json_dict = json.load(f)
     json_keys = list(json_dict.keys())
 
     current_keys = pymake.usgs_program_data.get_keys(current=True)
 
-    msg = 'the number of current keys is not equal to json keys'
+    msg = "the number of current keys is not equal to json keys"
     assert len(json_keys) == len(current_keys), msg
 
     prog_dict = pymake.usgs_program_data().get_program_dict()
     for key, value in json_dict.items():
         temp_dict = prog_dict[key]
-        msg = 'json dictionary for {} key '.format(key) + \
-              'is not equal to the .usgs_prog_data dictionary'
+        msg = (
+            "json dictionary for {} key ".format(key)
+            + "is not equal to the .usgs_prog_data dictionary"
+        )
         assert value == temp_dict, msg
 
     return
@@ -76,20 +79,21 @@ def test_usgsprograms_export_json():
 
 @raises(KeyError)
 def test_usgsprograms_load_json_error():
-    my_dict = {'mf2005': {'bad': 12, 'key': True}}
+    my_dict = {"mf2005": {"bad": 12, "key": True}}
 
-    fpth = os.path.join(cpth, 'code.test.error.json')
-    pymake.usgs_program_data.export_json(fpth=fpth, prog_data=my_dict,
-                                         update=False)
+    fpth = os.path.join(cpth, "code.test.error.json")
+    pymake.usgs_program_data.export_json(
+        fpth=fpth, prog_data=my_dict, update=False
+    )
 
     pymake.usgs_program_data.load_json(fpth=fpth)
 
 
 def test_usgsprograms_load_json():
-    fpth = os.path.join(cpth, 'code.test.json')
+    fpth = os.path.join(cpth, "code.test.json")
     json_dict = pymake.usgs_program_data.load_json(fpth)
 
-    msg = 'could not load {}'.format(fpth)
+    msg = "could not load {}".format(fpth)
     assert json_dict is not None, msg
 
     return
@@ -97,12 +101,12 @@ def test_usgsprograms_load_json():
 
 @raises(IOError)
 def test_usgsprograms_list_json_error():
-    fpth = os.path.join(cpth, 'does.not.exist.json')
+    fpth = os.path.join(cpth, "does.not.exist.json")
     pymake.usgs_program_data.list_json(fpth=fpth)
 
 
 def test_usgsprograms_list_json():
-    fpth = os.path.join(cpth, 'code.test.json')
+    fpth = os.path.join(cpth, "code.test.json")
     pymake.usgs_program_data.list_json(fpth=fpth)
 
     return
@@ -110,7 +114,7 @@ def test_usgsprograms_list_json():
 
 def test_make():
     # add --makefile to command line list
-    sys.argv.append('--makefile')
+    sys.argv.append("--makefile")
 
     # get current directory and change to working directory
     cwd = os.getcwd()
@@ -119,7 +123,7 @@ def test_make():
     # build triangle and makefile
     success = True
     try:
-        pymake.build_apps('triangle')
+        pymake.build_apps("triangle")
     except:
         success = False
 
@@ -127,10 +131,10 @@ def test_make():
     os.chdir(cwd)
 
     # remove --makefile from command line list
-    sys.argv.remove('--makefile')
+    sys.argv.remove("--makefile")
 
     # evaluate success
-    assert success, 'could not build triangle'
+    assert success, "could not build triangle"
 
     return
 

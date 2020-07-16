@@ -1,15 +1,26 @@
-from __future__ import print_function
 import os
+
 from .compiler_language_files import get_ordered_srcfiles
 from .dag import get_f_nodelist
 
 try:
     import pydotplus.graphviz as pydot
 except:
-    print("pymake graphing capabilities not available.\n")
+    pydot = None
 
 
 def to_pydot(dag, filename="mygraph.png"):
+    """
+
+    Parameters
+    ----------
+    dag
+    filename
+
+    Returns
+    -------
+
+    """
     # Create the graph
     graph = pydot.Dot(graph_type="digraph")
 
@@ -30,11 +41,26 @@ def to_pydot(dag, filename="mygraph.png"):
 
 
 def add_pydot_nodes(graph, node_dict, n, ilev, level):
+    """
+
+    Parameters
+    ----------
+    graph
+    node_dict
+    n
+    ilev
+    level
+
+    Returns
+    -------
+
+    """
     if ilev == level:
         return
 
     if n in node_dict:
         return
+
     ttl = os.path.basename(n.name)
     pydotnode = pydot.Node(ttl, style="filled", fillcolor="red", label=ttl)
     node_dict[n] = pydotnode
@@ -46,8 +72,24 @@ def add_pydot_nodes(graph, node_dict, n, ilev, level):
 
 
 def add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
+    """
+
+    Parameters
+    ----------
+    graph
+    node_dict
+    edge_set
+    n
+    ilev
+    level
+
+    Returns
+    -------
+
+    """
     if ilev == level:
         return
+
     if len(n.dependencies) > 0:
         for m in n.dependencies:
             if m not in node_dict:
@@ -62,23 +104,60 @@ def add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
 
 
 def make_plots(
-    srcdir, outdir, include_subdir=False, level=3, extension=".png"
+    srcdir,
+    outdir,
+    include_subdir=False,
+    level=3,
+    extension=".png",
+    verbose=False,
 ):
-    """Create plots of module dependencies."""
+    """Create plots of module dependencies.
+
+    Parameters
+    ----------
+    srcdir : str
+        path for source files
+    outdir : str
+        path for output images
+    include_subdir : bool
+        boolean indicating is subdirectories in the source file directory
+        should be included
+    level : int
+        dependency level (1 is the minimum)
+    extension : str
+        output extension (default is .png)
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
+
+    Returns
+    -------
+
+    """
+    # evaluate if pydot plus is installed
+    if pydot is None:
+        msg = "pydotplus must be installed to use " + "{}".format(
+            make_plots.__module__ + "." + make_plots.__name__
+        )
+        raise ModuleNotFoundError(msg)
+
     srcfiles = get_ordered_srcfiles(srcdir, include_subdir)
     nodelist = get_f_nodelist(srcfiles)
-    for n in nodelist:
-        print(os.path.basename(n.name))
-        for m in n.dependencies:
-            print("  " + os.path.basename(m.name))
-        print("")
+    for idx, n in enumerate(nodelist):
+        if verbose:
+            print("{:<3d}: {}".format(idx + 1, os.path.basename(n.name)))
+            for jdx, m in enumerate(n.dependencies):
+                msg = "     {:<3d}: {}".format(
+                    jdx + 1, os.path.basename(m.name)
+                )
+                print(msg)
 
     if not os.path.isdir(outdir):
         raise Exception("output directory does not exist")
 
     for n in nodelist:
         filename = os.path.join(outdir, os.path.basename(n.name) + extension)
-        print("Creating " + filename)
+        if verbose:
+            print("Creating " + filename)
         graph = pydot.Dot(graph_type="digraph")
         node_dict = {}
         ilev = 0

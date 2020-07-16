@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import sys
 import shutil
@@ -6,15 +5,15 @@ import pymake
 import flopy
 
 # define program data
-target = 'gsflow'
-if sys.platform.lower() == 'win32':
-    target += '.exe'
+target = "gsflow"
+if sys.platform.lower() == "win32":
+    target += ".exe"
 
 # get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
-dstpth = os.path.join('temp')
+dstpth = os.path.join("temp")
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
 
@@ -23,13 +22,26 @@ gsflowpth = os.path.join(dstpth, prog_dict.dirname)
 egsflow = os.path.abspath(os.path.join(dstpth, target))
 
 # example path
-expth = os.path.join(gsflowpth, 'data')
-examples = ['sagehen']
-control_files = ['gsflow.control']
+expth = os.path.join(gsflowpth, "data")
+examples = ["sagehen"]
+control_files = ["gsflow.control"]
 
 # set up pths and exes
 pths = [gsflowpth]
 exes = [egsflow]
+
+pm = pymake.Pymake(verbose=True)
+pm.target = target
+pm.appdir = dstpth
+
+
+def download_src():
+    # Remove the existing target download directory if it exists
+    if os.path.isdir(gsflowpth):
+        shutil.rmtree(gsflowpth)
+
+    # download the target
+    pm.download_target(target, download_path=dstpth)
 
 
 def copy_example_dir(epth):
@@ -51,15 +63,15 @@ def copy_example_dir(epth):
         # edit the control file for a shorter run
         # sagehen
         if epth == examples[0]:
-            fpth = os.path.join(dstpth, epth, 'linux', control_files[0])
+            fpth = os.path.join(dstpth, epth, "linux", control_files[0])
             with open(fpth) as f:
                 lines = f.readlines()
-            with open(fpth, 'w') as f:
+            with open(fpth, "w") as f:
                 idx = 0
                 while idx < len(lines):
                     line = lines[idx]
-                    if 'end_time' in line:
-                        line += '6\n1\n1981\n'
+                    if "end_time" in line:
+                        line += "6\n1\n1981\n"
                         idx += 3
                     f.write(line)
                     idx += 1
@@ -71,16 +83,17 @@ def run_gsflow(example, control_file):
         # copy files
         copy_example_dir(example)
 
-        model_ws = os.path.join(dstpth, example, 'linux')
+        model_ws = os.path.join(dstpth, example, "linux")
 
         # run the flow model
-        success, buff = flopy.run_model(egsflow, control_file,
-                                        model_ws=model_ws, silent=False)
+        success, buff = flopy.run_model(
+            egsflow, control_file, model_ws=model_ws, silent=False
+        )
         if not success:
-            errmsg = 'could not run {}'.format(control_file)
+            errmsg = "could not run {}".format(control_file)
     else:
         success = False
-        errmsg = 'could not run...{}'.format(egsflow)
+        errmsg = "could not run...{}".format(egsflow)
 
     assert success, errmsg
 
@@ -90,36 +103,32 @@ def run_gsflow(example, control_file):
 def clean_up():
     # clean up downloaded directories
     if os.path.isdir(gsflowpth):
-        print('Removing folder ' + gsflowpth)
+        print("Removing folder " + gsflowpth)
         shutil.rmtree(gsflowpth)
 
     # clean up examples
     for example in examples:
         pth = os.path.join(dstpth, example)
         if os.path.isdir(pth):
-            print('Removing example folder ' + example)
+            print("Removing example folder " + example)
             shutil.rmtree(pth)
+
+    # remove download directory
+    pm.download_cleanup()
 
     # clean up compiled executables
     if os.path.isfile(egsflow):
-        print('Removing ' + egsflow)
+        print("Removing...'" + egsflow + "'")
         os.remove(egsflow)
     return
 
 
-def test_compile_gsflow():
-    # Remove the existing GSFLOW directory if it exists
-    if os.path.isdir(gsflowpth):
-        shutil.rmtree(gsflowpth)
+def test_download():
+    download_src()
 
-    # download and compile GSFLOW
-    pymake.build_program(target=target,
-                         include_subdirs=True,
-                         fflags='-O1 -fno-second-underscore',
-                         cflags='-O1',
-                         download_dir=dstpth,
-                         exe_dir=dstpth)
-    return
+
+def test_compile():
+    pm.build()
 
 
 def test_gsflow():
@@ -133,13 +142,8 @@ def test_clean_up():
 
 
 if __name__ == "__main__":
-
-    # compile GSFLOW
-    test_compile_gsflow()
-
-    # run example problems
+    test_download()
+    test_compile()
     for ex, cf in zip(examples, control_files):
         run_gsflow(ex, cf)
-
-    # clean up test
-    clean_up()
+    test_clean_up()

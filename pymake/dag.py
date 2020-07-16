@@ -5,9 +5,6 @@ determine compiling order, for example.  Topological sort pseudocode
 based on: http://en.wikipedia.org/wiki/Topological_sorting
 
 """
-
-from __future__ import print_function
-
 __author__ = "Christian D. Langevin"
 __date__ = "March 20, 2014"
 __version__ = "1.0.0"

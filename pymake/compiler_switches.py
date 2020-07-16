@@ -9,7 +9,7 @@ from .Popen_wrapper import (
 from .compiler_language_files import get_fortran_files, get_c_files, get_iso_c
 
 
-def check_gnu_switch_available(switch, compiler="gfortran"):
+def check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
     """Determine if a specified GNU compiler switch exists. Not all switches
     will be detected, for example '-O2'  adn '-fbounds-check=on'.
 
@@ -19,6 +19,8 @@ def check_gnu_switch_available(switch, compiler="gfortran"):
         compiler switch
     compiler : str
         compiler name, must be gfortran or gcc
+    verbose : bool
+        boolean for verbose output to terminal
 
     Returns
     -------
@@ -33,19 +35,20 @@ def check_gnu_switch_available(switch, compiler="gfortran"):
 
     # determine the gfortran command line flags available
     cmdlist = [compiler, "--help", "-v"]
-    # proc = Popen(cmdlist, stdout=PIPE, stderr=PIPE, shell=False)
     proc = process_Popen_initialize(cmdlist)
-    process_Popen_command(False, cmdlist)
+    if verbose:
+        process_Popen_command(False, cmdlist)
 
     # establish communicator
-    _, stdout = process_Popen_communicate(proc, verbose=False)
+    _, stdout = process_Popen_communicate(proc, verbose=verbose)
 
     # determine if flag exists
     avail = switch in stdout
 
     # write a message
-    msg = "  {} switch available: {}".format(switch, avail)
-    print(msg)
+    if verbose:
+        msg = "  {} switch available: {}".format(switch, avail)
+        print(msg)
 
     return avail
 
@@ -94,7 +97,9 @@ def get_prepend(compiler, osname):
     return prepend
 
 
-def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
+def get_optlevel(
+    target, fc, cc, debug, fflags, cflags, osname=None, verbose=False
+):
     """Return a compiler optimization switch.
 
     Parameters
@@ -114,6 +119,8 @@ def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
     osname : str
         optional lower case OS name. If not passed it will be determined
         using sys.platform
+    verbose : bool
+        boolean for verbose output to terminal
 
     Returns
     -------
@@ -150,7 +157,7 @@ def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
     # set basic optimization level
     if debug:
         if osname == "win32":
-            optlevel = "Od"
+            optlevel = "O0"
         else:
             optlevel = "O0"
     else:
@@ -191,7 +198,14 @@ def get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
 
 
 def get_fortran_flags(
-    target, fc, fflags, debug, double=False, sharedobject=False, osname=None
+    target,
+    fc,
+    fflags,
+    debug,
+    double=False,
+    sharedobject=False,
+    osname=None,
+    verbose=False,
 ):
     """Return a list of pymake and user specified fortran compiler switches.
 
@@ -213,6 +227,8 @@ def get_fortran_flags(
     osname : str
         optional lower case OS name. If not passed it will be determined
         using sys.platform
+    verbose : bool
+        boolean for verbose output to terminal
 
     Returns
     -------
@@ -251,7 +267,7 @@ def get_fortran_flags(
             flags.append("fbacktrace")
             if debug:
                 flags += ["g", "fcheck=all", "fbounds-check", "Wall"]
-                if check_gnu_switch_available("-ffpe-trap"):
+                if check_gnu_switch_available("-ffpe-trap", verbose=verbose):
                     flags.append("ffpe-trap=overflow,zero,invalid,denormal")
             else:
                 if check_gnu_switch_available("-ffpe-summary"):
@@ -312,7 +328,14 @@ def get_fortran_flags(
 
 
 def get_c_flags(
-    target, cc, cflags, debug, srcfiles=None, sharedobject=False, osname=None
+    target,
+    cc,
+    cflags,
+    debug,
+    srcfiles=None,
+    sharedobject=False,
+    osname=None,
+    verbose=False,
 ):
     """Return a list of standard and user specified c/c++ compiler switches.
 
@@ -333,6 +356,8 @@ def get_c_flags(
     osname : str
         optional lower case OS name. If not passed it will be determined
         using sys.platform
+    verbose : bool
+        boolean for verbose output to terminal
 
     Returns
     -------
@@ -370,7 +395,9 @@ def get_c_flags(
                     flags.append("static")
             if debug:
                 flags += ["g"]
-                if check_gnu_switch_available("-Wall", compiler="gcc"):
+                if check_gnu_switch_available(
+                    "-Wall", compiler="gcc", verbose=verbose
+                ):
                     flags.append("Wall")
             else:
                 pass
@@ -380,7 +407,9 @@ def get_c_flags(
                 raise NotImplementedError(msg)
             if debug:
                 flags += ["g"]
-                if check_gnu_switch_available("-Wall", compiler="clang"):
+                if check_gnu_switch_available(
+                    "-Wall", compiler="clang", verbose=verbose
+                ):
                     flags.append("Wall")
             else:
                 pass
@@ -440,7 +469,14 @@ def get_c_flags(
 
 
 def get_linker_flags(
-    target, fc, cc, syslibs, srcfiles, sharedobject=False, osname=None
+    target,
+    fc,
+    cc,
+    syslibs,
+    srcfiles,
+    sharedobject=False,
+    osname=None,
+    verbose=False,
 ):
     """Return the compiler to use for linking and a list of pymake and user
     specified linker switches (syslibs).
@@ -462,6 +498,8 @@ def get_linker_flags(
     osname : str
         optional lower case OS name. If not passed it will be determined
         using sys.platform
+    verbose : bool
+        boolean for verbose output to terminal
 
     Returns
     -------
@@ -578,7 +616,7 @@ def get_linker_flags(
     return compiler, syslibs_out
 
 
-def set_compiler(target):
+def set_compiler(target, verbose=False):
     """Set fortran and c compilers based on --ifort, --mpiifort, --icc, --cl,
     clang++, and --clang command line arguments.
 
@@ -586,6 +624,8 @@ def set_compiler(target):
     ----------
     target : str
         target to build
+    verbose : bool
+        boolean for verbose output to terminal
 
     Returns
     -------
@@ -628,14 +668,15 @@ def set_compiler(target):
         elif cc == "icc":
             cc = "icpc"
 
-    msg = '{} fortran code will be built with "{}".\n'.format(target, fc)
-    msg += '{} c/c++ code will be built with "{}".\n'.format(target, cc)
-    print(msg)
+    if verbose:
+        msg = '{} fortran code will be built with "{}".\n'.format(target, fc)
+        msg += '{} c/c++ code will be built with "{}".\n'.format(target, cc)
+        print(msg)
 
     return fc, cc
 
 
-def set_fflags(target, fc="gfortran", argv=True, osname=None):
+def set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
     """Set appropriate fortran compiler flags based on target.
 
     Parameters
@@ -650,6 +691,8 @@ def set_fflags(target, fc="gfortran", argv=True, osname=None):
     osname : str
         optional lower case OS name. If not passed it will be determined
         using sys.platform
+    verbose : bool
+        boolean for verbose output to terminal
 
     Returns
     -------
@@ -702,20 +745,21 @@ def set_fflags(target, fc="gfortran", argv=True, osname=None):
                     fflags += s.split(delim)
 
         # write fortran flags
-        if len(fflags) > 0:
-            msg = (
-                "{} fortran code ".format(target)
-                + "will be built with the following predefined flags:\n"
-            )
-            msg += "    {}\n".format(" ".join(fflags))
-            print(msg)
-        else:
+        if len(fflags) < 1:
             fflags = None
+        else:
+            if verbose:
+                msg = (
+                    "{} fortran code ".format(target)
+                    + "will be built with the following predefined flags:\n"
+                )
+                msg += "    {}\n".format(" ".join(fflags))
+                print(msg)
 
     return fflags
 
 
-def set_cflags(target, cc="gcc", argv=True, osname=None):
+def set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
     """Set appropriate c compiler flags based on target.
 
     Parameters
@@ -730,6 +774,8 @@ def set_cflags(target, cc="gcc", argv=True, osname=None):
     osname : str
         optional lower case OS name. If not passed it will be determined
         using sys.platform
+    verbose : bool
+        boolean for verbose output to terminal
 
     Returns
     -------
@@ -780,20 +826,23 @@ def set_cflags(target, cc="gcc", argv=True, osname=None):
                     cflags += s.split(delim)
 
         # write c/c++ flags
-        if len(cflags) > 0:
-            msg = (
-                "{} c/c++ code ".format(target)
-                + "will be built with the following predefined flags:\n"
-            )
-            msg += "    {}\n".format(" ".join(cflags))
-            print(msg)
-        else:
+        if len(cflags) < 1:
             cflags = None
+        else:
+            if verbose:
+                msg = (
+                    "{} c/c++ code ".format(target)
+                    + "will be built with the following predefined flags:\n"
+                )
+                msg += "    {}\n".format(" ".join(cflags))
+                print(msg)
 
     return cflags
 
 
-def set_syslibs(target, fc="gfortran", cc="gcc", argv=True, osname=None):
+def set_syslibs(
+    target, fc="gfortran", cc="gcc", argv=True, osname=None, verbose=False
+):
     """Set appropriate linker flags (syslib) based on target.
 
     Parameters
@@ -810,6 +859,8 @@ def set_syslibs(target, fc="gfortran", cc="gcc", argv=True, osname=None):
     osname : str
         optional lower case OS name. If not passed it will be determined
         using sys.platform
+    verbose : bool
+        boolean for verbose output to terminal
 
     Returns
     -------
@@ -848,10 +899,11 @@ def set_syslibs(target, fc="gfortran", cc="gcc", argv=True, osname=None):
                 if cc in ["cl", "icl", "gcc", "g++"]:
                     default_syslibs = False
 
-    print("\nosname:  ", osname)
-    print("fc:      ", fc)
-    print("cc:      ", cc)
-    print("default: {}\n".format(default_syslibs))
+    if verbose:
+        print("\nosname:  ", osname)
+        print("fc:      ", fc)
+        print("cc:      ", cc)
+        print("default: {}\n".format(default_syslibs))
 
     # set default syslibs
     if default_syslibs:
@@ -885,14 +937,15 @@ def set_syslibs(target, fc="gfortran", cc="gcc", argv=True, osname=None):
                 syslibs += s.split(delim)
 
     # write syslibs
-    msg = "{} will use the following predefined syslibs:\n".format(target)
-    msg += "    '{}'\n".format(" ".join(syslibs))
-    print(msg)
+    if verbose:
+        msg = "{} will use the following predefined syslibs:\n".format(target)
+        msg += "    '{}'\n".format(" ".join(syslibs))
+        print(msg)
 
     return syslibs
 
 
-def set_debug(target):
+def set_debug(target, verbose=False):
     """Set boolean that defines if the target should be compiled with debug
     compiler options based on -dbg or --debug command line arguments.
 
@@ -900,6 +953,8 @@ def set_debug(target):
     ----------
     target : str
         target to build
+    verbose : bool
+        boolean for verbose output to terminal
 
     Returns
     -------
@@ -913,17 +968,20 @@ def set_debug(target):
             break
 
     # write a message
-    if debug:
-        comptype = "debug"
-    else:
-        comptype = "release"
-    msg = '{} will be built as a "{}" application.\n'.format(target, comptype)
-    print(msg)
+    if verbose:
+        if debug:
+            comptype = "debug"
+        else:
+            comptype = "release"
+        msg = '{} will be built as a "{}" application.\n'.format(
+            target, comptype
+        )
+        print(msg)
 
     return debug
 
 
-def set_arch(target):
+def set_arch(target, verbose=False):
     """Set architecture to compile target for based on --ia32 command line
     argument. Default architecture is intel64 (64-bit).
 
@@ -931,6 +989,8 @@ def set_arch(target):
     ----------
     target : str
         target to build
+    verbose : bool
+        boolean for verbose output to terminal
 
     Returns
     -------
@@ -948,7 +1008,8 @@ def set_arch(target):
             arch = "ia32"
 
     # write a message
-    msg = '{} will be built for "{}" architecture.\n'.format(target, arch)
-    print(msg)
+    if verbose:
+        msg = '{} will be built for "{}" architecture.\n'.format(target, arch)
+        print(msg)
 
     return arch

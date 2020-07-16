@@ -9,14 +9,11 @@ except:
 
 def build_all():
     if pymake is not None:
-        # build all of the applications
-        pymake.build_apps()
-
         # build code json
         pymake.usgs_program_data.export_json(current=True)
 
-        # compress files
-        pymake.compress_apps()
+        # build all of the applications
+        pymake.build_apps()
 
 
 if __name__ == '__main__':
