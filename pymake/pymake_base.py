@@ -134,7 +134,7 @@ def get_arg_dict():
         },
         "include_subdirs": {
             "tag": ("-sd", "--subdirs"),
-            "help": """Include source files in srcdir subdirectories. 
+            "help": """Include source files in srcdir subdirectories.
                          (default is None)""",
             "default": None,
             "choices": None,

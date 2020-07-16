@@ -66,17 +66,18 @@ def build_apps(
 
         code_dict[target] = usgs_program_data.get_target(target)
 
+        # write system information
+        if idt == 0:
+            if pmobj.verbose:
+                print(
+                    "{} will be built ".format(target)
+                    + 'for the "{}" operating system\n'.format(sys.platform)
+                )
+
         # save initial compiler settings
         if idt == 0:
             fc0 = pmobj.fc
             cc0 = pmobj.cc
-
-        # write system information
-        if pmobj.verbose:
-            print(
-                "{} will be built ".format(target)
-                + 'for the "{}" operating system\n'.format(sys.platform)
-            )
 
         # reset compilers
         if target in ("gridgen",):
@@ -92,6 +93,10 @@ def build_apps(
         else:
             pmobj.fc = fc0
             pmobj.cc = cc0
+
+        # reset extrafiles for instances with more than one target
+        if idt > 0:
+            pmobj.extrafiles = None
 
         # set double precision flag and whether the executable name
         # can be modified

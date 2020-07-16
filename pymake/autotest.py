@@ -971,13 +971,13 @@ def compare_budget(
 
     # headers
     headers = ("INCREMENTAL", "CUMULATIVE")
-    dir = ("IN", "OUT")
+    direction = ("IN", "OUT")
 
     # Get name of list files
-    list1 = None
+    lst_file1 = None
     if files1 is None:
-        list = get_entries_from_namefile(namefile1, "list")
-        list1 = list[0][0]
+        lst_file = get_entries_from_namefile(namefile1, "list")
+        lst_file1 = lst_file[0][0]
     else:
         if isinstance(files1, str):
             files1 = [files1]
@@ -986,12 +986,12 @@ def compare_budget(
                 "list" in os.path.basename(file).lower()
                 or "lst" in os.path.basename(file).lower()
             ):
-                list1 = file
+                lst_file1 = file
                 break
-    list2 = None
+    lst_file2 = None
     if files2 is None:
-        list = get_entries_from_namefile(namefile2, "list")
-        list2 = list[0][0]
+        lst_file = get_entries_from_namefile(namefile2, "list")
+        lst_file2 = lst_file[0][0]
     else:
         if isinstance(files2, str):
             files2 = [files2]
@@ -1000,13 +1000,13 @@ def compare_budget(
                 "list" in os.path.basename(file).lower()
                 or "lst" in os.path.basename(file).lower()
             ):
-                list2 = file
+                lst_file2 = file
                 break
     # Determine if there are two files to compare
-    if list1 is None or list2 is None:
-        print("list1 or list2 is None")
-        print("list1: {}".format(list1))
-        print("list2: {}".format(list2))
+    if lst_file1 is None or lst_file2 is None:
+        print("lst_file1 or lst_file2 is None")
+        print("lst_file1: {}".format(lst_file1))
+        print("lst_file2: {}".format(lst_file2))
         return True
 
     # Open output file
@@ -1015,19 +1015,19 @@ def compare_budget(
         f.write("Created by pymake.autotest.compare\n")
 
     # Initialize SWR budget objects
-    lst1obj = flopy.utils.MfusgListBudget(list1)
-    lst2obj = flopy.utils.MfusgListBudget(list2)
+    lst1obj = flopy.utils.MfusgListBudget(lst_file1)
+    lst2obj = flopy.utils.MfusgListBudget(lst_file2)
 
     # Determine if there any SWR entries in the budget file
     if not lst1obj.isvalid() or not lst2obj.isvalid():
         return True
 
-    # Get numpy budget tables for list1
+    # Get numpy budget tables for lst_file1
     lst1 = []
     lst1.append(lst1obj.get_incremental())
     lst1.append(lst1obj.get_cumulative())
 
-    # Get numpy budget tables for list2
+    # Get numpy budget tables for lst_file2
     lst2 = []
     lst2.append(lst2obj.get_incremental())
     lst2.append(lst2obj.get_cumulative())
@@ -1098,7 +1098,7 @@ def compare_budget(
                     if outfile is not None:
                         e = (
                             '"{} {}" percent difference ({})'.format(
-                                headers[idx], dir[kdx], t
+                                headers[idx], direction[kdx], t
                             )
                             + " for stress period {} and time step {} > {}.".format(
                                 kper[jdx] + 1, kstp[jdx] + 1, max_pd

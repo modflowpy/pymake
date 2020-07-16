@@ -3,8 +3,6 @@ import sys
 import json
 from collections import OrderedDict
 
-import pymake
-
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes."""

@@ -37,14 +37,29 @@ jobs:
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install .
 
-    - name: Install gfortran (Linux)
+    - name: Install gfortran on Linux
       if: runner.os == 'Linux'
       run: |
         sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
+        sudo ln -fs /usr/bin/gcc-9 /usr/local/bin/gcc
+        sudo ln -fs /usr/bin/g++-9 /usr/local/bin/g++
 
-    - name: Print gfortran version
+    - name: Install gfortran on MacOS
+      shell: bash
+      if: runner.os == 'macOS'
+      run: |
+        brew cask info gfortran
+        brew cask install gfortran
+        ls -l /usr/local/gfortran/bin/
+        sudo ln -fs /usr/local/gfortran/bin/gfortran /usr/local/bin/gfortran
+        sudo ln -fs /usr/local/gfortran/bin/gcc /usr/local/bin/gcc
+        sudo ln -fs /usr/local/gfortran/bin/g++ /usr/local/bin/g++
+
+    - name: Print GNU compiler versions
       run: |
         gfortran --version
+        gcc --version
+        g++ --version
 
     - name: Run nosetests
       run: |

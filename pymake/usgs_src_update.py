@@ -27,7 +27,7 @@ def get_function_names(module, select_name=None):
 
     """
     func = {}
-    for key, value in module.__dict__.items():
+    for _, value in module.__dict__.items():
         ladd = False
         if isinstance(value, types.FunctionType):
             if select_name is None:
@@ -176,7 +176,7 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
         os.makedirs(dstpth)
 
     # move the files
-    for src_dir, dirs, files in os.walk(rootdir):
+    for src_dir, _, files in os.walk(rootdir):
         # skip target directory (dirname)
         if dirname in src_dir:
             continue
@@ -772,11 +772,11 @@ def update_vs2dt_files(srcdir, fc, cc, arch, double):
     # move the main source into the source directory
     f1 = os.path.join(srcdir, "..", "vs2dt3_3.f")
     f1 = os.path.abspath(f1)
-    assert os.path.isfile(f1)
+    assert os.path.isfile(f1), "{} does not exist".format(f1)
     f2 = os.path.join(srcdir, "vs2dt3_3.f")
     f2 = os.path.abspath(f2)
     shutil.move(f1, f2)
-    assert os.path.isfile(f2)
+    assert os.path.isfile(f2), "{} does not exist".format(f2)
 
     f1 = open(os.path.join(srcdir, "vs2dt3_3.f"), "r")
     f2 = open(os.path.join(srcdir, "vs2dt3_3.f.tmp"), "w")

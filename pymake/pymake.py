@@ -379,8 +379,8 @@ class Pymake:
         -------
 
         """
-        if self.extrafiles is None:
-            extrafiles = None
+        extrafiles = self.extrafiles
+        if extrafiles is None:
             if self.target in ("zbud6",):
                 extrafiles = [
                     "../../../src/Utilities/ArrayHandlers.f90",
@@ -401,25 +401,25 @@ class Pymake:
                     "../../../src/Utilities/version.f90",
                 ]
 
-            # set extrafiles
-            self.extrafiles = extrafiles
-
             # evaluate extrafiles type
-            if self.extrafiles:
+            if extrafiles:
                 srcdir = os.path.abspath(self.srcdir)
-                if isinstance(self.extrafiles, list):
-                    for idx, value in enumerate(self.extrafiles):
+                if isinstance(extrafiles, list):
+                    for idx, value in enumerate(extrafiles):
                         fpth = os.path.join(srcdir, value)
-                        self.extrafiles[idx] = os.path.normpath(fpth)
-                elif isinstance(self.extrafiles, str):
-                    fpth = os.path.join(srcdir, self.extrafiles)
-                    self.extrafiles = os.path.normpath(fpth)
+                        extrafiles[idx] = os.path.normpath(fpth)
+                elif isinstance(extrafiles, str):
+                    fpth = os.path.join(srcdir, extrafiles)
+                    extrafiles = os.path.normpath(fpth)
                 else:
                     msg = (
                         "invalid extrafiles format - "
                         + "must be a list or string"
                     )
                     raise ValueError(msg)
+
+                # reset extrafiles
+                self.extrafiles = extrafiles
 
         return
 
