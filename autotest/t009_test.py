@@ -6,8 +6,6 @@ import flopy
 
 # define program data
 target = "mt3dusgs"
-if sys.platform.lower() == "win32":
-    target += ".exe"
 
 # get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)

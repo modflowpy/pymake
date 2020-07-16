@@ -45,9 +45,32 @@ class Pymake:
         self.download = None
         self.download_path = None
         self.download_dir = None
-        self.srcdir = None
         self.returncode = 0
         self.build_targets = []
+
+        # initialize class variables available as argv items
+        self.target = None
+        self.srcdir = None
+        self.fc = None
+        self.cc = None
+        self.arch = None
+        self.makeclean = None
+        self.double = None
+        self.debug = None
+        self.expedite = None
+        self.dryrun = None
+        self.include_subdirs = None
+        self.fflags = None
+        self.cflags = None
+        self.syslibs = None
+        self.makefile = None
+        self.srcdir2 = None
+        self.extrafiles = None
+        self.excludefiles = None
+        self.sharedobject = None
+        self.appdir = None
+        self.keep = None
+        self.zip = None
 
         # set class variables with default values from arg_dict
         for key, value in get_arg_dict().items():
@@ -117,11 +140,24 @@ class Pymake:
         zip_pth = self.zip
         if zip_pth is not None:
             targets = []
-            bindir = None
-            for target in self.build_targets:
-                if bindir is None:
-                    bindir = os.path.dirname(target)
-                targets.append(os.path.basename(target))
+            appdir = self.appdir
+
+            # list of applications build at this time
+            if len(self.build_targets) > 0:
+                for target in self.build_targets:
+                    targets.append(os.path.basename(target))
+
+                    # set appdir based on first target, assumes that the path
+                    # for all of the targets are the same
+                    if appdir is None:
+                        appdir = os.path.dirname(target)
+            # determine files in appdir if no applications build at this
+            # time (--keep command line argument)
+            else:
+                if appdir is None:
+                    appdir = "."
+                for target in os.listdir(appdir):
+                    targets.append(target)
 
             # add code.json
             if "code.json" not in targets:
@@ -134,13 +170,20 @@ class Pymake:
                     print(msg)
                 os.remove(zip_pth)
 
-            # compress the compiled executables
+            # print a message describing the zip process
             if self.verbose:
                 msg = "Compressing files in '{}' ".format(
-                    bindir
+                    appdir
                 ) + "directory to zip file '{}'".format(zip_pth)
                 print(msg)
-            if not zip_all(zip_pth, dir_pths=bindir, patterns=targets):
+                for idx, target in enumerate(targets):
+                    msg = " {:>3d}. adding ".format(
+                        idx + 1
+                    ) + "'{}' to zipfile".format(target)
+                    print(msg)
+
+            # compress the compiled executables
+            if not zip_all(zip_pth, dir_pths=appdir, patterns=targets):
                 self.returncode = 1
 
         return
@@ -418,8 +461,8 @@ class Pymake:
                     )
                     raise ValueError(msg)
 
-                # reset extrafiles
-                self.extrafiles = extrafiles
+            # reset extrafiles
+            self.extrafiles = extrafiles
 
         return
 

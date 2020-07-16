@@ -332,10 +332,8 @@ def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
         pass
 
     # remove srcdir_temp and copy in srcdir
-    try:
+    if os.path.isdir(srcdir_temp):
         shutil.rmtree(srcdir_temp)
-    except:
-        pass
     shutil.copytree(srcdir, srcdir_temp)
 
     # copy files from a specified common source directory if
