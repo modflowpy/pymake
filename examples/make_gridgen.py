@@ -2,7 +2,7 @@ import pymake
 
 
 def test_build_gridgen():
-    pymake.build_apps('gridgen')
+    pymake.build_apps("gridgen")
 
     return
 

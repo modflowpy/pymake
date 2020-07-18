@@ -3,7 +3,7 @@
 try:
     import pymake
 except:
-    print('pymake is not installed...will not build executables')
+    print("pymake is not installed...will not build executables")
     pymake = None
 
 
@@ -16,5 +16,5 @@ def build_all():
         pymake.build_apps()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     build_all()

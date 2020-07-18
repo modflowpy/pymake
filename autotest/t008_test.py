@@ -162,6 +162,7 @@ def test_mf6():
 def test_makefile():
     build_with_makefile()
 
+
 def test_sharedobject():
     pm.target = "libmf6"
     prog_dict = pymake.usgs_program_data.get_target(pm.target)

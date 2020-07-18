@@ -2,7 +2,7 @@ import pymake
 
 
 def make_swtv4():
-    pymake.build_apps('swtv4')
+    pymake.build_apps("swtv4")
 
     return
 
