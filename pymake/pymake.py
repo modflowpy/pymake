@@ -17,7 +17,6 @@ import sys
 import time
 import shutil
 import argparse
-import psutil
 
 from .compiler_switches import (
     get_osname,
