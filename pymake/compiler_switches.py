@@ -87,11 +87,11 @@ def get_base_app_name(value):
     """
     value = os.path.basename(value)
     if (
-            value.endswith(".exe")
-            or value.endswith(".dll")
-            or value.endswith(".so")
+        value.endswith(".exe")
+        or value.endswith(".dll")
+        or value.endswith(".so")
     ):
-        value = os.path.splitext()[0]
+        value = os.path.splitext(value)[0]
 
     return value
 
@@ -123,7 +123,7 @@ def get_prepend(compiler, osname):
 
 
 def get_optlevel(
-        target, fc, cc, debug, fflags, cflags, osname=None, verbose=False
+    target, fc, cc, debug, fflags, cflags, osname=None, verbose=False
 ):
     """Return a compiler optimization switch.
 
@@ -219,14 +219,14 @@ def get_optlevel(
 
 
 def get_fortran_flags(
-        target,
-        fc,
-        fflags,
-        debug,
-        double=False,
-        sharedobject=False,
-        osname=None,
-        verbose=False,
+    target,
+    fc,
+    fflags,
+    debug,
+    double=False,
+    sharedobject=False,
+    osname=None,
+    verbose=False,
 ):
     """Return a list of pymake and user specified fortran compiler switches.
 
@@ -351,14 +351,14 @@ def get_fortran_flags(
 
 
 def get_c_flags(
-        target,
-        cc,
-        cflags,
-        debug,
-        srcfiles=None,
-        sharedobject=False,
-        osname=None,
-        verbose=False,
+    target,
+    cc,
+    cflags,
+    debug,
+    srcfiles=None,
+    sharedobject=False,
+    osname=None,
+    verbose=False,
 ):
     """Return a list of standard and user specified c/c++ compiler switches.
 
@@ -418,7 +418,7 @@ def get_c_flags(
             if debug:
                 flags += ["g"]
                 if check_gnu_switch_available(
-                        "-Wall", compiler="gcc", verbose=verbose
+                    "-Wall", compiler="gcc", verbose=verbose
                 ):
                     flags.append("Wall")
             else:
@@ -430,7 +430,7 @@ def get_c_flags(
             if debug:
                 flags += ["g"]
                 if check_gnu_switch_available(
-                        "-Wall", compiler="clang", verbose=verbose
+                    "-Wall", compiler="clang", verbose=verbose
                 ):
                     flags.append("Wall")
             else:
@@ -495,14 +495,14 @@ def get_c_flags(
 
 
 def get_linker_flags(
-        target,
-        fc,
-        cc,
-        syslibs,
-        srcfiles,
-        sharedobject=False,
-        osname=None,
-        verbose=False,
+    target,
+    fc,
+    cc,
+    syslibs,
+    srcfiles,
+    sharedobject=False,
+    osname=None,
+    verbose=False,
 ):
     """Return the compiler to use for linking and a list of pymake and user
     specified linker switches (syslibs).
@@ -715,8 +715,8 @@ def set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
         else:
             if verbose:
                 msg = (
-                        "{} fortran code ".format(target)
-                        + "will be built with the following predefined flags:\n"
+                    "{} fortran code ".format(target)
+                    + "will be built with the following predefined flags:\n"
                 )
                 msg += "    {}\n".format(" ".join(fflags))
                 print(msg)
@@ -793,8 +793,8 @@ def set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
         else:
             if verbose:
                 msg = (
-                        "{} c/c++ code ".format(target)
-                        + "will be built with the following predefined flags:\n"
+                    "{} c/c++ code ".format(target)
+                    + "will be built with the following predefined flags:\n"
                 )
                 msg += "    {}\n".format(" ".join(cflags))
                 print(msg)
@@ -803,7 +803,7 @@ def set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
 
 
 def set_syslibs(
-        target, fc="gfortran", cc="gcc", argv=True, osname=None, verbose=False
+    target, fc="gfortran", cc="gcc", argv=True, osname=None, verbose=False
 ):
     """Set appropriate linker flags (syslib) based on target.
 

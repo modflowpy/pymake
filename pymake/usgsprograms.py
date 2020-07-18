@@ -127,7 +127,7 @@ class usgs_program_data:
         # remove path and extension from key
         key = os.path.basename(key)
         if key.endswith(".exe") or key.endswith(".dll") or key.endswith(".so"):
-            key = os.path.splitext()[0]
+            key = os.path.splitext(key)[0]
 
         # return program attributes
         return usgs_program_data()._target_data(key)
@@ -231,7 +231,7 @@ class usgs_program_data:
 
     @staticmethod
     def export_json(
-            fpth="code.json", prog_data=None, current=False, update=True
+        fpth="code.json", prog_data=None, current=False, update=True
     ):
         """Export USGS program data as a json file.
 
