@@ -104,10 +104,10 @@ class Pymake:
         """
         print("\nPymake settings\n" + 30 * "-")
         for key, value in get_arg_dict().items():
-            v = getattr(self, key, value["default"])
-            if isinstance(v, list):
-                v = ", ".join(v)
-            print(" {}={}".format(key, v))
+            print_value = getattr(self, key, value["default"])
+            if isinstance(print_value, list):
+                print_value = ", ".join(print_value)
+            print(" {}={}".format(key, print_value))
         print("\n")
 
     def argv_reset_settings(self, args):

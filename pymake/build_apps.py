@@ -137,7 +137,7 @@ def build_apps(
         # determine if single, double, or both should be built
         precision = usgs_program_data.get_precision(target)
 
-        for idx, double in enumerate(precision):
+        for double in precision:
             # set double flag
             pmobj.double = double
 

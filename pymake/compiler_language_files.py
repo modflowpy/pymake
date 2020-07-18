@@ -117,7 +117,7 @@ def get_iso_c(srcfiles):
 
 
 def get_srcfiles(srcdir, include_subdir):
-    """Get a list of srcfiles in source file directory srcdir
+    """Get a list of source files in source file directory srcdir
 
     Parameters
     ----------
@@ -136,23 +136,23 @@ def get_srcfiles(srcdir, include_subdir):
     # create a list of all c(pp), f and f90 source files
     templist = []
     for path, _, files in os.walk(srcdir):
-        for name in files:
+        for file in files:
             if not include_subdir:
                 if path != srcdir:
                     continue
-            f = os.path.join(os.path.join(path, name))
-            templist.append(f)
+            file = os.path.join(os.path.join(path, file))
+            templist.append(file)
     srcfiles = []
-    for f in templist:
+    for file in templist:
         if (
-            f.lower().endswith(".f")
-            or f.lower().endswith(".f90")
-            or f.lower().endswith(".for")
-            or f.lower().endswith(".fpp")
-            or f.lower().endswith(".c")
-            or f.lower().endswith(".cpp")
+            file.lower().endswith(".f")
+            or file.lower().endswith(".f90")
+            or file.lower().endswith(".for")
+            or file.lower().endswith(".fpp")
+            or file.lower().endswith(".c")
+            or file.lower().endswith(".cpp")
         ):
-            srcfiles.append(os.path.relpath(f, os.getcwd()))
+            srcfiles.append(os.path.relpath(file, os.getcwd()))
     return srcfiles
 
 
@@ -167,29 +167,29 @@ def get_ordered_srcfiles(all_srcfiles):
 
     Returns
     -------
-    orderedsourcefiles : list
+    ordered_srcfiles : list
         list of ordered source files
 
     """
-    cfiles = []  # mja
+    cfiles = []
     ffiles = []
-    for f in all_srcfiles:
+    for file in all_srcfiles:
         if (
-            f.lower().endswith(".f")
-            or f.lower().endswith(".f90")
-            or f.lower().endswith(".for")
-            or f.lower().endswith(".fpp")
+            file.lower().endswith(".f")
+            or file.lower().endswith(".f90")
+            or file.lower().endswith(".for")
+            or file.lower().endswith(".fpp")
         ):
-            ffiles.append(f)
-        elif f.lower().endswith(".c") or f.lower().endswith(".cpp"):  # mja
-            cfiles.append(f)  # mja
+            ffiles.append(file)
+        elif file.lower().endswith(".c") or file.lower().endswith(".cpp"):
+            cfiles.append(file)
 
     # order the source files using the directed acyclic graph in dag.py
-    orderedsourcefiles = []
+    ordered_srcfiles = []
     if ffiles:
-        orderedsourcefiles += order_source_files(ffiles)
+        ordered_srcfiles += order_source_files(ffiles)
 
     if cfiles:
-        orderedsourcefiles += order_c_source_files(cfiles)
+        ordered_srcfiles += order_c_source_files(cfiles)
 
-    return orderedsourcefiles
+    return ordered_srcfiles
