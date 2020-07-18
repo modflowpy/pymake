@@ -3,7 +3,7 @@ from pymake import build_apps
 
 # Download and compile the MODFLOW 6 distribution
 def make_mf6():
-    build_apps(["mf6", "zbud6"])
+    build_apps(["mf6", "libmf6", "zbud6"])
 
     return
 

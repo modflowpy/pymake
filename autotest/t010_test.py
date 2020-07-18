@@ -27,6 +27,7 @@ pm.target = target
 pm.appdir = dstpth
 pm.cc = "g++"
 pm.fc = None
+pm.inplace = True
 
 
 def download_src():
@@ -57,8 +58,8 @@ def clean_up():
     if os.path.isdir(pth):
         shutil.rmtree(pth)
 
-    # remove download directory
-    pm.download_cleanup()
+    # finalize pymake object
+    pm.finalize()
 
     if os.path.isfile(exe_name):
         print("Removing " + target)

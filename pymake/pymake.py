@@ -17,6 +17,7 @@ import sys
 import time
 import shutil
 import argparse
+import psutil
 
 from .compiler_switches import (
     get_osname,
@@ -71,19 +72,29 @@ class Pymake:
         self.appdir = None
         self.keep = None
         self.zip = None
+        self.inplace = None
 
         # set class variables with default values from arg_dict
         for key, value in get_arg_dict().items():
             setattr(self, key, value["default"])
 
-        # do not parse command line arguments if program running script is
-        # nosetests, pytest, etc.
-        if "test" not in sys.argv[0].lower():
+        # do not parse command line arguments if python is running script
+        if sys.argv[0].lower().endswith(".py"):
             self.arg_parser()
 
         # reset select variables using passed variables
         if verbose is not None:
             self.verbose = verbose
+
+    def finalize(self):
+        """Finalize Pymake class
+
+        Returns
+        -------
+
+        """
+        if self.download:
+            self._download_cleanup()
 
     def print_settings(self):
         """Print settings defined by command line arguments
@@ -94,7 +105,10 @@ class Pymake:
         """
         print("\nPymake settings\n" + 30 * "-")
         for key, value in get_arg_dict().items():
-            print(" {}={}".format(key, getattr(self, key, value["default"])))
+            v = getattr(self, key, value["default"])
+            if isinstance(v, list):
+                v = ", ".join(v)
+            print(" {}={}".format(key, v))
         print("\n")
 
     def argv_reset_settings(self, args):
@@ -237,16 +251,24 @@ class Pymake:
         # set url
         if url is None:
             url = prog_dict.url
-        self.url = url
 
-        # set download_dir
-        self.download_path = download_path
-        self.download_dir = os.path.join(download_path, prog_dict.dirname)
+        # determine if the download url has changed
+        new_url = False
+        if self.url != url:
+            new_url = True
 
-        # set download parameters
-        self.download = False
-        self.verify = verify
-        self.timeout = timeout
+        if new_url:
+            # automatic clean up
+            if self.download:
+                self._download_cleanup()
+
+            # setup new
+            self.url = url
+            self.download = False
+            self.verify = verify
+            self.timeout = timeout
+            self.download_path = download_path
+            self.download_dir = os.path.join(download_path, prog_dict.dirname)
 
         return
 
@@ -309,7 +331,7 @@ class Pymake:
             )
         return self.download
 
-    def download_cleanup(self):
+    def _download_cleanup(self):
         """
 
         Returns
@@ -376,7 +398,7 @@ class Pymake:
             target = target[:-4]
 
         # determine if source subdirectories should be included
-        if target in ["mf6", "gridgen", "mf6beta", "gsflow"]:
+        if target in ["mf6", "libmf6", "gridgen", "mf6beta", "gsflow"]:
             self.include_subdirs = True
 
         return
@@ -408,15 +430,26 @@ class Pymake:
 
         return build_target
 
+    def set_srcdir2(self):
+        """Set srcdir2 to compile target. Default is None.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+        if self.srcdir2 is None:
+            if self.target in ("libmf6",):
+                self.srcdir2 = os.path.join(self.download_dir, "src")
+        return
+
     def set_extrafiles(self):
         """Set extrafiles to compile target. Default is None.
 
         Parameters
         ----------
-        target : str
-            target to build
-        download_dir : str
-            path downloaded files will be placed in
 
         Returns
         -------
@@ -466,6 +499,23 @@ class Pymake:
 
         return
 
+    def set_excludefiles(self):
+        """Set excludefiles to compile target. Default is None.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+        if self.excludefiles is None:
+            if self.target in ("libmf6",):
+                self.excludefiles = [
+                    os.path.join(self.download_dir, "src", "mf6.f90")
+                ]
+        return
+
     def build(self, target=None, srcdir=None, modify_exe_name=False):
         """Build the target
 
@@ -495,8 +545,14 @@ class Pymake:
         # set include_subdirs for known targets
         self.set_include_subdirs()
 
+        # set srcdir2 for known targets
+        self.set_srcdir2()
+
         # set extrafiles for known targets
         self.set_extrafiles()
+
+        # set excludefiles for known targets
+        self.set_excludefiles()
 
         # set compiler flags
         if self.fc != "none":
@@ -602,6 +658,8 @@ class Pymake:
                 excludefiles=self.excludefiles,
                 sharedobject=self.sharedobject,
                 appdir=self.appdir,
+                verbose=self.verbose,
+                inplace=self.inplace,
             )
 
         # issue error if target was not built
@@ -632,11 +690,21 @@ class Pymake:
             updated target name
 
         """
-        # add exe extension to target on windows
+        # add extension to target on windows or if shared object
         if sys.platform.lower() == "win32":
+            if self.sharedobject:
+                ext = ".dll"
+            else:
+                ext = ".exe"
+        else:
+            if self.sharedobject:
+                ext = ".so"
+            else:
+                ext = None
+        if ext is not None:
             filename, file_extension = os.path.splitext(target)
-            if file_extension.lower() != ".exe":
-                target += ".exe"
+            if file_extension.lower() != ext:
+                target += ext
 
         # add double and debug to target name
         if modify_target:
@@ -678,4 +746,5 @@ if __name__ == "__main__":
         sharedobject=args.sharedobject,
         appdir=args.appdir,
         verbose=args.verbose,
+        inplace=args.inplace,
     )

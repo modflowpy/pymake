@@ -22,18 +22,13 @@ from .compiler_switches import (
     get_linker_flags,
 )
 from .compiler_language_files import (
+    get_srcfiles,
     get_ordered_srcfiles,
     get_c_files,
     get_fortran_files,
 )
 
-# if sys.version_info >= (3, 3):
-#     from shutil import which
-# else:
-#     from distutils.spawn import find_executable as which
-
 # define temporary directories
-srcdir_temp = os.path.join(".", "src_temp")
 objdir_temp = os.path.join(".", "obj_temp")
 moddir_temp = os.path.join(".", "mod_temp")
 
@@ -181,7 +176,7 @@ def get_arg_dict():
             "help": """List of extra source files to include in the
                          compilation.  extrafiles can be either a list of files
                          or the name of a text file that contains a list of
-                         files.  (default is None)""",
+                         files. (default is None)""",
             "default": None,
             "choices": None,
             "action": None,
@@ -191,7 +186,7 @@ def get_arg_dict():
             "help": """List of extra source files to exclude from the
                          compilation.  excludefiles can be either a list of
                          files or the name of a text file that contains a list
-                         of files.  (default is None)""",
+                         of files. (default is None)""",
             "default": None,
             "choices": None,
             "action": None,
@@ -230,6 +225,14 @@ def get_arg_dict():
             "default": None,
             "choices": None,
             "action": None,
+        },
+        "inplace": {
+            "tag": ("--inplace",),
+            "help": """Source files in srcdir are used directly
+                         (default is False)""",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
         },
     }
 
@@ -301,7 +304,15 @@ def parser():
     return args
 
 
-def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
+def pymake_initialize(
+    srcdir,
+    target,
+    commonsrc,
+    extrafiles,
+    excludefiles,
+    include_subdirs,
+    srcdir_temp,
+):
     """Remove temp source directory and target, and then copy source into
     source temp directory.
 
@@ -319,73 +330,105 @@ def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
     excludefiles : str
         path for excludefiles file that contains filename of source files
         to exclude from the build
+    include_subdirs : bool
+        boolean indicating source files in srcdir subdirectories should be
+        included in the build
+    srcdir_temp : str
+        path for directory that will contain the source files. If
+        srcdir_temp is the same as srcdir then the original source files
+        will be used.
 
     Returns
     -------
-    None
+    srcfiles : list
+        list of source files for build
 
     """
     # remove the target if it already exists
-    try:
+    if os.path.isfile(target):
         os.remove(target)
-    except:
-        pass
+
+    inplace = False
+    if srcdir == srcdir_temp:
+        inplace = True
+
+    # if exclude is not None, then it is a text file with a list of
+    # source files that need to be excluded from srctemp.
+    excludefiles = get_extra_exclude_files(excludefiles)
+    if excludefiles:
+        for idx, ef in enumerate(excludefiles):
+            excludefiles[idx] = os.path.basename(ef)
 
     # remove srcdir_temp and copy in srcdir
-    if os.path.isdir(srcdir_temp):
-        shutil.rmtree(srcdir_temp)
-    shutil.copytree(srcdir, srcdir_temp)
+    if not inplace:
+        if os.path.isdir(srcdir_temp):
+            shutil.rmtree(srcdir_temp)
+        if excludefiles:
+            shutil.copytree(
+                srcdir,
+                srcdir_temp,
+                ignore=shutil.ignore_patterns(*excludefiles),
+            )
+        else:
+            shutil.copytree(srcdir, srcdir_temp)
+
+    # get a list of source files in srcdir_temp to include
+    srcfiles = get_srcfiles(srcdir_temp, include_subdirs)
 
     # copy files from a specified common source directory if
     # commonsrc is not None
     if commonsrc is not None:
-        pth = os.path.basename(os.path.normpath(commonsrc))
-        pth = os.path.join(srcdir_temp, pth)
-        shutil.copytree(commonsrc, pth)
+        if not inplace:
+            src = os.path.relpath(commonsrc, os.getcwd())
+            dst = os.path.join(
+                srcdir_temp, os.path.basename(os.path.normpath(commonsrc))
+            )
+            if excludefiles:
+                shutil.copytree(
+                    src, dst, ignore=shutil.ignore_patterns(*excludefiles),
+                )
+            else:
+                shutil.copytree(src, dst)
+        else:
+            dst = os.path.normpath(os.path.relpath(commonsrc, srcdir_temp))
 
-    # if extrafiles is not none, then it is a text file with a list of
+        srcfiles += get_srcfiles(dst, include_subdirs)
+
+    # if extrafiles is not None, then it is a text file with a list of
     # additional source files that need to be copied into srctemp and
     # compiled.
-    files = get_extrafiles(extrafiles)
+    files = get_extra_exclude_files(extrafiles)
     if files is None:
         files = []
-    for fname in files:
-        if not os.path.isfile(fname):
-            print("Current working directory: {}".format(os.getcwd()))
-            print("Error in extrafiles: {}".format(extrafiles))
-            print("Could not find file: {}".format(fname))
-            raise Exception()
-        dst = os.path.join(srcdir_temp, os.path.basename(fname))
-        if os.path.isfile(dst):
-            raise Exception(
-                "Error with extrafile.  Name conflicts with "
-                "an existing source file: {}".format(dst)
-            )
-        shutil.copy(fname, dst)
-
-    # if exclude is not None, then it is a text file with a list of
-    # source files that need to be excluded from srctemp.
-    files = get_extrafiles(excludefiles)
-    if files is None:
-        files = []
-    for fname in files:
-        if not os.path.isfile(fname):
-            print("Current working directory: {}".format(os.getcwd()))
-            print("Warning in excludefiles: {}".format(excludefiles))
-            print("Could not find file: {}".format(fname))
+    for fpth in files:
+        if not os.path.isfile(fpth):
+            msg = "Current working directory: {}\n".format(os.getcwd())
+            msg += "Error in extrafiles: {}\n".format(extrafiles)
+            msg += "Could not find file: {}".format(fpth)
+            raise FileNotFoundError(msg)
+        if inplace:
+            dst = os.path.normpath(os.path.relpath(fpth, os.getcwd()))
         else:
-            base = None
-            tail = True
-            while tail:
-                fname, tail = os.path.split(fname)
-                if base is None:
-                    base = tail
-                else:
-                    base = os.path.join(tail, base)
-                dst = os.path.join(srcdir_temp, base)
-                if os.path.isfile(dst):
-                    os.remove(dst)
-                    tail = False
+            dst = os.path.join(srcdir_temp, os.path.basename(fpth))
+            if os.path.isfile(dst):
+                raise ValueError(
+                    "Error with extrafile.  Name conflicts with "
+                    "an existing source file: {}".format(dst)
+                )
+        if not inplace:
+            shutil.copy(fpth, dst)
+
+        # add extrafiles to srcfiles
+        srcfiles.append(dst)
+
+    # remove exclude files from srcfiles list
+    if excludefiles:
+        remove_list = []
+        for fpth in srcfiles:
+            if os.path.basename(fpth) in excludefiles:
+                remove_list.append(fpth)
+        for fpth in remove_list:
+            srcfiles.remove(fpth)
 
     # if they don't exist, create directories for objects and mods
     if not os.path.exists(objdir_temp):
@@ -393,10 +436,10 @@ def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
     if not os.path.exists(moddir_temp):
         os.makedirs(moddir_temp)
 
-    return
+    return srcfiles
 
 
-def get_extrafiles(extrafiles):
+def get_extra_exclude_files(extrafiles):
     """Get extrafiles to include in compilation from a file or a list.
 
     Parameters
@@ -434,7 +477,7 @@ def get_extrafiles(extrafiles):
     return files
 
 
-def clean(target, intelwin, verbose=False):
+def clean(target, intelwin, inplace, srcdir_temp, verbose=False):
     """Cleanup intermediate files. Remove mod and object files, and remove the
     temporary source directory.
 
@@ -445,6 +488,17 @@ def clean(target, intelwin, verbose=False):
     intelwin : bool
         boolean indicating if pymake was used to compile source code on
         Windows using Intel compilers
+    inplace : bool
+        boolean indicating that the source files in srcdir, srcdir2, and
+        defined in extrafiles will be used directly. If inplace is True,
+        source files will be copied to a directory named srcdir_temp.
+        (default is False)
+    srcdir_temp : str
+        path for directory that will contain the source files. If
+        srcdir_temp is the same as srcdir then the original source files
+        will be used.
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
 
     Returns
     -------
@@ -489,11 +543,18 @@ def clean(target, intelwin, verbose=False):
             + "and module directories..."
         )
         print(msg)
-    if os.path.isdir(srcdir_temp):
-        shutil.rmtree(srcdir_temp)
+    if not inplace:
+        if os.path.isdir(srcdir_temp):
+            if verbose:
+                print("removing...'{}'".format(srcdir_temp))
+            shutil.rmtree(srcdir_temp)
     if os.path.isdir(objdir_temp):
+        if verbose:
+            print("removing...'{}'".format(objdir_temp))
         shutil.rmtree(objdir_temp)
     if os.path.isdir(moddir_temp):
+        if verbose:
+            print("removing...'{}'".format(moddir_temp))
         shutil.rmtree(moddir_temp)
 
     # remove the windows batchfile
@@ -502,7 +563,7 @@ def clean(target, intelwin, verbose=False):
     return
 
 
-def create_openspec(verbose):
+def create_openspec(srcfiles, verbose):
     """Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
     STREAM ACCESS. This is specific to MODFLOW and MT3D based targets. Source
     directories are scanned and files defining file access are replaced.
@@ -515,11 +576,20 @@ def create_openspec(verbose):
     None
 
     """
+    # list of files to replace
     files = ["openspec.inc", "filespec.inc"]
-    dirs = [d[0] for d in os.walk(srcdir_temp)]
-    for d in dirs:
+
+    # build list of directory paths from srcfiles
+    dpths = []
+    for fpth in srcfiles:
+        dpth = os.path.dirname(fpth)
+        if dpth not in dpths:
+            dpths.append(dpth)
+
+    # replace files in directory paths if they exist
+    for dpth in dpths:
         for file in files:
-            fpth = os.path.join(d, file)
+            fpth = os.path.join(dpth, file)
             if os.path.isfile(fpth):
                 if verbose:
                     print('replacing..."{}"'.format(fpth))
@@ -618,6 +688,11 @@ def pymake_compile(
         boolean indicating a shared object (.so or .dll) will be built
     verbose : bool
         boolean indicating if output will be printed to the terminal
+    inplace : bool
+        boolean indicating that the source files in srcdir, srcdir2, and
+        defined in extrafiles will be used directly. If inplace is True,
+        source files will be copied to a directory named srcdir_temp.
+        (default is False)
 
     Returns
     -------
@@ -625,6 +700,7 @@ def pymake_compile(
         returncode
 
     """
+    # write pymake setting
     if verbose:
         msg = (
             "\nPymake settings in {}\n".format(pymake_compile.__name__)
@@ -632,11 +708,13 @@ def pymake_compile(
         )
         print(msg)
         frame = inspect.currentframe()
-        args, _, _, values = inspect.getargvalues(frame)
-        for arg in args:
+        fnargs, _, _, values = inspect.getargvalues(frame)
+        for arg in fnargs:
             value = values[arg]
-            if isinstance(value, list):
-                value = " ".join(value)
+            if not value:
+                value = "None"
+            elif isinstance(value, list):
+                value = ", ".join(value)
             print(" {}={}".format(arg, value))
 
     # initialize returncode
@@ -1117,7 +1195,7 @@ def create_makefile(
         dirs = dirs + dirs2
 
     # source files in extrafiles
-    files = get_extrafiles(extrafiles)
+    files = get_extra_exclude_files(extrafiles)
     if files is not None:
         for ef in files:
             fdir = os.path.dirname(ef)
@@ -1578,6 +1656,7 @@ def main(
     sharedobject=False,
     appdir=None,
     verbose=False,
+    inplace=False,
 ):
     """Main pymake function.
 
@@ -1632,6 +1711,11 @@ def main(
         path for executable
     verbose : bool
         boolean indicating if output will be printed to the terminal
+    inplace : bool
+        boolean indicating that the source files in srcdir, srcdir2, and
+        defined in extrafiles will be used directly. If inplace is True,
+        source files will be copied to a directory named srcdir_temp.
+        (default is False)
 
     Returns
     -------
@@ -1641,6 +1725,11 @@ def main(
     """
 
     if srcdir is not None and target is not None:
+
+        if inplace:
+            srcdir_temp = srcdir
+        else:
+            srcdir_temp = os.path.join(".", "src_temp")
 
         # process appdir
         if appdir is not None:
@@ -1697,10 +1786,18 @@ def main(
             os.makedirs(pth)
 
         # initialize
-        pymake_initialize(srcdir, target, srcdir2, extrafiles, excludefiles)
+        srcfiles = pymake_initialize(
+            srcdir,
+            target,
+            srcdir2,
+            extrafiles,
+            excludefiles,
+            include_subdirs,
+            srcdir_temp,
+        )
 
         # get ordered list of files to compile
-        srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
+        srcfiles = get_ordered_srcfiles(srcfiles)
 
         # set intelwin flag to True in compiling on windows with Intel compilers
         intelwin = False
@@ -1714,7 +1811,7 @@ def main(
 
         # update openspec files based on intelwin
         if not intelwin:
-            create_openspec(verbose)
+            create_openspec(srcfiles, verbose)
 
         # compile the executable
         returncode = pymake_compile(
@@ -1755,7 +1852,7 @@ def main(
 
         # clean up temporary files
         if makeclean and returncode == 0:
-            clean(target, intelwin, verbose)
+            clean(target, intelwin, inplace, srcdir_temp, verbose)
     else:
         msg = (
             "Nothing to do, the srcdir ({}) ".format(srcdir)

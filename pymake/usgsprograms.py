@@ -116,7 +116,7 @@ class usgs_program_data:
         Parameters
         ----------
         key : str
-            Target USGS program
+            Target USGS program that may have a path and an extension
 
         Returns
         -------
@@ -124,8 +124,10 @@ class usgs_program_data:
             Dictionary with USGS program attributes for the specified key
 
         """
-        if ".exe" in key.lower():
-            key = key[:-4]
+        # remove path and extension from key
+        key = os.path.splitext(os.path.basename(key))[0]
+
+        # return program attributes
         return usgs_program_data()._target_data(key)
 
     @staticmethod

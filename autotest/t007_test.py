@@ -211,8 +211,8 @@ def clean_up():
         if os.path.isdir(d):
             shutil.rmtree(d)
 
-    # remove download directory
-    pm.download_cleanup()
+    # finalize pymake object
+    pm.finalize()
 
     # clean up compiled executables
     for epth in epths:

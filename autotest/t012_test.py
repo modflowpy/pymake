@@ -113,8 +113,8 @@ def clean_up():
             print("Removing example folder " + example)
             shutil.rmtree(pth)
 
-    # remove download directory
-    pm.download_cleanup()
+    # finalize pymake object
+    pm.finalize()
 
     # clean up compiled executables
     if os.path.isfile(egsflow):

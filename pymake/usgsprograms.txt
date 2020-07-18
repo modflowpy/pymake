@@ -8,6 +8,7 @@ mfusg        1.5      True    https://water.usgs.gov/water-resources/software/MO
 zonbudusg    1.5      True    https://water.usgs.gov/water-resources/software/MODFLOW-USG/mfusg1_5.zip                        mfusg1_5          src/zonebudusg          True            False
 mf6          6.1.1    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.1.1.zip                           mf6.1.1           src                     True            False
 zbud6        6.1.1    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.1.1.zip                           mf6.1.1           utils/zonebudget/src    True            False
+libmf6       6.1.1    True    https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6.1.1.zip                           mf6.1.1           srcbmi                  True            False
 swtv4        4.00.05  True    https://water.usgs.gov/water-resources/software/SEAWAT/swt_v4_00_05.zip                         swt_v4_00_05      source                  False           True
 mp6          6.0.1    True    https://water.usgs.gov/water-resources/software/MODPATH/modpath.6_0_01.zip                      modpath.6_0       src                     True            False
 mp7          7.2.001  True    https://water.usgs.gov/water-resources/software/MODPATH/modpath_7_2_001.zip                     modpath_7_2_001   source                  True            False

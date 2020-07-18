@@ -116,21 +116,21 @@ def get_iso_c(srcfiles):
     return iso_c
 
 
-def get_ordered_srcfiles(srcdir, include_subdir=False):
-    """Create a list of ordered source files (both fortran and c). Ordering is
-    build using a directed acyclic graph to determine module dependencies.
+def get_srcfiles(srcdir, include_subdir):
+    """Get a list of srcfiles in source file directory srcdir
 
     Parameters
     ----------
     srcdir : str
         path for directory containing source files
-    include_subdir : bool
-        flag indicating if source files are in subdirectories in srcdir
+    include_subdirs : bool
+        boolean indicating source files in srcdir subdirectories should be
+        included in the build
 
     Returns
     -------
-    orderedsourcefiles : list
-        list of ordered source files
+    srcfiles : list
+        list of fortran and c/c++ file in srcdir
 
     """
     # create a list of all c(pp), f and f90 source files
@@ -142,7 +142,6 @@ def get_ordered_srcfiles(srcdir, include_subdir=False):
                     continue
             f = os.path.join(os.path.join(path, name))
             templist.append(f)
-    cfiles = []  # mja
     srcfiles = []
     for f in templist:
         if (
@@ -150,30 +149,47 @@ def get_ordered_srcfiles(srcdir, include_subdir=False):
             or f.lower().endswith(".f90")
             or f.lower().endswith(".for")
             or f.lower().endswith(".fpp")
+            or f.lower().endswith(".c")
+            or f.lower().endswith(".cpp")
         ):
-            srcfiles.append(f)
+            srcfiles.append(os.path.relpath(f, os.getcwd()))
+    return srcfiles
+
+
+def get_ordered_srcfiles(all_srcfiles):
+    """Create a list of ordered source files (both fortran and c). Ordering is
+    build using a directed acyclic graph to determine module dependencies.
+
+    Parameters
+    ----------
+    all_srcfiles : list
+        list of all fortran and c/c++ source files
+
+    Returns
+    -------
+    orderedsourcefiles : list
+        list of ordered source files
+
+    """
+    cfiles = []  # mja
+    ffiles = []
+    for f in all_srcfiles:
+        if (
+            f.lower().endswith(".f")
+            or f.lower().endswith(".f90")
+            or f.lower().endswith(".for")
+            or f.lower().endswith(".fpp")
+        ):
+            ffiles.append(f)
         elif f.lower().endswith(".c") or f.lower().endswith(".cpp"):  # mja
             cfiles.append(f)  # mja
 
-    srcfileswithpath = []
-    for srcfile in srcfiles:
-        # s = os.path.join(srcdir, srcfile)
-        s = srcfile
-        srcfileswithpath.append(s)
-
-    # from mja
-    cfileswithpath = []
-    for srcfile in cfiles:
-        # s = os.path.join(srcdir, srcfile)
-        s = srcfile
-        cfileswithpath.append(s)
-
     # order the source files using the directed acyclic graph in dag.py
     orderedsourcefiles = []
-    if len(srcfileswithpath) > 0:
-        orderedsourcefiles += order_source_files(srcfileswithpath)
+    if ffiles:
+        orderedsourcefiles += order_source_files(ffiles)
 
-    if len(cfileswithpath) > 0:
-        orderedsourcefiles += order_c_source_files(cfileswithpath)
+    if cfiles:
+        orderedsourcefiles += order_c_source_files(cfiles)
 
     return orderedsourcefiles

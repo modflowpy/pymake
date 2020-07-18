@@ -25,6 +25,7 @@ pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
 pm.makefile = True
+pm.inplace = True
 
 
 def download_src():
@@ -82,8 +83,8 @@ def clean_up():
         if os.path.isdir(d):
             shutil.rmtree(d)
 
-    # remove download directory
-    pm.download_cleanup()
+    # finalize pymake object
+    pm.finalize()
 
     # clean up MODFLOW-NWT
     if os.path.isfile(epth):

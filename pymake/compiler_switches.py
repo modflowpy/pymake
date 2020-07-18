@@ -71,6 +71,23 @@ def get_osname():
     return osname
 
 
+def get_base_app_name(app_name):
+    """Remove path and extension from an application name.
+
+    Parameters
+    ----------
+    app_name : str
+        application name that may include a directory path and extension
+
+    Returns
+    -------
+    target : str
+        application name base name with out directory path and extension
+
+    """
+    return os.path.splitext(os.path.basename(app_name))[0]
+
+
 def get_prepend(compiler, osname):
     """Return the appropriate prepend for a compiler switch for a OS.
 
@@ -128,10 +145,8 @@ def get_optlevel(
         compiler optimization switch
 
     """
-    # remove target .exe extension, if necessary
-    target = os.path.basename(target)
-    if ".exe" in target.lower():
-        target = target[:-4]
+    # remove target extension, if necessary
+    target = get_base_app_name(target)
 
     # get lower case OS string
     if osname is None:
@@ -139,11 +154,9 @@ def get_optlevel(
 
     # remove .exe extension from compiler if necessary
     if fc is not None:
-        if ".exe" in fc.lower():
-            fc = fc[:-4]
+        fc = get_base_app_name(fc)
     if cc is not None:
-        if ".exe" in cc.lower():
-            cc = cc[:-4]
+        cc = get_base_app_name(cc)
 
     compiler = None
     if fc is not None:
@@ -241,13 +254,10 @@ def get_fortran_flags(
     # define fortran flags
     if fc is not None:
         # remove .exe extension of necessary
-        if ".exe" in fc.lower():
-            fc = fc[:-4]
+        fc = get_base_app_name(fc)
 
         # remove target .exe extension, if necessary
-        target = os.path.basename(target)
-        if ".exe" in target.lower():
-            target = target[:-4]
+        target = get_base_app_name(target)
 
         # get lower case OS string
         if osname is None:
@@ -264,6 +274,8 @@ def get_fortran_flags(
             else:
                 if osname == "win32":
                     flags.append("static")
+                if "fPIC" in flags:
+                    flags.remove("fPIC")
             flags.append("fbacktrace")
             if debug:
                 flags += ["g", "fcheck=all", "fbounds-check", "Wall"]
@@ -299,6 +311,9 @@ def get_fortran_flags(
             else:
                 if sharedobject:
                     flags.append("fPIC")
+                else:
+                    if "fPIC" in flags:
+                        flags.remove("fPIC")
                 if debug:
                     flags += ["g"]
                 flags += ["no-heap-arrays", "fpe0", "traceback"]
@@ -370,13 +385,10 @@ def get_c_flags(
     # define c flags
     if cc is not None:
         # remove .exe extension of necessary
-        if ".exe" in cc.lower():
-            cc = cc[:-4]
+        cc = get_base_app_name(cc)
 
         # remove target .exe extension, if necessary
-        target = os.path.basename(target)
-        if ".exe" in target.lower():
-            target = target[:-4]
+        target = get_base_app_name(target)
 
         # get lower case OS string
         if osname is None:
@@ -393,6 +405,8 @@ def get_c_flags(
             else:
                 if osname == "win32":
                     flags.append("static")
+                if "fPIC" in flags:
+                    flags.remove("fPIC")
             if debug:
                 flags += ["g"]
                 if check_gnu_switch_available(
@@ -422,6 +436,10 @@ def get_c_flags(
             else:
                 if sharedobject:
                     flags.append("fpic")
+                else:
+                    if "fpic" in flags:
+                        flags.remove("fpic")
+
                 if debug:
                     flags += ["debug full"]
         elif cc in ["cl"]:
@@ -517,11 +535,9 @@ def get_linker_flags(
 
     # remove .exe extension of necessary
     if fc is not None:
-        if ".exe" in fc.lower():
-            fc = fc[:-4]
+        fc = get_base_app_name(fc)
     if cc is not None:
-        if ".exe" in cc.lower():
-            cc = fc[:-4]
+        cc = get_base_app_name(cc)
 
     # set linker compiler
     compiler = None
@@ -531,9 +547,7 @@ def get_linker_flags(
         compiler = cc
 
     # remove target .exe extension, if necessary
-    target = os.path.basename(target)
-    if ".exe" in target.lower():
-        target = target[:-4]
+    target = get_base_app_name(target)
 
     # get lower case OS string
     if osname is None:
@@ -567,6 +581,12 @@ def get_linker_flags(
         syslibs_out.append(copt)
     # add static link flags for GNU compilers
     else:
+        if "shared" in syslibs_out:
+            syslibs_out.remove("shared")
+        if "dynamiclib" in syslibs_out:
+            syslibs_out.remove("dynamiclib")
+        if "dll" in syslibs_out:
+            syslibs_out.remove("dll")
         isstatic = False
         isgfortran = False
         if osname == "win32":
@@ -616,66 +636,6 @@ def get_linker_flags(
     return compiler, syslibs_out
 
 
-def set_compiler(target, verbose=False):
-    """Set fortran and c compilers based on --ifort, --mpiifort, --icc, --cl,
-    clang++, and --clang command line arguments.
-
-    Parameters
-    ----------
-    target : str
-        target to build
-    verbose : bool
-        boolean for verbose output to terminal
-
-    Returns
-    -------
-    fc : str
-        string denoting the fortran compiler to use. Default is gfortran.
-    cc : str
-        string denoting the c compiler to use. Default is gcc.
-
-    """
-    fc = "gfortran"
-    if target in ["triangle", "gridgen"]:
-        fc = None
-
-    cc = "gcc"
-    if target in ["gridgen"]:
-        cc = "g++"
-
-    # parse command line arguments to see if user specified options
-    # relative to building the target
-    for arg in sys.argv:
-        if arg.lower() == "--ifort" and fc is not None:
-            fc = "ifort"
-        elif arg.lower() == "--icc":
-            cc = "icc"
-        elif arg.lower() == "--icpc":
-            cc = "icpc"
-        elif arg.lower() == "--cl":
-            cc = "cl"
-        elif arg.lower() == "--icl":
-            cc = "icl"
-        elif arg.lower() == "--clang":
-            cc = "clang"
-        elif arg.lower() == "--clang++":
-            cc = "clang++"
-
-    # reset cc for gridgen if it is specified as 'clang'
-    if target == "gridgen":
-        if cc == "clang":
-            cc = "clang++"
-        elif cc == "icc":
-            cc = "icpc"
-
-    if verbose:
-        msg = '{} fortran code will be built with "{}".\n'.format(target, fc)
-        msg += '{} c/c++ code will be built with "{}".\n'.format(target, cc)
-        print(msg)
-
-    return fc, cc
-
-
 def set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
     """Set appropriate fortran compiler flags based on target.
 
@@ -709,13 +669,10 @@ def set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
             osname = get_osname()
 
         # remove target .exe extension, if necessary
-        target = os.path.basename(target)
-        if ".exe" in target.lower():
-            target = target[:-4]
+        target = get_base_app_name(target)
 
         # remove .exe extension if necessary
-        if ".exe" in fc.lower():
-            fc = fc[:-4]
+        fc = get_base_app_name(fc)
 
         if target == "mp7":
             if fc == "gfortran":
@@ -792,13 +749,10 @@ def set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
             osname = get_osname()
 
         # remove target .exe extension, if necessary
-        target = os.path.basename(target)
-        if ".exe" in target.lower():
-            target = target[:-4]
+        target = get_base_app_name(target)
 
         # remove .exe extension of necessary
-        if ".exe" in cc.lower():
-            cc = cc[:-4]
+        cc = get_base_app_name(cc)
 
         if target == "triangle":
             if osname in ["linux", "darwin"]:
@@ -873,17 +827,13 @@ def set_syslibs(
         osname = get_osname()
 
     # remove target .exe extension, if necessary
-    target = os.path.basename(target)
-    if ".exe" in target.lower():
-        target = target[:-4]
+    target = get_base_app_name(target)
 
     # remove .exe extension of necessary
     if fc is not None:
-        if ".exe" in fc.lower():
-            fc = fc[:-4]
+        fc = get_base_app_name(fc)
     if cc is not None:
-        if ".exe" in cc.lower():
-            cc = cc[:-4]
+        cc = get_base_app_name(cc)
 
     # initialize syslibs
     syslibs = []
@@ -943,73 +893,3 @@ def set_syslibs(
         print(msg)
 
     return syslibs
-
-
-def set_debug(target, verbose=False):
-    """Set boolean that defines if the target should be compiled with debug
-    compiler options based on -dbg or --debug command line arguments.
-
-    Parameters
-    ----------
-    target : str
-        target to build
-    verbose : bool
-        boolean for verbose output to terminal
-
-    Returns
-    -------
-    debug : bool
-
-    """
-    debug = False
-    for arg in sys.argv:
-        if arg.lower() == "-dbg" or arg.lower() == "--debug":
-            debug = True
-            break
-
-    # write a message
-    if verbose:
-        if debug:
-            comptype = "debug"
-        else:
-            comptype = "release"
-        msg = '{} will be built as a "{}" application.\n'.format(
-            target, comptype
-        )
-        print(msg)
-
-    return debug
-
-
-def set_arch(target, verbose=False):
-    """Set architecture to compile target for based on --ia32 command line
-    argument. Default architecture is intel64 (64-bit).
-
-    Parameters
-    ----------
-    target : str
-        target to build
-    verbose : bool
-        boolean for verbose output to terminal
-
-    Returns
-    -------
-    arch : str
-
-    """
-    arch = "intel64"
-    for arg in sys.argv:
-        if arg.lower() == "--ia32":
-            arch = "ia32"
-
-    # set arch to ia32 if building on windows
-    if target == "triangle":
-        if get_osname() == "win32":
-            arch = "ia32"
-
-    # write a message
-    if verbose:
-        msg = '{} will be built for "{}" architecture.\n'.format(target, arch)
-        print(msg)
-
-    return arch
