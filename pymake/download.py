@@ -503,7 +503,7 @@ def get_request_json(request_url, verbose=False):
     success = True
 
     # open request
-    req = request_get(request_url, verbose=verbose)
+    req = request_get(request_url, max_requests=max_requests, verbose=verbose)
 
     # connection established - retrieve the json
     if req.ok:
