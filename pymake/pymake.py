@@ -1,4 +1,6 @@
-"""Make a binary executable for a FORTRAN program, such as MODFLOW."""
+"""Make a binary executable for a FORTRAN, C, or C++ program, such as
+MODFLOW 6.
+"""
 __author__ = "Christian D. Langevin"
 __date__ = "October 26, 2014"
 __version__ = "1.2.0"

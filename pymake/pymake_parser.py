@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 import argparse
 
 from .pymake import __description__
@@ -54,7 +53,7 @@ def get_arg_dict():
         },
         "arch": {
             "tag": ("-ar", "--arch"),
-            "help": """Architecture to use for Intel and Microsoft 
+            "help": """Architecture to use for Intel and Microsoft
                          compilers on Windows. (default is intel64)""",
             "default": "intel64",
             "choices": ["ia32", "ia32_intel64", "intel64"],
@@ -112,8 +111,8 @@ def get_arg_dict():
             "tag": ("-ff", "--fflags"),
             "help": """Additional Fortran compiler flags. Fortran compiler 
                          flags should be enclosed in quotes and start with a
-                         blank space or separated from the name (-ff or 
-                         --fflags) with a equal sign (-ff='-O3'). 
+                         blank space or separated from the name (-ff or
+                         --fflags) with a equal sign (-ff='-O3').
                          (default is None)""",
             "default": None,
             "choices": None,
@@ -123,8 +122,8 @@ def get_arg_dict():
             "tag": ("-cf", "--cflags"),
             "help": """Additional C/C++ compiler flags. C/C++ compiler 
                          flags should be enclosed in quotes and start with a
-                         blank space or separated from the name (-cf or 
-                         --cflags) with a equal sign (-cf='-O3'). 
+                         blank space or separated from the name (-cf or
+                         --cflags) with a equal sign (-cf='-O3').
                          (default is None)""",
             "default": None,
             "choices": None,
@@ -134,7 +133,7 @@ def get_arg_dict():
             "tag": ("-sl", "--syslibs"),
             "help": """Linker system libraries. Linker libraries should be
                          enclosed in quotes and start with a blank space or 
-                         separated from the name (-sl or --syslibs) with a 
+                         separated from the name (-sl or --syslibs) with a
                          equal sign (-sl='-libgcc'). (default is None)""",
             "default": None,
             "choices": ["-lc", "-lm"],
@@ -177,7 +176,7 @@ def get_arg_dict():
         },
         "sharedobject": {
             "tag": ("-so", "--sharedobject"),
-            "help": """Create shared object or dll on Windows. 
+            "help": """Create shared object or dll on Windows.
                          (default is False)""",
             "default": False,
             "choices": None,
@@ -223,12 +222,12 @@ def get_arg_dict():
     }
 
 
-def parser_setup(p, value, reset_default=False):
+def parser_setup(parser_obj, value, reset_default=False):
     """Add argument to argparse object
 
     Parameters
     ----------
-    p : object
+    parser_obj : object
         argparse object
     value : dict
         argparse settings
@@ -237,7 +236,7 @@ def parser_setup(p, value, reset_default=False):
 
     Returns
     -------
-    p : object
+    parser_obj : object
         updated argparse object
 
     """
@@ -246,20 +245,20 @@ def parser_setup(p, value, reset_default=False):
     else:
         default = value["default"]
     if value["action"] is None:
-        p.add_argument(
+        parser_obj.add_argument(
             *value["tag"],
             help=value["help"],
             default=default,
             choices=value["choices"],
         )
     else:
-        p.add_argument(
+        parser_obj.add_argument(
             *value["tag"],
             help=value["help"],
             default=default,
             action=value["action"],
         )
-    return p
+    return parser_obj
 
 
 def parser():
@@ -275,7 +274,7 @@ def parser():
 
     """
     description = __description__
-    parser = argparse.ArgumentParser(
+    parser_obj = argparse.ArgumentParser(
         description=description,
         epilog="""Note that the source directory
                                      should not contain any bad or duplicate
@@ -288,6 +287,6 @@ def parser():
     )
 
     for _, value in get_arg_dict().items():
-        parser = parser_setup(parser, value)
-    args = parser.parse_args()
-    return args
+        my_parser = parser_setup(parser_obj, value)
+    parser_args = my_parser.parse_args()
+    return parser_args

@@ -91,6 +91,6 @@ jobs:
 
     - name: Run nosetests
       env:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        repo-token: ${{ secrets.ACTIONS_PYMAKE }}
       run: |
         nosetests -v --with-id --with-timer -w ./autotest

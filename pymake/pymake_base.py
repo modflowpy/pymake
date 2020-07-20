@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 import os
 import traceback
 import shutil
@@ -314,8 +313,8 @@ def pymake_initialize(
     # source files that need to be excluded from srctemp.
     excludefiles = get_extra_exclude_files(excludefiles)
     if excludefiles:
-        for idx, ef in enumerate(excludefiles):
-            excludefiles[idx] = os.path.basename(ef)
+        for idx, exclude_file in enumerate(excludefiles):
+            excludefiles[idx] = os.path.basename(exclude_file)
 
     # remove srcdir_temp and copy in srcdir
     if not inplace:
