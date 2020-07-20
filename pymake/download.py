@@ -223,7 +223,7 @@ def download_and_unzip(
     # open request
     for idx in range(nattempts):
         if verbose:
-            msg = "open request attempt {} of {}".format(idx+1, nattempts)
+            msg = "open request attempt {} of {}".format(idx + 1, nattempts)
             print(msg)
 
         req = requests.get(url, stream=True, verify=verify)
