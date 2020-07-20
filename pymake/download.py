@@ -3,6 +3,7 @@ import sys
 import shutil
 import time
 import timeit
+import requests
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 import tarfile
 
@@ -164,13 +165,58 @@ class pymakeZipFile(ZipFile):
         return success
 
 
+def request_get(url, verify, timeout, max_requests, verbose):
+    """Make a url request
+
+    Parameters
+    ----------
+    url : str
+        url address for the zip file
+    verify : bool
+        boolean indicating if the url request should be verified
+    timeout : int
+        url request time out length (default is 30 seconds)
+    max_requests : int
+        number of url download request attempts (default is 10)
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
+
+    Returns
+    -------
+    req : request object
+        request object for url
+
+    """
+    for idx in range(max_requests):
+        if verbose:
+            msg = "open request attempt {} of {}".format(idx + 1, max_requests)
+            print(msg)
+        try:
+            req = requests.get(
+                url, stream=True, verify=verify, timeout=timeout
+            )
+        except:
+            if idx < max_requests - 1:
+                time.sleep(13)
+                continue
+            else:
+                msg = "Cannot open request from:\n" + "    {}\n\n".format(url)
+                print(msg)
+                req.raise_for_status()
+
+        # successful request
+        break
+
+    return req
+
+
 def download_and_unzip(
     url,
     pth="./",
     delete_zip=True,
     verify=True,
     timeout=30,
-    nattempts=10,
+    max_requests=10,
     chunk_size=2048000,
     verbose=False,
 ):
@@ -189,7 +235,7 @@ def download_and_unzip(
         boolean indicating if the url request should be verified
     timeout : int
         url request time out length (default is 30 seconds)
-    nattempts : int
+    max_requests : int
         number of url download request attempts (default is 10)
     chunk_size : int
         maximum url download request chunk size (default is 2048000 bytes)
@@ -200,11 +246,7 @@ def download_and_unzip(
     -------
 
     """
-    try:
-        import requests
-    except Exception as e:
-        msg = "pymake.download_and_unzip() error import requests: " + str(e)
-        raise Exception(msg)
+    # create download directory
     if not os.path.exists(pth):
         if verbose:
             print("Creating the directory:\n    {}".format(pth))
@@ -221,23 +263,7 @@ def download_and_unzip(
     tic = timeit.default_timer()
 
     # open request
-    for idx in range(nattempts):
-        if verbose:
-            msg = "open request attempt {} of {}".format(idx + 1, nattempts)
-            print(msg)
-
-        req = requests.get(url, stream=True, verify=verify)
-        if req.status_code != 200:
-            if idx < nattempts - 1:
-                time.sleep(13)
-                continue
-            else:
-                msg = "Cannot open request from:\n    {}\n\n".format(url)
-                print(msg)
-                req.raise_for_status()
-
-        # request opened
-        break
+    req = request_get(url, verify, timeout, max_requests, verbose)
 
     # get content length
     tag = "Content-length"
@@ -260,7 +286,7 @@ def download_and_unzip(
         raise Exception(msg)
 
     # download data from url
-    for idx in range(nattempts):
+    for idx in range(max_requests):
         # print download attempt message
         if verbose:
             print(" download attempt: {}".format(idx + 1))
@@ -268,41 +294,36 @@ def download_and_unzip(
         # connection established - download the file
         ds = 0
         try:
-            req = requests.get(
-                url, verify=verify, timeout=timeout, stream=True
-            )
-            if req.status_code == 200:
-                with open(file_name, "wb") as f:
-                    for chunk in req.iter_content(chunk_size=chunk_size):
-                        if chunk:
-                            ds += len(chunk)
-                            if fs > 0:
-                                msg = (
-                                    "     downloaded "
-                                    + sbfmt.format(bfmt.format(ds))
-                                    + " of "
-                                    + bfmt.format(int(fs))
-                                    + " bytes"
-                                    + " ({:10.4%})".format(
-                                        float(ds) / float(fs)
-                                    )
-                                )
-                                if verbose:
-                                    print(msg)
-                                else:
-                                    sys.stdout.write(".")
-                                    sys.stdout.flush()
-                            f.write(chunk)
+            with open(file_name, "wb") as f:
+                for chunk in req.iter_content(chunk_size=chunk_size):
+                    if chunk:
+                        ds += len(chunk)
+                        if fs > 0:
+                            msg = (
+                                "     downloaded "
+                                + sbfmt.format(bfmt.format(ds))
+                                + " of "
+                                + bfmt.format(int(fs))
+                                + " bytes"
+                                + " ({:10.4%})".format(float(ds) / float(fs))
+                            )
+                            if verbose:
+                                print(msg)
+                            else:
+                                sys.stdout.write(".")
+                                sys.stdout.flush()
+                        f.write(chunk)
 
                 # check that the entire file has been downloaded
                 if ds == fs:
                     success = True
                 else:
                     continue
-            else:
-                success = False
         except:
-            time.sleep(13)
+            # reestablish request
+            req = request_get(url, verify, timeout, max_requests, verbose)
+
+            # try to download the data again
             continue
 
         # terminate the download attempt loop
@@ -453,22 +474,33 @@ def get_request_json(request_url):
         json object
 
     """
-    import requests
     import json
 
+    nattempts = 10
     json_obj = None
     success = True
 
     # open request
-    r = requests.get(request_url)
+    for idx in range(nattempts):
+        req = requests.get(request_url)
+        if req.status_code != 200:
+            if idx < nattempts - 1:
+                time.sleep(13)
+                continue
+            else:
+                msg = "Cannot open request from:\n    {}\n\n".format(
+                    request_url
+                )
+                print(msg)
+                req.raise_for_status()
 
     # connection established - retrieve the json
-    if r.ok:
-        json_obj = json.loads(r.text or r.content)
+    if req.ok:
+        json_obj = json.loads(req.text or req.content)
     else:
-        success = r.status_code == requests.codes.ok
+        success = req.status_code == requests.codes.ok
 
-    return success, r, json_obj
+    return success, req, json_obj
 
 
 def repo_json(github_repo, tag_name=None, error_return=False, verbose=False):
@@ -534,7 +566,7 @@ def repo_json(github_repo, tag_name=None, error_return=False, verbose=False):
         print(msg)
 
     # process the request
-    success, r, json_obj = get_request_json(request_url)
+    success, req, json_obj = get_request_json(request_url)
 
     # evaluate request errors
     if not success:
@@ -550,7 +582,7 @@ def repo_json(github_repo, tag_name=None, error_return=False, verbose=False):
             if error_return:
                 json_obj = None
             else:
-                r.raise_for_status()
+                req.raise_for_status()
 
     # return json object
     return json_obj
