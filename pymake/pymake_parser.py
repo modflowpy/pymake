@@ -109,7 +109,7 @@ def get_arg_dict():
         },
         "fflags": {
             "tag": ("-ff", "--fflags"),
-            "help": """Additional Fortran compiler flags. Fortran compiler 
+            "help": """Additional Fortran compiler flags. Fortran compiler
                          flags should be enclosed in quotes and start with a
                          blank space or separated from the name (-ff or
                          --fflags) with a equal sign (-ff='-O3').
@@ -120,7 +120,7 @@ def get_arg_dict():
         },
         "cflags": {
             "tag": ("-cf", "--cflags"),
-            "help": """Additional C/C++ compiler flags. C/C++ compiler 
+            "help": """Additional C/C++ compiler flags. C/C++ compiler
                          flags should be enclosed in quotes and start with a
                          blank space or separated from the name (-cf or
                          --cflags) with a equal sign (-cf='-O3').

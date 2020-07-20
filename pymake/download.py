@@ -543,7 +543,7 @@ def repo_json(github_repo, tag_name=None, error_return=False, verbose=False):
         request_url = "{}/releases/latest".format(repo_url)
     else:
         request_url = "{}/releases".format(repo_url)
-        success, r, json_cat = get_request_json(request_url, verbose=verbose)
+        success, _, json_cat = get_request_json(request_url, verbose=verbose)
         if success:
             request_url = None
             for release in json_cat:

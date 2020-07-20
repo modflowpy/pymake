@@ -90,7 +90,8 @@ jobs:
         g++ --version
 
     - name: Run nosetests
+      shell: bash
       env:
         repo-token: ${{ secrets.ACTIONS_PYMAKE }}
       run: |
-        nosetests -v --with-id --with-timer -w ./autotest
+        nosetests -v --with-id --with-timer -w ./autotest "$repo-token"
