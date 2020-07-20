@@ -90,7 +90,7 @@ jobs:
         g++ --version
 
     - name: Run nosetests
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
       run: |
         nosetests -v --with-id --with-timer -w ./autotest
