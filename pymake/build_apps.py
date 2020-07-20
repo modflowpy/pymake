@@ -12,6 +12,7 @@ def build_apps(
     download_dir=None,
     appdir=None,
     verbose=None,
+    release_precision=True,
 ):
     """Build all of the current targets or a subset of targets.
 
@@ -26,6 +27,12 @@ def build_apps(
         download directory path
     appdir : str
         target path
+    release_precision : bool
+        boolean indicating if only the release precision version should be
+        build. If release_precision is False, then the release precision
+        version will be compiled along with a double precision version of
+        the program for programs where the standard_switch and double_switch
+        in usgsprograms.txt is True. default is True.
 
     Returns
     -------
@@ -136,6 +143,11 @@ def build_apps(
 
         # determine if single, double, or both should be built
         precision = usgs_program_data.get_precision(target)
+
+        # just build the first precision in precision list if
+        # standard_precision is True
+        if release_precision:
+            precision = precision[0:1]
 
         for double in precision:
             # set double flag

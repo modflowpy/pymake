@@ -1,15 +1,15 @@
 """Make a binary executable for a FORTRAN program, such as MODFLOW."""
 __author__ = "Christian D. Langevin"
 __date__ = "October 26, 2014"
-__version__ = "1.1.0"
-__maintainer__ = "Christian D. Langevin"
+__version__ = "1.2.0"
+__maintainer__ = "Joseph D. Hughes"
 __email__ = "langevin@usgs.gov"
 __status__ = "Production"
 __description__ = """
-This is the pymake program for compiling fortran source files, such as
-the source files that come with MODFLOW. The program works by building
-a directed acyclic graph of the module dependencies and then compiling
-the source files in the proper order.
+This is the pymake program for compiling fortran, c, and c++ source files,
+such as the source files that come with MODFLOW. The program works by building
+a directed acyclic graph of the module dependencies and then compiling the
+source files in the proper order.
 """
 
 import os
@@ -26,7 +26,11 @@ from .compiler_switches import (
     get_linker_flags,
 )
 from .download import download_and_unzip, zip_all
-from .pymake_base import main, parser, get_arg_dict, parser_setup
+from .pymake_base import main
+from .pymake_parser import (
+    get_arg_dict,
+    parser_setup,
+)
 from .usgsprograms import usgs_program_data
 from .usgs_src_update import build_replace
 
@@ -716,34 +720,3 @@ class Pymake:
                 if filename.lower()[-1] != "d":
                     target = filename + "d" + file_extension
         return target
-
-
-if __name__ == "__main__":
-    # get the arguments
-    args = parser()
-
-    # call main -- note that this form allows main to be called
-    # from python as a function.
-    main(
-        args.srcdir,
-        args.target,
-        fc=args.fc,
-        cc=args.cc,
-        makeclean=args.makeclean,
-        expedite=args.expedite,
-        dryrun=args.dryrun,
-        double=args.double,
-        debug=args.debug,
-        include_subdirs=args.subdirs,
-        fflags=args.fflags,
-        cflags=args.cflags,
-        arch=args.arch,
-        makefile=args.makefile,
-        srcdir2=args.commonsrc,
-        extrafiles=args.extrafiles,
-        excludefiles=args.excludefiles,
-        sharedobject=args.sharedobject,
-        appdir=args.appdir,
-        verbose=args.verbose,
-        inplace=args.inplace,
-    )

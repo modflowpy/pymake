@@ -38,6 +38,7 @@ def download_src():
 
 
 def build_with_makefile():
+    success = True
     if os.path.isfile("makefile"):
         # remove existing target
         if os.path.isfile(epth):
@@ -62,7 +63,7 @@ def build_with_makefile():
         errmsg = "{} created by makefile does not exist.".format(target)
         success = os.path.isfile(epth)
     else:
-        errmsg = "makefile does not exist...skipping build_with_make()"
+        errmsg = "makefile does not exist"
 
     assert success, errmsg
 

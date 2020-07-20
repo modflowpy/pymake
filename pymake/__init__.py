@@ -1,7 +1,8 @@
 # __init__.py
 from .pymake import Pymake, __version__
 from .usgsprograms import usgs_program_data
-from .pymake_base import main, parser
+from .pymake_base import main
+from .pymake_parser import parser
 from .build_apps import build_apps
 from .download import (
     download_and_unzip,

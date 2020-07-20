@@ -13,7 +13,7 @@ def build_all():
         pymake.usgs_program_data.export_json(current=True)
 
         # build all of the applications
-        pymake.build_apps()
+        pymake.build_apps(release_precision=False)
 
 
 if __name__ == "__main__":
