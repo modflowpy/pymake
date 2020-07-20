@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import time
 import timeit
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 import tarfile
@@ -218,34 +219,53 @@ def download_and_unzip(
     # download the file
     success = False
     tic = timeit.default_timer()
+
+    # open request
     for idx in range(nattempts):
-        # open request
+        if verbose:
+            msg = "open request attempt {} of {}".format(idx+1, nattempts)
+            print(msg)
+
         req = requests.get(url, stream=True, verify=verify)
         if req.status_code != 200:
             if idx < nattempts - 1:
+                time.sleep(13)
                 continue
             else:
-                msg = "Cannot download file:\n    {}\n\n".format(url)
+                msg = "Cannot open request from:\n    {}\n\n".format(url)
                 print(msg)
                 req.raise_for_status()
 
+        # request opened
+        break
+
+    # get content length
+    tag = "Content-length"
+    if tag in req.headers:
+        fs = req.headers[tag]
+        lenfs = len(fs)
+        fs = int(fs)
+
+        bfmt = "{:" + "{}".format(lenfs) + ",d}"
+        sbfmt = "{:>" + "{}".format(len(bfmt.format(int(fs)))) + "s} bytes"
+        msg = "   file size: {}".format(sbfmt.format(bfmt.format(int(fs))))
+        if verbose:
+            print(msg)
+    else:
+        msg = "'{}' header not available from '{}'".format(tag, url)
+        raise Exception(msg)
+
+    if fs <= 0:
+        msg = "invalid request file size ({}) from '{}'".format(fs, url)
+        raise Exception(msg)
+
+    # download data from url
+    for idx in range(nattempts):
         # print download attempt message
         if verbose:
             print(" download attempt: {}".format(idx + 1))
 
         # connection established - download the file
-        fs = 0
-        lenfs = 0
-        if "Content-length" in req.headers:
-            fs = req.headers["Content-length"]
-            lenfs = len(fs)
-            fs = int(fs)
-        if fs > 0:
-            bfmt = "{:" + "{}".format(lenfs) + ",d}"
-            sbfmt = "{:>" + "{}".format(len(bfmt.format(int(fs)))) + "s} bytes"
-            msg = "   file size: {}".format(sbfmt.format(bfmt.format(int(fs))))
-            if verbose:
-                print(msg)
         ds = 0
         try:
             req = requests.get(
@@ -282,6 +302,7 @@ def download_and_unzip(
             else:
                 success = False
         except:
+            time.sleep(13)
             continue
 
         # terminate the download attempt loop
