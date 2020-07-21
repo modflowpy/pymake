@@ -1,15 +1,17 @@
-"""Make a binary executable for a FORTRAN program, such as MODFLOW."""
+"""Make a binary executable for a FORTRAN, C, or C++ program, such as
+MODFLOW 6.
+"""
 __author__ = "Christian D. Langevin"
 __date__ = "October 26, 2014"
-__version__ = "1.1.0"
-__maintainer__ = "Christian D. Langevin"
+__version__ = "1.2.0"
+__maintainer__ = "Joseph D. Hughes"
 __email__ = "langevin@usgs.gov"
 __status__ = "Production"
 __description__ = """
-This is the pymake program for compiling fortran source files, such as
-the source files that come with MODFLOW. The program works by building
-a directed acyclic graph of the module dependencies and then compiling
-the source files in the proper order.
+This is the pymake program for compiling fortran, c, and c++ source files,
+such as the source files that come with MODFLOW. The program works by building
+a directed acyclic graph of the module dependencies and then compiling the
+source files in the proper order.
 """
 
 import os
@@ -26,7 +28,11 @@ from .compiler_switches import (
     get_linker_flags,
 )
 from .download import download_and_unzip, zip_all
-from .pymake_base import main, parser, get_arg_dict, parser_setup
+from .pymake_base import main
+from .pymake_parser import (
+    get_arg_dict,
+    parser_setup,
+)
 from .usgsprograms import usgs_program_data
 from .usgs_src_update import build_replace
 
@@ -71,19 +77,29 @@ class Pymake:
         self.appdir = None
         self.keep = None
         self.zip = None
+        self.inplace = None
 
         # set class variables with default values from arg_dict
         for key, value in get_arg_dict().items():
             setattr(self, key, value["default"])
 
-        # do not parse command line arguments if program running script is
-        # nosetests, pytest, etc.
-        if "test" not in sys.argv[0].lower():
+        # do not parse command line arguments if python is running script
+        if sys.argv[0].lower().endswith(".py"):
             self.arg_parser()
 
         # reset select variables using passed variables
         if verbose is not None:
             self.verbose = verbose
+
+    def finalize(self):
+        """Finalize Pymake class
+
+        Returns
+        -------
+
+        """
+        if self.download:
+            self._download_cleanup()
 
     def print_settings(self):
         """Print settings defined by command line arguments
@@ -94,7 +110,10 @@ class Pymake:
         """
         print("\nPymake settings\n" + 30 * "-")
         for key, value in get_arg_dict().items():
-            print(" {}={}".format(key, getattr(self, key, value["default"])))
+            print_value = getattr(self, key, value["default"])
+            if isinstance(print_value, list):
+                print_value = ", ".join(print_value)
+            print(" {}={}".format(key, print_value))
         print("\n")
 
     def argv_reset_settings(self, args):
@@ -237,16 +256,24 @@ class Pymake:
         # set url
         if url is None:
             url = prog_dict.url
-        self.url = url
 
-        # set download_dir
-        self.download_path = download_path
-        self.download_dir = os.path.join(download_path, prog_dict.dirname)
+        # determine if the download url has changed
+        new_url = False
+        if self.url != url:
+            new_url = True
 
-        # set download parameters
-        self.download = False
-        self.verify = verify
-        self.timeout = timeout
+        if new_url:
+            # automatic clean up
+            if self.download:
+                self._download_cleanup()
+
+            # setup new
+            self.url = url
+            self.download = False
+            self.verify = verify
+            self.timeout = timeout
+            self.download_path = download_path
+            self.download_dir = os.path.join(download_path, prog_dict.dirname)
 
         return
 
@@ -309,7 +336,7 @@ class Pymake:
             )
         return self.download
 
-    def download_cleanup(self):
+    def _download_cleanup(self):
         """
 
         Returns
@@ -376,7 +403,7 @@ class Pymake:
             target = target[:-4]
 
         # determine if source subdirectories should be included
-        if target in ["mf6", "gridgen", "mf6beta", "gsflow"]:
+        if target in ["mf6", "libmf6", "gridgen", "mf6beta", "gsflow"]:
             self.include_subdirs = True
 
         return
@@ -408,15 +435,26 @@ class Pymake:
 
         return build_target
 
+    def set_srcdir2(self):
+        """Set srcdir2 to compile target. Default is None.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+        if self.srcdir2 is None:
+            if self.target in ("libmf6",):
+                self.srcdir2 = os.path.join(self.download_dir, "src")
+        return
+
     def set_extrafiles(self):
         """Set extrafiles to compile target. Default is None.
 
         Parameters
         ----------
-        target : str
-            target to build
-        download_dir : str
-            path downloaded files will be placed in
 
         Returns
         -------
@@ -466,6 +504,23 @@ class Pymake:
 
         return
 
+    def set_excludefiles(self):
+        """Set excludefiles to compile target. Default is None.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+        if self.excludefiles is None:
+            if self.target in ("libmf6",):
+                self.excludefiles = [
+                    os.path.join(self.download_dir, "src", "mf6.f90")
+                ]
+        return
+
     def build(self, target=None, srcdir=None, modify_exe_name=False):
         """Build the target
 
@@ -495,8 +550,14 @@ class Pymake:
         # set include_subdirs for known targets
         self.set_include_subdirs()
 
+        # set srcdir2 for known targets
+        self.set_srcdir2()
+
         # set extrafiles for known targets
         self.set_extrafiles()
+
+        # set excludefiles for known targets
+        self.set_excludefiles()
 
         # set compiler flags
         if self.fc != "none":
@@ -602,6 +663,8 @@ class Pymake:
                 excludefiles=self.excludefiles,
                 sharedobject=self.sharedobject,
                 appdir=self.appdir,
+                verbose=self.verbose,
+                inplace=self.inplace,
             )
 
         # issue error if target was not built
@@ -632,11 +695,21 @@ class Pymake:
             updated target name
 
         """
-        # add exe extension to target on windows
+        # add extension to target on windows or if shared object
         if sys.platform.lower() == "win32":
+            if self.sharedobject:
+                ext = ".dll"
+            else:
+                ext = ".exe"
+        else:
+            if self.sharedobject:
+                ext = ".so"
+            else:
+                ext = None
+        if ext is not None:
             filename, file_extension = os.path.splitext(target)
-            if file_extension.lower() != ".exe":
-                target += ".exe"
+            if file_extension.lower() != ext:
+                target += ext
 
         # add double and debug to target name
         if modify_target:
@@ -649,33 +722,3 @@ class Pymake:
                 if filename.lower()[-1] != "d":
                     target = filename + "d" + file_extension
         return target
-
-
-if __name__ == "__main__":
-    # get the arguments
-    args = parser()
-
-    # call main -- note that this form allows main to be called
-    # from python as a function.
-    main(
-        args.srcdir,
-        args.target,
-        fc=args.fc,
-        cc=args.cc,
-        makeclean=args.makeclean,
-        expedite=args.expedite,
-        dryrun=args.dryrun,
-        double=args.double,
-        debug=args.debug,
-        include_subdirs=args.subdirs,
-        fflags=args.fflags,
-        cflags=args.cflags,
-        arch=args.arch,
-        makefile=args.makefile,
-        srcdir2=args.commonsrc,
-        extrafiles=args.extrafiles,
-        excludefiles=args.excludefiles,
-        sharedobject=args.sharedobject,
-        appdir=args.appdir,
-        verbose=args.verbose,
-    )

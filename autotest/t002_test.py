@@ -72,8 +72,8 @@ def clean_up():
         if os.path.isdir(d):
             shutil.rmtree(d)
 
-    # remove download directory
-    pm.download_cleanup()
+    # finalize pymake object
+    pm.finalize()
 
     if os.path.isfile(epth):
         print("Removing " + target)

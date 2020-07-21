@@ -153,8 +153,8 @@ def clean_up():
         if os.path.isdir(d):
             shutil.rmtree(d)
 
-    # remove download directory
-    pm.download_cleanup()
+    # finalize pymake object
+    pm.finalize()
 
     for epth in epths:
         if os.path.isfile(epth):

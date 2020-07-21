@@ -2,28 +2,32 @@
 Python package for compiling MODFLOW-based programs.
 
 
-### Version 1.1
+### Version 1.2
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ff198bf587524161ad2bc60b3ab15979)](https://app.codacy.com/manual/jdhughes-usgs/pymake?utm_source=github.com&utm_medium=referral&utm_content=modflowpy/pymake&utm_campaign=Badge_Grade_Settings)
 [![Build Status](https://travis-ci.org/modflowpy/pymake.svg?branch=master)](https://travis-ci.org/modflowpy/pymake)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/pymake/badge.svg?branch=master)](https://coveralls.io/github/modflowpy/pymake?branch=master)
 
 
-This is a relatively simple python package for compiling MODFLOW-based programs.
-The package determines the build order using a directed acyclic graph and then
-compiles the source files using gfortran or intel Fortran (ifort).
+This is a python package for compiling MODFLOW-based and other Fortran, C, and 
+C++ programs. The package determines the build order using a directed acyclic 
+graph and then compiles the source files using GNU compilers (`gcc`, `g++`, 
+`gfortran`) or Intel compilers (`ifort`, `icc`).
 
 pymake can be run from the command line or it can be called from within python.
+By default, pymake sets the optimization level, Fortran flags, C/C++ flags, and
+linker flags that are consistent with those used to compile MODFLOW-based 
+programs released by the USGS.
 
-pymake includes example scripts for building MODFLOW 6, MODFLOW-2005, MODFLOW-NWT,
-MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7, MT3DMS, MT3D-USGS,
-and SEAWAT using gfortran on Mac or Linux.  The scripts download the distribution
-file from the USGS and compile the source into a binary executable.
+pymake includes example scripts for building MODFLOW 6, MODFLOW-2005, 
+MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7, 
+GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, and SUTRA. Example scripts for 
+creating the utility programs CRT, Triangle, and GRIDGEN are also included.
+The scripts download the distribution file from the USGS (and other 
+organizations) and compile the source into a binary executable.
 
-pymake includes code for compiling with ifort on Windows and OSX.
-
-Note that if gfortran is used, the `openspec.f` and `FILESPEC.inc` (MT3DMS)
-file will automatically be changed to the following so that binary files are
-created properly using standard Fortran:
+Note that if gfortran is used to compile MODFLOW-based codes, the `openspec.f` 
+and `FILESPEC.inc` (MT3DMS) files will automatically be changed to the 
+following so that binary files are created properly using standard Fortran:
 
 ```
 c -- created by pymake.py
@@ -36,88 +40,202 @@ c -- end of include file
 
 ## Command Line Usage
 
+pymake can be used to compile MODFLOW 6 directly from the command line using 
+the Intel Fortran compiler `ifort` from a subdirectory at the same level as 
+the `src` subdirectory by specifying:
+
+```
+python -m pymake ../src/ ../bin/mf6 -mc --subdirs -fc ifort
+```
+
 To see help for running from command line, use the following statement.
 
-```python -m pymake.pymake -h```
+```
+python -m pymake -h
+```
 
-usage: ```pymake.py [-h] [-fc {ifort,gfortran}] [-cc {gcc,clang}]
-[-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e]
-[-dr] [-sd] [-ff]
-srcdir target```
+The help message identifies required positional arguments and optional 
+arguments that can be provided to overide default values.
 
-This is the pymake program for compiling fortran source files, such as the
-source files that come with MODFLOW. The program works by building a directed
-acyclic graph of the module dependencies and then compiling the source files
-in the proper order.
+```
+usage: __main__.py [-h] [-fc {ifort,mpiifort,gfortran,none}]
+                    [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}]
+                    [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e]
+                    [-dr] [-sd] [-ff FFLAGS] [-cf CFLAGS] [-sl {-lc,-lm}] [-mf]
+                    [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so]
+                    [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace]
+                    srcdir target
+
+This is the pymake program for compiling fortran, c, and c++ source files,
+such as the source files that come with MODFLOW. The program works by building
+a directed acyclic graph of the module dependencies and then compiling the
+source files in the proper order.
 
 positional arguments:
-srcdir                Location of source directory
-target                Name of target to create
+  srcdir                Path source directory.
+  target                Name of target to create. (can include path)
 
 optional arguments:
--h, --help            show this help message and exit
--fc {ifort,gfortran}  Fortran compiler to use (default is gfortran)
--cc {gcc,clang}       C compiler to use (default is gcc)
--ar {ia32,ia32_intel64,intel64}
-Architecture to use for ifort (default is intel64)
--mc, --makeclean      Clean files when done
--dbl, --double        Force double precision
--dbg, --debug         Create debug version
--e, --expedite        Only compile out of date source files. Clean must not
-have been used on previous build. Does not work yet
-for ifort.
--dr, --dryrun         Do not actually compile. Files will be deleted, if
---makeclean is used. Does not work yet for ifort.
--sd, --subdirs        Include source files in srcdir subdirectories.
--ff, --fflags         Additional fortran compiler flags.
--mf, --makefile       Create a standard makefile. Does not work for
-ifort for Windows yet.
+  -h, --help            show this help message and exit
+  -fc {ifort,mpiifort,gfortran,none}
+                        Fortran compiler to use. (default is gfortran)
+  -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
+                        C/C++ compiler to use. (default is gcc)
+  -ar {ia32,ia32_intel64,intel64}, --arch {ia32,ia32_intel64,intel64}
+                        Architecture to use for Intel and Microsoft compilers
+                        on Windows. (default is intel64)
+  -mc, --makeclean      Clean temporary object, module, and source files when
+                        done. (default is False)
+  -dbl, --double        Force double precision. (default is False)
+  -dbg, --debug         Create debug version. (default is False)
+  -e, --expedite        Only compile out of date source files. Clean must not
+                        have been used on previous build. (default is False)
+  -dr, --dryrun         Do not actually compile. Files will be deleted, if
+                        --makeclean is used. Does not work yet for ifort.
+                        (default is False)
+  -sd, --subdirs        Include source files in srcdir subdirectories.
+                        (default is None)
+  -ff FFLAGS, --fflags FFLAGS
+                        Additional Fortran compiler flags. Fortran compiler
+                        flags should be enclosed in quotes and start with a
+                        blank space or separated from the name (-ff or
+                        --fflags) with a equal sign (-ff='-O3'). (default is
+                        None)
+  -cf CFLAGS, --cflags CFLAGS
+                        Additional C/C++ compiler flags. C/C++ compiler flags
+                        should be enclosed in quotes and start with a blank
+                        space or separated from the name (-cf or --cflags)
+                        with a equal sign (-cf='-O3'). (default is None)
+  -sl {-lc,-lm}, --syslibs {-lc,-lm}
+                        Linker system libraries. Linker libraries should be
+                        enclosed in quotes and start with a blank space or
+                        separated from the name (-sl or --syslibs) with a
+                        equal sign (-sl='-libgcc'). (default is None)
+  -mf, --makefile       Create a GNU make makefile. (default is False)
+  -cs COMMONSRC, --commonsrc COMMONSRC
+                        Additional directory with common source files.
+                        (default is None)
+  -ef EXTRAFILES, --extrafiles EXTRAFILES
+                        List of extra source files to include in the
+                        compilation. extrafiles can be either a list of files
+                        or the name of a text file that contains a list of
+                        files. (default is None)
+  -exf EXCLUDEFILES, --excludefiles EXCLUDEFILES
+                        List of extra source files to exclude from the
+                        compilation. excludefiles can be either a list of
+                        files or the name of a text file that contains a list
+                        of files. (default is None)
+  -so, --sharedobject   Create shared object or dll on Windows. (default is
+                        False)
+  -ad APPDIR, --appdir APPDIR
+                        Target path that overides path defined target path
+                        (default is None)
+  -v, --verbose         Verbose output to terminal. (default is False)
+  --keep                Keep existing executable. (default is False)
+  --zip ZIP             Zip built executable. (default is False)
+  --inplace             Source files in srcdir are used directly. (default is
+                        False)
 
 Note that the source directory should not contain any bad or duplicate source
-files as all source files in the source directory will be built and linked.
+files as all source files in the source directory, the common source file
+directory (srcdir2), and the extra files (extrafiles) will be built and
+linked. Files can be excluded by using the excludefiles command line switch.
+```
 
+Note that command line arguments for Fortran flags, C/C++ flags, and syslib 
+libraries should be enclosed in quotes and start with a space prior to the 
+first value (`-ff ' -O3'`) or use an equal sign separating the command line 
+argument and the values (`-ff='-O3'`). The command line argument to use an 
+`-O3` optimization level when compiling MODFLOW 6 with the `ifort` compiler 
+would be:
+
+```
+python -m pymake ../src/ ../bin/mf6 -mc --subdirs -fc ifort -ff='-O3'
+```
+ 
 
 ## From Python
 
-### Script to compile mfnwt
+### Script to compile MODFLOW 6
 
+When using the pymake object (`Pymake()`) only the positional arguments 
+(`srcdir`, `target`) need to be specified in the script. 
+
+```python
 import pymake
-srcdir = '../mfnwt/src'
-target = 'mfnwt'
-pymake.main(srcdir, target, 'gfortran', 'gcc', makeclean=True, expedite=False,
-dryrun=False, double=False, debug=False, include_subdirs=False)
+pm = pymake.Pymake()
+pm.srcdir = '../mfnwt/src'
+pm.target = 'mf6'
+pm.include_subdirs = True
+pm.build()
+```
 
-*or see make_mfnwt.py in examples directory*
+It is suggested that optional variables required for successful compiling and 
+linking be manually specified in the script to mininimize the potential for 
+unsuccessful builds. For MODFLOW 6, subdirectories in the `src` subdirectory
+need to be included and '`pm.include_subdirs = True`' has been specified in
+the script. Custom optimization levels and compiler flags could be specified
+to get consistent builds. 
 
+Non-default values for the optional arguments can specified as command line 
+arguments. For example, MODFLOW 6 could be compiled using Intel compilers 
+instead of the default GNU compilers with the script listed above by 
+specifying:
+
+```
+python mymf6script.py -fc ifort -cc icc
+```
 
 ## Automatic Download and Build
 
 The following scripts can be run directly from the command line to build
-MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR,
-MODFLOW-2000, MODPATH 6, MODPATH 7, MT3DMS, MT3D-USGS, and SEAWAT
-binaries on Mac and Linux. The scripts will download the distribution
-file from the USGS (requires internet connection), unzip the file, and
-compile the source.  MT3DMS will be downloaded from the University of
-Alabama.
+MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000,
+MODPATH 6, MODPATH 7, MT3DMS, MT3D-USGS, and SEAWAT binaries on Linux, Mac,
+and Windows. The scripts will download the distribution file from the USGS 
+(requires internet connection), unzip the file, and compile the source.  
+MT3DMS will be downloaded from the University of Alabama and Triangle will be 
+downloaded from 
+[netlib.org](http://www.netlib.org/voronoi/triangle.zip). The scripts use the 
+`pymake.build_apps()` method which download and unzip the distribution files 
+and set all of the pymake settings required to build the program. Available 
+example scripts include: 
 
-python make_modflow6.py
-python make_mf2005.py
-python make_mfnwt.py
-python make_mfusg.py
-python make_mflgr.py
-python make_mf2000.py
-python make_modpath6.py
-python make_modpath7.py
-python make_mt3d.py
-python make_mt3dusgs
-python make_swtv4.py
+* make_modflow6.py
+* make_mf2005.py
+* make_mfnwt.py
+* make_mfusg.py
+* make_mflgr.py
+* make_mf2000.py
+* make_modpath6.py
+* make_modpath7.py
+* make_gsflow.py
+* make_vs2dt.py
+* make_mt3d.py
+* make_mt3dusgs.py
+* make_swtv4.py
+* make_crt.py
+* make_gridgen.py
+* make_triangle.py
+
+Optional command line arguments can be used to customize the build (`-fc`, 
+`-cc`, `--fflags`, etc.). MODFLOW 6 could be built using intel compilers and 
+an `O3` optimation level by specifying:
+
+```
+python make_mf6.py -fc=ifort --fflags='-O3'
+```
+
 
 ## Installation
 
 To install pymake directly from the git repository type:
 
+```
 pip install https://github.com/modflowpy/pymake/zipball/master
+```
 
 To update your version of pymake with the latest from the git repository type:
 
+```
 pip install https://github.com/modflowpy/pymake/zipball/master --upgrade
+```

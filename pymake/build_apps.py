@@ -12,6 +12,7 @@ def build_apps(
     download_dir=None,
     appdir=None,
     verbose=None,
+    release_precision=True,
 ):
     """Build all of the current targets or a subset of targets.
 
@@ -26,6 +27,12 @@ def build_apps(
         download directory path
     appdir : str
         target path
+    release_precision : bool
+        boolean indicating if only the release precision version should be
+        build. If release_precision is False, then the release precision
+        version will be compiled along with a double precision version of
+        the program for programs where the standard_switch and double_switch
+        in usgsprograms.txt is True. default is True.
 
     Returns
     -------
@@ -52,6 +59,9 @@ def build_apps(
                 type(pymake_object), type(Pymake())
             )
             raise TypeError(msg)
+
+    # set object to clean after each build
+    pmobj.makeclean = True
 
     # reset variables based on passed args
     if download_dir is not None:
@@ -88,11 +98,21 @@ def build_apps(
                 pmobj.cc = "clang++"
         elif target in ("triangle",):
             pmobj.fc = "none"
-        elif target in ("mf6",):
+        elif target in ("mf6", "libmf6"):
             pmobj.cc = "none"
         else:
             pmobj.fc = fc0
             pmobj.cc = cc0
+
+        # set sharedobject
+        if target in ("libmf6",):
+            pmobj.sharedobject = True
+        else:
+            pmobj.sharedobject = False
+
+        # reset srcdir2 - TODO make more robust
+        if target not in ("libmf6",):
+            pmobj.srcdir2 = None
 
         # reset extrafiles for instances with more than one target
         if idt > 0:
@@ -106,31 +126,9 @@ def build_apps(
             update_target_name = True
 
         # set download information
-        download_now = True
-        download_clean = True
         download_dir = "temp"
 
-        # modify download if mf6 and also building zonbud6
-        if target == "mf6":
-            if idt + 1 < len(targets):
-                if targets[idt + 1] == "zbud6":
-                    download_clean = False
-        elif target == "zbud6":
-            if idt > 0:
-                if targets[idt - 1] == "mf6":
-                    download_now = False
-
-        # modify download if mfusg and also building zonbudusg
-        if target == "mfusg":
-            if idt + 1 < len(targets):
-                if targets[idt + 1] == "zonbudusg":
-                    download_clean = False
-        elif target == "zonbudusg":
-            if idt > 0:
-                if targets[idt - 1] == "mfusg":
-                    download_now = False
-
-        if target in ["mt3dms", "triangle", "mf6beta"]:
+        if target in ("mt3dms", "triangle"):
             download_verify = False
             timeout = 10
         else:
@@ -146,7 +144,12 @@ def build_apps(
         # determine if single, double, or both should be built
         precision = usgs_program_data.get_precision(target)
 
-        for idx, double in enumerate(precision):
+        # just build the first precision in precision list if
+        # standard_precision is True
+        if release_precision:
+            precision = precision[0:1]
+
+        for double in precision:
             # set double flag
             pmobj.double = double
 
@@ -157,37 +160,17 @@ def build_apps(
                 )
             )
 
-            # set download boolean
-            if idx == 0:
-                download = download_now
-            else:
-                download = False
-
-            # set clean boolean
-            if len(precision) > 1:
-                if idx < len(precision) - 1:
-                    clean = False
-                else:
-                    clean = download_clean
-            else:
-                clean = download_clean
-
             # setup download for target
-            if download:
-                pmobj.download_setup(
-                    target,
-                    download_path=download_dir,
-                    verify=download_verify,
-                    timeout=timeout,
-                )
+            pmobj.download_setup(
+                target,
+                download_path=download_dir,
+                verify=download_verify,
+                timeout=timeout,
+            )
 
             # build the code
             if build_target:
                 pmobj.build(modify_exe_name=update_target_name)
-
-            # clean up the download
-            if clean:
-                pmobj.download_cleanup()
 
         # calculate download and compile time
         end_downcomp = datetime.now()
@@ -206,5 +189,8 @@ def build_apps(
     # compress targets
     if pmobj.returncode == 0:
         pmobj.compress_targets()
+
+    # execute final Pymake object operations
+    pmobj.finalize()
 
     return pmobj.returncode

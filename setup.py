@@ -18,7 +18,7 @@ setup(name='pymake',
       url='https://github.com/modflowpy/pymake.git',
       license='New BSD',
       platforms='Windows, Mac OS-X, Linux',
-      install_requires=[],  # ['pydotplus>=2.0'],
+      install_requires=['requests'],  # ['pydotplus>=2.0'],
       packages=['pymake'],
       include_package_data=True,
       version=__version__)

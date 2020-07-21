@@ -16,7 +16,7 @@ class dotdict(dict):
 program_data_file = "usgsprograms.txt"
 
 # keys to create for each target
-target_keys = [
+target_keys = (
     "version",
     "current",
     "url",
@@ -24,7 +24,7 @@ target_keys = [
     "srcdir",
     "standard_switch",
     "double_switch",
-]
+)
 
 
 def str_to_bool(s):
@@ -87,7 +87,19 @@ class usgs_program_data:
         return dotdict(program_data)
 
     def _target_data(self, key):
-        """Get the dictionary for the target key."""
+        """Get the dictionary for the target key.
+
+        Parameters
+        ----------
+        key : str
+            Program key (name)
+
+        Returns
+        -------
+        return : dict
+            dictionary with attributes for program key (name)
+
+        """
         if key not in self._program_dict:
             msg = '"{}" key does not exist. Available keys: '.format(key)
             for idx, k in enumerate(self._program_dict.keys()):
@@ -98,7 +110,20 @@ class usgs_program_data:
         return self._program_dict[key]
 
     def _target_keys(self, current=False):
-        """Get the target keys."""
+        """Get the target keys.
+
+        Parameters
+        ----------
+        current : bool
+            boolean indicating if only current program versions should be
+            returned. (default is False)
+
+        Returns
+        -------
+        keys : list
+            list containing program keys (names)
+
+        """
         if current:
             keys = [
                 key
@@ -116,7 +141,7 @@ class usgs_program_data:
         Parameters
         ----------
         key : str
-            Target USGS program
+            Target USGS program that may have a path and an extension
 
         Returns
         -------
@@ -124,8 +149,12 @@ class usgs_program_data:
             Dictionary with USGS program attributes for the specified key
 
         """
-        if ".exe" in key.lower():
-            key = key[:-4]
+        # remove path and extension from key
+        key = os.path.basename(key)
+        if key.endswith(".exe") or key.endswith(".dll") or key.endswith(".so"):
+            key = os.path.splitext(key)[0]
+
+        # return program attributes
         return usgs_program_data()._target_data(key)
 
     @staticmethod

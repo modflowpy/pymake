@@ -28,6 +28,7 @@ pm.target = target
 pm.appdir = dstpth
 pm.dryrun = False
 pm.makefile = True
+pm.inplace = True
 
 
 def get_example_dirs():
@@ -108,8 +109,8 @@ def clean_up():
         if os.path.isdir(d):
             shutil.rmtree(d)
 
-    # remove download directory
-    pm.download_cleanup()
+    # finalize pymake object
+    pm.finalize()
 
     if os.path.isfile(epth):
         print("Removing " + target)
@@ -154,15 +155,24 @@ def test_compile():
 
 
 def test_mf6():
-    # get name files and simulation name
-    example_dirs = get_example_dirs()
-    # run models
-    for ws in example_dirs:
+    for ws in get_example_dirs():
         yield run_mf6, ws
 
 
 def test_makefile():
     build_with_makefile()
+
+
+def test_sharedobject():
+    pm.target = "libmf6"
+    prog_dict = pymake.usgs_program_data.get_target(pm.target)
+    pm.srcdir = os.path.join(mf6pth, prog_dict.srcdir)
+    pm.srcdir2 = os.path.join(mf6pth, "src")
+    pm.excludefiles = [os.path.join(pm.srcdir2, "mf6.f90")]
+    pm.makefile = False
+    pm.sharedobject = True
+    pm.inplace = False
+    pm.build()
 
 
 def test_clean_up():
@@ -174,5 +184,6 @@ if __name__ == "__main__":
     test_compile()
     for ws in get_example_dirs():
         run_mf6(ws)
-    build_with_makefile()
+    test_makefile()
+    test_sharedobject()
     test_clean_up()

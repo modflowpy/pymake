@@ -25,6 +25,7 @@ pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
 pm.makefile = True
+pm.inplace = True
 
 
 def download_src():
@@ -37,6 +38,7 @@ def download_src():
 
 
 def build_with_makefile():
+    success = True
     if os.path.isfile("makefile"):
         # remove existing target
         if os.path.isfile(epth):
@@ -61,7 +63,7 @@ def build_with_makefile():
         errmsg = "{} created by makefile does not exist.".format(target)
         success = os.path.isfile(epth)
     else:
-        errmsg = "makefile does not exist...skipping build_with_make()"
+        errmsg = "makefile does not exist"
 
     assert success, errmsg
 
@@ -82,8 +84,8 @@ def clean_up():
         if os.path.isdir(d):
             shutil.rmtree(d)
 
-    # remove download directory
-    pm.download_cleanup()
+    # finalize pymake object
+    pm.finalize()
 
     # clean up MODFLOW-NWT
     if os.path.isfile(epth):

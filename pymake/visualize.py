@@ -1,6 +1,6 @@
 import os
 
-from .compiler_language_files import get_ordered_srcfiles
+from .compiler_language_files import get_srcfiles, get_ordered_srcfiles
 from .dag import get_f_nodelist
 
 try:
@@ -140,7 +140,7 @@ def make_plots(
         )
         raise ModuleNotFoundError(msg)
 
-    srcfiles = get_ordered_srcfiles(srcdir, include_subdir)
+    srcfiles = get_ordered_srcfiles(get_srcfiles(srcdir, include_subdir))
     nodelist = get_f_nodelist(srcfiles)
     for idx, n in enumerate(nodelist):
         if verbose:

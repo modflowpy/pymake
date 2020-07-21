@@ -1,12 +1,10 @@
-#! /usr/bin/env python
 import os
 import traceback
 import shutil
-import argparse
 import datetime
 import inspect
 
-from .pymake import __description__, __version__
+from .pymake import __version__
 
 from .Popen_wrapper import (
     process_Popen_initialize,
@@ -22,286 +20,256 @@ from .compiler_switches import (
     get_linker_flags,
 )
 from .compiler_language_files import (
+    get_srcfiles,
     get_ordered_srcfiles,
     get_c_files,
     get_fortran_files,
 )
 
-# if sys.version_info >= (3, 3):
-#     from shutil import which
-# else:
-#     from distutils.spawn import find_executable as which
-
 # define temporary directories
-srcdir_temp = os.path.join(".", "src_temp")
 objdir_temp = os.path.join(".", "obj_temp")
 moddir_temp = os.path.join(".", "mod_temp")
 
 
-def get_arg_dict():
-    """Get command line argument dictionary
-
-    Returns
-    -------
-    return : dict
-        Dictionary of command line argument options
-
-    """
-    return {
-        "srcdir": {
-            "tag": ("srcdir",),
-            "help": "Location of source directory",
-            "default": None,
-            "choices": None,
-            "action": None,
-        },
-        "target": {
-            "tag": ("target",),
-            "help": "Name of target to create (can include path)",
-            "default": None,
-            "choices": None,
-            "action": None,
-        },
-        "fc": {
-            "tag": ("-fc",),
-            "help": "Fortran compiler to use (default is gfortran)",
-            "default": "gfortran",
-            "choices": ["ifort", "mpiifort", "gfortran", "none"],
-            "action": None,
-        },
-        "cc": {
-            "tag": ("-cc",),
-            "help": "C/C++ compiler to use (default is gcc)",
-            "default": "gcc",
-            "choices": [
-                "gcc",
-                "clang",
-                "clang++",
-                "icc",
-                "icl",
-                "mpiicc",
-                "g++",
-                "cl",
-                "none",
-            ],
-            "action": None,
-        },
-        "arch": {
-            "tag": ("-ar", "--arch"),
-            "help": "Architecture to use for ifort (default is intel64)",
-            "default": "intel64",
-            "choices": ["ia32", "ia32_intel64", "intel64"],
-            "action": None,
-        },
-        "makeclean": {
-            "tag": ("-mc", "--makeclean"),
-            "help": "Clean files when done (default is True)",
-            "default": True,
-            "choices": None,
-            "action": "store_true",
-        },
-        "double": {
-            "tag": ("-dbl", "--double"),
-            "help": "Force double precision (default is False)",
-            "default": False,
-            "choices": None,
-            "action": "store_false",
-        },
-        "debug": {
-            "tag": ("-dbg", "--debug"),
-            "help": "Create debug version (default is False)",
-            "default": False,
-            "choices": None,
-            "action": "store_false",
-        },
-        "expedite": {
-            "tag": ("-e", "--expedite"),
-            "help": """Only compile out of date source files.
-                         Clean must not have been used on previous build.
-                         Does not work yet for ifort. (default is False)""",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "dryrun": {
-            "tag": ("-dr", "--dryrun"),
-            "help": """Do not actually compile.  Files will be
-                         deleted, if --makeclean is used.
-                         Does not work yet for ifort. (default is False)""",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "include_subdirs": {
-            "tag": ("-sd", "--subdirs"),
-            "help": """Include source files in srcdir subdirectories.
-                         (default is None)""",
-            "default": None,
-            "choices": None,
-            "action": "store_true",
-        },
-        "fflags": {
-            "tag": ("-ff", "--fflags"),
-            "help": "Additional fortran compiler flags (default is None)",
-            "default": None,
-            "choices": None,
-            "action": None,
-        },
-        "cflags": {
-            "tag": ("-cf", "--cflags"),
-            "help": "Additional C/C++ compiler flags (default is None)",
-            "default": None,
-            "choices": None,
-            "action": None,
-        },
-        "syslibs": {
-            "tag": ("-sl", "--syslibs"),
-            "help": "Linker system libraries (default is None)",
-            "default": None,
-            "choices": ["-lc", "-lm"],
-            "action": None,
-        },
-        "makefile": {
-            "tag": ("-mf", "--makefile"),
-            "help": "Create a standard makefile (default is False)",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "srcdir2": {
-            "tag": ("-cs", "--commonsrc"),
-            "help": """Additional directory with common source files.
-                         (default is None)""",
-            "default": None,
-            "choices": None,
-            "action": None,
-        },
-        "extrafiles": {
-            "tag": ("-ef", "--extrafiles"),
-            "help": """List of extra source files to include in the
-                         compilation.  extrafiles can be either a list of files
-                         or the name of a text file that contains a list of
-                         files.  (default is None)""",
-            "default": None,
-            "choices": None,
-            "action": None,
-        },
-        "excludefiles": {
-            "tag": ("-exf", "--excludefiles"),
-            "help": """List of extra source files to exclude from the
-                         compilation.  excludefiles can be either a list of
-                         files or the name of a text file that contains a list
-                         of files.  (default is None)""",
-            "default": None,
-            "choices": None,
-            "action": None,
-        },
-        "sharedobject": {
-            "tag": ("-so", "--sharedobject"),
-            "help": "Create shared object (default is False)",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "appdir": {
-            "tag": ("-ad", "--appdir"),
-            "help": "Target path (default is None)",
-            "default": None,
-            "choices": None,
-            "action": None,
-        },
-        "verbose": {
-            "tag": ("-v", "--verbose"),
-            "help": "Verbose output to terminal (default is False)",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "keep": {
-            "tag": ("--keep",),
-            "help": "Keep existing executable (default is False)",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "zip": {
-            "tag": ("--zip",),
-            "help": "Zip built executable (default is False)",
-            "default": None,
-            "choices": None,
-            "action": None,
-        },
-    }
-
-
-def parser_setup(p, value, reset_default=False):
-    """Add argument to argparse object
+def main(
+    srcdir=None,
+    target=None,
+    fc="gfortran",
+    cc="gcc",
+    makeclean=True,
+    expedite=False,
+    dryrun=False,
+    double=False,
+    debug=False,
+    include_subdirs=False,
+    fflags=None,
+    cflags=None,
+    syslibs=None,
+    arch="intel64",
+    makefile=False,
+    srcdir2=None,
+    extrafiles=None,
+    excludefiles=None,
+    sharedobject=False,
+    appdir=None,
+    verbose=False,
+    inplace=False,
+):
+    """Main pymake function.
 
     Parameters
     ----------
-    p : object
-        argparse object
-    value : dict
-        argparse settings
-    reset_default : bool
-        boolean that defines if default values should be used
+    srcdir : str
+        path for directory containing source files
+    target : str
+        executable name or path for executable to create
+    fc : str
+        fortran compiler
+    cc : str
+        c or cpp compiler
+    makeclean : bool
+        boolean indicating if intermediate files should be cleaned up
+        after successful build
+    expedite : bool
+        boolean indicating if only out of date source files will be compiled.
+        Clean must not have been used on previous build.
+    dryrun : bool
+        boolean indicating if source files should be compiled.  Files will be
+        deleted, if makeclean is True.
+    double : bool
+        boolean indicating a compiler switch will be used to create an
+        executable with double precision real variables.
+    debug : bool
+        boolean indicating is a debug executable will be built
+    include_subdirs : bool
+        boolean indicating source files in srcdir subdirectories should be
+        included in the build
+    fflags : list
+        user provided list of fortran compiler flags
+    cflags : list
+        user provided list of c or cpp compiler flags
+    syslibs : list
+        user provided syslibs
+    arch : str
+        Architecture to use for Intel Compilers on Windows (default is intel64)
+    makefile : bool
+        boolean indicating if a GNU make makefile should be created
+    srcdir2 : str
+        additional directory with common source files.
+    extrafiles : str
+        path for extrafiles file that contains paths to additional source
+        files to include
+    excludefiles : str
+        path for excludefiles file that contains filename of source files
+        to exclude from the build
+    sharedobject : bool
+        boolean indicating a shared object (.so or .dll) will be built
+    appdir : str
+        path for executable
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
+    inplace : bool
+        boolean indicating that the source files in srcdir, srcdir2, and
+        defined in extrafiles will be used directly. If inplace is True,
+        source files will be copied to a directory named srcdir_temp.
+        (default is False)
 
     Returns
     -------
-    p : object
-        updated argparse object
+    returncode : int
+        return code
 
     """
-    if reset_default:
-        default = None
-    else:
-        default = value["default"]
-    if value["action"] is None:
-        p.add_argument(
-            *value["tag"],
-            help=value["help"],
-            default=default,
-            choices=value["choices"],
+
+    if srcdir is not None and target is not None:
+
+        if inplace:
+            srcdir_temp = srcdir
+        else:
+            srcdir_temp = os.path.join(".", "src_temp")
+
+        # process appdir
+        if appdir is not None:
+            target = os.path.join(appdir, target)
+
+            # make appdir if it does not exist
+            if not os.path.isdir(appdir):
+                os.makedirs(appdir)
+        else:
+            target = os.path.join(".", target)
+
+        # set fc and cc to None if they are passed as 'none'
+        if fc == "none":
+            fc = None
+        if cc == "none":
+            cc = None
+        if fc is None and cc is None:
+            msg = (
+                "Nothing to do the fortran (-fc) and c/c++ compilers (-cc)"
+                + "are both 'none'."
+            )
+            raise ValueError(msg)
+
+        # convert fflags, cflags, and syslibs to lists
+        if fflags is None:
+            fflags = []
+        elif isinstance(fflags, str):
+            fflags = fflags.split()
+        if cflags is None:
+            cflags = []
+        elif isinstance(cflags, str):
+            cflags = cflags.split()
+        if syslibs is None:
+            syslibs = []
+        elif isinstance(syslibs, str):
+            syslibs = syslibs.split()
+
+        # write summary information
+        if verbose:
+            print("\nsource files are in:\n    {}\n".format(srcdir))
+            print("executable name to be created:\n    {}\n".format(target))
+            if srcdir2 is not None:
+                msg = "additional source files are in:\n" + "     {}\n".format(
+                    srcdir2
+                )
+                print(msg)
+
+        # make sure the path for the target exists
+        pth = os.path.dirname(target)
+        if pth == "":
+            pth = "."
+        if not os.path.exists(pth):
+            print("creating target path - {}\n".format(pth))
+            os.makedirs(pth)
+
+        # initialize
+        srcfiles = pymake_initialize(
+            srcdir,
+            target,
+            srcdir2,
+            extrafiles,
+            excludefiles,
+            include_subdirs,
+            srcdir_temp,
         )
-    else:
-        p.add_argument(
-            *value["tag"],
-            help=value["help"],
-            default=default,
-            action=value["action"],
+
+        # get ordered list of files to compile
+        srcfiles = get_ordered_srcfiles(srcfiles)
+
+        # set intelwin flag to True in compiling on windows with Intel compilers
+        intelwin = False
+        if get_osname() == "win32":
+            if fc is not None:
+                if fc in ["ifort", "mpiifort"]:
+                    intelwin = True
+            if cc is not None:
+                if cc in ["cl", "icl"]:
+                    intelwin = True
+
+        # update openspec files based on intelwin
+        if not intelwin:
+            create_openspec(srcfiles, verbose)
+
+        # compile the executable
+        returncode = pymake_compile(
+            srcfiles,
+            target,
+            fc,
+            cc,
+            expedite,
+            dryrun,
+            double,
+            debug,
+            fflags,
+            cflags,
+            syslibs,
+            arch,
+            intelwin,
+            sharedobject,
+            verbose,
         )
-    return p
+
+        # create makefile
+        if makefile:
+            create_makefile(
+                target,
+                srcdir,
+                srcdir2,
+                extrafiles,
+                srcfiles,
+                debug,
+                double,
+                fc,
+                cc,
+                fflags,
+                cflags,
+                syslibs,
+                verbose,
+            )
+
+        # clean up temporary files
+        if makeclean and returncode == 0:
+            clean(target, intelwin, inplace, srcdir_temp, verbose)
+    else:
+        msg = (
+            "Nothing to do, the srcdir ({}) ".format(srcdir)
+            + "and/or target ({}) ".format(target)
+            + "are not specified."
+        )
+        raise ValueError(msg)
+
+    return returncode
 
 
-def parser():
-    """Construct the parser and return argument values.
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-    args : list
-        command line argument list
-
-    """
-    description = __description__
-    parser = argparse.ArgumentParser(
-        description=description,
-        epilog="""Note that the source directory
-                                     should not contain any bad or duplicate
-                                     source files as all source files in the
-                                     source directory will be built and
-                                     linked.""",
-    )
-
-    for _, value in get_arg_dict().items():
-        parser = parser_setup(parser, value)
-    args = parser.parse_args()
-    return args
-
-
-def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
+def pymake_initialize(
+    srcdir,
+    target,
+    commonsrc,
+    extrafiles,
+    excludefiles,
+    include_subdirs,
+    srcdir_temp,
+):
     """Remove temp source directory and target, and then copy source into
     source temp directory.
 
@@ -319,73 +287,105 @@ def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
     excludefiles : str
         path for excludefiles file that contains filename of source files
         to exclude from the build
+    include_subdirs : bool
+        boolean indicating source files in srcdir subdirectories should be
+        included in the build
+    srcdir_temp : str
+        path for directory that will contain the source files. If
+        srcdir_temp is the same as srcdir then the original source files
+        will be used.
 
     Returns
     -------
-    None
+    srcfiles : list
+        list of source files for build
 
     """
     # remove the target if it already exists
-    try:
+    if os.path.isfile(target):
         os.remove(target)
-    except:
-        pass
+
+    inplace = False
+    if srcdir == srcdir_temp:
+        inplace = True
+
+    # if exclude is not None, then it is a text file with a list of
+    # source files that need to be excluded from srctemp.
+    excludefiles = get_extra_exclude_files(excludefiles)
+    if excludefiles:
+        for idx, exclude_file in enumerate(excludefiles):
+            excludefiles[idx] = os.path.basename(exclude_file)
 
     # remove srcdir_temp and copy in srcdir
-    if os.path.isdir(srcdir_temp):
-        shutil.rmtree(srcdir_temp)
-    shutil.copytree(srcdir, srcdir_temp)
+    if not inplace:
+        if os.path.isdir(srcdir_temp):
+            shutil.rmtree(srcdir_temp)
+        if excludefiles:
+            shutil.copytree(
+                srcdir,
+                srcdir_temp,
+                ignore=shutil.ignore_patterns(*excludefiles),
+            )
+        else:
+            shutil.copytree(srcdir, srcdir_temp)
+
+    # get a list of source files in srcdir_temp to include
+    srcfiles = get_srcfiles(srcdir_temp, include_subdirs)
 
     # copy files from a specified common source directory if
     # commonsrc is not None
     if commonsrc is not None:
-        pth = os.path.basename(os.path.normpath(commonsrc))
-        pth = os.path.join(srcdir_temp, pth)
-        shutil.copytree(commonsrc, pth)
+        if not inplace:
+            src = os.path.relpath(commonsrc, os.getcwd())
+            dst = os.path.join(
+                srcdir_temp, os.path.basename(os.path.normpath(commonsrc))
+            )
+            if excludefiles:
+                shutil.copytree(
+                    src, dst, ignore=shutil.ignore_patterns(*excludefiles),
+                )
+            else:
+                shutil.copytree(src, dst)
+        else:
+            dst = os.path.normpath(os.path.relpath(commonsrc, srcdir_temp))
 
-    # if extrafiles is not none, then it is a text file with a list of
+        srcfiles += get_srcfiles(dst, include_subdirs)
+
+    # if extrafiles is not None, then it is a text file with a list of
     # additional source files that need to be copied into srctemp and
     # compiled.
-    files = get_extrafiles(extrafiles)
+    files = get_extra_exclude_files(extrafiles)
     if files is None:
         files = []
-    for fname in files:
-        if not os.path.isfile(fname):
-            print("Current working directory: {}".format(os.getcwd()))
-            print("Error in extrafiles: {}".format(extrafiles))
-            print("Could not find file: {}".format(fname))
-            raise Exception()
-        dst = os.path.join(srcdir_temp, os.path.basename(fname))
-        if os.path.isfile(dst):
-            raise Exception(
-                "Error with extrafile.  Name conflicts with "
-                "an existing source file: {}".format(dst)
-            )
-        shutil.copy(fname, dst)
-
-    # if exclude is not None, then it is a text file with a list of
-    # source files that need to be excluded from srctemp.
-    files = get_extrafiles(excludefiles)
-    if files is None:
-        files = []
-    for fname in files:
-        if not os.path.isfile(fname):
-            print("Current working directory: {}".format(os.getcwd()))
-            print("Warning in excludefiles: {}".format(excludefiles))
-            print("Could not find file: {}".format(fname))
+    for fpth in files:
+        if not os.path.isfile(fpth):
+            msg = "Current working directory: {}\n".format(os.getcwd())
+            msg += "Error in extrafiles: {}\n".format(extrafiles)
+            msg += "Could not find file: {}".format(fpth)
+            raise FileNotFoundError(msg)
+        if inplace:
+            dst = os.path.normpath(os.path.relpath(fpth, os.getcwd()))
         else:
-            base = None
-            tail = True
-            while tail:
-                fname, tail = os.path.split(fname)
-                if base is None:
-                    base = tail
-                else:
-                    base = os.path.join(tail, base)
-                dst = os.path.join(srcdir_temp, base)
-                if os.path.isfile(dst):
-                    os.remove(dst)
-                    tail = False
+            dst = os.path.join(srcdir_temp, os.path.basename(fpth))
+            if os.path.isfile(dst):
+                raise ValueError(
+                    "Error with extrafile.  Name conflicts with "
+                    "an existing source file: {}".format(dst)
+                )
+        if not inplace:
+            shutil.copy(fpth, dst)
+
+        # add extrafiles to srcfiles
+        srcfiles.append(dst)
+
+    # remove exclude files from srcfiles list
+    if excludefiles:
+        remove_list = []
+        for fpth in srcfiles:
+            if os.path.basename(fpth) in excludefiles:
+                remove_list.append(fpth)
+        for fpth in remove_list:
+            srcfiles.remove(fpth)
 
     # if they don't exist, create directories for objects and mods
     if not os.path.exists(objdir_temp):
@@ -393,10 +393,10 @@ def pymake_initialize(srcdir, target, commonsrc, extrafiles, excludefiles):
     if not os.path.exists(moddir_temp):
         os.makedirs(moddir_temp)
 
-    return
+    return srcfiles
 
 
-def get_extrafiles(extrafiles):
+def get_extra_exclude_files(extrafiles):
     """Get extrafiles to include in compilation from a file or a list.
 
     Parameters
@@ -434,7 +434,7 @@ def get_extrafiles(extrafiles):
     return files
 
 
-def clean(target, intelwin, verbose=False):
+def clean(target, intelwin, inplace, srcdir_temp, verbose=False):
     """Cleanup intermediate files. Remove mod and object files, and remove the
     temporary source directory.
 
@@ -445,6 +445,17 @@ def clean(target, intelwin, verbose=False):
     intelwin : bool
         boolean indicating if pymake was used to compile source code on
         Windows using Intel compilers
+    inplace : bool
+        boolean indicating that the source files in srcdir, srcdir2, and
+        defined in extrafiles will be used directly. If inplace is True,
+        source files will be copied to a directory named srcdir_temp.
+        (default is False)
+    srcdir_temp : str
+        path for directory that will contain the source files. If
+        srcdir_temp is the same as srcdir then the original source files
+        will be used.
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
 
     Returns
     -------
@@ -489,11 +500,18 @@ def clean(target, intelwin, verbose=False):
             + "and module directories..."
         )
         print(msg)
-    if os.path.isdir(srcdir_temp):
-        shutil.rmtree(srcdir_temp)
+    if not inplace:
+        if os.path.isdir(srcdir_temp):
+            if verbose:
+                print("removing...'{}'".format(srcdir_temp))
+            shutil.rmtree(srcdir_temp)
     if os.path.isdir(objdir_temp):
+        if verbose:
+            print("removing...'{}'".format(objdir_temp))
         shutil.rmtree(objdir_temp)
     if os.path.isdir(moddir_temp):
+        if verbose:
+            print("removing...'{}'".format(moddir_temp))
         shutil.rmtree(moddir_temp)
 
     # remove the windows batchfile
@@ -502,7 +520,7 @@ def clean(target, intelwin, verbose=False):
     return
 
 
-def create_openspec(verbose):
+def create_openspec(srcfiles, verbose):
     """Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
     STREAM ACCESS. This is specific to MODFLOW and MT3D based targets. Source
     directories are scanned and files defining file access are replaced.
@@ -515,11 +533,20 @@ def create_openspec(verbose):
     None
 
     """
+    # list of files to replace
     files = ["openspec.inc", "filespec.inc"]
-    dirs = [d[0] for d in os.walk(srcdir_temp)]
-    for d in dirs:
+
+    # build list of directory paths from srcfiles
+    dpths = []
+    for fpth in srcfiles:
+        dpth = os.path.dirname(fpth)
+        if dpth not in dpths:
+            dpths.append(dpth)
+
+    # replace files in directory paths if they exist
+    for dpth in dpths:
         for file in files:
-            fpth = os.path.join(d, file)
+            fpth = os.path.join(dpth, file)
             if os.path.isfile(fpth):
                 if verbose:
                     print('replacing..."{}"'.format(fpth))
@@ -618,6 +645,11 @@ def pymake_compile(
         boolean indicating a shared object (.so or .dll) will be built
     verbose : bool
         boolean indicating if output will be printed to the terminal
+    inplace : bool
+        boolean indicating that the source files in srcdir, srcdir2, and
+        defined in extrafiles will be used directly. If inplace is True,
+        source files will be copied to a directory named srcdir_temp.
+        (default is False)
 
     Returns
     -------
@@ -625,6 +657,7 @@ def pymake_compile(
         returncode
 
     """
+    # write pymake setting
     if verbose:
         msg = (
             "\nPymake settings in {}\n".format(pymake_compile.__name__)
@@ -632,11 +665,13 @@ def pymake_compile(
         )
         print(msg)
         frame = inspect.currentframe()
-        args, _, _, values = inspect.getargvalues(frame)
-        for arg in args:
+        fnargs, _, _, values = inspect.getargvalues(frame)
+        for arg in fnargs:
             value = values[arg]
-            if isinstance(value, list):
-                value = " ".join(value)
+            if not value:
+                value = "None"
+            elif isinstance(value, list):
+                value = ", ".join(value)
             print(" {}={}".format(arg, value))
 
     # initialize returncode
@@ -1117,7 +1152,7 @@ def create_makefile(
         dirs = dirs + dirs2
 
     # source files in extrafiles
-    files = get_extrafiles(extrafiles)
+    files = get_extra_exclude_files(extrafiles)
     if files is not None:
         for ef in files:
             fdir = os.path.dirname(ef)
@@ -1554,214 +1589,3 @@ def create_makefile(
     f.close()
 
     return
-
-
-def main(
-    srcdir=None,
-    target=None,
-    fc="gfortran",
-    cc="gcc",
-    makeclean=True,
-    expedite=False,
-    dryrun=False,
-    double=False,
-    debug=False,
-    include_subdirs=False,
-    fflags=None,
-    cflags=None,
-    syslibs=None,
-    arch="intel64",
-    makefile=False,
-    srcdir2=None,
-    extrafiles=None,
-    excludefiles=None,
-    sharedobject=False,
-    appdir=None,
-    verbose=False,
-):
-    """Main pymake function.
-
-    Parameters
-    ----------
-    srcdir : str
-        path for directory containing source files
-    target : str
-        executable name or path for executable to create
-    fc : str
-        fortran compiler
-    cc : str
-        c or cpp compiler
-    makeclean : bool
-        boolean indicating if intermediate files should be cleaned up
-        after successful build
-    expedite : bool
-        boolean indicating if only out of date source files will be compiled.
-        Clean must not have been used on previous build.
-    dryrun : bool
-        boolean indicating if source files should be compiled.  Files will be
-        deleted, if makeclean is True.
-    double : bool
-        boolean indicating a compiler switch will be used to create an
-        executable with double precision real variables.
-    debug : bool
-        boolean indicating is a debug executable will be built
-    include_subdirs : bool
-        boolean indicating source files in srcdir subdirectories should be
-        included in the build
-    fflags : list
-        user provided list of fortran compiler flags
-    cflags : list
-        user provided list of c or cpp compiler flags
-    syslibs : list
-        user provided syslibs
-    arch : str
-        Architecture to use for Intel Compilers on Windows (default is intel64)
-    makefile : bool
-        boolean indicating if a GNU make makefile should be created
-    srcdir2 : str
-        additional directory with common source files.
-    extrafiles : str
-        path for extrafiles file that contains paths to additional source
-        files to include
-    excludefiles : str
-        path for excludefiles file that contains filename of source files
-        to exclude from the build
-    sharedobject : bool
-        boolean indicating a shared object (.so or .dll) will be built
-    appdir : str
-        path for executable
-    verbose : bool
-        boolean indicating if output will be printed to the terminal
-
-    Returns
-    -------
-    returncode : int
-        return code
-
-    """
-
-    if srcdir is not None and target is not None:
-
-        # process appdir
-        if appdir is not None:
-            target = os.path.join(appdir, target)
-
-            # make appdir if it does not exist
-            if not os.path.isdir(appdir):
-                os.makedirs(appdir)
-        else:
-            target = os.path.join(".", target)
-
-        # set fc and cc to None if they are passed as 'none'
-        if fc == "none":
-            fc = None
-        if cc == "none":
-            cc = None
-        if fc is None and cc is None:
-            msg = (
-                "Nothing to do the fortran (-fc) and c/c++ compilers (-cc)"
-                + "are both 'none'."
-            )
-            raise ValueError(msg)
-
-        # convert fflags, cflags, and syslibs to lists
-        if fflags is None:
-            fflags = []
-        elif isinstance(fflags, str):
-            fflags = fflags.split()
-        if cflags is None:
-            cflags = []
-        elif isinstance(cflags, str):
-            cflags = cflags.split()
-        if syslibs is None:
-            syslibs = []
-        elif isinstance(syslibs, str):
-            syslibs = syslibs.split()
-
-        # write summary information
-        if verbose:
-            print("\nsource files are in:\n    {}\n".format(srcdir))
-            print("executable name to be created:\n    {}\n".format(target))
-            if srcdir2 is not None:
-                msg = "additional source files are in:\n" + "     {}\n".format(
-                    srcdir2
-                )
-                print(msg)
-
-        # make sure the path for the target exists
-        pth = os.path.dirname(target)
-        if pth == "":
-            pth = "."
-        if not os.path.exists(pth):
-            print("creating target path - {}\n".format(pth))
-            os.makedirs(pth)
-
-        # initialize
-        pymake_initialize(srcdir, target, srcdir2, extrafiles, excludefiles)
-
-        # get ordered list of files to compile
-        srcfiles = get_ordered_srcfiles(srcdir_temp, include_subdirs)
-
-        # set intelwin flag to True in compiling on windows with Intel compilers
-        intelwin = False
-        if get_osname() == "win32":
-            if fc is not None:
-                if fc in ["ifort", "mpiifort"]:
-                    intelwin = True
-            if cc is not None:
-                if cc in ["cl", "icl"]:
-                    intelwin = True
-
-        # update openspec files based on intelwin
-        if not intelwin:
-            create_openspec(verbose)
-
-        # compile the executable
-        returncode = pymake_compile(
-            srcfiles,
-            target,
-            fc,
-            cc,
-            expedite,
-            dryrun,
-            double,
-            debug,
-            fflags,
-            cflags,
-            syslibs,
-            arch,
-            intelwin,
-            sharedobject,
-            verbose,
-        )
-
-        # create makefile
-        if makefile:
-            create_makefile(
-                target,
-                srcdir,
-                srcdir2,
-                extrafiles,
-                srcfiles,
-                debug,
-                double,
-                fc,
-                cc,
-                fflags,
-                cflags,
-                syslibs,
-                verbose,
-            )
-
-        # clean up temporary files
-        if makeclean and returncode == 0:
-            clean(target, intelwin, verbose)
-    else:
-        msg = (
-            "Nothing to do, the srcdir ({}) ".format(srcdir)
-            + "and/or target ({}) ".format(target)
-            + "are not specified."
-        )
-        raise ValueError(msg)
-
-    return returncode
