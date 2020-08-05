@@ -13,22 +13,29 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
     - name: Set up Python 3.8
       uses: actions/setup-python@v1
       with:
         python-version: 3.8
+
     - name: Setup Graphviz
       uses: ts-graphviz/setup-graphviz@v1
+
     - name: Install packages
       run: |
         pip install requests pydotplus appdirs numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install pylint flake8 black
+
     - name: Run black
       run: black --check --line-length 79 ./pymake
+
     - name: Run flake8
       run: flake8 --count --show-source ./pymake
+
     - name: Run pylint
       run: pylint --jobs=0 --errors-only ./pymake
 
@@ -48,7 +55,9 @@ jobs:
             python-version: 3.8
 
     steps:
-    - uses: actions/checkout@v1
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
     - name: Setup Graphviz
       uses: ts-graphviz/setup-graphviz@v1
 
@@ -59,7 +68,7 @@ jobs:
 
     - name: Install python packages
       run: |
-        pip install requests nose-timer
+        pip install requests nose-timer coverage
         pip install pydotplus appdirs
         pip install numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
@@ -92,4 +101,11 @@ jobs:
     - name: Run nosetests
       shell: bash
       run: |
-        nosetests -v --with-id --with-timer -w ./autotest
+        coverage run -m nose -v --with-id --with-timer \
+        --with-coverage --cover-package=flopy --cover-xml \
+        --cover-xml-file=../coverage.xml -w ./autotest
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1.0.12
+      with:
+        file: ./coverage.xml
