@@ -127,13 +127,8 @@ def build_apps(
 
         # set download information
         download_dir = "temp"
-
-        if target in ("mt3dms", "triangle"):
-            download_verify = False
-            timeout = 10
-        else:
-            download_verify = True
-            timeout = 30
+        download_verify = True
+        timeout = 30
 
         # set target and srcdir
         pmobj.target = target

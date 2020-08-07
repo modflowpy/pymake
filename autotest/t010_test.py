@@ -4,6 +4,8 @@ import shutil
 import subprocess
 import pymake
 
+import pytest
+
 # define program data
 target = "gridgen"
 if sys.platform.lower() == "win32":
@@ -19,7 +21,7 @@ if not os.path.exists(dstpth):
 
 ver = prog_dict.version
 pth = os.path.join(dstpth, prog_dict.dirname)
-expth = os.path.join(pth, "examples")
+expth = os.path.join(pth, "examples", "biscayne")
 exe_name = os.path.join(dstpth, target)
 
 pm = pymake.Pymake(verbose=True)
@@ -29,27 +31,19 @@ pm.cc = "g++"
 pm.fc = None
 pm.inplace = True
 
-
-def download_src():
-    # Remove the existing target download directory if it exists
-    if os.path.isdir(dstpth):
-        shutil.rmtree(dstpth)
-
-    # download the target
-    pm.download_target(target, download_path=dstpth)
-
-
-def get_example_dirs():
-    prog = os.path.abspath(exe_name)
-    if os.path.isfile(prog):
-        exdirs = [
-            o
-            for o in os.listdir(expth)
-            if os.path.isdir(os.path.join(expth, o))
-        ]
-    else:
-        exdirs = [None]
-    return exdirs
+biscayne_cmds = [
+    "buildqtg action01_buildqtg.dfn",
+    "grid02qtg-to-usgdata action02_writeusgdata.dfn",
+    "grid01mfg-to-polyshapefile action03_shapefile.dfn",
+    "grid02qtg-to-polyshapefile action03_shapefile.dfn",
+    "grid01mfg-to-pointshapefile action03_shapefile.dfn",
+    "grid02qtg-to-pointshapefile action03_shapefile.dfn",
+    "canal_grid02qtg_lay1_intersect action04_intersect.dfn",
+    "chd_grid02qtg_lay1_intersect action04_intersect.dfn",
+    "grid01mfg-to-vtkfile action05_vtkfile.dfn",
+    "grid02qtg-to-vtkfile action05_vtkfile.dfn",
+    "grid02qtg-to-vtkfilesv action05_vtkfile.dfn",
+]
 
 
 def clean_up():
@@ -81,58 +75,38 @@ def run_command(cmdlist, cwd):
     return retval
 
 
-def run_gridgen(d):
-    biscayne_cmds = [
-        "buildqtg action01_buildqtg.dfn",
-        "grid02qtg-to-usgdata action02_writeusgdata.dfn",
-        "grid01mfg-to-polyshapefile action03_shapefile.dfn",
-        "grid02qtg-to-polyshapefile action03_shapefile.dfn",
-        "grid01mfg-to-pointshapefile action03_shapefile.dfn",
-        "grid02qtg-to-pointshapefile action03_shapefile.dfn",
-        "canal_grid02qtg_lay1_intersect action04_intersect.dfn",
-        "chd_grid02qtg_lay1_intersect action04_intersect.dfn",
-        "grid01mfg-to-vtkfile action05_vtkfile.dfn",
-        "grid02qtg-to-vtkfile action05_vtkfile.dfn",
-        "grid02qtg-to-vtkfilesv action05_vtkfile.dfn",
-    ]
-
+def run_gridgen(cmd):
+    success = False
     prog = os.path.abspath(exe_name)
     if os.path.exists(prog):
-        print("running...{}".format(d))
+        testpth = os.path.abspath(expth)
 
-        testpth = os.path.join(expth, d)
-        testpth = os.path.abspath(testpth)
+        cmdlist = [prog] + cmd.split()
+        print("running {}".format(" ".join(cmdlist)))
+        retcode = run_command(cmdlist, testpth)
+        if retcode == 0:
+            success = True
 
-        for cmd in biscayne_cmds:
-            cmdlist = [prog] + cmd.split()
-            print("running {}".format(" ".join(cmdlist)))
-            retcode = run_command(cmdlist, testpth)
-            success = False
-            if retcode == 0:
-                success = True
-            assert success, "could not run {}".format(" ".join(cmdlist))
-
-        if success:
-            pymake.teardown(testpth)
-    else:
-        success = False
-
-    assert success, "could not run {}".format(prog)
-
-    return
+    return success
 
 
 def test_download():
-    download_src()
+    # Remove the existing target download directory if it exists
+    if os.path.isdir(dstpth):
+        shutil.rmtree(dstpth)
+
+    # download the target
+    pm.download_target(target, download_path=dstpth)
+    assert pm.download, "could not download {} distribution".format(target)
 
 
 def test_compile():
-    pm.build()
+    assert pm.build() == 0, "could not compile {}".format(target)
 
 
-def test_gridgen():
-    for d in get_example_dirs():
-        yield run_gridgen, d
+@pytest.mark.parametrize("cmd", biscayne_cmds)
+def test_gridgen(cmd):
+    assert run_gridgen(cmd), "could not run {}".format(cmd)
 
 
 def test_clean_up():
@@ -142,6 +116,6 @@ def test_clean_up():
 if __name__ == "__main__":
     test_download()
     test_compile()
-    for d in get_example_dirs():
-        run_gridgen(d)
+    for cmd in biscayne_cmds:
+        run_gridgen(cmd)
     test_clean_up()

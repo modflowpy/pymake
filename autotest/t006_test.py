@@ -28,15 +28,6 @@ pm.makefile = True
 pm.inplace = True
 
 
-def download_src():
-    # Remove the existing mf2005 directory if it exists
-    if os.path.isdir(mfnwtpth):
-        shutil.rmtree(mfnwtpth)
-
-    # download the modflow 2005 release
-    pm.download_target(target, download_path=dstpth)
-
-
 def build_with_makefile():
     success = True
     if os.path.isfile("makefile"):
@@ -96,11 +87,17 @@ def clean_up():
 
 
 def test_download():
-    download_src()
+    # Remove the existing mf2005 directory if it exists
+    if os.path.isdir(mfnwtpth):
+        shutil.rmtree(mfnwtpth)
+
+    # download the modflow 2005 release
+    pm.download_target(target, download_path=dstpth)
+    assert pm.download, "could not download {} distribution".format(target)
 
 
 def test_compile():
-    pm.build()
+    assert pm.build() == 0, "could not compile {}".format(target)
 
 
 def test_makefile():

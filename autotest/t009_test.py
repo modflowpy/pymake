@@ -4,6 +4,8 @@ import shutil
 import pymake
 import flopy
 
+import pytest
+
 # define program data
 target = "mt3dusgs"
 
@@ -40,48 +42,49 @@ expth = os.path.join(mtusgspth, "data")
 epths = [emtusgs, emfnwt, emf6]
 
 pm = pymake.Pymake(verbose=True)
-pm.target = target
 pm.appdir = dstpth
+pm.makeclean = True
 
+sim_dirs = [
+    "2ED5EAs",
+    "CTS1",
+    "CTS2",
+    "CTS3",
+    "CTS4",
+    "Keating",
+    "Keating_UZF",
+    "SFT_CrnkNic",
+    "UZT_Disp_Lamb01_TVD",
+    "UZT_Disp_Lamb1",
+    "UZT_Disp_Lamb10",
+    "UZT_NonLin",
+    "gwt",
+    "lkt",
+    "p01SpatialStresses(mf6)",
+]
 
-def get_example_dirs():
-    if os.path.exists(emtusgs):
-        exclude_dirs = ["Keating", "Keating_UZF"]
+# remove after MODFLOW 6 v6.1.2 release
+for exclude in (
+        "Keating",
+        "Keating_UZF",
+):
+    if exclude in sim_dirs:
+        sim_dirs.remove(exclude)
 
-        upd = pymake.usgs_program_data()
-
-        # exclude additional directories based on version of codes
-        # MODFLOW-NWT
-        ver = upd.get_version("mfnwt")
-        if ver == "1.2.0":
-            exclude_dirs += [
-                "UZT_NonLin",
-                "UZT_Disp_Lamb01_TVD",
-                "UZT_Disp_Lamb1",
-                "UZT_Disp_Lamb10",
-            ]
-
-        # create list of example directories to test
-        exdirs = [
-            o
-            for o in sorted(os.listdir(expth))
-            if os.path.isdir(os.path.join(expth, o)) and o not in exclude_dirs
-        ]
-    else:
-        exdirs = [None]
-    return exdirs
-
-
-def download_src():
-    # Remove the existing target download directory if it exists
-    if os.path.isdir(mtusgspth):
-        shutil.rmtree(mtusgspth)
-
-    # download the target
-    pm.download_target(target, download_path=dstpth)
+# CI fix
+if pymake.usgs_program_data().get_version(mfnwt_target) == "1.2.0":
+    for exclude in (
+            "UZT_NonLin",
+            "UZT_Disp_Lamb01_TVD",
+            "UZT_Disp_Lamb1",
+            "UZT_Disp_Lamb10",
+    ):
+        if exclude in sim_dirs:
+            sim_dirs.remove(exclude)
 
 
 def run_mt3dusgs(temp_dir):
+    success = False
     if os.path.exists(emtusgs):
         model_ws = os.path.join(expth, temp_dir)
 
@@ -124,31 +127,23 @@ def run_mt3dusgs(temp_dir):
             eapp, nam, model_ws=model_ws, silent=False
         )
 
-        assert success, "could not run...{}".format(msg)
-
         # run the MT3D-USGS model
-        print("running model...{}".format(mt_nam))
-        success, buff = flopy.run_model(
-            emtusgs,
-            mt_nam,
-            model_ws=model_ws,
-            silent=False,
-            normal_msg="Program completed.",
-        )
-        if not success:
-            errmsg = "could not run {}".format(mtnam)
-    else:
-        success = False
-        errmsg = "could not run {}".format(os.path.basename(emtusgs))
+        if success:
+            print("running model...{}".format(mt_nam))
+            success, buff = flopy.run_model(
+                emtusgs,
+                mt_nam,
+                model_ws=model_ws,
+                silent=False,
+                normal_msg="Program completed.",
+            )
 
-    assert success, errmsg
-
-    return
+    return success
 
 
 def clean_up():
     print("Removing temporary build directories")
-    dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp")]
+    dirs_temp = (os.path.join("obj_temp"), os.path.join("mod_temp"), dstpth)
     for d in dirs_temp:
         if os.path.isdir(d):
             shutil.rmtree(d)
@@ -162,22 +157,45 @@ def clean_up():
             os.remove(epth)
 
 
+def test_download_mt3dms():
+    # Remove the existing target download directory if it exists
+    if os.path.isdir(mtusgspth):
+        shutil.rmtree(mtusgspth)
+
+    pm.target = "mt3dms"
+    pm.download_target(pm.target, download_path=dstpth)
+    assert pm.download, "could not download {} distribution".format(pm.target)
+
+
+def test_compile_mt3dms():
+    assert pm.build() == 0, "could not compile {}".format(pm.target)
+
+
 def test_download_exes():
     pymake.getmfexes(dstpth, exes=("mfnwt", "mf6"), verbose=True)
     return
 
 
 def test_download():
-    download_src()
+    # Remove the existing target download directory if it exists
+    if os.path.isdir(mtusgspth):
+        shutil.rmtree(mtusgspth)
+
+    # reset the Pymake object for target
+    pm.reset(target)
+
+    # download the target
+    pm.download_target(target, download_path=dstpth)
+    assert pm.download, "could not download {} distribution".format(target)
 
 
 def test_compile():
-    pm.build()
+    assert pm.build() == 0, "could not compile {}".format(target)
 
 
-def test_mt3dusgs():
-    for dn in get_example_dirs():
-        yield run_mt3dusgs, dn
+@pytest.mark.parametrize("ws", sim_dirs)
+def test_mt3dusgs(ws):
+    assert run_mt3dusgs(ws), "could not run {}".format(ws)
 
 
 def test_clean_up():
@@ -185,9 +203,11 @@ def test_clean_up():
 
 
 if __name__ == "__main__":
+    test_download_mt3dms()
+    test_compile_mt3dms()
     test_download_exes()
     test_download()
     test_compile()
-    for dn in get_example_dirs():
+    for dn in sim_dirs:
         run_mt3dusgs(dn)
     test_clean_up()

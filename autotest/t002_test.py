@@ -5,6 +5,8 @@ import shutil
 import pymake
 import flopy
 
+import pytest
+
 # define program data
 target = "swtv4"
 if sys.platform.lower() == "win32":
@@ -24,6 +26,25 @@ deppth = os.path.join(swtpth, "dependencies")
 
 srcpth = os.path.join(swtpth, prog_dict.srcdir)
 epth = os.path.abspath(os.path.join(dstpth, target))
+
+name_files = sorted(
+    [
+        "4_hydrocoin/seawat.nam",
+        "5_saltlake/seawat.nam",
+        "2_henry/1_classic_case1/seawat.nam",
+        "2_henry/4_VDF_uncpl_Trans/seawat.nam",
+        "2_henry/5_VDF_DualD_Trans/seawat.nam",
+        "2_henry/6_age_simulation/henry_mod.nam",
+        "2_henry/2_classic_case2/seawat.nam",
+        "2_henry/3_VDF_no_Trans/seawat.nam",
+        "1_box/case1/seawat.nam",
+        "1_box/case2/seawat.nam",
+        "3_elder/seawat.nam",
+    ]
+)
+# add path to name_files
+for idx, namefile in enumerate(name_files):
+    name_files[idx] = os.path.join(expth, namefile)
 
 pm = pymake.Pymake(verbose=True)
 pm.target = target
@@ -45,26 +66,6 @@ def edit_namefile(namefile):
     f.close()
 
 
-def get_namefiles():
-    if os.path.exists(epth):
-        exclude_tests = ("7_swtv4_ex", "6_rotation")
-        namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
-        simname = pymake.get_sim_name(namefiles, rootpth=expth)
-    else:
-        namefiles = [None]
-        simname = [None]
-    return zip(namefiles, simname)
-
-
-def download_src():
-    # Remove the existing seawat directory if it exists
-    if os.path.isdir(swtpth):
-        shutil.rmtree(swtpth)
-
-    # download the target
-    pm.download_target(target, download_path=dstpth)
-
-
 def clean_up():
     print("Removing temporary build directories")
     dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp")]
@@ -81,33 +82,16 @@ def clean_up():
     return
 
 
-def run_seawat(namepth, dst):
-    if namepth is not None:
-        print("running...{}".format(dst))
-        # setup
-        testpth = os.path.join(dstpth, dst)
-        pymake.setup(namepth, testpth)
+def run_seawat(fn):
+    # edit the name files
+    edit_namefile(fn)
 
-        # edit name file
-        pth = os.path.join(testpth, os.path.basename(namepth))
-        edit_namefile(pth)
-
-        # run test models
-        if os.path.exists(epth):
-            print("running model...{}".format(os.path.basename(namepth)))
-            success, buff = flopy.run_model(
-                epth, os.path.basename(namepth), model_ws=testpth, silent=False
-            )
-        if success:
-            pymake.teardown(testpth)
-        else:
-            errmsg = "could not run...{}".format(os.path.basename(namepth))
-    else:
-        success = False
-        errmsg = "{} does not exist".format(epth)
-
+    # run the models
+    success, buff = flopy.run_model(
+        epth, os.path.basename(fn), model_ws=os.path.dirname(fn), silent=False
+    )
+    errmsg = "could not run...{}".format(os.path.basename(fn))
     assert success, errmsg
-
     return
 
 
@@ -135,20 +119,22 @@ def build_seawat_dependency_graphs():
 
 
 def test_download():
-    download_src()
+    # Remove the existing seawat directory if it exists
+    if os.path.isdir(swtpth):
+        shutil.rmtree(swtpth)
+
+    # download the target
+    pm.download_target(target, download_path=dstpth)
+    assert pm.download, "could not download {}".format(target)
 
 
 def test_compile():
-    pm.build()
+    assert pm.build() == 0, "could not compile {}".format(target)
 
 
-def test_seawat():
-    # get name files and simulation name
-    namefiles = get_namefiles()
-
-    # run models
-    for namepth, dst in namefiles:
-        yield run_seawat, namepth, dst
+@pytest.mark.parametrize("fn", name_files)
+def test_seawat(fn):
+    run_seawat(fn)
 
 
 def test_dependency_graphs():
@@ -162,7 +148,7 @@ def test_clean_up():
 if __name__ == "__main__":
     test_download()
     test_compile()
-    for namepth, dst in get_namefiles():
-        run_seawat(namepth, dst)
+    for fn in name_files:
+        run_seawat(fn)
     test_dependency_graphs()
     test_clean_up()

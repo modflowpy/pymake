@@ -4,6 +4,8 @@ import shutil
 import pymake
 import flopy
 
+import pytest
+
 # define program data
 target = "mfusg"
 if sys.platform.lower() == "win32":
@@ -23,53 +25,43 @@ expth = os.path.join(mfusgpth, "test")
 srcpth = os.path.join(mfusgpth, prog_dict.srcdir)
 epth = os.path.abspath(os.path.join(dstpth, target))
 
+name_files = [
+    "01A_nestedgrid_nognc/flow.nam",
+    "01B_nestedgrid_gnc/flow.nam",
+    "03A_conduit_unconfined/ex3A.nam",
+    "03B_conduit_unconfined/ex3B.nam",
+    "03C_conduit_unconfined/ex3C.nam",
+    "03D_conduit_unconfined/ex3D.nam",
+    "03_conduit_confined/ex3.nam",
+]
+# add path to name_files
+for idx, namefile in enumerate(name_files):
+    name_files[idx] = os.path.join(expth, namefile)
+
 pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
 
 
-def edit_namefiles():
-    namefiles = pymake.get_namefiles(expth)
-    for namefile in namefiles:
-        # read existing namefile
-        f = open(namefile, "r")
-        lines = f.read().splitlines()
-        f.close()
-        # convert file extensions to lower case
-        f = open(namefile, "w")
-        for line in lines:
-            t = line.split()
-            fn, ext = os.path.splitext(t[2])
-            f.write(
-                "{:15s} {:3s} {} ".format(
-                    t[0], t[1], "{}{}".format(fn, ext.lower())
-                )
+def edit_namefile(namefile):
+    # read existing namefile
+    f = open(namefile, "r")
+    lines = f.read().splitlines()
+    f.close()
+    # convert file extensions to lower case
+    f = open(namefile, "w")
+    for line in lines:
+        t = line.split()
+        fn, ext = os.path.splitext(t[2])
+        f.write(
+            "{:15s} {:3s} {} ".format(
+                t[0], t[1], "{}{}".format(fn, ext.lower())
             )
-            if len(t) > 3:
-                f.write("{}".format(t[3]))
-            f.write("\n")
-        f.close()
-
-
-def get_namefiles():
-    if os.path.exists(epth):
-        exclude_tests = ("7_swtv4_ex",)
-        namefiles = pymake.get_namefiles(expth, exclude=exclude_tests)
-        simname = pymake.get_sim_name(namefiles, rootpth=expth)
-    else:
-        namefiles = [None]
-        simname = [None]
-
-    return zip(namefiles, simname)
-
-
-def download_src():
-    # Remove the existing mf2005 directory if it exists
-    if os.path.isdir(mfusgpth):
-        shutil.rmtree(mfusgpth)
-
-    # download the modflow 2005 release
-    pm.download_target(target, download_path=dstpth)
+        )
+        if len(t) > 3:
+            f.write("{}".format(t[3]))
+        f.write("\n")
+    f.close()
 
 
 def clean_up():
@@ -89,52 +81,42 @@ def clean_up():
     return
 
 
-def run_mfusg(namepth, dst):
-    if os.path.exists(epth):
-        # setup
-        testpth = os.path.join(dstpth, dst)
-        pymake.setup(namepth, testpth)
-
-        # run test models
-        print("running model...{}".format(os.path.basename(namepth)))
-        success, buff = flopy.run_model(
-            epth, os.path.basename(namepth), model_ws=testpth, silent=True
-        )
-        if success:
-            pymake.teardown(testpth)
-        else:
-            errmsg = "could not run {}".format(os.path.basename(namepth))
-    else:
-        success = False
-        errmsg = "could not run {}".format(epth)
-
+def run_mfusg(fn):
+    # edit namefile
+    edit_namefile(fn)
+    # run test models
+    print("running model...{}".format(os.path.basename(fn)))
+    success, buff = flopy.run_model(
+        epth, os.path.basename(fn), model_ws=os.path.dirname(fn), silent=False
+    )
+    errmsg = "could not run {}".format(fn)
     assert success, errmsg
 
     return
 
 
 def test_download():
-    download_src()
+    # Remove the existing mf2005 directory if it exists
+    if os.path.isdir(mfusgpth):
+        shutil.rmtree(mfusgpth)
+
+    # download the modflow-usg release
+    pm.download_target(target, download_path=dstpth)
+    assert pm.download, "could not download {}".format(target)
 
 
 def test_compile():
-    pm.build()
-
+    assert pm.build() == 0, "could not compile {}".format(target)
     return
 
 
-def test_mfusg():
-    # edit namefiles
-    edit_namefiles()
-    # get name files and simulation name
-    sim_list = get_namefiles()
-    # run models
-    for namepth, dst in sim_list:
-        yield run_mfusg, namepth, dst
+@pytest.mark.parametrize("fn", name_files)
+def test_mfusg(fn):
+    run_mfusg(fn)
 
 
 def test_clean_up():
-    yield clean_up
+    clean_up()
 
 
 if __name__ == "__main__":
@@ -142,15 +124,9 @@ if __name__ == "__main__":
 
     test_compile()
 
-    # edit namefiles
-    edit_namefiles()
-
-    # get name files and simulation name
-    sim_list = get_namefiles()
-
     # run models
-    for namepth, dst in sim_list:
-        run_mfusg(namepth, dst)
+    for namefile in name_files:
+        run_mfusg(namefile)
 
     # clean up
     test_clean_up()
