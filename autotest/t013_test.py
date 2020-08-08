@@ -13,11 +13,17 @@ def test_gnu_make():
 
     target = "triangle"
     pm = pymake.Pymake(verbose=True)
+    pm.makefile = True
+    pm.makeclean = True
+    pm.cc = "gcc"
 
-    # add test arguments from command line list
-    cargs = ("--makefile", "-mc")
-    for arg in cargs:
-        sys.argv.append(arg)
+    if sys.platform.lower() == "win32":
+        target += ".exe"
+
+    # # add test arguments from command line list
+    # cargs = ("--makefile", "-mc")
+    # for arg in cargs:
+    #     sys.argv.append(arg)
 
     # get current directory
     cwd = os.getcwd()
@@ -31,11 +37,12 @@ def test_gnu_make():
         pymake.build_apps(target, clean=False, pymake_object=pm) == 0
     ), "could not build {}".format(target)
 
-    # remove test arguments from command line list
-    for arg in cargs:
-        sys.argv.remove(arg)
+    # # remove test arguments from command line list
+    # for arg in cargs:
+    #     sys.argv.remove(arg)
 
     if os.path.isfile(os.path.join(cpth, "makefile")):
+        print("cleaning with GNU make")
         # clean prior to make
         print("clean {} with makefile".format(target))
         success, buff = flopy.run_model(
@@ -79,4 +86,4 @@ def test_clean_up():
 
 if __name__ == "__main__":
     test_gnu_make()
-    test_clean_up()
+    # test_clean_up()
