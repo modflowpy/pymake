@@ -6,12 +6,11 @@ import flopy
 
 # working directory
 cpth = os.path.abspath(os.path.join("temp", "t013"))
-if os.path.isdir(cpth):
-    shutil.rmtree(cpth)
-os.makedirs(cpth)
 
 
 def test_gnu_make():
+    os.makedirs(cpth, exist_ok=True)
+
     target = "triangle"
     pm = pymake.Pymake(verbose=True)
 
@@ -80,4 +79,4 @@ def test_clean_up():
 
 if __name__ == "__main__":
     test_gnu_make()
-    # test_clean_up()
+    test_clean_up()
