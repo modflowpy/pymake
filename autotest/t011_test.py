@@ -1,16 +1,14 @@
 import os
-import sys
 import shutil
 import json
 import pymake
-import flopy
 
 import pytest
 
 cpth = os.path.abspath(os.path.join("temp", "t011"))
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+if os.path.isdir(cpth):
+    shutil.rmtree(cpth)
+os.makedirs(cpth)
 
 
 def test_usgsprograms():
@@ -23,8 +21,6 @@ def test_usgsprograms():
 
     msg = "the keys from program_dict are not equal to .get_keys()"
     assert all_keys == get_keys, msg
-
-    return
 
 
 def test_target_key_error():
@@ -46,8 +42,6 @@ def test_target_keys():
             + "does not match dictionary from .get_target()"
         )
         assert target_dict == test_dict, msg
-
-    return
 
 
 def test_usgsprograms_export_json():
@@ -78,8 +72,6 @@ def test_usgsprograms_export_json():
         )
         assert value == temp_dict, msg
 
-    return
-
 
 def test_usgsprograms_load_json_error():
     print("test_usgsprograms_load_json_error()")
@@ -100,8 +92,6 @@ def test_usgsprograms_load_json():
 
     msg = "could not load {}".format(fpth)
     assert json_dict is not None, msg
-
-    return
 
 
 def test_usgsprograms_list_json_error():
@@ -129,96 +119,19 @@ def test_not_shared():
     assert not target_dict.shared_object, "mf6 is not a shared object"
 
 
-def test_gnu_make():
-    target = "triangle"
-
-    # add test arguments from command line list
-    cargs = ("--makefile", "-mc")
-    for arg in cargs:
-        sys.argv.append(arg)
-
-    # get current directory and change to working directory
-    cwd = os.getcwd()
-    os.chdir(cpth)
-
-    # build triangle and makefile
-    assert pymake.build_apps(target) == 0, "could not build {}".format(target)
-
-    # remove test arguments from command line list
-    for arg in cargs:
-        sys.argv.remove(arg)
-
-    if sys.platform.lower() == "win32":
-        target += ".exe"
-    #
-    # # return to starting directory
-    # os.chdir(cwd)
-
-    # download the source files again
-    pm = pymake.Pymake(verbose=True)
-    dpth = os.path.join("temp", "triangle1.6", "src")
-    pm.download_target(target, download_path=dpth)
-
-    for file in os.listdir(dpth):
-        if "triangle" not in file:
-            os.remove(os.path.join(dpth, file))
-    #
-    # # change to working directory
-    # os.chdir(cpth)
-
-    # if os.path.isfile("makefile"):
-    if os.path.isfile(os.path.join(cpth, "makefile")):
-        # clean prior to make
-        print("clean {} with makefile".format(target))
-        success, buff = flopy.run_model(
-            "make",
-            None,
-            cargs="clean",
-            model_ws=cpth,
-            report=True,
-            normal_msg="rm -rf ./triangle",
-            silent=False,
-        )
-        # retcode = os.system("make clean")
-
-        # build triangle with makefile
-        # if retcode == 0:
-        if success:
-            print("build {} with makefile".format(target))
-            success, buff = flopy.run_model(
-                "make",
-                None,
-                model_ws=cpth,
-                report=True,
-                normal_msg="cc -O2 -o triangle ./obj_temp/triangle.o",
-                silent=False,
-            )
-            # os.system("make")
-
-    # return to starting directory
-    os.chdir(cwd)
-
-    assert os.path.isfile(
-        os.path.join(cpth, target)
-    ), "could not build {} with makefile".format(target)
-
-    return
-
-
 def test_clean_up():
     shutil.rmtree(cpth)
 
 
 if __name__ == "__main__":
-    # test_usgsprograms()
-    # test_target_key_error()
-    # test_target_keys()
-    # test_usgsprograms_export_json()
-    # test_usgsprograms_load_json_error()
-    # test_usgsprograms_load_json()
-    # test_usgsprograms_list_json_error()
-    # test_usgsprograms_list_json()
-    # test_shared()
-    # test_not_shared()
-    test_gnu_make()
+    test_usgsprograms()
+    test_target_key_error()
+    test_target_keys()
+    test_usgsprograms_export_json()
+    test_usgsprograms_load_json_error()
+    test_usgsprograms_load_json()
+    test_usgsprograms_list_json_error()
+    test_usgsprograms_list_json()
+    test_shared()
+    test_not_shared()
     # test_clean_up()

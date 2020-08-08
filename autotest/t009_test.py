@@ -65,8 +65,8 @@ sim_dirs = [
 
 # remove after MODFLOW 6 v6.1.2 release
 for exclude in (
-        "Keating",
-        "Keating_UZF",
+    "Keating",
+    "Keating_UZF",
 ):
     if exclude in sim_dirs:
         sim_dirs.remove(exclude)
@@ -74,10 +74,10 @@ for exclude in (
 # CI fix
 if pymake.usgs_program_data().get_version(mfnwt_target) == "1.2.0":
     for exclude in (
-            "UZT_NonLin",
-            "UZT_Disp_Lamb01_TVD",
-            "UZT_Disp_Lamb1",
-            "UZT_Disp_Lamb10",
+        "UZT_NonLin",
+        "UZT_Disp_Lamb01_TVD",
+        "UZT_Disp_Lamb1",
+        "UZT_Disp_Lamb10",
     ):
         if exclude in sim_dirs:
             sim_dirs.remove(exclude)

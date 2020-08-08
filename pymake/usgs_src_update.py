@@ -128,6 +128,11 @@ def update_triangle_files(srcdir, fc, cc, arch, double):
     dst = os.path.join(srcdir, "triangle.h")
     shutil.move(src, dst)
 
+    # remove remaining downloaded files
+    for file in os.listdir(rootdir):
+        src = os.path.join(rootdir, file)
+        if os.path.isfile(src):
+            os.remove(src)
     return
 
 

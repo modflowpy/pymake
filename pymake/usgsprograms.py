@@ -334,7 +334,8 @@ class usgs_program_data:
             raise IOError(msg)
 
         # export code.json to --appdir directory, if the
-        # command line argument was specified. Only done if not travis
+        # command line argument was specified. Only done if not CI
+        # command line argument was specified. Only done if not CI
         appdir = "."
         for idx, argv in enumerate(sys.argv):
             if argv in ("--appdir", "-ad"):
