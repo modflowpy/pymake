@@ -7,6 +7,8 @@ from pymake.autotest import get_namefiles
 
 import flopy
 
+import pytest
+
 # define program data
 target = "mf2005"
 if sys.platform.lower() == "win32":
@@ -24,30 +26,36 @@ mfver = prog_dict.version
 mfpth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(mfpth, "test-run")
 epth = os.path.join(dstpth, target)
-exclude = ("MNW2-Fig28", "swi2ex4sww", "testsfr2_tab", "UZFtest2")
+name_files = [
+    "l1b2k_bath.nam",
+    "test1tr.nam",
+    "mnw1.nam",
+    "testsfr2.nam",
+    "bcf2ss.nam",
+    "restest.nam",
+    "etsdrt.nam",
+    "str.nam",
+    "tr2k_s3.nam",
+    "fhb.nam",
+    "twri.nam",
+    "ibs2k.nam",
+    "swtex4.nam",
+    "twrihfb.nam",
+    "l1a2k.nam",
+    "tc2hufv4.nam",
+    "twrip.nam",
+    "l1b2k.nam",
+    "test1ss.nam",
+]
+# add path to name_files
+for idx, namefile in enumerate(name_files):
+    name_files[idx] = os.path.join(expth, namefile)
 
 pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
 pm.fflags = "-O3 -fbacktrace"
 pm.cflags = "-O3"
-
-
-def download_src():
-    # Remove the existing target download directory if it exists
-    if os.path.isdir(mfpth):
-        shutil.rmtree(mfpth)
-
-    # download the target
-    pm.download_target(target, download_path=dstpth)
-
-
-def mf2005_namefiles():
-    if os.path.isdir(expth):
-        namefiles = get_namefiles(expth, exclude=exclude)
-    else:
-        namefiles = [None]
-    return namefiles
 
 
 def run_mf2005(namefile, regression=True):
@@ -160,16 +168,22 @@ def cleanup():
 
 
 def test_download():
-    download_src()
+    # Remove the existing target download directory if it exists
+    if os.path.isdir(mfpth):
+        shutil.rmtree(mfpth)
+
+    # download the target
+    pm.download_target(target, download_path=dstpth)
+    assert pm.download, "could not download {}".format(target)
 
 
 def test_compile():
-    pm.build()
+    assert pm.build() == 0, "could not compile {}".format(target)
 
 
-def test_mf2005():
-    for namefile in mf2005_namefiles():
-        yield run_mf2005, namefile
+@pytest.mark.parametrize("fn", name_files)
+def test_mf2005(fn):
+    run_mf2005(fn)
     return
 
 
@@ -184,7 +198,7 @@ if __name__ == "__main__":
 
     test_compile()
 
-    for namefile in mf2005_namefiles():
+    for namefile in name_files:
         run_mf2005(namefile)
 
     test_cleanup()

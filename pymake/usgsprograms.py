@@ -24,6 +24,7 @@ target_keys = (
     "srcdir",
     "standard_switch",
     "double_switch",
+    "shared_object",
 )
 
 
@@ -76,7 +77,12 @@ class usgs_program_data:
             d = OrderedDict()
             for idx, key in enumerate(target_keys):
                 v = t[idx + 1]
-                if key in ["current", "standard_switch", "double_switch"]:
+                if key in (
+                    "current",
+                    "standard_switch",
+                    "double_switch",
+                    "shared_object",
+                ):
                     v = str_to_bool(v)
                 d[key] = v
 
@@ -328,7 +334,8 @@ class usgs_program_data:
             raise IOError(msg)
 
         # export code.json to --appdir directory, if the
-        # command line argument was specified. Only done if not travis
+        # command line argument was specified. Only done if not CI
+        # command line argument was specified. Only done if not CI
         appdir = "."
         for idx, argv in enumerate(sys.argv):
             if argv in ("--appdir", "-ad"):

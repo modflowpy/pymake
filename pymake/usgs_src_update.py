@@ -128,6 +128,11 @@ def update_triangle_files(srcdir, fc, cc, arch, double):
     dst = os.path.join(srcdir, "triangle.h")
     shutil.move(src, dst)
 
+    # remove remaining downloaded files
+    for file in os.listdir(rootdir):
+        src = os.path.join(rootdir, file)
+        if os.path.isfile(src):
+            os.remove(src)
     return
 
 
@@ -160,8 +165,10 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
 
     # Clean up unneeded files
     for f in ["ReadMe_MT3DMS.pdf", "upgrade.pdf"]:
-        print('Removing..."{}"'.format(f))
-        os.remove(os.path.join(rootdir, f))
+        fpth = os.path.join(rootdir, f)
+        if os.path.isfile(fpth):
+            print('Removing..."{}"'.format(f))
+            os.remove(fpth)
 
     # remove some unneeded folders
     dir_list = ["bin", "doc", "examples", "utility"]

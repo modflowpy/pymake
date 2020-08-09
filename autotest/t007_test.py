@@ -4,6 +4,8 @@ import shutil
 import pymake
 import flopy
 
+import pytest
+
 # define program data
 target = "mp7"
 if sys.platform.lower() == "win32":
@@ -41,43 +43,24 @@ pm.appdir = dstpth
 # MODPATH 7 examples
 expth = os.path.join(mp7pth, "examples")
 
+name_files = [
+    "ex01/modflow-2005/original/ex01a_mf2005.mpsim",
+    "ex01/modflow-2005/original/ex01b_mf2005.mpsim",
+    "ex01/modflow-6/original/ex01a_mf6.mpsim",
+    "ex01/modflow-6/original/ex01b_mf6.mpsim",
+    "ex02/modflow-6/original/ex02a_mf6.mpsim",
+    "ex02/modflow-6/original/ex02b_mf6.mpsim",
+    "ex02/modflow-usg/original/ex02a_mfusg.mpsim",
+    "ex02/modflow-usg/original/ex02b_mfusg.mpsim",
+    "ex03/modflow-6/original/ex03a_mf6.mpsim",
+    "ex04/modflow-6/original/ex04a_mf6.mpsim",
+]
+# add path to name_files
+for idx, namefile in enumerate(name_files):
+    name_files[idx] = os.path.join(expth, namefile)
+
 # set up pths and exes
 epths = [emp7, emf2005, emfusg, emf6]
-
-
-def download_src():
-    # Remove the existing target download directory if it exists
-    if os.path.isdir(mp7pth):
-        shutil.rmtree(mp7pth)
-
-    # download the target
-    pm.download_target(target, download_path=dstpth)
-
-
-def get_simfiles():
-    if os.path.exists(emp7):
-        edirs = [
-            name
-            for name in os.listdir(expth)
-            if os.path.isdir(os.path.join(expth, name))
-        ]
-        pths = [os.path.join(expth, edir) for edir in edirs]
-        dirs = []
-        for pth in pths:
-            for name in os.listdir(pth):
-                if os.path.isdir(os.path.join(pth, name)):
-                    dirs.append(os.path.join(pth, name))
-        simfiles = []
-        for d in dirs:
-            pth = os.path.join(d, "original")
-            simfiles += [
-                os.path.join(pth, f)
-                for f in os.listdir(pth)
-                if f.endswith(".mpsim")
-            ]
-    else:
-        simfiles = [None]
-    return simfiles
 
 
 def replace_data(dpth):
@@ -134,6 +117,7 @@ def set_lowercase(fpth):
 
 
 def run_modpath7(fn):
+    success = False
     if os.path.exists(emp7):
         model_ws = os.path.dirname(fn)
         # run the flow model
@@ -184,24 +168,18 @@ def run_modpath7(fn):
             success, buff = flopy.run_model(
                 exe, fpth, model_ws=model_ws, silent=False
             )
-            assert success, "could not run...{}".format(msg)
 
-        # run the modpath model
-        print("running model...{}".format(fn))
-        exe = emp7
+        if success:
+            # run the modpath model
+            print("running model...{}".format(fn))
+            exe = emp7
 
-        fpth = os.path.basename(fn)
-        success, buff = flopy.run_model(
-            exe, fpth, model_ws=model_ws, silent=False
-        )
-        if not success:
-            errmsg = "could not run {}".format(os.path.basename(fn))
-    else:
-        success = False
-        errmsg = "could not run...{}".format(emp7)
+            fpth = os.path.basename(fn)
+            success, buff = flopy.run_model(
+                exe, fpth, model_ws=model_ws, silent=False
+            )
 
-    assert success, errmsg
-    return
+    return success
 
 
 def clean_up():
@@ -223,21 +201,26 @@ def clean_up():
 
 
 def test_download():
-    download_src()
+    # Remove the existing target download directory if it exists
+    if os.path.isdir(mp7pth):
+        shutil.rmtree(mp7pth)
+
+    # download the target
+    pm.download_target(target, download_path=dstpth)
+    assert pm.download, "could not download {} distribution".format(target)
 
 
 def test_compile():
-    pm.build()
+    assert pm.build() == 0, "could not compile {}".format(target)
 
 
 def test_download_exes():
     pymake.getmfexes(dstpth, exes=("mf2005", "mfusg", "mf6"), verbose=True)
 
 
-def test_modpath7():
-    simfiles = get_simfiles()
-    for fn in simfiles:
-        yield run_modpath7, fn
+@pytest.mark.parametrize("fn", name_files)
+def test_modpath7(fn):
+    assert run_modpath7(fn), "could not run {}".format(fn)
 
 
 def test_clean_up():
@@ -245,9 +228,9 @@ def test_clean_up():
 
 
 if __name__ == "__main__":
-    test_download()
-    test_compile()
-    test_download_exes()
-    for fn in get_simfiles():
+    # test_download()
+    # test_compile()
+    # test_download_exes()
+    for fn in name_files:
         run_modpath7(fn)
-    test_clean_up()
+    # test_clean_up()

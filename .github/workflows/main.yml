@@ -68,11 +68,17 @@ jobs:
 
     - name: Install python packages
       run: |
-        pip install requests nose-timer coverage
+        python -m pip install --upgrade pip
+        pip install requests pytest pytest-cov coverage
         pip install pydotplus appdirs
         pip install numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install .
+
+    - name: Install pytest timer on Linux
+      if: runner.os == 'Linux'
+      run: |
+        pip install pytest-timer[termcolor]
 
     - name: Install gfortran on Linux
       if: runner.os == 'Linux'
@@ -98,12 +104,15 @@ jobs:
         gcc --version
         g++ --version
 
-    - name: Run nosetests
+    - name: Run pytest
       shell: bash
       run: |
-        coverage run -m nose -v --with-id --with-timer \
-        --with-coverage --cover-package=pymake --cover-xml \
-        --cover-xml-file=../coverage.xml -w ./autotest
+        pytest -v --cov=pymake --cov-report=xml autotest/
+
+    - name: Print coverage report before upload
+      shell: bash
+      run: |
+        coverage report
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1.0.12

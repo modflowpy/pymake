@@ -18,6 +18,7 @@ from .compiler_switches import (
     get_c_flags,
     get_fortran_flags,
     get_linker_flags,
+    _get_os_macro,
 )
 from .compiler_language_files import (
     get_srcfiles,
@@ -1318,6 +1319,12 @@ def create_makefile(
         line += "\tendif\n"
         line += "endif\n\n"
         f.write(line)
+    else:
+        line = "# set cc compiler to gcc if it is cc\n"
+        line += "ifeq ($(CC), cc)\n"
+        line += "\tCC = gcc\n"
+        line += "endif\n\n"
+        f.write(line)
 
     # optimization level
     optlevel = get_optlevel(
@@ -1329,6 +1336,13 @@ def create_makefile(
 
     # fortran flags
     if fext is not None:
+        # remove existing os_macro for machine OS from fflags prior to
+        # adding os_macro for specific OS
+        tag = "-" + _get_os_macro()
+        if tag in fflags:
+            fflags.remove(tag)
+
+        # build fortran flags for each os
         line = "# set the fortran flags\n"
         line += "ifeq ($(detected_OS), Windows)\n"
         line += "\tifeq ($(FC), gfortran)\n"
@@ -1372,6 +1386,9 @@ def create_makefile(
             osname="linux",
             verbose=verbose,
         )
+        for idx, flag in enumerate(tfflags):
+            if "-D__" in flag:
+                tfflags[idx] = "$(OS_macro)"
         line += "\t\tFFLAGS ?= {}\n".format(" ".join(tfflags))
         line += "\t\tMODSWITCH = -module $(MODDIR)\n"
         line += "\tendif\n"

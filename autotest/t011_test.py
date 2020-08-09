@@ -1,19 +1,35 @@
 import os
-import sys
 import shutil
 import json
-
 import pymake
 
-from nose.tools import *
+import pytest
 
-cpth = os.path.join("temp", "t011")
-# make the directory if it does not exist
-if not os.path.isdir(cpth):
-    os.makedirs(cpth)
+cpth = os.path.abspath(os.path.join("temp", "t011"))
+
+
+def initialize_working_dir():
+    # make sure the test directory exists
+    os.makedirs(cpth, exist_ok=True)
+
+
+def export_code_json():
+    # make sure the test directory exists
+    initialize_working_dir()
+
+    # make the json file
+    fpth = os.path.join(cpth, "code.test.json")
+    pymake.usgs_program_data.export_json(fpth=fpth, current=True)
+
+    # check that the json file was made
+    msg = "did not make...{}".format(fpth)
+    assert os.path.isfile(fpth), msg
+
+    return fpth
 
 
 def test_usgsprograms():
+    print("test_usgsprograms()")
     upd = pymake.usgs_program_data().get_program_dict()
 
     all_keys = list(upd.keys())
@@ -23,15 +39,15 @@ def test_usgsprograms():
     msg = "the keys from program_dict are not equal to .get_keys()"
     assert all_keys == get_keys, msg
 
-    return
 
-
-@raises(KeyError)
 def test_target_key_error():
-    pymake.usgs_program_data.get_target("error")
+    print("test_target_key_error()")
+    with pytest.raises(KeyError):
+        pymake.usgs_program_data.get_target("error")
 
 
 def test_target_keys():
+    print("test_target_keys()")
     prog_dict = pymake.usgs_program_data().get_program_dict()
     targets = pymake.usgs_program_data.get_keys()
     for target in targets:
@@ -44,16 +60,10 @@ def test_target_keys():
         )
         assert target_dict == test_dict, msg
 
-    return
-
 
 def test_usgsprograms_export_json():
-    fpth = os.path.join(cpth, "code.test.json")
-    pymake.usgs_program_data.export_json(fpth=fpth, current=True)
-
-    # check that the json file was made
-    msg = "did not make...{}".format(fpth)
-    assert os.path.isfile(fpth), msg
+    # export code.json and return json file path
+    fpth = export_code_json()
 
     # test the json export
     with open(fpth, "r") as f:
@@ -74,69 +84,66 @@ def test_usgsprograms_export_json():
         )
         assert value == temp_dict, msg
 
-    return
 
-
-@raises(KeyError)
 def test_usgsprograms_load_json_error():
-    my_dict = {"mf2005": {"bad": 12, "key": True}}
+    print("test_usgsprograms_load_json_error()")
+
+    initialize_working_dir()
 
     fpth = os.path.join(cpth, "code.test.error.json")
+    my_dict = {"mf2005": {"bad": 12, "key": True}}
     pymake.usgs_program_data.export_json(
         fpth=fpth, prog_data=my_dict, update=False
     )
 
-    pymake.usgs_program_data.load_json(fpth=fpth)
+    with pytest.raises(KeyError):
+        pymake.usgs_program_data.load_json(fpth=fpth)
 
 
 def test_usgsprograms_load_json():
-    fpth = os.path.join(cpth, "code.test.json")
+    print("test_usgsprograms_load_json()")
+
+    # export code.json and return json file path
+    fpth = export_code_json()
+
     json_dict = pymake.usgs_program_data.load_json(fpth)
 
+    # check that the json file was loaded
     msg = "could not load {}".format(fpth)
     assert json_dict is not None, msg
 
-    return
 
-
-@raises(IOError)
 def test_usgsprograms_list_json_error():
+    print("test_usgsprograms_list_json_error()")
+
+    # make sure the example directory exists
+    initialize_working_dir()
+
     fpth = os.path.join(cpth, "does.not.exist.json")
-    pymake.usgs_program_data.list_json(fpth=fpth)
+    with pytest.raises(IOError):
+        pymake.usgs_program_data.list_json(fpth=fpth)
 
 
 def test_usgsprograms_list_json():
-    fpth = os.path.join(cpth, "code.test.json")
+    print("test_usgsprograms_list_json()")
+
+    # export code.json and return json file path
+    fpth = export_code_json()
+
+    # list the contents of the json file
     pymake.usgs_program_data.list_json(fpth=fpth)
 
-    return
+
+def test_shared():
+    print("test_shared()")
+    target_dict = pymake.usgs_program_data.get_target("libmf6")
+    assert target_dict.shared_object, "libmf6 is a shared object"
 
 
-def test_make():
-    # add --makefile to command line list
-    sys.argv.append("--makefile")
-
-    # get current directory and change to working directory
-    cwd = os.getcwd()
-    os.chdir(cpth)
-
-    # build triangle and makefile
-    success = True
-    try:
-        pymake.build_apps("triangle")
-    except:
-        success = False
-
-    # change to starting directory
-    os.chdir(cwd)
-
-    # remove --makefile from command line list
-    sys.argv.remove("--makefile")
-
-    # evaluate success
-    assert success, "could not build triangle"
-
-    return
+def test_not_shared():
+    print("test_not_shared()")
+    target_dict = pymake.usgs_program_data.get_target("mf6")
+    assert not target_dict.shared_object, "mf6 is not a shared object"
 
 
 def test_clean_up():
@@ -152,5 +159,6 @@ if __name__ == "__main__":
     test_usgsprograms_load_json()
     test_usgsprograms_list_json_error()
     test_usgsprograms_list_json()
-    test_make()
+    test_shared()
+    test_not_shared()
     test_clean_up()

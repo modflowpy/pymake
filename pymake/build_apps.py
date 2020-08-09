@@ -13,6 +13,7 @@ def build_apps(
     appdir=None,
     verbose=None,
     release_precision=True,
+    clean=True,
 ):
     """Build all of the current targets or a subset of targets.
 
@@ -33,6 +34,8 @@ def build_apps(
         version will be compiled along with a double precision version of
         the program for programs where the standard_switch and double_switch
         in usgsprograms.txt is True. default is True.
+    clean : bool
+        boolean determining of final download should be removed
 
     Returns
     -------
@@ -52,7 +55,7 @@ def build_apps(
     if pymake_object is None:
         pmobj = Pymake()
     else:
-        if isinstance(pymake_object, Pymake()):
+        if isinstance(pymake_object, Pymake):
             pmobj = pymake_object
         else:
             msg = "pymake_object ({}) is not of type {}".format(
@@ -127,13 +130,8 @@ def build_apps(
 
         # set download information
         download_dir = "temp"
-
-        if target in ("mt3dms", "triangle"):
-            download_verify = False
-            timeout = 10
-        else:
-            download_verify = True
-            timeout = 30
+        download_verify = True
+        timeout = 30
 
         # set target and srcdir
         pmobj.target = target
@@ -191,6 +189,7 @@ def build_apps(
         pmobj.compress_targets()
 
     # execute final Pymake object operations
-    pmobj.finalize()
+    if clean:
+        pmobj.finalize()
 
     return pmobj.returncode

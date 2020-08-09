@@ -91,6 +91,23 @@ class Pymake:
         if verbose is not None:
             self.verbose = verbose
 
+    def reset(self, target):
+        """Reset PyMake object variables for a target
+
+        Parameters
+        ----------
+        target : str
+            target name
+
+        Returns
+        -------
+
+        """
+        if self.verbose:
+            print("resetting Pymake class")
+        self.target = target
+        self.srcdir = None
+
     def finalize(self):
         """Finalize Pymake class
 

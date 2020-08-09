@@ -22,12 +22,9 @@ def compile_code():
         shutil.rmtree(mflgrpth)
 
     # compile MODFLOW-LGR
-    returncode = pymake.build_apps(
+    return pymake.build_apps(
         target, download_dir=dstpth, appdir=dstpth, verbose=True
     )
-    assert returncode == 0, "{} build failed".format(target)
-
-    return
 
 
 def clean_up():
@@ -53,11 +50,11 @@ def clean_up():
 
 
 def test_compile():
-    compile_code()
+    assert compile_code() == 0, "could not compile {}".format(target)
 
 
 def test_clean_up():
-    clean_up
+    clean_up()
 
 
 if __name__ == "__main__":

@@ -297,16 +297,7 @@ def get_fortran_flags(
             if double:
                 flags += ["fdefault-real-8", "fdefault-double-8"]
             # define the OS macro for gfortran
-            if osname == "win32":
-                os_macro = "D_WIN32"
-            elif osname == "darwin":
-                os_macro = "D__APPLE__"
-            elif "linux" in osname:
-                os_macro = "D__linux__"
-            elif "bsd" in osname:
-                os_macro = "D__unix__"
-            else:
-                os_macro = None
+            os_macro = _get_os_macro(osname)
             if os_macro is not None:
                 flags.append(os_macro)
         elif fc in ["ifort", "mpiifort"]:
@@ -901,3 +892,35 @@ def set_syslibs(
         print(msg)
 
     return syslibs
+
+
+# hidden functions
+def _get_os_macro(osname=None):
+    """Get OS macro
+
+    Parameters
+    ----------
+    osname : str
+        optional lower case OS name. If not passed it will be determined
+        using sys.platform
+
+    Returns
+    -------
+    os_macro : str
+        os macro flag
+
+    """
+    os_macro_dict = {
+        "win32": "D_WIN32",
+        "darwin": "D__APPLE__",
+        "linux": "D__linux__",
+        "bsd": "D__unix__",
+    }
+    # get lower case OS string
+    if osname is None:
+        osname = get_osname()
+    if osname in os_macro_dict.keys():
+        os_macro = os_macro_dict[osname]
+    else:
+        os_macro = None
+    return os_macro

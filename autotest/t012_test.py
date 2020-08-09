@@ -4,6 +4,8 @@ import shutil
 import pymake
 import flopy
 
+import pytest
+
 # define program data
 target = "gsflow"
 if sys.platform.lower() == "win32":
@@ -23,8 +25,7 @@ egsflow = os.path.abspath(os.path.join(dstpth, target))
 
 # example path
 expth = os.path.join(gsflowpth, "data")
-examples = ["sagehen"]
-control_files = ["gsflow.control"]
+examples = (("sagehen", "gsflow.control"),)
 
 # set up pths and exes
 pths = [gsflowpth]
@@ -33,15 +34,6 @@ exes = [egsflow]
 pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
-
-
-def download_src():
-    # Remove the existing target download directory if it exists
-    if os.path.isdir(gsflowpth):
-        shutil.rmtree(gsflowpth)
-
-    # download the target
-    pm.download_target(target, download_path=dstpth)
 
 
 def copy_example_dir(epth):
@@ -62,8 +54,9 @@ def copy_example_dir(epth):
 
         # edit the control file for a shorter run
         # sagehen
-        if epth == examples[0]:
-            fpth = os.path.join(dstpth, epth, "linux", control_files[0])
+        example, control_file = examples[0]
+        if epth == example:
+            fpth = os.path.join(dstpth, epth, "linux", control_file)
             with open(fpth) as f:
                 lines = f.readlines()
             with open(fpth, "w") as f:
@@ -79,6 +72,7 @@ def copy_example_dir(epth):
 
 
 def run_gsflow(example, control_file):
+    success = False
     if os.path.exists(egsflow):
         # copy files
         copy_example_dir(example)
@@ -91,13 +85,7 @@ def run_gsflow(example, control_file):
         )
         if not success:
             errmsg = "could not run {}".format(control_file)
-    else:
-        success = False
-        errmsg = "could not run...{}".format(egsflow)
-
-    assert success, errmsg
-
-    return
+    return success
 
 
 def clean_up():
@@ -107,7 +95,7 @@ def clean_up():
         shutil.rmtree(gsflowpth)
 
     # clean up examples
-    for example in examples:
+    for example, control_file in examples:
         pth = os.path.join(dstpth, example)
         if os.path.isdir(pth):
             print("Removing example folder " + example)
@@ -124,16 +112,22 @@ def clean_up():
 
 
 def test_download():
-    download_src()
+    # Remove the existing target download directory if it exists
+    if os.path.isdir(gsflowpth):
+        shutil.rmtree(gsflowpth)
+
+    # download the target
+    pm.download_target(target, download_path=dstpth)
+    assert pm.download, "could not download {} distribution".format(target)
 
 
 def test_compile():
-    pm.build()
+    assert pm.build() == 0, "could not compile {}".format(target)
 
 
-def test_gsflow():
-    for ex, cf in zip(examples, control_files):
-        yield run_gsflow, ex, cf
+@pytest.mark.parametrize("ex,cf", examples)
+def test_gsflow(ex, cf):
+    assert run_gsflow(ex, cf), "could not run {}-{}".format(ex, cf)
 
 
 def test_clean_up():
@@ -144,6 +138,6 @@ def test_clean_up():
 if __name__ == "__main__":
     test_download()
     test_compile()
-    for ex, cf in zip(examples, control_files):
-        run_gsflow(ex, cf)
+    for ex, cf in examples:
+        assert run_gsflow(ex, cf), "could not run {}-{}".format(ex, cf)
     test_clean_up()
