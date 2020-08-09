@@ -109,5 +109,12 @@ jobs:
       run: |
         pytest -v --cov=pymake --cov-report=xml autotest/
 
+    - name: Print coverage report before upload
+      shell: bash
+      run: |
+        coverage report
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1.0.12
+      with:
+        file: ./coverage.xml
