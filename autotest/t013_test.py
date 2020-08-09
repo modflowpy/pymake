@@ -20,11 +20,6 @@ def test_gnu_make():
     if sys.platform.lower() == "win32":
         target += ".exe"
 
-    # # add test arguments from command line list
-    # cargs = ("--makefile", "-mc")
-    # for arg in cargs:
-    #     sys.argv.append(arg)
-
     # get current directory
     cwd = os.getcwd()
 
@@ -36,10 +31,6 @@ def test_gnu_make():
     assert (
         pymake.build_apps(target, clean=False, pymake_object=pm) == 0
     ), "could not build {}".format(target)
-
-    # # remove test arguments from command line list
-    # for arg in cargs:
-    #     sys.argv.remove(arg)
 
     if os.path.isfile(os.path.join(cpth, "makefile")):
         print("cleaning with GNU make")
@@ -86,4 +77,4 @@ def test_clean_up():
 
 if __name__ == "__main__":
     test_gnu_make()
-    # test_clean_up()
+    test_clean_up()

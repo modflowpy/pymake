@@ -1319,6 +1319,12 @@ def create_makefile(
         line += "\tendif\n"
         line += "endif\n\n"
         f.write(line)
+    else:
+        line = "# set cc compiler to gcc if it is cc\n"
+        line += "ifeq ($(CC), cc)\n"
+        line += "\tCC = gcc\n"
+        line += "endif\n\n"
+        f.write(line)
 
     # optimization level
     optlevel = get_optlevel(
