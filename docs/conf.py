@@ -10,12 +10,11 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
 
-# sys.path.insert(0, os.path.abspath('.'))
-
-# from pymake import __version__
+from pymake import __version__
 
 # -- Project information -----------------------------------------------------
 
@@ -24,8 +23,8 @@ copyright = u"2020, Christian D. Langevin"
 author = u"Christian D. Langevin"
 
 # The version.
-version = "1.2" # __version__
-release = "1.2" # __version__
+version = __version__
+release = __version__
 language = None
 
 
