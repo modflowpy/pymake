@@ -1,0 +1,5 @@
+nbsphinx
+nbsphinx_link
+Ipython
+ipykernel
+git+https://github.com/pandas-dev/pydata-sphinx-theme.git@master
