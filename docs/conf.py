@@ -15,15 +15,10 @@ import sys
 from subprocess import Popen, PIPE
 from pymake import __version__
 
-sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath(".."))
 
 # -- Create the pymake rst files ---------------------------------------------
-args = (
-        "sphinx-apidoc",
-        "-o",
-        "source/",
-        "../pymake/"
-        )
+args = ("sphinx-apidoc", "-o", "source/", "../pymake/")
 proc = Popen(args, stdout=PIPE, stderr=PIPE, cwd=".")
 stdout, stderr = proc.communicate()
 if stdout:
