@@ -6,7 +6,7 @@ Python package for compiling MODFLOW-based programs.
 ![pymake continuous integration](https://github.com/modflowpy/pymake/workflows/pymake%20continuous%20integration/badge.svg)
 [![codecov](https://codecov.io/gh/modflowpy/pymake/branch/master/graph/badge.svg)](https://codecov.io/gh/modflowpy/pymake)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ff198bf587524161ad2bc60b3ab15979)](https://app.codacy.com/manual/jdhughes-usgs/pymake?utm_source=github.com&utm_medium=referral&utm_content=modflowpy/pymake&utm_campaign=Badge_Grade_Dashboard)
-
+[![Documentation Status](https://readthedocs.org/projects/mfpymake/badge/?version=latest)](https://mfpymake.readthedocs.io/en/latest/?badge=latest)
 
 This is a python package for compiling MODFLOW-based and other Fortran, C, and 
 C++ programs. The package determines the build order using a directed acyclic 
@@ -164,7 +164,7 @@ When using the pymake object (`Pymake()`) only the positional arguments
 ```python
 import pymake
 pm = pymake.Pymake()
-pm.srcdir = '../mfnwt/src'
+pm.srcdir = '../src'
 pm.target = 'mf6'
 pm.include_subdirs = True
 pm.build()

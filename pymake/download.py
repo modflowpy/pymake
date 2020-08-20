@@ -1,3 +1,15 @@
+"""Utility functions to:
+
+1. download and unzip software releases from the USGS and other organizations
+   (triangle, MT3DMS).
+2. download the latest MODFLOW-based applications and utilities for MacOS,
+   Linux, and Windows from https://github.com/MODFLOW-USGS/executables
+3. determine the latest version (GitHub tag) of a GitHub repository and a
+   dictionary containing the file name and the link to a asset on
+   contained in a github repository
+4. compress all files in a list, files in a list of directories
+
+"""
 import os
 import sys
 import shutil
@@ -9,9 +21,8 @@ import tarfile
 
 
 class pymakeZipFile(ZipFile):
-    """ZipFile file attributes are not being preserved.
-
-    This class preserves file attributes as described on StackOverflow at
+    """ZipFile file attributes are not being preserved. This class preserves
+    file attributes as described on StackOverflow at
     https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
 
     """
@@ -165,7 +176,7 @@ class pymakeZipFile(ZipFile):
         return success
 
 
-def request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
+def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
     """Make a url request
 
     Parameters
@@ -265,7 +276,7 @@ def download_and_unzip(
     tic = timeit.default_timer()
 
     # open request
-    req = request_get(
+    req = _request_get(
         url,
         verify=verify,
         timeout=timeout,
@@ -335,7 +346,7 @@ def download_and_unzip(
                     continue
         except:
             # reestablish request
-            req = request_get(
+            req = _request_get(
                 url,
                 verify=verify,
                 timeout=timeout,
@@ -428,7 +439,7 @@ def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
     )
 
 
-def get_default_repo():
+def _get_default_repo():
     """Return the default repo name.
 
     Returns
@@ -440,7 +451,7 @@ def get_default_repo():
     return "MODFLOW-USGS/executables"
 
 
-def get_default_json(tag_name=None):
+def _get_default_json(tag_name=None):
     """Return a default github api json for the provided release tag_name in a
     github repository.
 
@@ -459,7 +470,7 @@ def get_default_json(tag_name=None):
     if tag_name is None:
         tag_name = "4.0"
     url = "https://github.com/{}/".format(
-        get_default_repo()
+        _get_default_repo()
     ) + "releases/download/{}/".format(tag_name)
     json_obj = {"tag_name": tag_name}
 
@@ -475,7 +486,7 @@ def get_default_json(tag_name=None):
     return json_obj
 
 
-def get_request_json(request_url, verbose=False):
+def _get_request_json(request_url, verbose=False):
     """Process a url request and return a json if successful.
 
     Parameters
@@ -503,7 +514,7 @@ def get_request_json(request_url, verbose=False):
     success = True
 
     # open request
-    req = request_get(request_url, max_requests=max_requests, verbose=verbose)
+    req = _request_get(request_url, max_requests=max_requests, verbose=verbose)
 
     # connection established - retrieve the json
     if req.ok:
@@ -514,7 +525,7 @@ def get_request_json(request_url, verbose=False):
     return success, req, json_obj
 
 
-def repo_json(github_repo, tag_name=None, error_return=False, verbose=False):
+def _repo_json(github_repo, tag_name=None, error_return=False, verbose=False):
     """Return the github api json for the latest github release in a github
     repository.
 
@@ -543,7 +554,7 @@ def repo_json(github_repo, tag_name=None, error_return=False, verbose=False):
         request_url = "{}/releases/latest".format(repo_url)
     else:
         request_url = "{}/releases".format(repo_url)
-        success, _, json_cat = get_request_json(request_url, verbose=verbose)
+        success, _, json_cat = _get_request_json(request_url, verbose=verbose)
         if success:
             request_url = None
             for release in json_cat:
@@ -577,15 +588,15 @@ def repo_json(github_repo, tag_name=None, error_return=False, verbose=False):
         print(msg)
 
     # process the request
-    success, req, json_obj = get_request_json(request_url, verbose=verbose)
+    success, req, json_obj = _get_request_json(request_url, verbose=verbose)
 
     # evaluate request errors
     if not success:
-        if github_repo == get_default_repo():
+        if github_repo == _get_default_repo():
             msg = "will use default values for {}".format(github_repo)
             if verbose:
                 print(msg)
-            json_obj = get_default_json(tag_name)
+            json_obj = _get_default_json(tag_name)
         else:
             msg = "Could not find json from " + request_url
             if verbose:
@@ -621,10 +632,10 @@ def get_repo_assets(github_repo=None, version=None, error_return=False):
 
     """
     if github_repo is None:
-        github_repo = get_default_repo()
+        github_repo = _get_default_repo()
 
     # get json and extract assets
-    json_obj = repo_json(
+    json_obj = _repo_json(
         github_repo, tag_name=version, error_return=error_return
     )
     if json_obj is None:
@@ -659,10 +670,10 @@ def repo_latest_version(github_repo=None):
 
     """
     if github_repo is None:
-        github_repo = get_default_repo()
+        github_repo = _get_default_repo()
 
     # get json
-    json_obj = repo_json(github_repo)
+    json_obj = _repo_json(github_repo)
 
     return json_obj["tag_name"]
 
@@ -727,7 +738,7 @@ def getmfexes(pth=".", version=None, platform=None, exes=None, verbose=False):
             raise TypeError(msg)
 
     # Determine path for file download and then download and unzip
-    assets = get_repo_assets(github_repo=get_default_repo(), version=version)
+    assets = get_repo_assets(github_repo=_get_default_repo(), version=version)
     download_url = assets[zipname]
     download_and_unzip(download_url, download_dir, verbose=verbose)
 

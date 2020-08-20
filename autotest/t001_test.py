@@ -3,8 +3,6 @@ import sys
 import shutil
 
 import pymake
-from pymake.autotest import get_namefiles
-
 import flopy
 
 import pytest

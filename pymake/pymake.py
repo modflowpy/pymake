@@ -1,11 +1,60 @@
-"""Make a binary executable for a FORTRAN, C, or C++ program, such as
-MODFLOW 6.
+"""Pymake class to make a binary executable for a FORTRAN, C, or C++ program,
+such as MODFLOW 6. An example of how to build MODFLOW-2005 from source files
+in the official release downloaded from the USGS using Intel compilers is:
+
+.. code-block:: python
+
+    import pymake
+
+    # create an instance of the Pymake object
+    pm = pymake.Pymake(verbose=True)
+
+    # reset select pymake settings
+    pm.target = "mf2005"
+    pm.appdir = "../bin"
+    pm.fc = "ifort"
+    pm.cc = "icc"
+    pm.fflags = "-O3 -fbacktrace"
+    pm.cflags = "-O3"
+
+    # download the target
+    pm.download_target(pm.target, download_path="temp")
+
+    # build the target
+    pm.build()
+
+    # clean up downloaded files
+    pm.finalize()
+
+All other settings not specified in the script would be based on command
+line arguments or default values. The same :code:`Pymake()` object could be
+used to compile MODFLOW 6 by appending the following code to the previous code
+block:
+
+.. code-block:: python
+
+    # reset the target
+    pm.target = "mf6"
+
+    # download the target
+    pm.download_target(pm.target, download_path="temp")
+
+    # build the target
+    pm.build()
+
+    # clean up downloaded files
+    pm.finalize()
+
+The Intel compilers and fortran flags defined previously would be used when
+MODFLOW 6 was built.
+
 """
-__author__ = "Christian D. Langevin"
+
+__author__ = "Joseph D. Hughes"
 __date__ = "October 26, 2014"
 __version__ = "1.2.0"
 __maintainer__ = "Joseph D. Hughes"
-__email__ = "langevin@usgs.gov"
+__email__ = "jdhughes@usgs.gov"
 __status__ = "Production"
 __description__ = """
 This is the pymake program for compiling fortran, c, and c++ source files,
@@ -20,21 +69,21 @@ import time
 import shutil
 import argparse
 
-from .compiler_switches import (
-    get_osname,
-    get_optlevel,
-    get_fortran_flags,
-    get_c_flags,
-    get_linker_flags,
+from ._compiler_switches import (
+    _get_osname,
+    _get_optlevel,
+    _get_fortran_flags,
+    _get_c_flags,
+    _get_linker_flags,
 )
 from .download import download_and_unzip, zip_all
 from .pymake_base import main
 from .pymake_parser import (
-    get_arg_dict,
-    parser_setup,
+    _get_arg_dict,
+    _parser_setup,
 )
 from .usgsprograms import usgs_program_data
-from .usgs_src_update import build_replace
+from ._usgs_src_update import _build_replace
 
 
 class Pymake:
@@ -80,12 +129,12 @@ class Pymake:
         self.inplace = None
 
         # set class variables with default values from arg_dict
-        for key, value in get_arg_dict().items():
+        for key, value in _get_arg_dict().items():
             setattr(self, key, value["default"])
 
         # do not parse command line arguments if python is running script
         if sys.argv[0].lower().endswith(".py"):
-            self.arg_parser()
+            self._arg_parser()
 
         # reset select variables using passed variables
         if verbose is not None:
@@ -118,7 +167,7 @@ class Pymake:
         if self.download:
             self._download_cleanup()
 
-    def print_settings(self):
+    def _print_settings(self):
         """Print settings defined by command line arguments
 
         Returns
@@ -126,7 +175,7 @@ class Pymake:
 
         """
         print("\nPymake settings\n" + 30 * "-")
-        for key, value in get_arg_dict().items():
+        for key, value in _get_arg_dict().items():
             print_value = getattr(self, key, value["default"])
             if isinstance(print_value, list):
                 print_value = ", ".join(print_value)
@@ -145,7 +194,7 @@ class Pymake:
                 setattr(self, key, args.__dict__[key])
         return
 
-    def arg_parser(self):
+    def _arg_parser(self):
         """Setup argparse object for Pymake object using only optional
         command lone arguments.
 
@@ -153,13 +202,13 @@ class Pymake:
         -------
 
         """
-        loc_dict = get_arg_dict()
+        loc_dict = _get_arg_dict()
         parser = argparse.ArgumentParser(description=__description__,)
         for _, value in loc_dict.items():
             tag = value["tag"][0]
             # only process optional command line variables
             if tag.startswith("-"):
-                parser = parser_setup(parser, value, reset_default=True)
+                parser = _parser_setup(parser, value, reset_default=True)
 
         # reset self.variables using optional command line arguments
         self.argv_reset_settings(parser.parse_args())
@@ -167,7 +216,7 @@ class Pymake:
         return
 
     def compress_targets(self):
-        """Compress targets in build_targets
+        """Compress targets in build_targets list.
 
         Returns
         -------
@@ -224,7 +273,7 @@ class Pymake:
 
         return
 
-    def clean_targets(self):
+    def _clean_targets(self):
         """Clean up list of targets
 
         Returns
@@ -375,7 +424,7 @@ class Pymake:
                     ntries = 10
                     for itries in range(ntries):
                         # wait to delete on windows
-                        if get_osname() == "win32":
+                        if _get_osname() == "win32":
                             time.sleep(3)
 
                         # remove the directory
@@ -398,12 +447,12 @@ class Pymake:
                                 print(msg)
 
                     # wait prior to returning on windows
-                    if get_osname() == "win32":
+                    if _get_osname() == "win32":
                         time.sleep(6)
 
         return
 
-    def set_include_subdirs(self):
+    def _set_include_subdirs(self):
         """Determine if sub-directories in the source directory should be
         included.
 
@@ -452,7 +501,7 @@ class Pymake:
 
         return build_target
 
-    def set_srcdir2(self):
+    def _set_srcdir2(self):
         """Set srcdir2 to compile target. Default is None.
 
         Parameters
@@ -467,7 +516,7 @@ class Pymake:
                 self.srcdir2 = os.path.join(self.download_dir, "src")
         return
 
-    def set_extrafiles(self):
+    def _set_extrafiles(self):
         """Set extrafiles to compile target. Default is None.
 
         Parameters
@@ -521,7 +570,7 @@ class Pymake:
 
         return
 
-    def set_excludefiles(self):
+    def _set_excludefiles(self):
         """Set excludefiles to compile target. Default is None.
 
         Parameters
@@ -565,29 +614,29 @@ class Pymake:
             self.srcdir = os.path.join(self.download_dir, prog_dict.srcdir)
 
         # set include_subdirs for known targets
-        self.set_include_subdirs()
+        self._set_include_subdirs()
 
         # set srcdir2 for known targets
-        self.set_srcdir2()
+        self._set_srcdir2()
 
         # set extrafiles for known targets
-        self.set_extrafiles()
+        self._set_extrafiles()
 
         # set excludefiles for known targets
-        self.set_excludefiles()
+        self._set_excludefiles()
 
         # set compiler flags
         if self.fc != "none":
             if self.fflags is None:
                 optlevel = (
-                    get_optlevel(
+                    _get_optlevel(
                         self.target, self.fc, self.cc, self.debug, [], []
                     )
                     + " "
                 )
 
                 self.fflags = optlevel + " ".join(
-                    get_fortran_flags(
+                    _get_fortran_flags(
                         self.target,
                         self.fc,
                         [],
@@ -599,14 +648,14 @@ class Pymake:
         if self.cc != "none":
             if self.cflags is None:
                 optlevel = (
-                    get_optlevel(
+                    _get_optlevel(
                         self.target, self.fc, self.cc, self.debug, [], []
                     )
                     + " "
                 )
 
                 self.cflags = optlevel + " ".join(
-                    get_c_flags(
+                    _get_c_flags(
                         self.target,
                         self.cc,
                         [],
@@ -616,7 +665,7 @@ class Pymake:
                 )
         if self.syslibs is None:
             self.syslibs = " ".join(
-                get_linker_flags(
+                _get_linker_flags(
                     self.target,
                     self.fc,
                     self.cc,
@@ -635,14 +684,14 @@ class Pymake:
         if build_target:
             # print Pymake() settings
             if self.verbose:
-                self.print_settings()
+                self._print_settings()
 
             # download url if it has not been downloaded
             if self.download is not None:
                 self.download_url()
 
             # update source code, if necessary
-            replace_function = build_replace(self.target)
+            replace_function = _build_replace(self.target)
             if replace_function is not None:
                 if self.verbose:
                     msg = "replacing select source files for " + "{}\n".format(

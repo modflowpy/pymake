@@ -1,5 +1,5 @@
 #!/bin/bash
 
-sphinx-apidoc -o source/ ../pymake/
+sphinx-apidoc -e -o source/ ../pymake/
 make html
 

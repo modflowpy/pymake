@@ -1,10 +1,13 @@
+"""Private functions for running pymake commands using Popen
+
+"""
 import sys
 from subprocess import Popen, PIPE, STDOUT
 
 PY3 = sys.version_info[0] >= 3
 
 
-def process_Popen_initialize(cmdlist, intelwin=False):
+def _process_Popen_initialize(cmdlist, intelwin=False):
     """Generic function to initialize a Popen process.
 
     Parameters
@@ -29,7 +32,7 @@ def process_Popen_initialize(cmdlist, intelwin=False):
     return Popen(cmdlist, stdout=PIPE, stderr=stderr)
 
 
-def process_Popen_command(shellflg, cmdlist):
+def _process_Popen_command(shellflg, cmdlist):
     """Generic function to write Popen command data to the screen.
 
     Parameters
@@ -52,7 +55,7 @@ def process_Popen_command(shellflg, cmdlist):
     return
 
 
-def process_Popen_communicate(proc, verbose=True):
+def _process_Popen_communicate(proc, verbose=True):
     """Generic function to write communication information from Popen to the
     screen.
 
@@ -95,7 +98,7 @@ def process_Popen_communicate(proc, verbose=True):
     return stderr, stdout
 
 
-def process_Popen_stdout(proc):
+def _process_Popen_stdout(proc):
     """Generic function to write Popen stdout data to the terminal.
 
     Parameters

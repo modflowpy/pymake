@@ -1,3 +1,23 @@
+"""Utility functions to extract information for a target from the USGS
+application database. Available functionality includes:
+
+1. Get a list of available targets
+2. Get data for a specific target
+3. Get a dictionary with the data for all targets
+4. Get the current version of a target
+5. Get a list indicating if single and double precsion versions of the
+   target application should be built
+6. Functions to load, update, and export a USGS-style "code.json" json file
+   containing information in the USGS application database
+
+A table listing the available pymake targets is included below:
+
+.. csv-table:: Available pymake targets
+   :file: ./usgsprograms.txt
+   :widths: 10, 10, 10, 20, 10, 10, 10, 10, 10
+   :header-rows: 1
+
+"""
 import os
 import sys
 import json
@@ -28,7 +48,7 @@ target_keys = (
 )
 
 
-def str_to_bool(s):
+def _str_to_bool(s):
     """Convert "True" and "False" strings to a boolean.
 
     Parameters
@@ -70,9 +90,11 @@ class usgs_program_data:
 
         program_data = OrderedDict()
         for line in url_in[1:]:
-            t = line.split()
-            if len(t) < 1:
+            # skip blank lines
+            if len(line.strip()) < 1:
                 continue
+            # parse comma separated line
+            t = [item.strip() for item in line.split(sep=",")]
             # programmatically build a dictionary for each target
             d = OrderedDict()
             for idx, key in enumerate(target_keys):
@@ -83,7 +105,7 @@ class usgs_program_data:
                     "double_switch",
                     "shared_object",
                 ):
-                    v = str_to_bool(v)
+                    v = _str_to_bool(v)
                 d[key] = v
 
             # make it possible to access each key with a dot (.)
