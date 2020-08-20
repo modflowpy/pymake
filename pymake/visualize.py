@@ -1,7 +1,25 @@
+"""Utility to create dependency graphs for source files in a directory.
+Dependency graphs can be created using:
+
+.. code-block:: python
+
+    import os
+    import pymake
+
+    srcpth = os.path.join("..", "src")
+    deppth = "dependencies"
+    if not os.path.exists(deppth):
+        os.makedirs(deppth)
+
+    pymake.visualize.make_plots(srcpth, deppth, include_subdir=True)
+
+
+
+"""
 import os
 
-from .compiler_language_files import get_srcfiles, get_ordered_srcfiles
-from .dag import get_f_nodelist
+from ._compiler_language_files import _get_srcfiles, _get_ordered_srcfiles
+from ._dag import _get_f_nodelist
 
 try:
     import pydotplus.graphviz as pydot
@@ -10,12 +28,14 @@ except:
 
 
 def to_pydot(dag, filename="mygraph.png"):
-    """
+    """Create a png file of a Directed Acyclic Graph
 
     Parameters
     ----------
-    dag
-    filename
+    dag : object
+        directed acyclic graph
+    filename : str
+        path of the graph png
 
     Returns
     -------
@@ -40,7 +60,7 @@ def to_pydot(dag, filename="mygraph.png"):
     return
 
 
-def add_pydot_nodes(graph, node_dict, n, ilev, level):
+def _add_pydot_nodes(graph, node_dict, n, ilev, level):
     """
 
     Parameters
@@ -67,11 +87,11 @@ def add_pydot_nodes(graph, node_dict, n, ilev, level):
     graph.add_node(pydotnode)
     if len(n.dependencies) > 0:
         for m in n.dependencies:
-            add_pydot_nodes(graph, node_dict, m, ilev + 1, level)
+            _add_pydot_nodes(graph, node_dict, m, ilev + 1, level)
     return
 
 
-def add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
+def _add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
     """
 
     Parameters
@@ -99,7 +119,9 @@ def add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
                 edge_set.add(tpl)
                 edge = pydot.Edge(node_dict[n], node_dict[m])
                 graph.add_edge(edge)
-                add_pydot_edges(graph, node_dict, edge_set, m, ilev + 1, level)
+                _add_pydot_edges(
+                    graph, node_dict, edge_set, m, ilev + 1, level
+                )
     return
 
 
@@ -140,8 +162,8 @@ def make_plots(
         )
         raise ModuleNotFoundError(msg)
 
-    srcfiles = get_ordered_srcfiles(get_srcfiles(srcdir, include_subdir))
-    nodelist = get_f_nodelist(srcfiles)
+    srcfiles = _get_ordered_srcfiles(_get_srcfiles(srcdir, include_subdir))
+    nodelist = _get_f_nodelist(srcfiles)
     for idx, n in enumerate(nodelist):
         if verbose:
             print("{:<3d}: {}".format(idx + 1, os.path.basename(n.name)))
@@ -161,10 +183,10 @@ def make_plots(
         graph = pydot.Dot(graph_type="digraph")
         node_dict = {}
         ilev = 0
-        add_pydot_nodes(graph, node_dict, n, ilev, level)
+        _add_pydot_nodes(graph, node_dict, n, ilev, level)
         edge_set = set()
         ilev = 1
-        add_pydot_edges(graph, node_dict, edge_set, n, ilev, level)
+        _add_pydot_edges(graph, node_dict, edge_set, n, ilev, level)
         if extension == ".png":
             graph.write_png(filename)
         elif extension == ".pdf":

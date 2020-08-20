@@ -1,3 +1,7 @@
+"""Private functions to edit target source files in distributed software
+releases.
+
+"""
 import os
 import sys
 import shutil
@@ -6,7 +10,7 @@ import types
 from .usgsprograms import usgs_program_data
 
 
-def get_function_names(module, select_name=None):
+def _get_function_names(module, select_name=None):
     """Get a dictionary of functions available in a user-specified source file.
     This function was developed to create a dictionary of functions in this
     source file (build_apps.py). Optionally, the user can get a get a
@@ -40,7 +44,7 @@ def get_function_names(module, select_name=None):
     return func
 
 
-def build_replace(targets):
+def _build_replace(targets):
     """Get pointers to appropriate replace_function for a target.
 
     Parameters
@@ -64,7 +68,7 @@ def build_replace(targets):
             targets[idx] = target[:-4]
 
     # get a dictionary of update functions
-    funcs = get_function_names(sys.modules[__name__], select_name="update_")
+    funcs = _get_function_names(sys.modules[__name__], select_name="_update_")
 
     # generate a list of available functions
     replace_funcs = []
@@ -85,7 +89,7 @@ def build_replace(targets):
 
 # routines for updating source files locations and to compile
 # with gfortran, gcc, and g++
-def update_triangle_files(srcdir, fc, cc, arch, double):
+def _update_triangle_files(srcdir, fc, cc, arch, double):
     """Update triangle source files.
 
     Parameters
@@ -136,7 +140,7 @@ def update_triangle_files(srcdir, fc, cc, arch, double):
     return
 
 
-def update_mt3dms_files(srcdir, fc, cc, arch, double):
+def _update_mt3dms_files(srcdir, fc, cc, arch, double):
     """Update MT3DMS source files.
 
     Parameters
@@ -260,7 +264,7 @@ def update_mt3dms_files(srcdir, fc, cc, arch, double):
     return
 
 
-def update_swtv4_files(srcdir, fc, cc, arch, double):
+def _update_swtv4_files(srcdir, fc, cc, arch, double):
     """Update SEAWAT source files
 
     Parameters
@@ -344,7 +348,7 @@ def update_swtv4_files(srcdir, fc, cc, arch, double):
     return
 
 
-def update_mf2005_files(srcdir, fc, cc, arch, double):
+def _update_mf2005_files(srcdir, fc, cc, arch, double):
     """Update MODFLOW2005 source files
 
     Parameters
@@ -409,7 +413,7 @@ def update_mf2005_files(srcdir, fc, cc, arch, double):
     f.close()
 
 
-def update_mfnwt_files(srcdir, fc, cc, arch, double):
+def _update_mfnwt_files(srcdir, fc, cc, arch, double):
     """Update MODFLOW-NWT source files
 
     Parameters
@@ -479,7 +483,7 @@ def update_mfnwt_files(srcdir, fc, cc, arch, double):
         f.close()
 
 
-def update_gsflow_files(srcdir, fc, cc, arch, double):
+def _update_gsflow_files(srcdir, fc, cc, arch, double):
     """Update GSFLOW source files
 
     Parameters
@@ -579,7 +583,7 @@ def update_gsflow_files(srcdir, fc, cc, arch, double):
     return
 
 
-def update_mf2000_files(srcdir, fc, cc, arch, double):
+def _update_mf2000_files(srcdir, fc, cc, arch, double):
     """Update MODFLOW-2000 source files
 
     Parameters
@@ -640,7 +644,7 @@ def update_mf2000_files(srcdir, fc, cc, arch, double):
     return
 
 
-def update_mflgr_files(srcdir, fc, cc, arch, double):
+def _update_mflgr_files(srcdir, fc, cc, arch, double):
     """Update MODFLOW-LGR source files
 
     Parameters
@@ -675,7 +679,7 @@ def update_mflgr_files(srcdir, fc, cc, arch, double):
     f.close()
 
 
-def update_mp6_files(srcdir, fc, cc, arch, double):
+def _update_mp6_files(srcdir, fc, cc, arch, double):
     """Update MODPATH 6 source files
 
     Parameters
@@ -723,7 +727,7 @@ def update_mp6_files(srcdir, fc, cc, arch, double):
     os.remove(fname1)
 
 
-def update_mp7_files(srcdir, fc, cc, arch, double):
+def _update_mp7_files(srcdir, fc, cc, arch, double):
     """Update MODPATH 7 source files
 
     Parameters
@@ -755,7 +759,7 @@ def update_mp7_files(srcdir, fc, cc, arch, double):
     f.close()
 
 
-def update_vs2dt_files(srcdir, fc, cc, arch, double):
+def _update_vs2dt_files(srcdir, fc, cc, arch, double):
     """Update VS2DT source files
 
     Parameters

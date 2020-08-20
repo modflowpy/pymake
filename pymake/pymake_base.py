@@ -1,3 +1,44 @@
+"""Main pymake function, :code:`main()`, that is called when pymake is run from
+the command line. :code:`main()` can also be called directly from a script in
+combination with :code:`parser()`.
+
+.. code-block:: python
+
+    import pymake
+    args = pymake.parser()
+    pymake.main(
+        args.srcdir,
+        args.target,
+        fc=args.fc,
+        cc=args.cc,
+        makeclean=args.makeclean,
+        expedite=args.expedite,
+        dryrun=args.dryrun,
+        double=args.double,
+        debug=args.debug,
+        include_subdirs=args.subdirs,
+        fflags=args.fflags,
+        cflags=args.cflags,
+        arch=args.arch,
+        syslibs=args.syslibs,
+        makefile=args.makefile,
+        srcdir2=args.commonsrc,
+        extrafiles=args.extrafiles,
+        excludefiles=args.excludefiles,
+        sharedobject=args.sharedobject,
+        appdir=args.appdir,
+        verbose=args.verbose,
+        inplace=args.inplace,
+    )
+
+
+The script could be run from the command line using:
+
+.. code-block:: bash
+
+    python myscript.py ../src myapp -fc=ifort -cc=icc
+
+"""
 import os
 import traceback
 import shutil
@@ -6,25 +47,25 @@ import inspect
 
 from .pymake import __version__
 
-from .Popen_wrapper import (
-    process_Popen_initialize,
-    process_Popen_command,
-    process_Popen_stdout,
-    process_Popen_communicate,
+from ._Popen_wrapper import (
+    _process_Popen_initialize,
+    _process_Popen_command,
+    _process_Popen_stdout,
+    _process_Popen_communicate,
 )
-from .compiler_switches import (
-    get_osname,
-    get_optlevel,
-    get_c_flags,
-    get_fortran_flags,
-    get_linker_flags,
+from ._compiler_switches import (
+    _get_osname,
+    _get_optlevel,
+    _get_c_flags,
+    _get_fortran_flags,
+    _get_linker_flags,
     _get_os_macro,
 )
-from .compiler_language_files import (
-    get_srcfiles,
-    get_ordered_srcfiles,
-    get_c_files,
-    get_fortran_files,
+from ._compiler_language_files import (
+    _get_srcfiles,
+    _get_ordered_srcfiles,
+    _get_c_files,
+    _get_fortran_files,
 )
 
 # define temporary directories
@@ -184,7 +225,7 @@ def main(
             os.makedirs(pth)
 
         # initialize
-        srcfiles = pymake_initialize(
+        srcfiles = _pymake_initialize(
             srcdir,
             target,
             srcdir2,
@@ -195,11 +236,11 @@ def main(
         )
 
         # get ordered list of files to compile
-        srcfiles = get_ordered_srcfiles(srcfiles)
+        srcfiles = _get_ordered_srcfiles(srcfiles)
 
         # set intelwin flag to True in compiling on windows with Intel compilers
         intelwin = False
-        if get_osname() == "win32":
+        if _get_osname() == "win32":
             if fc is not None:
                 if fc in ["ifort", "mpiifort"]:
                     intelwin = True
@@ -209,10 +250,10 @@ def main(
 
         # update openspec files based on intelwin
         if not intelwin:
-            create_openspec(srcfiles, verbose)
+            _create_openspec(srcfiles, verbose)
 
         # compile the executable
-        returncode = pymake_compile(
+        returncode = _pymake_compile(
             srcfiles,
             target,
             fc,
@@ -232,7 +273,7 @@ def main(
 
         # create makefile
         if makefile:
-            create_makefile(
+            _create_makefile(
                 target,
                 srcdir,
                 srcdir2,
@@ -250,7 +291,7 @@ def main(
 
         # clean up temporary files
         if makeclean and returncode == 0:
-            clean(target, intelwin, inplace, srcdir_temp, verbose)
+            _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose)
     else:
         msg = (
             "Nothing to do, the srcdir ({}) ".format(srcdir)
@@ -262,7 +303,7 @@ def main(
     return returncode
 
 
-def pymake_initialize(
+def _pymake_initialize(
     srcdir,
     target,
     commonsrc,
@@ -312,7 +353,7 @@ def pymake_initialize(
 
     # if exclude is not None, then it is a text file with a list of
     # source files that need to be excluded from srctemp.
-    excludefiles = get_extra_exclude_files(excludefiles)
+    excludefiles = _get_extra_exclude_files(excludefiles)
     if excludefiles:
         for idx, exclude_file in enumerate(excludefiles):
             excludefiles[idx] = os.path.basename(exclude_file)
@@ -331,7 +372,7 @@ def pymake_initialize(
             shutil.copytree(srcdir, srcdir_temp)
 
     # get a list of source files in srcdir_temp to include
-    srcfiles = get_srcfiles(srcdir_temp, include_subdirs)
+    srcfiles = _get_srcfiles(srcdir_temp, include_subdirs)
 
     # copy files from a specified common source directory if
     # commonsrc is not None
@@ -350,12 +391,12 @@ def pymake_initialize(
         else:
             dst = os.path.normpath(os.path.relpath(commonsrc, srcdir_temp))
 
-        srcfiles += get_srcfiles(dst, include_subdirs)
+        srcfiles += _get_srcfiles(dst, include_subdirs)
 
     # if extrafiles is not None, then it is a text file with a list of
     # additional source files that need to be copied into srctemp and
     # compiled.
-    files = get_extra_exclude_files(extrafiles)
+    files = _get_extra_exclude_files(extrafiles)
     if files is None:
         files = []
     for fpth in files:
@@ -397,7 +438,7 @@ def pymake_initialize(
     return srcfiles
 
 
-def get_extra_exclude_files(extrafiles):
+def _get_extra_exclude_files(extrafiles):
     """Get extrafiles to include in compilation from a file or a list.
 
     Parameters
@@ -435,7 +476,7 @@ def get_extra_exclude_files(extrafiles):
     return files
 
 
-def clean(target, intelwin, inplace, srcdir_temp, verbose=False):
+def _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose=False):
     """Cleanup intermediate files. Remove mod and object files, and remove the
     temporary source directory.
 
@@ -521,7 +562,7 @@ def clean(target, intelwin, inplace, srcdir_temp, verbose=False):
     return
 
 
-def create_openspec(srcfiles, verbose):
+def _create_openspec(srcfiles, verbose):
     """Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
     STREAM ACCESS. This is specific to MODFLOW and MT3D based targets. Source
     directories are scanned and files defining file access are replaced.
@@ -565,7 +606,7 @@ def create_openspec(srcfiles, verbose):
     return
 
 
-def check_out_of_date(srcfile, objfile):
+def _check_out_of_date(srcfile, objfile):
     """Check if existing object files are current with the existing source
     files.
 
@@ -591,7 +632,7 @@ def check_out_of_date(srcfile, objfile):
     return stale
 
 
-def pymake_compile(
+def _pymake_compile(
     srcfiles,
     target,
     fc,
@@ -661,7 +702,7 @@ def pymake_compile(
     # write pymake setting
     if verbose:
         msg = (
-            "\nPymake settings in {}\n".format(pymake_compile.__name__)
+            "\nPymake settings in {}\n".format(_pymake_compile.__name__)
             + 40 * "-"
         )
         print(msg)
@@ -682,12 +723,12 @@ def pymake_compile(
     ilink = 0
 
     # set optimization levels
-    optlevel = get_optlevel(
+    optlevel = _get_optlevel(
         target, fc, cc, debug, fflags, cflags, verbose=verbose
     )
 
     # get fortran and c compiler switches
-    tfflags = get_fortran_flags(
+    tfflags = _get_fortran_flags(
         target,
         fc,
         fflags,
@@ -696,7 +737,7 @@ def pymake_compile(
         sharedobject=sharedobject,
         verbose=verbose,
     )
-    tcflags = get_c_flags(
+    tcflags = _get_c_flags(
         target,
         cc,
         cflags,
@@ -707,7 +748,7 @@ def pymake_compile(
     )
 
     # get linker flags and syslibs
-    lc, tlflags = get_linker_flags(
+    lc, tlflags = _get_linker_flags(
         target,
         fc,
         cc,
@@ -757,7 +798,7 @@ def pymake_compile(
 
         # Create target using a batch file on Windows
         try:
-            create_win_batch(
+            _create_win_batch(
                 batchfile,
                 fc,
                 cc,
@@ -784,7 +825,7 @@ def pymake_compile(
     else:
         if sharedobject:
             program_path, ext = os.path.splitext(target)
-            if get_osname() == "win32":
+            if _get_osname() == "win32":
                 if ext.lower() != ".dll":
                     target = program_path + ".dll"
             else:
@@ -850,7 +891,7 @@ def pymake_compile(
             # exists. No need to compile if object file is newer.
             compilefile = True
             if expedite:
-                if not check_out_of_date(srcfile, objfile):
+                if not _check_out_of_date(srcfile, objfile):
                     compilefile = False
 
             if compilefile:
@@ -893,17 +934,17 @@ def pymake_compile(
                 print(msg)
 
             # write the command to the terminal
-            process_Popen_command(False, cmdlist)
+            _process_Popen_command(False, cmdlist)
 
             # run the command using Popen
-            proc = process_Popen_initialize(cmdlist, intelwin)
+            proc = _process_Popen_initialize(cmdlist, intelwin)
 
             # write batch file execution to terminal
             if intelwin:
-                process_Popen_stdout(proc)
+                _process_Popen_stdout(proc)
             # establish communicator to report errors
             else:
-                process_Popen_communicate(proc)
+                _process_Popen_communicate(proc)
 
             # evaluate return code
             returncode = proc.returncode
@@ -919,7 +960,7 @@ def pymake_compile(
     return returncode
 
 
-def create_win_batch(
+def _create_win_batch(
     batchfile,
     fc,
     cc,
@@ -1051,7 +1092,7 @@ def create_win_batch(
     return
 
 
-def create_makefile(
+def _create_makefile(
     target,
     srcdir,
     srcdir2,
@@ -1114,8 +1155,8 @@ def create_makefile(
     objext = ".o"
 
     # get list of unique fortran and c/c++ file extensions
-    fext = get_fortran_files(srcfiles, extensions=True)
-    cext = get_c_files(srcfiles, extensions=True)
+    fext = _get_fortran_files(srcfiles, extensions=True)
+    cext = _get_c_files(srcfiles, extensions=True)
 
     # set exe_name
     exe_name = os.path.splitext(os.path.basename(target))[0]
@@ -1153,7 +1194,7 @@ def create_makefile(
         dirs = dirs + dirs2
 
     # source files in extrafiles
-    files = get_extra_exclude_files(extrafiles)
+    files = _get_extra_exclude_files(extrafiles)
     if files is not None:
         for ef in files:
             fdir = os.path.dirname(ef)
@@ -1327,7 +1368,7 @@ def create_makefile(
         f.write(line)
 
     # optimization level
-    optlevel = get_optlevel(
+    optlevel = _get_optlevel(
         target, fc, cc, debug, fflags, cflags, verbose=verbose
     )
     line = "# set the optimization level (OPTLEVEL) if not defined\n"
@@ -1346,7 +1387,7 @@ def create_makefile(
         line = "# set the fortran flags\n"
         line += "ifeq ($(detected_OS), Windows)\n"
         line += "\tifeq ($(FC), gfortran)\n"
-        tfflags = get_fortran_flags(
+        tfflags = _get_fortran_flags(
             target,
             "gfortran",
             fflags,
@@ -1362,7 +1403,7 @@ def create_makefile(
         line += "\tendif\n"
         line += "else\n"
         line += "\tifeq ($(FC), gfortran)\n"
-        tfflags = get_fortran_flags(
+        tfflags = _get_fortran_flags(
             target,
             "gfortran",
             fflags,
@@ -1377,7 +1418,7 @@ def create_makefile(
         line += "\t\tFFLAGS ?= {}\n".format(" ".join(tfflags))
         line += "\tendif\n"
         line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
-        tfflags = get_fortran_flags(
+        tfflags = _get_fortran_flags(
             target,
             "ifort",
             fflags,
@@ -1400,7 +1441,7 @@ def create_makefile(
         line = "# set the c/c++ flags\n"
         line += "ifeq ($(detected_OS), Windows)\n"
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
-        tcflags = get_c_flags(
+        tcflags = _get_c_flags(
             target,
             "gcc",
             fflags,
@@ -1412,7 +1453,7 @@ def create_makefile(
         line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
         line += "\tendif\n"
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
-        tcflags = get_c_flags(
+        tcflags = _get_c_flags(
             target,
             "clang",
             fflags,
@@ -1425,7 +1466,7 @@ def create_makefile(
         line += "\tendif\n"
         line += "else\n"
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
-        tcflags = get_c_flags(
+        tcflags = _get_c_flags(
             target,
             "gcc",
             fflags,
@@ -1437,7 +1478,7 @@ def create_makefile(
         line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
         line += "\tendif\n"
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
-        tcflags = get_c_flags(
+        tcflags = _get_c_flags(
             target,
             "clang",
             fflags,
@@ -1449,7 +1490,7 @@ def create_makefile(
         line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
         line += "\tendif\n"
         line += "\tifeq ($(CC), $(filter $(CC), icc mpiicc icpc))\n"
-        tcflags = get_c_flags(
+        tcflags = _get_c_flags(
             target,
             "icc",
             fflags,
@@ -1469,7 +1510,7 @@ def create_makefile(
     line += "ifeq ($(detected_OS), Windows)\n"
     # c/c++ compiler used for linking
     if fext is None:
-        _, tsyslibs = get_linker_flags(
+        _, tsyslibs = _get_linker_flags(
             target,
             None,
             "gcc",
@@ -1481,7 +1522,7 @@ def create_makefile(
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
         line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
         line += "\tendif\n"
-        _, tsyslibs = get_linker_flags(
+        _, tsyslibs = _get_linker_flags(
             target,
             None,
             "clang",
@@ -1495,7 +1536,7 @@ def create_makefile(
         line += "\tendif\n"
     # fortran compiler used for linking
     else:
-        _, tsyslibs = get_linker_flags(
+        _, tsyslibs = _get_linker_flags(
             target,
             "gfortran",
             "gcc",
@@ -1511,7 +1552,7 @@ def create_makefile(
     line += "else\n"
     # c/c++ compiler used for linking
     if fext is None:
-        _, tsyslibs = get_linker_flags(
+        _, tsyslibs = _get_linker_flags(
             target,
             None,
             "gcc",
@@ -1523,7 +1564,7 @@ def create_makefile(
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
         line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
         line += "\tendif\n"
-        _, tsyslibs = get_linker_flags(
+        _, tsyslibs = _get_linker_flags(
             target,
             None,
             "clang",
@@ -1539,7 +1580,7 @@ def create_makefile(
     else:
         # gfortran compiler
         line += "\tifeq ($(FC), gfortran)\n"
-        _, tsyslibs = get_linker_flags(
+        _, tsyslibs = _get_linker_flags(
             target,
             "gfortran",
             "gcc",
@@ -1552,7 +1593,7 @@ def create_makefile(
         line += "\tendif\n"
         # ifort compiler
         line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
-        _, tsyslibs = get_linker_flags(
+        _, tsyslibs = _get_linker_flags(
             target,
             "ifort",
             "icc",

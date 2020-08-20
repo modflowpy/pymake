@@ -20,7 +20,7 @@ from pymake import __version__
 
 
 # -- Create the pymake rst files ---------------------------------------------
-args = ("sphinx-apidoc", "-o", "source/", "../pymake/")
+args = ("sphinx-apidoc", "-e", "-o", "source/", "../pymake/")
 proc = Popen(args, stdout=PIPE, stderr=PIPE, cwd=".")
 stdout, stderr = proc.communicate()
 if stdout:
@@ -31,8 +31,8 @@ if stderr:
 # -- Project information -----------------------------------------------------
 
 project = "pymake"
-copyright = u"2020, Christian D. Langevin"
-author = u"Christian D. Langevin"
+copyright = u"2020, Joseph D. Hughes"
+author = u"Joseph D. Hughes"
 
 # The version.
 version = __version__
@@ -162,7 +162,7 @@ html_use_smartypants = True
 html_show_sphinx = True
 
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
-html_show_copyright = True
+html_show_copyright = False
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "pymakedoc"

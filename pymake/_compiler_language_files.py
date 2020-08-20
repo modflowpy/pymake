@@ -1,9 +1,10 @@
+"""Private functions for processing c/c++ and fortran files
+"""
 import os
+from ._dag import _order_source_files, _order_c_source_files
 
-from .dag import order_source_files, order_c_source_files
 
-
-def get_fortran_files(srcfiles, extensions=False):
+def _get_fortran_files(srcfiles, extensions=False):
     """Return a list of fortran files or unique fortran file extensions.
 
     Parameters
@@ -35,7 +36,7 @@ def get_fortran_files(srcfiles, extensions=False):
     return files_out
 
 
-def get_c_files(srcfiles, extensions=False):
+def _get_c_files(srcfiles, extensions=False):
     """Return a list of c and cpp files or unique c and cpp file extensions.
 
     Parameters
@@ -66,7 +67,7 @@ def get_c_files(srcfiles, extensions=False):
     return files_out
 
 
-def get_iso_c(srcfiles):
+def _get_iso_c(srcfiles):
     """Determine if iso_c_binding is used so that the correct c/c++ compiler
     flags can be set. All fortran files are scanned.
 
@@ -116,7 +117,7 @@ def get_iso_c(srcfiles):
     return iso_c
 
 
-def get_srcfiles(srcdir, include_subdir):
+def _get_srcfiles(srcdir, include_subdir):
     """Get a list of source files in source file directory srcdir
 
     Parameters
@@ -156,7 +157,7 @@ def get_srcfiles(srcdir, include_subdir):
     return srcfiles
 
 
-def get_ordered_srcfiles(all_srcfiles):
+def _get_ordered_srcfiles(all_srcfiles):
     """Create a list of ordered source files (both fortran and c). Ordering is
     build using a directed acyclic graph to determine module dependencies.
 
@@ -184,12 +185,12 @@ def get_ordered_srcfiles(all_srcfiles):
         elif file.lower().endswith(".c") or file.lower().endswith(".cpp"):
             cfiles.append(file)
 
-    # order the source files using the directed acyclic graph in dag.py
+    # order the source files using the directed acyclic graph in _dag.py
     ordered_srcfiles = []
     if ffiles:
-        ordered_srcfiles += order_source_files(ffiles)
+        ordered_srcfiles += _order_source_files(ffiles)
 
     if cfiles:
-        ordered_srcfiles += order_c_source_files(cfiles)
+        ordered_srcfiles += _order_c_source_files(cfiles)
 
     return ordered_srcfiles

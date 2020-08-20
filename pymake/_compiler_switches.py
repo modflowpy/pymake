@@ -1,15 +1,22 @@
+"""Private functions for setting c/c++ and fortran compiler flags and
+appropriate linker flags for defined targets.
+"""
 import os
 import sys
 
-from .Popen_wrapper import (
-    process_Popen_initialize,
-    process_Popen_command,
-    process_Popen_communicate,
+from ._Popen_wrapper import (
+    _process_Popen_initialize,
+    _process_Popen_command,
+    _process_Popen_communicate,
 )
-from .compiler_language_files import get_fortran_files, get_c_files, get_iso_c
+from ._compiler_language_files import (
+    _get_fortran_files,
+    _get_c_files,
+    _get_iso_c,
+)
 
 
-def check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
+def _check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
     """Determine if a specified GNU compiler switch exists. Not all switches
     will be detected, for example '-O2'  adn '-fbounds-check=on'.
 
@@ -35,12 +42,12 @@ def check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
 
     # determine the gfortran command line flags available
     cmdlist = [compiler, "--help", "-v"]
-    proc = process_Popen_initialize(cmdlist)
+    proc = _process_Popen_initialize(cmdlist)
     if verbose:
-        process_Popen_command(False, cmdlist)
+        _process_Popen_command(False, cmdlist)
 
     # establish communicator
-    _, stdout = process_Popen_communicate(proc, verbose=verbose)
+    _, stdout = _process_Popen_communicate(proc, verbose=verbose)
 
     # determine if flag exists
     avail = switch in stdout
@@ -53,7 +60,7 @@ def check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
     return avail
 
 
-def get_osname():
+def _get_osname():
     """Return the lower case OS platform name.
 
     Parameters
@@ -71,7 +78,7 @@ def get_osname():
     return osname
 
 
-def get_base_app_name(value):
+def _get_base_app_name(value):
     """Remove path and extension from an application name.
 
     Parameters
@@ -96,7 +103,7 @@ def get_base_app_name(value):
     return value
 
 
-def get_prepend(compiler, osname):
+def _get_prepend(compiler, osname):
     """Return the appropriate prepend for a compiler switch for a OS.
 
     Parameters
@@ -122,7 +129,7 @@ def get_prepend(compiler, osname):
     return prepend
 
 
-def get_optlevel(
+def _get_optlevel(
     target, fc, cc, debug, fflags, cflags, osname=None, verbose=False
 ):
     """Return a compiler optimization switch.
@@ -154,17 +161,17 @@ def get_optlevel(
 
     """
     # remove target extension, if necessary
-    target = get_base_app_name(target)
+    target = _get_base_app_name(target)
 
     # get lower case OS string
     if osname is None:
-        osname = get_osname()
+        osname = _get_osname()
 
     # remove .exe extension from compiler if necessary
     if fc is not None:
-        fc = get_base_app_name(fc)
+        fc = _get_base_app_name(fc)
     if cc is not None:
-        cc = get_base_app_name(cc)
+        cc = _get_base_app_name(cc)
 
     compiler = None
     if fc is not None:
@@ -173,7 +180,7 @@ def get_optlevel(
         compiler = cc
 
     # get - or / to prepend for compiler switches
-    prepend = get_prepend(compiler, osname)
+    prepend = _get_prepend(compiler, osname)
 
     # set basic optimization level
     if debug:
@@ -200,9 +207,9 @@ def get_optlevel(
 
     # reset optlevel with specified flags from setters
     if compiler == fc:
-        tval = set_fflags(target, fc, argv=False, osname=osname)
+        tval = _set_fflags(target, fc, argv=False, osname=osname)
     else:
-        tval = set_cflags(target, cc, argv=False, osname=osname)
+        tval = _set_cflags(target, cc, argv=False, osname=osname)
 
     # look for for optimization levels in compiler flags from setters
     if tval is not None:
@@ -218,7 +225,7 @@ def get_optlevel(
     return optlevel
 
 
-def get_fortran_flags(
+def _get_fortran_flags(
     target,
     fc,
     fflags,
@@ -262,17 +269,17 @@ def get_fortran_flags(
     # define fortran flags
     if fc is not None:
         # remove .exe extension of necessary
-        fc = get_base_app_name(fc)
+        fc = _get_base_app_name(fc)
 
         # remove target .exe extension, if necessary
-        target = get_base_app_name(target)
+        target = _get_base_app_name(target)
 
         # get lower case OS string
         if osname is None:
-            osname = get_osname()
+            osname = _get_osname()
 
         # get - or / to prepend for compiler switches
-        prepend = get_prepend(fc, osname)
+        prepend = _get_prepend(fc, osname)
 
         # generate standard fortran flags
         if fc == "gfortran":
@@ -287,12 +294,12 @@ def get_fortran_flags(
             flags.append("fbacktrace")
             if debug:
                 flags += ["g", "fcheck=all", "fbounds-check", "Wall"]
-                if check_gnu_switch_available("-ffpe-trap", verbose=verbose):
+                if _check_gnu_switch_available("-ffpe-trap", verbose=verbose):
                     flags.append("ffpe-trap=overflow,zero,invalid,denormal")
             else:
-                if check_gnu_switch_available("-ffpe-summary"):
+                if _check_gnu_switch_available("-ffpe-summary"):
                     flags.append("ffpe-summary=overflow")
-                if check_gnu_switch_available("-ffpe-trap"):
+                if _check_gnu_switch_available("-ffpe-trap"):
                     flags.append("ffpe-trap=overflow,zero,invalid")
             if double:
                 flags += ["fdefault-real-8", "fdefault-double-8"]
@@ -327,7 +334,7 @@ def get_fortran_flags(
                     flags.append(flag[1:])
 
         # add target specific fortran switches
-        tlist = set_fflags(target, fc=fc, argv=False, osname=osname)
+        tlist = _set_fflags(target, fc=fc, argv=False, osname=osname)
         if tlist is not None:
             for flag in tlist:
                 if flag[1] != "O":
@@ -341,7 +348,7 @@ def get_fortran_flags(
     return flags
 
 
-def get_c_flags(
+def _get_c_flags(
     target,
     cc,
     cflags,
@@ -384,17 +391,17 @@ def get_c_flags(
     # define c flags
     if cc is not None:
         # remove .exe extension of necessary
-        cc = get_base_app_name(cc)
+        cc = _get_base_app_name(cc)
 
         # remove target .exe extension, if necessary
-        target = get_base_app_name(target)
+        target = _get_base_app_name(target)
 
         # get lower case OS string
         if osname is None:
-            osname = get_osname()
+            osname = _get_osname()
 
         # get - or / to prepend for compiler switches
-        prepend = get_prepend(cc, osname)
+        prepend = _get_prepend(cc, osname)
 
         # generate c flags
         if cc in ["gcc", "g++"]:
@@ -408,7 +415,7 @@ def get_c_flags(
                     flags.remove("fPIC")
             if debug:
                 flags += ["g"]
-                if check_gnu_switch_available(
+                if _check_gnu_switch_available(
                     "-Wall", compiler="gcc", verbose=verbose
                 ):
                     flags.append("Wall")
@@ -420,7 +427,7 @@ def get_c_flags(
                 raise NotImplementedError(msg)
             if debug:
                 flags += ["g"]
-                if check_gnu_switch_available(
+                if _check_gnu_switch_available(
                     "-Wall", compiler="clang", verbose=verbose
                 ):
                     flags.append("Wall")
@@ -451,15 +458,15 @@ def get_c_flags(
         # any fortran files. -D_UF defines UNIX naming conventions for
         # mixed language compilation.
         if srcfiles is not None:
-            ffiles = get_fortran_files(srcfiles)
-            cfiles = get_c_files(srcfiles)
+            ffiles = _get_fortran_files(srcfiles)
+            cfiles = _get_c_files(srcfiles)
             if ffiles is not None:
                 iso_c_check = True
                 if osname == "win32":
                     if cc in ["icl", "cl"]:
                         iso_c_check = False
                 if iso_c_check:
-                    use_iso_c = get_iso_c(ffiles)
+                    use_iso_c = _get_iso_c(ffiles)
                     if not use_iso_c and cfiles is not None:
                         flags.append("D_UF")
 
@@ -471,7 +478,7 @@ def get_c_flags(
                     flags.append(flag[1:])
 
         # add target specific c/c++ switches
-        tlist = set_cflags(target, cc=cc, argv=False, osname=osname)
+        tlist = _set_cflags(target, cc=cc, argv=False, osname=osname)
         if tlist is not None:
             for flag in tlist:
                 if flag[1] != "O":
@@ -485,7 +492,7 @@ def get_c_flags(
     return flags
 
 
-def get_linker_flags(
+def _get_linker_flags(
     target,
     fc,
     cc,
@@ -529,14 +536,14 @@ def get_linker_flags(
 
     """
     # get list of unique fortran and c/c++ file extensions
-    fext = get_fortran_files(srcfiles, extensions=True)
-    cext = get_c_files(srcfiles, extensions=True)
+    fext = _get_fortran_files(srcfiles, extensions=True)
+    cext = _get_c_files(srcfiles, extensions=True)
 
     # remove .exe extension of necessary
     if fc is not None:
-        fc = get_base_app_name(fc)
+        fc = _get_base_app_name(fc)
     if cc is not None:
-        cc = get_base_app_name(cc)
+        cc = _get_base_app_name(cc)
 
     # set linker compiler
     compiler = None
@@ -546,14 +553,14 @@ def get_linker_flags(
         compiler = cc
 
     # remove target .exe extension, if necessary
-    target = get_base_app_name(target)
+    target = _get_base_app_name(target)
 
     # get lower case OS string
     if osname is None:
-        osname = get_osname()
+        osname = _get_osname()
 
     # get - or / to prepend for compiler switches
-    prepend = get_prepend(compiler, osname)
+    prepend = _get_prepend(compiler, osname)
 
     # set outgoing syslibs
     syslibs_out = []
@@ -622,7 +629,7 @@ def get_linker_flags(
             syslibs_out.append(switch[1:])
 
     # add target specific linker (syslib) switches
-    tlist = set_syslibs(target, fc=fc, cc=cc, argv=False, osname=osname)
+    tlist = _set_syslibs(target, fc=fc, cc=cc, argv=False, osname=osname)
     if len(tlist) > 0:
         for switch in tlist:
             if switch[1:] not in syslibs_out:
@@ -635,7 +642,7 @@ def get_linker_flags(
     return compiler, syslibs_out
 
 
-def set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
+def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
     """Set appropriate fortran compiler flags based on target.
 
     Parameters
@@ -665,13 +672,13 @@ def set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
         fflags = []
         # get lower case OS string
         if osname is None:
-            osname = get_osname()
+            osname = _get_osname()
 
         # remove target .exe extension, if necessary
-        target = get_base_app_name(target)
+        target = _get_base_app_name(target)
 
         # remove .exe extension if necessary
-        fc = get_base_app_name(fc)
+        fc = _get_base_app_name(fc)
 
         if target == "mp7":
             if fc == "gfortran":
@@ -715,7 +722,7 @@ def set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
     return fflags
 
 
-def set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
+def _set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
     """Set appropriate c compiler flags based on target.
 
     Parameters
@@ -745,13 +752,13 @@ def set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
         cflags = []
         # get lower case OS string
         if osname is None:
-            osname = get_osname()
+            osname = _get_osname()
 
         # remove target .exe extension, if necessary
-        target = get_base_app_name(target)
+        target = _get_base_app_name(target)
 
         # remove .exe extension of necessary
-        cc = get_base_app_name(cc)
+        cc = _get_base_app_name(cc)
 
         if target == "triangle":
             if osname in ["linux", "darwin"]:
@@ -793,7 +800,7 @@ def set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
     return cflags
 
 
-def set_syslibs(
+def _set_syslibs(
     target, fc="gfortran", cc="gcc", argv=True, osname=None, verbose=False
 ):
     """Set appropriate linker flags (syslib) based on target.
@@ -823,16 +830,16 @@ def set_syslibs(
     """
     # get lower case OS string
     if osname is None:
-        osname = get_osname()
+        osname = _get_osname()
 
     # remove target .exe extension, if necessary
-    target = get_base_app_name(target)
+    target = _get_base_app_name(target)
 
     # remove .exe extension of necessary
     if fc is not None:
-        fc = get_base_app_name(fc)
+        fc = _get_base_app_name(fc)
     if cc is not None:
-        cc = get_base_app_name(cc)
+        cc = _get_base_app_name(cc)
 
     # initialize syslibs
     syslibs = []
@@ -918,7 +925,7 @@ def _get_os_macro(osname=None):
     }
     # get lower case OS string
     if osname is None:
-        osname = get_osname()
+        osname = _get_osname()
     if osname in os_macro_dict.keys():
         os_macro = os_macro_dict[osname]
     else:

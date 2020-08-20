@@ -127,7 +127,7 @@ When using the pymake object (`Pymake()`) only the positional arguments
 ```python
 import pymake
 pm = pymake.Pymake()
-pm.srcdir = '../mfnwt/src'
+pm.srcdir = '../src'
 pm.target = 'mf6'
 pm.include_subdirs = True
 pm.build()

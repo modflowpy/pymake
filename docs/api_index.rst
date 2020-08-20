@@ -6,7 +6,6 @@ created from the documentation strings in original Python code. In the
 left-hand menu you will find the different categories of the API documentation.
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 4
 
-    ./source/pymake
     ./source/modules

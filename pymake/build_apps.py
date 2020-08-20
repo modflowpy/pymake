@@ -1,3 +1,26 @@
+"""Function to build MODFLOW-based models and other utility software based on
+targets defined in the usgsprograms database (usgsprograms.txt). The
+usgsprograms database can be queried using functions in the usgsprograms
+module. An example of using :code:`build_apps()` to build MODFLOW 6 is:
+
+.. code-block:: python
+
+    build_apps(["mf6",])
+
+which will download the latest MODFLOW 6 software release, compile the code,
+and delete the downloaded files after successfully building the application.
+Multiple applications can be built by adding additional targets to the tuple
+in :code:`build_apps()`. For example, MODFLOW 6 and MODFLOW-2005 could be
+built by specifying:
+
+.. code-block:: python
+
+    build_apps(["mf6","mf2005"]))
+
+Applications are built in the order they are listed in the list. All valid
+USGS applications are built if no list is passed to the function.
+
+"""
 import os
 import sys
 from datetime import datetime
@@ -40,6 +63,7 @@ def build_apps(
     Returns
     -------
     returncode : int
+        integer value indicating successful completion (0) or failure (>0)
 
     """
 

@@ -11,7 +11,7 @@ from .download import (
     get_repo_assets,
     zip_all,
 )
-from .visualize import make_plots
+from .visualize import make_plots, to_pydot
 from .autotest import (
     setup,
     setup_comparison,
@@ -30,4 +30,8 @@ from .autotest import (
     setup_mf6_comparison,
     get_mf6_comparison,
     get_mf6_files,
+    get_mf6_blockdata,
+    get_mf6_ftypes,
+    get_mf6_mshape,
+    get_mf6_nper,
 )

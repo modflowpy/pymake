@@ -1,9 +1,60 @@
+"""Autotest functionality for MODFLOW-based models. Includes functionality for
+copying existing model and comparision files, comparing results, and tearing
+down test and comparison models. A typical example of using the autotest
+functionality for MODFLOW-2005 and comparing the MODFLOW-2005 results to
+MODFLOW-2000 results is:
+
+.. code-block:: python
+
+        import pymake
+
+        # Setup
+        testpth = "../test/mytest"
+        nam1 = "model1.nam"
+        pymake.setup(nam1, testpth)
+
+        # run test models
+        success, buff = flopy.run_model(
+                "mf2005", nam1, model_ws=testpth, silent=True
+            )
+        if success:
+            testpth_reg = os.path.join(testpth, "mf2000")
+            nam2 = "model2.name"
+            pymake.setup(nam2, testpth_reg)
+            success_reg, buff = flopy.run_model(
+                    "mf2000", nam2, model_ws=testpth_reg, silent=True
+                )
+
+        # compare results
+        if success and success_reg:
+            fpth = os.path.split(os.path.join(testpth, nam1))[0]
+            outfile1 = os.path.join(fpth, "bud.cmp")
+            fpth = os.path.split(os.path.join(testpth, nam2))[0]
+            outfile2 = os.path.join(fpth, "hds.cmp")
+            success_reg = pymake.compare(
+                os.path.join(testpth, nam1),
+                os.path.join(testpth_reg, nam2),
+                max_cumpd=0.01,
+                max_incpd=0.01,
+                htol=0.001,
+                outfile1=outfile1,
+                outfile2=outfile2,
+            )
+
+        # Clean things up
+        if success_reg:
+            pymake.teardown(testpth)
+
+Note: autotest functionality will likely be removed from pymake in the future
+to a dedicated GitHub repository.
+
+"""
 import os
 import shutil
 import textwrap
 import numpy as np
 
-ignore_ext = [
+ignore_ext = (
     ".hds",
     ".hed",
     ".bud",
@@ -17,7 +68,7 @@ ignore_ext = [
     ".gwv",
     ".mv",
     ".out",
-]
+)
 
 
 def setup(namefile, dst, remove_existing=True, extrafiles=None):
@@ -26,10 +77,14 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
     Parameters
     ----------
     namefile : str
-        path to a
-    dst
-    remove_existing
-    extrafiles
+        MODFLOW-based model name file.
+    dst : str
+        destination path for comparison model or file(s)
+    remove_existing : bool
+        boolean indicating if an existing comparision model or file(s) should
+        be replaced (default is True)
+    extrafiles : str or list of str
+        list of extra files to include in the comparision
 
     Returns
     -------
@@ -107,6 +162,24 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
 
 
 def setup_comparison(namefile, dst, remove_existing=True):
+    """Setup a comparison model or comparision file(s) for a MODFLOW-based
+    model.
+
+    Parameters
+    ----------
+    namefile : str
+        MODFLOW-based model name file.
+    dst : str
+        destination path for comparison model or file(s)
+    remove_existing : bool
+        boolean indicating if an existing comparision model or file(s) should
+        be replaced (default is True)
+
+
+    Returns
+    -------
+
+    """
     # Construct src pth from namefile
     src = os.path.dirname(namefile)
     action = None
@@ -409,7 +482,7 @@ def setup_mf6(
     ----------
     src : src
         directory path with original MODFLOW 6 input files
-    dst :
+    dst : str
         directory path that original MODFLOW 6 input files will be copied to
     mfnamefile : str
         optional MODFLOW 6 simulation name file (default is mfsim.nam)
@@ -500,7 +573,7 @@ def get_mf6_comparison(src):
     """
     action = None
     # Possible comparison - the order matters
-    optcomp = [
+    optcomp = (
         "compare",
         ".cmp",
         "mf2005",
@@ -515,7 +588,7 @@ def get_mf6_comparison(src):
         "libmf6.cmp",
         "mf6",
         "mf6.cmp",
-    ]
+    )
     # Construct src pth from namefile
     action = None
     for root, dirs, files in os.walk(src):
@@ -534,7 +607,7 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
     ----------
     src : src
         directory path with original MODFLOW 6 input files
-    dst :
+    dst : str
         directory path that original MODFLOW 6 input files will be copied to
     remove_existing : bool
         boolean indicating if existing file in dst should be removed (default
@@ -951,16 +1024,33 @@ def compare_budget(
 
     Parameters
     ----------
-    namefile1
-    namefile2
-    max_cumpd
-    max_incpd
-    outfile
-    files1
-    files2
+    namefile1 : str
+        namefile path for base model
+    namefile2 : str
+        namefile path for comparison model
+    max_cumpd : float
+        maximum percent discrepancy allowed for cumulative budget terms
+        (default is 0.01)
+    max_incpd : float
+        maximum percent discrepancy allowed for incremental budget terms
+        (default is 0.01)
+    outfile : str
+        budget comparison output file name. If outfile is None, no
+        comparison output is saved. (default is None)
+    files1 : str
+        base model output file. If files1 is not None, results
+        will be extracted from files1 and namefile1 will not be used.
+        (default is None)
+    files2 : str
+        comparison model output file. If files2 is not None, results
+        will be extracted from files2 and namefile2 will not be used.
+        (default is None)
 
     Returns
     -------
+    success : bool
+        boolean indicating if the difference between budgets are less
+        than max_cumpd and max_incpd
 
     """
     try:
@@ -1140,16 +1230,33 @@ def compare_swrbudget(
 
     Parameters
     ----------
-    namefile1
-    namefile2
-    max_cumpd
-    max_incpd
-    outfile
-    files1
-    files2
+    namefile1 : str
+        namefile path for base model
+    namefile2 : str
+        namefile path for comparison model
+    max_cumpd : float
+        maximum percent discrepancy allowed for cumulative budget terms
+        (default is 0.01)
+    max_incpd : float
+        maximum percent discrepancy allowed for incremental budget terms
+        (default is 0.01)
+    outfile : str
+        budget comparison output file name. If outfile is None, no
+        comparison output is saved. (default is None)
+    files1 : str
+        base model output file. If files1 is not None, results
+        will be extracted from files1 and namefile1 will not be used.
+        (default is None)
+    files2 : str
+        comparison model output file. If files2 is not None, results
+        will be extracted from files2 and namefile2 will not be used.
+        (default is None)
 
     Returns
     -------
+    success : bool
+        boolean indicating if the difference between budgets are less
+        than max_cumpd and max_incpd
 
     """
     try:
@@ -1328,23 +1435,48 @@ def compare_heads(
 
     Parameters
     ----------
-    namefile1
-    namefile2
-    precision
-    text
-    text2
-    htol
-    outfile
-    files1
-    files2
-    difftol
-    verbose
-    exfile
-    exarr
-    maxerr
+    namefile1 : str
+        namefile path for base model
+    namefile2 : str
+        namefile path for comparison model
+    precision : str
+        precision for binary head file ("auto", "single", or "double")
+        default is "auto"
+    htol : float
+        maximum allowed head difference (default is 0.001)
+    outfile : str
+        head comparison output file name. If outfile is None, no
+        comparison output is saved. (default is None)
+    files1 : str
+        base model output file. If files1 is not None, results
+        will be extracted from files1 and namefile1 will not be used.
+        (default is None)
+    files2 : str
+        comparison model output file. If files2 is not None, results
+        will be extracted from files2 and namefile2 will not be used.
+        (default is None)
+    difftol : bool
+        boolean determining if the absolute value of the head
+        difference greater than htol should be evaluated (default is False)
+    verbose : bool
+        boolean indicating if verbose output should be written to the
+        terminal (default is False)
+    exfile : str
+        path to a file with exclusion array data. Head differences will not
+        be evaluated where exclusion array values are greater than zero.
+        (default is None)
+    exarr : numpy.ndarry
+        exclusion array. Head differences will not be evaluated where
+        exclusion array values are greater than zero. (default is None).
+    maxerr : int
+        maximum number of head difference greater than htol that should be
+        reported. If maxerr is None, all head difference greater than htol
+        will be reported. (default is None)
 
     Returns
     -------
+    success : bool
+        boolean indicating if the head differences are less than htol.
 
     """
     try:
@@ -1612,9 +1744,9 @@ def compare_heads(
             h2[iexd] = 0.0
 
         if difftol:
-            diffmax, indices = calculate_difftol(h1, h2, htol)
+            diffmax, indices = _calculate_difftol(h1, h2, htol)
         else:
-            diffmax, indices = calculate_diffmax(h1, h2)
+            diffmax, indices = _calculate_diffmax(h1, h2)
 
         if outfile is not None:
             if idx < 1:
@@ -1708,19 +1840,43 @@ def compare_concs(
     difftol=False,
     verbose=False,
 ):
-    """Compare the mt3dms concentration results from two simulations.
+    """Compare the mt3dms and mt3dusgs concentration results from two
+    simulations.
 
     Parameters
     ----------
-    namefile1
-    namefile2
-    precision
-    ctol
-    outfile
-    files1
-    files2
-    difftol
-    verbose
+    namefile1 : str
+        namefile path for base model
+    namefile2 : str
+        namefile path for comparison model
+    precision : str
+        precision for binary head file ("auto", "single", or "double")
+        default is "auto"
+    ctol : float
+        maximum allowed concentration difference (default is 0.001)
+    outfile : str
+        concentration comparison output file name. If outfile is None, no
+        comparison output is saved. (default is None)
+    files1 : str
+        base model output file. If files1 is not None, results
+        will be extracted from files1 and namefile1 will not be used.
+        (default is None)
+    files2 : str
+        comparison model output file. If files2 is not None, results
+        will be extracted from files2 and namefile2 will not be used.
+        (default is None)
+    difftol : bool
+        boolean determining if the absolute value of the concentration
+        difference greater than ctol should be evaluated (default is False)
+    verbose : bool
+        boolean indicating if verbose output should be written to the
+        terminal (default is False)
+
+    Returns
+    -------
+    success : bool
+        boolean indicating if the concentration differences are less than
+        ctol.
 
     Returns
     -------
@@ -1835,9 +1991,9 @@ def compare_concs(
             u2 = uobj2.get_data(totim=time)
 
             if difftol:
-                diffmax, indices = calculate_difftol(u1, u2, ctol)
+                diffmax, indices = _calculate_difftol(u1, u2, ctol)
             else:
-                diffmax, indices = calculate_diffmax(u1, u2)
+                diffmax, indices = _calculate_diffmax(u1, u2)
 
             if outfile is not None:
                 if idx < 1:
@@ -1920,17 +2076,37 @@ def compare_stages(
 
     Parameters
     ----------
-    namefile1
-    namefile2
-    files1
-    files2
-    htol
-    outfile
-    difftol
-    verbose
+    namefile1 : str
+        namefile path for base model
+    namefile2 : str
+        namefile path for comparison model
+    precision : str
+        precision for binary head file ("auto", "single", or "double")
+        default is "auto"
+    htol : float
+        maximum allowed stage difference (default is 0.001)
+    outfile : str
+        head comparison output file name. If outfile is None, no
+        comparison output is saved. (default is None)
+    files1 : str
+        base model output file. If files1 is not None, results
+        will be extracted from files1 and namefile1 will not be used.
+        (default is None)
+    files2 : str
+        comparison model output file. If files2 is not None, results
+        will be extracted from files2 and namefile2 will not be used.
+        (default is None)
+    difftol : bool
+        boolean determining if the absolute value of the stage
+        difference greater than htol should be evaluated (default is False)
+    verbose : bool
+        boolean indicating if verbose output should be written to the
+        terminal (default is False)
 
     Returns
     -------
+    success : bool
+        boolean indicating if the stage differences are less than htol.
 
     """
     try:
@@ -2030,9 +2206,9 @@ def compare_stages(
         s2 = s2["stage"]
 
         if difftol:
-            diffmax, indices = calculate_difftol(s1, s2, htol)
+            diffmax, indices = _calculate_difftol(s1, s2, htol)
         else:
-            diffmax, indices = calculate_diffmax(s1, s2)
+            diffmax, indices = _calculate_diffmax(s1, s2)
 
         if outfile is not None:
             if idx < 1:
@@ -2093,16 +2269,23 @@ def compare_stages(
     return success
 
 
-def calculate_diffmax(v1, v2):
+def _calculate_diffmax(v1, v2):
     """Calculate the maximum difference between two vectors.
 
     Parameters
     ----------
-    v1
-    v2
+    v1 : numpy.ndarray
+        array of base model results
+    v2 : numpy.ndarray
+        array of comparison model results
 
     Returns
     -------
+    diffmax : float
+        absolute value of the maximum difference in v1 and v2 array values
+    indices : numpy.ndarry
+        indices where the absolute value of the difference is equal to the
+        absolute value of the maximum difference.
 
     """
     if v1.ndim > 1 or v2.ndim > 1:
@@ -2116,21 +2299,28 @@ def calculate_diffmax(v1, v2):
 
     diff = abs(v1 - v2)
     diffmax = diff.max()
-    indices = np.where(diff == diffmax)
-    return diffmax, indices
+    return diffmax, np.where(diff == diffmax)
 
 
-def calculate_difftol(v1, v2, tol):
+def _calculate_difftol(v1, v2, tol):
     """Calculate the difference between two arrays relative to a tolerance.
 
     Parameters
     ----------
-    v1
-    v2
-    tol
+    v1 : numpy.ndarray
+        array of base model results
+    v2 : numpy.ndarray
+        array of comparison model results
+    tol : float
+        tolerance used to evaluate base and comparison models
 
     Returns
     -------
+    diffmax : float
+        absolute value of the maximum difference in v1 and v2 array values
+    indices : numpy.ndarry
+        indices where the absolute value of the difference exceed the
+        specified tolerance.
 
     """
     if v1.ndim > 1 or v2.ndim > 1:
@@ -2143,9 +2333,7 @@ def calculate_difftol(v1, v2, tol):
         raise Exception(err)
 
     diff = abs(v1 - v2)
-    diffmax = diff.max()
-    indices = np.where(diff > tol)
-    return diffmax, indices
+    return diff.max(), np.where(diff > tol)
 
 
 def compare(
@@ -2160,23 +2348,46 @@ def compare(
     files1=None,
     files2=None,
 ):
-    """Compare the results for two standard simulations.
+    """Compare the budget and head results for two MODFLOW-based model
+    simulations.
 
     Parameters
     ----------
-    namefile1
-    namefile2
-    precision
-    max_cumpd
-    max_incpd
-    htol
-    outfile1
-    outfile2
-    files1
-    files2
+    namefile1 : str
+        namefile path for base model
+    namefile2 : str
+        namefile path for comparison model
+    precision : str
+        precision for binary head file ("auto", "single", or "double")
+        default is "auto"
+    max_cumpd : float
+        maximum percent discrepancy allowed for cumulative budget terms
+        (default is 0.01)
+    max_incpd : float
+        maximum percent discrepancy allowed for incremental budget terms
+        (default is 0.01)
+    htol : float
+        maximum allowed head difference (default is 0.001)
+    outfile1 : str
+        budget comparison output file name. If outfile1 is None, no budget
+        comparison output is saved. (default is None)
+    outfile2 : str
+        head comparison output file name. If outfile2 is None, no head
+        comparison output is saved. (default is None)
+    files1 : str
+        base model output file. If files1 is not None, results
+        will be extracted from files1 and namefile1 will not be used.
+        (default is None)
+    files2 : str
+        comparison model output file. If files2 is not None, results
+        will be extracted from files2 and namefile2 will not be used.
+        (default is None)
 
     Returns
     -------
+    success : bool
+        boolean indicating if the budget and head differences are less than
+        max_cumpd, max_incpd, and htol.
 
     """
 

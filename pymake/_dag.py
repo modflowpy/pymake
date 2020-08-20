@@ -1,9 +1,7 @@
-"""Set of classes for building a directed acyclic graph.
-
-Can be used to determine the order of dependencies.  Can be used to
-determine compiling order, for example.  Topological sort pseudocode
-based on: http://en.wikipedia.org/wiki/Topological_sorting
-
+"""Set of classes for building a directed acyclic graph (DAG). A DAG can be
+used to determine the order of dependencies in source code and determine
+compiling order.  Topological sort pseudocode based on:
+https://en.wikipedia.org/wiki/Topological_sorting
 """
 __author__ = "Christian D. Langevin"
 __date__ = "March 20, 2014"
@@ -65,7 +63,7 @@ class DirectedAcyclicGraph(object):
         return sort_list
 
 
-def get_f_nodelist(srcfiles):
+def _get_f_nodelist(srcfiles):
     """Get fortran DAG nodelist.
 
     Parameters
@@ -141,7 +139,7 @@ def get_f_nodelist(srcfiles):
     return nodelist
 
 
-def get_dag(nodelist):
+def _get_dag(nodelist):
     """Create a DAG from the nodelist.
 
     Parameters
@@ -159,7 +157,7 @@ def get_dag(nodelist):
     return dag
 
 
-def order_source_files(srcfiles):
+def _order_source_files(srcfiles):
     """Use a dag and a nodelist to order the fortran source files.
 
     Parameters
@@ -173,8 +171,8 @@ def order_source_files(srcfiles):
         DAG ordered list of source files
 
     """
-    nodelist = get_f_nodelist(srcfiles)
-    dag = get_dag(nodelist)
+    nodelist = _get_f_nodelist(srcfiles)
+    dag = _get_dag(nodelist)
     orderednodes = dag.toposort()
     osrcfiles = []
     for node in orderednodes:
@@ -183,7 +181,7 @@ def order_source_files(srcfiles):
     return osrcfiles
 
 
-def order_c_source_files(srcfiles):
+def _order_c_source_files(srcfiles):
     """Create a ordered list of c/c++ source files.
 
     Parameters
@@ -269,7 +267,7 @@ def order_c_source_files(srcfiles):
             )
             print(msg)
 
-    dag = get_dag(nodelist)
+    dag = _get_dag(nodelist)
     orderednodes = dag.toposort()
     osrcfiles = []
     for node in orderednodes:
