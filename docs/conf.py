@@ -13,9 +13,11 @@
 import os
 import sys
 from subprocess import Popen, PIPE
+
+# add pymake root directory to the python path
+sys.path.insert(0, os.path.abspath(".."))
 from pymake import __version__
 
-sys.path.insert(0, os.path.abspath(".."))
 
 # -- Create the pymake rst files ---------------------------------------------
 args = ("sphinx-apidoc", "-o", "source/", "../pymake/")
