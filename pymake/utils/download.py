@@ -301,7 +301,7 @@ def download_and_unzip(
         if verbose:
             print(msg)
     else:
-        file_size = 0.
+        file_size = 0.0
 
     # download data from url
     for idx in range(max_requests):
