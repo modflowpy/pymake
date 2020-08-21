@@ -1,6 +1,8 @@
-"""Pymake class to make a binary executable for a FORTRAN, C, or C++ program,
-such as MODFLOW 6. An example of how to build MODFLOW-2005 from source files
-in the official release downloaded from the USGS using Intel compilers is:
+""":code:`Pymake()` class to make a binary executable for a FORTRAN, C, or C++
+program, such as MODFLOW 6.
+
+An example of how to build MODFLOW-2005 from source files in the official
+release downloaded from the USGS using Intel compilers is:
 
 .. code-block:: python
 
@@ -69,21 +71,21 @@ import time
 import shutil
 import argparse
 
-from ._compiler_switches import (
+from .utils._compiler_switches import (
     _get_osname,
     _get_optlevel,
     _get_fortran_flags,
     _get_c_flags,
     _get_linker_flags,
 )
-from .download import download_and_unzip, zip_all
+from .utils.download import download_and_unzip, zip_all
 from .pymake_base import main
 from .pymake_parser import (
     _get_arg_dict,
     _parser_setup,
 )
-from .usgsprograms import usgs_program_data
-from ._usgs_src_update import _build_replace
+from .utils.usgsprograms import usgs_program_data
+from .utils._usgs_src_update import _build_replace
 
 
 class Pymake:
@@ -183,7 +185,12 @@ class Pymake:
         print("\n")
 
     def argv_reset_settings(self, args):
-        """Reset setting using command line arguments
+        """Reset settings using command line arguments
+
+        Parameters
+        ----------
+        args : Namespace object
+            reset self.variables using command line arguments
 
         Returns
         -------
@@ -463,13 +470,14 @@ class Pymake:
         -------
 
         """
-        # strip .exe extension if necessary
-        target = os.path.basename(self.target)
-        if ".exe" in target.lower():
-            target = target[:-4]
-
         # determine if source subdirectories should be included
-        if target in ["mf6", "libmf6", "gridgen", "mf6beta", "gsflow"]:
+        if self._get_base_target() in (
+            "mf6",
+            "libmf6",
+            "gridgen",
+            "mf6beta",
+            "gsflow",
+        ):
             self.include_subdirs = True
 
         return
@@ -480,6 +488,9 @@ class Pymake:
 
         Parameters
         ----------
+        target : str
+            target name. If target is None self.target will be used.
+            (default is None)
 
         Returns
         -------
@@ -501,6 +512,24 @@ class Pymake:
 
         return build_target
 
+    def _get_base_target(self):
+        """Get base target name without path and extension
+
+        Returns
+        -------
+        target : str
+            target name without path and extension
+
+        """
+        target = os.path.basename(self.target)
+        if target.lower().endswith(".exe"):
+            target = target[:-4]
+        elif target.lower().endswith(".dll"):
+            target = target[:-4]
+        elif target.lower().endswith(".so"):
+            target = target[:-3]
+        return target
+
     def _set_srcdir2(self):
         """Set srcdir2 to compile target. Default is None.
 
@@ -512,8 +541,22 @@ class Pymake:
 
         """
         if self.srcdir2 is None:
-            if self.target in ("libmf6",):
+            if self._get_base_target() in ("libmf6",):
                 self.srcdir2 = os.path.join(self.download_dir, "src")
+        return
+
+    def _set_sharedobject(self):
+        """Set sharedobject to compile target. Default is None.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+        if self._get_base_target() in ("libmf6",):
+            self.sharedobject = True
         return
 
     def _set_extrafiles(self):
@@ -528,7 +571,7 @@ class Pymake:
         """
         extrafiles = self.extrafiles
         if extrafiles is None:
-            if self.target in ("zbud6",):
+            if self._get_base_target() in ("zbud6",):
                 extrafiles = [
                     "../../../src/Utilities/ArrayHandlers.f90",
                     "../../../src/Utilities/ArrayReaders.f90",
@@ -581,7 +624,7 @@ class Pymake:
 
         """
         if self.excludefiles is None:
-            if self.target in ("libmf6",):
+            if self._get_base_target() in ("libmf6",):
                 self.excludefiles = [
                     os.path.join(self.download_dir, "src", "mf6.f90")
                 ]
@@ -593,10 +636,13 @@ class Pymake:
         Parameters
         ----------
         target : str
+            target name. If target is None self.target is used.
+            (default is None)
         srcdir : str
-            path to directory with source files
+            path to directory with source files. (default is None)
         modify_exe_name : bool
-            boolean that determines
+            boolean that determines if the target name can be modified to
+            include precision (dbl) and debugging (d) indicators.
 
         Returns
         -------
@@ -624,6 +670,9 @@ class Pymake:
 
         # set excludefiles for known targets
         self._set_excludefiles()
+
+        # set sharedobject for known targets
+        self._set_sharedobject()
 
         # set compiler flags
         if self.fc != "none":
