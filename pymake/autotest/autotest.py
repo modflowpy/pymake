@@ -586,7 +586,7 @@ def get_mf6_comparison(src):
     )
     # Construct src pth from namefile
     action = None
-    for _, dirs, files in os.walk(src):
+    for _, dirs, _ in os.walk(src):
         dl = [d.lower() for d in dirs]
         for oc in optcomp:
             if any(oc in s for s in dl):

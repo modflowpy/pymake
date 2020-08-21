@@ -7,7 +7,6 @@ acyclic graph and then compiles the source files using GNU compilers
 # __init__.py
 from .pymake import Pymake, __version__
 from .pymake_base import main
-
 from .pymake_parser import parser
 from .pymake_build_apps import build_apps
 
