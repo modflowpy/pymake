@@ -4,7 +4,7 @@ acyclic graph and then compiles the source files using GNU compilers
 (:code:`gcc`, :code:`g++`, :code:`gfortran`) or Intel compilers
 (:code:`ifort`, :code:`icc`)."""
 
-# __init__.py
+# pymake
 from .pymake import Pymake, __version__
 from .pymake_base import main
 from .pymake_parser import parser
@@ -55,12 +55,17 @@ __all__ = [
     "main",
     "parser",
     "build_apps",
+    # utilities
     "usgs_program_data",
     "download_and_unzip",
     "getmfexes",
     "repo_latest_version",
     "get_repo_assets",
     "zip_all",
+    # plot
+    "make_plots",
+    "to_pydot",
+    # autotest
     "setup",
     "setup_comparison",
     "teardown",
