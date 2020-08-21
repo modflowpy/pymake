@@ -284,9 +284,10 @@ def download_and_unzip(
         verbose=verbose,
     )
 
-    # get content length
+    # get content length, if available
     tag = "Content-length"
     if tag in req.headers:
+        verify_size = True
         file_size = req.headers[tag]
         len_file_size = len(file_size)
         file_size = int(file_size)
@@ -300,13 +301,6 @@ def download_and_unzip(
         )
         if verbose:
             print(msg)
-    else:
-        msg = "'{}' header not available from '{}'".format(tag, url)
-        raise Exception(msg)
-
-    if file_size <= 0:
-        msg = "invalid request file size ({}) from '{}'".format(file_size, url)
-        raise Exception(msg)
 
     # download data from url
     for idx in range(max_requests):
@@ -338,12 +332,7 @@ def download_and_unzip(
                                 sys.stdout.write(".")
                                 sys.stdout.flush()
                         f.write(chunk)
-
-                # check that the entire file has been downloaded
-                if download_size == file_size:
-                    success = True
-                else:
-                    continue
+                success = True
         except:
             # reestablish request
             req = _request_get(
