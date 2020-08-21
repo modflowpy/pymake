@@ -1,6 +1,6 @@
-"""Main pymake function, :code:`main()`, that is called when pymake is run from
-the command line. :code:`main()` can also be called directly from a script in
-combination with :code:`parser()`.
+"""Main pymake function, :code:`pymake.main()`, that is called when pymake is
+run from the command line. :code:`pymake.main()` can also be called directly
+from a script in combination with :code:`pymake.parser()`.
 
 .. code-block:: python
 
@@ -47,13 +47,13 @@ import inspect
 
 from .pymake import __version__
 
-from ._Popen_wrapper import (
+from .utils._Popen_wrapper import (
     _process_Popen_initialize,
     _process_Popen_command,
     _process_Popen_stdout,
     _process_Popen_communicate,
 )
-from ._compiler_switches import (
+from .utils._compiler_switches import (
     _get_osname,
     _get_optlevel,
     _get_c_flags,
@@ -61,7 +61,7 @@ from ._compiler_switches import (
     _get_linker_flags,
     _get_os_macro,
 )
-from ._compiler_language_files import (
+from .utils._compiler_language_files import (
     _get_srcfiles,
     _get_ordered_srcfiles,
     _get_c_files,

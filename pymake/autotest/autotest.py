@@ -1,6 +1,4 @@
-"""Autotest functionality for MODFLOW-based models. Includes functionality for
-copying existing model and comparision files, comparing results, and tearing
-down test and comparison models. A typical example of using the autotest
+"""A typical example of using the autotest
 functionality for MODFLOW-2005 and comparing the MODFLOW-2005 results to
 MODFLOW-2000 results is:
 

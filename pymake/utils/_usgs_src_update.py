@@ -13,7 +13,7 @@ from .usgsprograms import usgs_program_data
 def _get_function_names(module, select_name=None):
     """Get a dictionary of functions available in a user-specified source file.
     This function was developed to create a dictionary of functions in this
-    source file (build_apps.py). Optionally, the user can get a get a
+    source file (pymake_build_apps.py). Optionally, the user can get a get a
     dictionary of functions that contain a specific text string in the name.
 
     Parameters

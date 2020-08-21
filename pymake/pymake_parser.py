@@ -1,7 +1,14 @@
 """Parser used to process command line arguments when running pymake directly
 from the command line or in a script. The standard argparse module is used
 to parse command line arguments. Available command line arguments are
-programatically developed by a private dictionary.
+programmatically developed by a protected dictionary. The parser can be
+accessed using:
+
+.. code-block:: python
+
+    import pymake
+    args = pymake.parser()
+
 
 """
 
@@ -276,8 +283,8 @@ def parser():
 
     Returns
     -------
-    args : list
-        command line argument list
+    args : Namespace object
+        Namespace with command line arguments
 
     """
     description = __description__

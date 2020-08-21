@@ -104,7 +104,7 @@ def build_seawat_dependency_graphs():
 
         # build dependency graphs
         print("building dependency graphs")
-        pymake.visualize.make_plots(srcpth, deppth, verbose=True)
+        pymake.make_plots(srcpth, deppth, verbose=True)
 
         # test that the dependency figure for the SEAWAT main exists
         findf = os.path.join(deppth, "swt_v4.f.png")

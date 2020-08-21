@@ -1,5 +1,4 @@
-"""Utility to create dependency graphs for source files in a directory.
-Dependency graphs can be created using:
+"""Dependency graphs for applications can be created using:
 
 .. code-block:: python
 
@@ -18,8 +17,11 @@ Dependency graphs can be created using:
 """
 import os
 
-from ._compiler_language_files import _get_srcfiles, _get_ordered_srcfiles
-from ._dag import _get_f_nodelist
+from ..utils._compiler_language_files import (
+    _get_srcfiles,
+    _get_ordered_srcfiles,
+)
+from ..utils._dag import _get_f_nodelist
 
 try:
     import pydotplus.graphviz as pydot

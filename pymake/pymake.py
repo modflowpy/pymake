@@ -1,6 +1,8 @@
-"""Pymake class to make a binary executable for a FORTRAN, C, or C++ program,
-such as MODFLOW 6. An example of how to build MODFLOW-2005 from source files
-in the official release downloaded from the USGS using Intel compilers is:
+""":code:`Pymake()` class to make a binary executable for a FORTRAN, C, or C++
+program, such as MODFLOW 6.
+
+An example of how to build MODFLOW-2005 from source files in the official
+release downloaded from the USGS using Intel compilers is:
 
 .. code-block:: python
 
@@ -69,21 +71,21 @@ import time
 import shutil
 import argparse
 
-from ._compiler_switches import (
+from .utils._compiler_switches import (
     _get_osname,
     _get_optlevel,
     _get_fortran_flags,
     _get_c_flags,
     _get_linker_flags,
 )
-from .download import download_and_unzip, zip_all
+from .utils.download import download_and_unzip, zip_all
 from .pymake_base import main
 from .pymake_parser import (
     _get_arg_dict,
     _parser_setup,
 )
-from .usgsprograms import usgs_program_data
-from ._usgs_src_update import _build_replace
+from .utils.usgsprograms import usgs_program_data
+from .utils._usgs_src_update import _build_replace
 
 
 class Pymake:
