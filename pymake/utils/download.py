@@ -284,7 +284,7 @@ def download_and_unzip(
         verbose=verbose,
     )
 
-    # get content length
+    # get content length, if available
     tag = "Content-length"
     if tag in req.headers:
         file_size = req.headers[tag]
@@ -301,12 +301,7 @@ def download_and_unzip(
         if verbose:
             print(msg)
     else:
-        msg = "'{}' header not available from '{}'".format(tag, url)
-        raise Exception(msg)
-
-    if file_size <= 0:
-        msg = "invalid request file size ({}) from '{}'".format(file_size, url)
-        raise Exception(msg)
+        file_size = 0.0
 
     # download data from url
     for idx in range(max_requests):
@@ -320,30 +315,37 @@ def download_and_unzip(
             with open(file_name, "wb") as f:
                 for chunk in req.iter_content(chunk_size=chunk_size):
                     if chunk:
+                        # increment the counter
                         download_size += len(chunk)
-                        if file_size > 0:
-                            msg = (
-                                "     downloaded "
-                                + sbfmt.format(bfmt.format(download_size))
-                                + " of "
-                                + bfmt.format(int(file_size))
-                                + " bytes"
-                                + " ({:10.4%})".format(
-                                    float(download_size) / float(file_size)
-                                )
-                            )
-                            if verbose:
-                                print(msg)
-                            else:
-                                sys.stdout.write(".")
-                                sys.stdout.flush()
+
+                        # write the chunk
                         f.write(chunk)
 
-                # check that the entire file has been downloaded
-                if download_size == file_size:
-                    success = True
-                else:
-                    continue
+                        # write information to the screen
+                        if verbose:
+                            if file_size > 0:
+                                msg = (
+                                    "     downloaded "
+                                    + sbfmt.format(bfmt.format(download_size))
+                                    + " of "
+                                    + bfmt.format(int(file_size))
+                                    + " bytes"
+                                    + " ({:10.4%})".format(
+                                        float(download_size) / float(file_size)
+                                    )
+                                )
+                            else:
+                                msg = (
+                                    "     downloaded "
+                                    + sbfmt.format(bfmt.format(download_size))
+                                    + " bytes"
+                                )
+                            print(msg)
+                        else:
+                            sys.stdout.write(".")
+                            sys.stdout.flush()
+
+                success = True
         except:
             # reestablish request
             req = _request_get(
