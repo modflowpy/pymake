@@ -287,7 +287,6 @@ def download_and_unzip(
     # get content length, if available
     tag = "Content-length"
     if tag in req.headers:
-        verify_size = True
         file_size = req.headers[tag]
         len_file_size = len(file_size)
         file_size = int(file_size)
