@@ -783,11 +783,13 @@ def _update_vs2dt_files(srcdir, fc, cc, arch, double):
     # move the main source into the source directory
     f1 = os.path.join(srcdir, "..", "vs2dt3_3.f")
     f1 = os.path.abspath(f1)
-    assert os.path.isfile(f1), "{} does not exist".format(f1)
+    if not os.path.isfile(f1):
+        raise IOError("{} does not exist".format(f1))
     f2 = os.path.join(srcdir, "vs2dt3_3.f")
     f2 = os.path.abspath(f2)
     shutil.move(f1, f2)
-    assert os.path.isfile(f2), "{} does not exist".format(f2)
+    if not os.path.isfile(f2):
+        raise IOError("{} does not exist".format(f2))
 
     f1 = open(os.path.join(srcdir, "vs2dt3_3.f"), "r")
     f2 = open(os.path.join(srcdir, "vs2dt3_3.f.tmp"), "w")

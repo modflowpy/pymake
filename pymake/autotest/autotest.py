@@ -145,10 +145,8 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
         # subfolder if it doesn't exist
         sf = os.path.dirname(dstf)
         if not os.path.isdir(sf):
-            try:
-                os.mkdir(sf)
-            except:
-                print("Could not make " + sf)
+            os.makedirs(sf)
+
         # Now copy the file
         if os.path.exists(srcf):
             print("Copy file '" + srcf + "' -> '" + dstf + "'")
@@ -353,7 +351,7 @@ def get_namefiles(pth, exclude=None):
 
     """
     namefiles = []
-    for root, dirs, files in os.walk(pth):
+    for root, _, files in os.walk(pth):
         namefiles += [
             os.path.join(root, file) for file in files if file.endswith(".nam")
         ]
@@ -498,7 +496,6 @@ def setup_mf6(
         list of MODFLOW 6 output files
 
     """
-    import shutil
 
     # Create the destination folder
     create_dir = False
@@ -510,7 +507,7 @@ def setup_mf6(
     else:
         create_dir = True
     if create_dir:
-        os.mkdir(dst)
+        os.makedirs(dst)
 
     # Make list of files to copy
     fname = os.path.join(src, mfnamefile)
@@ -589,7 +586,7 @@ def get_mf6_comparison(src):
     )
     # Construct src pth from namefile
     action = None
-    for root, dirs, files in os.walk(src):
+    for _, dirs, files in os.walk(src):
         dl = [d.lower() for d in dirs]
         for oc in optcomp:
             if any(oc in s for s in dl):
@@ -932,7 +929,7 @@ def _get_mf6_external_files(srcdir, outplist, files):
                             break
 
         except:
-            pass
+            print("could not get a list of external mf6 files")
 
     return extfiles, outplist
 
@@ -1265,7 +1262,7 @@ def compare_swrbudget(
 
     # headers
     headers = ("INCREMENTAL", "CUMULATIVE")
-    dir = ("IN", "OUT")
+    direction = ("IN", "OUT")
 
     # Get name of list files
     list1 = None
@@ -1384,7 +1381,7 @@ def compare_swrbudget(
                     icnt += 1
                     e = (
                         '"{} {}" percent difference ({})'.format(
-                            headers[idx], dir[kdx], t
+                            headers[idx], direction[kdx], t
                         )
                         + " for stress period {} and time step {} > {}.".format(
                             kper[jdx] + 1, kstp[jdx] + 1, max_pd
@@ -1497,7 +1494,7 @@ def compare_heads(
         if ocf1[0][0] is None:
             return True
 
-        hu1, hfpth1, du1, dfpth1 = flopy.modflow.ModflowOc.get_ocoutput_units(
+        hu1, hfpth1, du1, _ = flopy.modflow.ModflowOc.get_ocoutput_units(
             ocf1[0][0]
         )
         if text.lower() == "head":
@@ -1690,9 +1687,11 @@ def compare_heads(
     times1 = headobj1.get_times()
     times2 = headobj2.get_times()
     for (t1, t2) in zip(times1, times2):
-        assert np.allclose(
-            [t1], [t2]
-        ), "times in two head files are not " + "equal ({},{})".format(t1, t2)
+        if not np.allclose([t1], [t2]):
+            msg = "times in two head files are not " + "equal ({},{})".format(
+                t1, t2
+            )
+            raise ValueError(msg)
 
     kstpkper = headobj1.get_kstpkper()
 
@@ -1711,14 +1710,14 @@ def compare_heads(
 
     icnt = 0
     # Process cumulative and incremental
-    for idx in range(len(times1)):
-        h1 = headobj1.get_data(totim=times1[idx])
+    for idx, (t1, t2) in enumerate(zip(times1, times2)):
+        h1 = headobj1.get_data(totim=t1)
         if unstructured1:
             temp = np.array([])
             for a in h1:
                 temp = np.hstack((temp, a))
             h1 = temp
-        h2 = headobj2.get_data(totim=times2[idx])
+        h2 = headobj2.get_data(totim=t2)
         if unstructured2:
             temp = np.array([])
             for a in h2:
@@ -1733,7 +1732,8 @@ def compare_heads(
                     + "can not be reshaped to the size of the "
                     + "head arrays ({})".format(h1.shape)
                 )
-                assert h1.flatten().shape == exd.shape, e
+                if h1.flatten().shape != exd.shape:
+                    raise ValueError(e)
                 exd = exd.reshape(h1.shape)
                 iexd = exd > 0
 
@@ -1786,7 +1786,7 @@ def compare_heads(
 
                 if verbose:
                     f.write("{}\n".format(ee))
-                    print(ee + " at time {}".format(times1[idx]))
+                    print(ee + " at time {}".format(t1))
 
                 e = ""
                 ncells = h1.flatten().shape[0]

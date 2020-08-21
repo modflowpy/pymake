@@ -43,6 +43,13 @@ def to_pydot(dag, filename="mygraph.png"):
     -------
 
     """
+    # evaluate if pydot plus is installed
+    if pydot is None:
+        msg = "pydotplus must be installed to use " + "{}".format(
+            make_plots.__module__ + "." + make_plots.__name__
+        )
+        raise ModuleNotFoundError(msg)
+
     # Create the graph
     graph = pydot.Dot(graph_type="digraph")
 
