@@ -13,31 +13,31 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v2
 
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.8
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
 
-    - name: Setup Graphviz
-      uses: ts-graphviz/setup-graphviz@v1
+      - name: Setup Graphviz
+        uses: ts-graphviz/setup-graphviz@v1
 
-    - name: Install packages
-      run: |
-        pip install requests pydotplus appdirs numpy matplotlib
-        pip install https://github.com/modflowpy/flopy/zipball/develop
-        pip install pylint flake8 black
+      - name: Install packages
+        run: |
+          pip install requests pydotplus appdirs numpy matplotlib
+          pip install https://github.com/modflowpy/flopy/zipball/develop
+          pip install pylint flake8 black
 
-    - name: Run black
-      run: black --check --line-length 79 ./pymake
+      - name: Run black
+        run: black --check --line-length 79 ./pymake
 
-    - name: Run flake8
-      run: flake8 --count --show-source ./pymake
+      - name: Run flake8
+        run: flake8 --count --show-source ./pymake
 
-    - name: Run pylint
-      run: pylint --jobs=0 --errors-only ./pymake
+      - name: Run pylint
+        run: pylint --jobs=0 --errors-only ./pymake
 
   pymakeCI:
     name: Run pymake CI on different python versions and different OSs
@@ -55,74 +55,84 @@ jobs:
             python-version: 3.8
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v2
 
-    - name: Setup Graphviz
-      uses: ts-graphviz/setup-graphviz@v1
+      - name: Setup Graphviz
+        uses: ts-graphviz/setup-graphviz@v1
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install python packages
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests pytest pytest-cov coverage
-        pip install pydotplus appdirs
-        pip install numpy matplotlib
-        pip install https://github.com/modflowpy/flopy/zipball/develop
-        pip install .
+      - name: Install python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pytest pytest-cov coverage
+          pip install pydotplus appdirs
+          pip install numpy matplotlib
+          pip install https://github.com/modflowpy/flopy/zipball/develop
+          pip install .
 
-    - name: Install pytest timer on Linux
-      if: runner.os == 'Linux'
-      run: |
-        pip install pytest-timer[termcolor]
+      - name: Install pytest timer on Linux
+        if: runner.os == 'Linux'
+        run: |
+          pip install pytest-timer[termcolor]
 
-    - name: Install gfortran on Linux
-      if: runner.os == 'Linux'
-      run: |
-        sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
-        sudo ln -fs /usr/bin/gcc-9 /usr/local/bin/gcc
-        sudo ln -fs /usr/bin/g++-9 /usr/local/bin/g++
+      - name: Install gfortran on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
+          sudo ln -fs /usr/bin/gcc-9 /usr/local/bin/gcc
+          sudo ln -fs /usr/bin/g++-9 /usr/local/bin/g++
 
-    - name: Install gfortran on MacOS
-      shell: bash
-      if: runner.os == 'macOS'
-      run: |
-        brew cask info gfortran
-        brew cask install gfortran
-        ls -l /usr/local/gfortran/bin/
-        sudo ln -fs /usr/local/gfortran/bin/gfortran /usr/local/bin/gfortran
-        sudo ln -fs /usr/local/gfortran/bin/gcc /usr/local/bin/gcc
-        sudo ln -fs /usr/local/gfortran/bin/g++ /usr/local/bin/g++
+      - name: Install gfortran on MacOS
+        shell: bash
+        if: runner.os == 'macOS'
+        run: |
+          brew cask info gfortran
+          brew cask install gfortran
+          ls -l /usr/local/gfortran/bin/
+          sudo ln -fs /usr/local/gfortran/bin/gfortran /usr/local/bin/gfortran
+          sudo ln -fs /usr/local/gfortran/bin/gcc /usr/local/bin/gcc
+          sudo ln -fs /usr/local/gfortran/bin/g++ /usr/local/bin/g++
 
-    - name: Print GNU compiler versions
-      run: |
-        gfortran --version
-        gcc --version
-        g++ --version
+      - name: Print GNU compiler versions
+        run: |
+          gfortran --version
+          gcc --version
+          g++ --version
 
-    - name: Run pytest
-      shell: bash
-      run: |
-        pytest -v --cov=pymake --cov-report=xml autotest/
+      - name: Run pytest
+        shell: bash
+        run: |
+          pytest -v --cov=pymake --cov-report=xml autotest/
 
-    - name: Print coverage report before upload
-      shell: bash
-      run: |
-        coverage report
+      - name: Print coverage report before upload
+        shell: bash
+        run: |
+          coverage report
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1.0.12
-      with:
-        file: ./coverage.xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1.0.12
+        with:
+          file: ./coverage.xml
 
-    - name: Trigger RTDs build
-      if: github.repository_owner == 'modflowpy' && github.ref == 'refs/heads/master'
-      uses: dfm/rtds-action@v1.0.0
-      with:
-        webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
-        webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
-        commit_ref: ${{ github.ref }}
+  pymake_rtd:
+    name: pymake rtd
+    needs: pymake_CI
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Trigger RTDs build
+        if: github.repository_owner == 'modflowpy' && github.ref == 'refs/heads/master'
+        uses: dfm/rtds-action@v1.0.0
+        with:
+          webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
+          webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
+          commit_ref: ${{ github.ref }}
