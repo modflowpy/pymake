@@ -118,3 +118,11 @@ jobs:
       uses: codecov/codecov-action@v1.0.12
       with:
         file: ./coverage.xml
+
+    - name: Trigger RTDs build
+      if: github.repository_owner == 'modflowpy' && github.ref == 'refs/heads/master'
+      uses: dfm/rtds-action@v1.0.0
+      with:
+        webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
+        webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
+        commit_ref: ${{ github.ref }}

@@ -559,14 +559,15 @@ def _update_gsflow_files(srcdir, fc, cc, arch, double):
             tag = "FORM='BINARY'"
             new_tag = "FORM='UNFORMATTED', ACCESS='STREAM'"
             fpth = os.path.join(srcdir, "prms", "utils_prms_windows.f90")
-            with open(fpth) as f:
-                lines = f.readlines()
-            f = open(fpth, "w")
-            for line in lines:
-                if tag in line:
-                    line = line.replace(tag, new_tag)
-                f.write(line)
-            f.close()
+            if os.path.isfile(fpth):
+                with open(fpth) as f:
+                    lines = f.readlines()
+                f = open(fpth, "w")
+                for line in lines:
+                    if tag in line:
+                        line = line.replace(tag, new_tag)
+                    f.write(line)
+                f.close()
 
         fpths = [
             os.path.join(srcdir, "prms", "utils_prms_linux.f90"),
@@ -578,7 +579,8 @@ def _update_gsflow_files(srcdir, fc, cc, arch, double):
             os.path.join(srcdir, "prms", "utils_prms_windows.f90"),
         ]
     for fpth in fpths:
-        os.remove(fpth)
+        if os.path.isfile(fpth):
+            os.remove(fpth)
 
     return
 
