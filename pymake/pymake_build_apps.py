@@ -156,7 +156,8 @@ def build_apps(
             update_target_name = True
 
         # set download information
-        download_dir = "temp"
+        if download_dir is None:
+            download_dir = "temp"
         download_verify = True
         timeout = 30
 
