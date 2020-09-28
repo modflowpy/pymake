@@ -42,15 +42,21 @@ def _check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
 
     # determine the gfortran command line flags available
     cmdlist = [compiler, "--help", "-v"]
-    proc = _process_Popen_initialize(cmdlist)
-    if verbose:
-        _process_Popen_command(False, cmdlist)
 
-    # establish communicator
-    _, stdout = _process_Popen_communicate(proc, verbose=verbose)
+    # Try to get gfortran help.  Return False if any problems.
+    try:
+        proc = _process_Popen_initialize(cmdlist)
+        if verbose:
+            _process_Popen_command(False, cmdlist)
 
-    # determine if flag exists
-    avail = switch in stdout
+        # establish communicator
+        _, stdout = _process_Popen_communicate(proc, verbose=verbose)
+
+        # determine if flag exists
+        avail = switch in stdout
+
+    except:
+        avail = False
 
     # write a message
     if verbose:
