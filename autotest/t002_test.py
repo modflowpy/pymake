@@ -98,22 +98,25 @@ def run_seawat(fn):
 def build_seawat_dependency_graphs():
     if os.path.exists(epth):
 
-        # build dependencies output directory
-        if not os.path.exists(deppth):
-            os.makedirs(deppth)
+        # only run on linuz
+        if "linux" in sys.platform.lower():
 
-        # build dependency graphs
-        print("building dependency graphs")
-        pymake.make_plots(srcpth, deppth, verbose=True)
+            # build dependencies output directory
+            if not os.path.exists(deppth):
+                os.makedirs(deppth)
 
-        # test that the dependency figure for the SEAWAT main exists
-        findf = os.path.join(deppth, "swt_v4.f.png")
-        success = os.path.isfile(findf)
-        assert success, "could not find {}".format(findf)
-    else:
-        success = False
+            # build dependency graphs
+            print("building dependency graphs")
+            pymake.make_plots(srcpth, deppth, verbose=True)
 
-    assert success, "could not build dependency graphs"
+            # test that the dependency figure for the SEAWAT main exists
+            findf = os.path.join(deppth, "swt_v4.f.png")
+            success = os.path.isfile(findf)
+            assert success, "could not find {}".format(findf)
+        else:
+            success = False
+
+        assert success, "could not build dependency graphs"
 
     return
 
