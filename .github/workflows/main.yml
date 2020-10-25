@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+
+    if: github.repository_owner == 'modflowpy'
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
