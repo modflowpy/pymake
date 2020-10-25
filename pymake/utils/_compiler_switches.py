@@ -330,7 +330,7 @@ def _get_fortran_flags(
                     flags += ["g"]
                 flags += ["no-heap-arrays", "fpe0", "traceback"]
                 if double:
-                    flags += ["real-size 64", "double-size 64"]
+                    flags += ["r8", "autodouble"]
 
         # Add passed fortran flags - assume that flags have - or / as the
         # first character. fortran flags starting with O are excluded
