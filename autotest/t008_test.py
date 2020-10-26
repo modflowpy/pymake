@@ -24,12 +24,21 @@ mf6ver = prog_dict.version
 mf6pth = os.path.join(dstpth, prog_dict.dirname)
 epth = os.path.join(dstpth, target)
 
-sim_dirs = []
-fpth = os.path.join("temp", "mf6examples", "mf6examples.txt")
+# set fpth based on current path
+if os.path.basename(os.path.normpath(os.getcwd())) == "autotest":
+    fpth = os.path.abspath(
+        os.path.join("temp", "mf6examples", "mf6examples.txt")
+    )
+else:
+    fpth = os.path.abspath(
+        os.path.join("autotest", "temp", "mf6examples", "mf6examples.txt")
+    )
 if os.path.isfile(fpth):
     with open(fpth) as f:
         lines = f.read().splitlines()
     sim_dirs = [line for line in lines if len(line) > 0]
+else:
+    sim_dirs = []
 
 pm = pymake.Pymake(verbose=True)
 pm.target = target

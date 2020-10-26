@@ -2,7 +2,7 @@ import os
 import shutil
 import pymake
 
-mf6_exdir = os.path.join('temp', "mf6examples")
+mf6_exdir = os.path.join("temp", "mf6examples")
 
 
 def download_mf6_examples(verbose=False):
