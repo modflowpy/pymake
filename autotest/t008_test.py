@@ -22,58 +22,23 @@ if not os.path.exists(dstpth):
 
 mf6ver = prog_dict.version
 mf6pth = os.path.join(dstpth, prog_dict.dirname)
-expth = os.path.join(mf6pth, "examples")
 epth = os.path.join(dstpth, target)
 
-sim_dirs = [
-    "ex01-twri",
-    "ex02-tidal",
-    "ex03-bcf2ss",
-    "ex04-fhb",
-    "ex05-mfusg1disu",
-    "ex06-mfusg1disv",
-    "ex07-mfusg1lgr",
-    "ex08-mfusg1xt3d",
-    "ex09-bump",
-    "ex10-bumpnr",
-    "ex11-disvmesh",
-    "ex12-hanicol",
-    "ex13-hanirow",
-    "ex14-hanixt3d",
-    "ex15-whirlsxt3d",
-    "ex16-mfnwt2",
-    "ex17-mfnwt3h",
-    "ex18-mfnwt3l",
-    "ex19-zaidel",
-    "ex20-keating",
-    "ex21-sfr1",
-    "ex22-lak2",
-    "ex23-lak4",
-    "ex24-neville",
-    "ex25-flowing-maw",
-    "ex26-Reilly-maw",
-    "ex27-advpakmvr",
-    "ex28-mflgr3",
-    "ex29-vilhelmsen-gc",
-    "ex30-vilhelmsen-gf",
-    "ex31-vilhelmsen-lgr",
-    "ex32-periodicbc",
-    "ex33-csub-jacob",
-    "ex34-csub-sub01",
-    "ex35-csub-holly",
-    "ex36-csub-subwt01",
-    "ex37-draindepth",
-]
-
-# remove after MODFLOW 6 v6.1.2 release
-if sys.platform.lower() == "win32":
-    for exclude in ("ex34-csub-sub01",):
-        if exclude in sim_dirs:
-            sim_dirs.remove(exclude)
-
-# add path to sim_dirs
-for idx, simdir in enumerate(sim_dirs):
-    sim_dirs[idx] = os.path.join(expth, simdir)
+# set fpth based on current path
+if os.path.basename(os.path.normpath(os.getcwd())) == "autotest":
+    fpth = os.path.abspath(
+        os.path.join("temp", "mf6examples", "mf6examples.txt")
+    )
+else:
+    fpth = os.path.abspath(
+        os.path.join("autotest", "temp", "mf6examples", "mf6examples.txt")
+    )
+if os.path.isfile(fpth):
+    with open(fpth) as f:
+        lines = f.read().splitlines()
+    sim_dirs = [line for line in lines if len(line) > 0]
+else:
+    sim_dirs = []
 
 pm = pymake.Pymake(verbose=True)
 pm.target = target
