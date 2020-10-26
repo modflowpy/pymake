@@ -7,6 +7,9 @@ import flopy
 
 import pytest
 
+# determine if running on a continuous integration server
+is_CI = 'CI' in os.environ
+
 # define program data
 target = "swtv4"
 if sys.platform.lower() == "win32":
@@ -96,10 +99,14 @@ def run_seawat(fn):
 
 
 def build_seawat_dependency_graphs():
-    if os.path.exists(epth):
+    success = True
+    build_graphs = True
+    if is_CI:
+        if "linux" not in sys.platform.lower():
+            build_graphs = False
 
-        # only run on linuz
-        if "linux" in sys.platform.lower():
+    if build_graphs:
+        if os.path.exists(epth):
 
             # build dependencies output directory
             if not os.path.exists(deppth):
@@ -113,10 +120,8 @@ def build_seawat_dependency_graphs():
             findf = os.path.join(deppth, "swt_v4.f.png")
             success = os.path.isfile(findf)
             assert success, "could not find {}".format(findf)
-        else:
-            success = False
 
-        assert success, "could not build dependency graphs"
+    assert success, "could not build dependency graphs"
 
     return
 

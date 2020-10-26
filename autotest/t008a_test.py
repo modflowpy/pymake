@@ -73,7 +73,7 @@ def examples_list(verbose=False):
     fpth = os.path.join(mf6_exdir, "mf6examples.txt")
     f = open(fpth, "w")
     for folder in src_folders:
-        f.write("{}\n".format(folder))
+        f.write("{}\n".format(os.path.abspath(folder)))
     f.close()
 
     return

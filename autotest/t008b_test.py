@@ -25,17 +25,11 @@ mf6pth = os.path.join(dstpth, prog_dict.dirname)
 epth = os.path.join(dstpth, target)
 
 sim_dirs = []
-fpth = os.path.join('temp', "mf6examples", "mf6examples.txt")
+fpth = os.path.join("temp", "mf6examples", "mf6examples.txt")
 if os.path.isfile(fpth):
     with open(fpth) as f:
         lines = f.read().splitlines()
     sim_dirs = [line for line in lines if len(line) > 0]
-#
-# # remove after MODFLOW 6 v6.1.2 release
-# if sys.platform.lower() == "win32":
-#     for exclude in ("ex34-csub-sub01",):
-#         if exclude in sim_dirs:
-#             sim_dirs.remove(exclude)
 
 pm = pymake.Pymake(verbose=True)
 pm.target = target
