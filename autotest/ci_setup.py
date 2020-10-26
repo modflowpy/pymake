@@ -5,9 +5,8 @@ import pymake
 mf6_exdir = os.path.join('temp', "mf6examples")
 
 
-def download_mf6_examples():
-    """
-    Download mf6 examples and return location of folder
+def download_mf6_examples(verbose=False):
+    """Download mf6 examples and return location of folder
 
     """
 
@@ -24,7 +23,7 @@ def download_mf6_examples():
     os.chdir(mf6_exdir)
 
     # Download the distribution
-    pymake.download_and_unzip(url, verify=True)
+    pymake.download_and_unzip(url, verify=True, verbose=verbose)
 
     # change back to original path
     os.chdir(cpth)
@@ -72,21 +71,17 @@ def examples_list(verbose=False):
 
     fpth = os.path.join(mf6_exdir, "mf6examples.txt")
     f = open(fpth, "w")
-    for folder in src_folders:
+    for idx, folder in enumerate(src_folders):
+        if verbose:
+            if idx == 0:
+                print("\n\nMODFLOW 6 examples:\n{}".format(78 * "-"))
+            print("{:>3d}: {}".format(idx + 1, folder))
         f.write("{}\n".format(os.path.abspath(folder)))
     f.close()
 
     return
 
 
-def test_mf6_setup():
-    mf6path = download_mf6_examples()
-
-
-def test_mf6_examples(verbose=True):
-    examples_list(verbose=verbose)
-
-
 if __name__ == "__main__":
-    mf6pth = test_mf6_setup()
-    examples_list()
+    mf6pth = download_mf6_examples(verbose=True)
+    examples_list(verbose=True)

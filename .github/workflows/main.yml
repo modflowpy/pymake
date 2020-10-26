@@ -107,6 +107,13 @@ jobs:
           gcc --version
           g++ --version
 
+      - name: Download examples for pytest runs
+        shell: bash
+        run: |
+          cd autotest
+          python ci_setup.py
+          cd ..
+
       - name: Run pytest
         shell: bash
         run: |
