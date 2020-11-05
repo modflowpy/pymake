@@ -15,8 +15,9 @@ def get_constant(rel_path, tag):
         if line.startswith(tag):
             delim = '"' if '"' in line else "'"
             return line.split(delim)[1]
-    else:
-        raise RuntimeError("Unable to find {} string.".format(tag))
+
+    # tag not found - raise exception
+    raise RuntimeError("Unable to find {} string.".format(tag))
 
 
 # trap installing pymake with something other than python 3
