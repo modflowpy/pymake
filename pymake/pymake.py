@@ -59,6 +59,7 @@ import time
 import shutil
 import argparse
 
+from .config import __description__
 from .utils._compiler_switches import (
     _get_osname,
     _get_optlevel,
