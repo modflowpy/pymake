@@ -1,20 +1,20 @@
-import sys
-from setuptools import setup
-import codecs
 import os
+import sys
+import codecs
+from setuptools import setup
 
 
 def read(rel_path):
     here = os.path.abspath(os.path.dirname(__file__))
-    with codecs.open(os.path.join(here, rel_path), "r") as fp:
-        return fp.read()
+    with codecs.open(os.path.join(here, rel_path), "r") as file_handle:
+        return file_handle.read()
 
 
 def get_constant(rel_path, tag):
     for line in read(rel_path).splitlines():
         if line.startswith(tag):
-            delim = '"' if '"' in line else "'"
-            return line.split(delim)[1]
+            delimiter = '"' if '"' in line else "'"
+            return line.split(delimiter)[1]
 
     # tag not found - raise exception
     raise RuntimeError("Unable to find {} string.".format(tag))
