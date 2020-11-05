@@ -45,8 +45,7 @@ import shutil
 import datetime
 import inspect
 
-from .pymake import __version__
-
+from .config import __version__
 from .utils._Popen_wrapper import (
     _process_Popen_initialize,
     _process_Popen_command,

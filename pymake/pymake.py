@@ -52,18 +52,6 @@ MODFLOW 6 was built.
 
 """
 
-__author__ = "Joseph D. Hughes"
-__date__ = "October 26, 2014"
-__version__ = "1.2.0"
-__maintainer__ = "Joseph D. Hughes"
-__email__ = "jdhughes@usgs.gov"
-__status__ = "Production"
-__description__ = """
-This is the pymake program for compiling fortran, c, and c++ source files,
-such as the source files that come with MODFLOW. The program works by building
-a directed acyclic graph of the module dependencies and then compiling the
-source files in the proper order.
-"""
 
 import os
 import sys
@@ -71,6 +59,7 @@ import time
 import shutil
 import argparse
 
+from .config import __description__
 from .utils._compiler_switches import (
     _get_osname,
     _get_optlevel,
