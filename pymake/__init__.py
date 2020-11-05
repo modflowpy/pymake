@@ -4,8 +4,18 @@ acyclic graph and then compiles the source files using GNU compilers
 (:code:`gcc`, :code:`g++`, :code:`gfortran`) or Intel compilers
 (:code:`ifort`, :code:`icc`)."""
 
+
 # pymake
-from .pymake import Pymake, __version__
+from .config import (
+    __version__,
+    __description__,
+    __author__,
+    __email__,
+    __status__,
+    __maintainer__,
+    __date__,
+)
+from .pymake import Pymake
 from .pymake_base import main
 from .pymake_parser import parser
 from .pymake_build_apps import build_apps

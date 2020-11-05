@@ -13,8 +13,7 @@ accessed using:
 """
 
 import argparse
-
-from .pymake import __description__
+from .config import __description__
 
 
 def _get_arg_dict():
