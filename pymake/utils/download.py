@@ -469,8 +469,9 @@ def _get_default_json(tag_name=None):
         file names and download links
 
     """
+    # set default tag name - update with each executables release
     if tag_name is None:
-        tag_name = "4.0"
+        tag_name = "5.0"
     url = "https://github.com/{}/".format(
         _get_default_repo()
     ) + "releases/download/{}/".format(tag_name)
