@@ -34,7 +34,7 @@ def download_mf6_examples(verbose=False):
     os.makedirs(mf6_exdir)
 
     print("copying files to...{}".format(mf6_exdir))
-    shutil.copytree(temp_dir, mf6_exdir, dirs_exist_ok=True)
+    shutil.copytree(temp_dir, mf6_exdir)
 
     print('removing...{} directory'.format(temp_download_dir))
     shutil.rmtree(temp_download_dir)
