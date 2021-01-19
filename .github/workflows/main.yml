@@ -83,20 +83,20 @@ jobs:
         run: |
           pip install pytest-timer[termcolor]
 
-      - name: Install gfortran on Linux
+      - name: Setup symbolic link to gfortran on Linux
         if: runner.os == 'Linux'
         run: |
-          sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
-          sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
-          sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
+          sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
+          sudo ln -fs /usr/bin/gcc-9 /usr/local/bin/gcc
+          sudo ln -fs /usr/bin/g++-9 /usr/local/bin/g++
 
       - name: Setup symbolic link to gfortran on macOS
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          sudo ln -fs /usr/local/bin/gfortran-10 /usr/local/bin/gfortran
-          sudo ln -fs /usr/local/bin/gcc-10 /usr/local/bin/gcc
-          sudo ln -fs /usr/local/bin/g++-10 /usr/local/bin/g++
+          sudo ln -fs /usr/local/bin/gfortran-9 /usr/local/bin/gfortran
+          sudo ln -fs /usr/local/bin/gcc-9 /usr/local/bin/gcc
+          sudo ln -fs /usr/local/bin/g++-9 /usr/local/bin/g++
 
       - name: Print GNU compiler versions
         run: |

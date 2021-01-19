@@ -10,28 +10,33 @@ def download_mf6_examples(verbose=False):
 
     """
 
-    # set url
-    url = "https://github.com/MODFLOW-USGS/modflow6-examples/releases/" + \
-          "download/current/modflow6-examples.zip"
+    target = "mf6"
+    pm = pymake.Pymake(verbose=True)
+    pm.target = target
 
-    # create folder for mf6 distribution download
-    cpth = os.getcwd()
-    print('create...{}'.format(mf6_exdir))
+    # download the modflow 6 release
+    pm.download_target(target, download_path="./temp")
+    assert pm.download, "could not download {} distribution".format(target)
+
+    # get program dictionary
+    prog_dict = pymake.usgs_program_data.get_target(target)
+
+    # set path to example
+    temp_download_dir = os.path.join("./temp", prog_dict.dirname)
+    temp_dir = os.path.join(temp_download_dir, "examples")
+
+    print("create...{}".format(mf6_exdir))
     if os.path.exists(mf6_exdir):
         shutil.rmtree(mf6_exdir)
     os.makedirs(mf6_exdir)
-    os.chdir(mf6_exdir)
 
-    # Download the distribution
-    pymake.download_and_unzip(url, verify=True, verbose=verbose)
+    print("copying files to...{}".format(mf6_exdir))
+    shutil.copytree(temp_dir, mf6_exdir, dirs_exist_ok=True)
 
-    # change back to original path
-    os.chdir(cpth)
+    print('removing...{} directory'.format(temp_download_dir))
+    shutil.rmtree(temp_download_dir)
 
-    # return the absolute path to the distribution
-    mf6path = os.path.abspath(mf6_exdir)
-
-    return mf6path
+    return os.path.abspath(mf6_exdir)
 
 
 def examples_list(verbose=False):
