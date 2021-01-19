@@ -2,7 +2,10 @@ import os
 import shutil
 import pymake
 
-mf6_exdir = os.path.join("temp", "mf6examples")
+temp_pth = "temp"
+if not os.path.exists(temp_pth):
+    os.makedirs(temp_pth)
+mf6_exdir = os.path.join(temp_pth, "mf6examples")
 
 
 def download_mf6_examples(verbose=False):
@@ -15,14 +18,14 @@ def download_mf6_examples(verbose=False):
     pm.target = target
 
     # download the modflow 6 release
-    pm.download_target(target, download_path="./temp")
+    pm.download_target(target, download_path=temp_pth)
     assert pm.download, "could not download {} distribution".format(target)
 
     # get program dictionary
     prog_dict = pymake.usgs_program_data.get_target(target)
 
     # set path to example
-    temp_download_dir = os.path.join("./temp", prog_dict.dirname)
+    temp_download_dir = os.path.join(temp_pth, prog_dict.dirname)
     temp_dir = os.path.join(temp_download_dir, "examples")
 
     print("create...{}".format(mf6_exdir))
