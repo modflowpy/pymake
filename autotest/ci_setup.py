@@ -28,11 +28,6 @@ def download_mf6_examples(verbose=False):
     temp_download_dir = os.path.join(temp_pth, prog_dict.dirname)
     temp_dir = os.path.join(temp_download_dir, "examples")
 
-    print("create...{}".format(mf6_exdir))
-    if os.path.exists(mf6_exdir):
-        shutil.rmtree(mf6_exdir)
-    os.makedirs(mf6_exdir)
-
     print("copying files to...{}".format(mf6_exdir))
     shutil.copytree(temp_dir, mf6_exdir)
 
