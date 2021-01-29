@@ -519,8 +519,9 @@ def _get_request_json(request_url, verbose=False, verify=True):
     success = True
 
     # open request
-    req = _request_get(request_url, max_requests=max_requests, verbose=verbose,
-                       verify=verify)
+    req = _request_get(
+        request_url, max_requests=max_requests, verbose=verbose, verify=verify
+    )
 
     # connection established - retrieve the json
     if req.ok:
@@ -531,8 +532,9 @@ def _get_request_json(request_url, verbose=False, verify=True):
     return success, req, json_obj
 
 
-def _repo_json(github_repo, tag_name=None, error_return=False, verbose=False,
-               verify=True):
+def _repo_json(
+    github_repo, tag_name=None, error_return=False, verbose=False, verify=True
+):
     """Return the github api json for the latest github release in a github
     repository.
 
@@ -563,8 +565,9 @@ def _repo_json(github_repo, tag_name=None, error_return=False, verbose=False,
         request_url = "{}/releases/latest".format(repo_url)
     else:
         request_url = "{}/releases".format(repo_url)
-        success, _, json_cat = _get_request_json(request_url, verbose=verbose,
-                                                 verify=verify)
+        success, _, json_cat = _get_request_json(
+            request_url, verbose=verbose, verify=verify
+        )
         if success:
             request_url = None
             for release in json_cat:
@@ -598,8 +601,9 @@ def _repo_json(github_repo, tag_name=None, error_return=False, verbose=False,
         print(msg)
 
     # process the request
-    success, req, json_obj = _get_request_json(request_url, verbose=verbose,
-                                               verify=verify)
+    success, req, json_obj = _get_request_json(
+        request_url, verbose=verbose, verify=verify
+    )
 
     # evaluate request errors
     if not success:
@@ -621,8 +625,9 @@ def _repo_json(github_repo, tag_name=None, error_return=False, verbose=False,
     return json_obj
 
 
-def get_repo_assets(github_repo=None, version=None, error_return=False,
-                    verify=True):
+def get_repo_assets(
+    github_repo=None, version=None, error_return=False, verify=True
+):
     """Return a dictionary containing the file name and the link to the asset
     contained in a github repository.
 
@@ -650,9 +655,7 @@ def get_repo_assets(github_repo=None, version=None, error_return=False,
 
     # get json and extract assets
     json_obj = _repo_json(
-        github_repo, tag_name=version,
-        error_return=error_return,
-        verify=verify
+        github_repo, tag_name=version, error_return=error_return, verify=verify
     )
     if json_obj is None:
         result_dict = None
@@ -694,8 +697,9 @@ def repo_latest_version(github_repo=None):
     return json_obj["tag_name"]
 
 
-def getmfexes(pth=".", version=None, platform=None, exes=None, verbose=False,
-              verify=True):
+def getmfexes(
+    pth=".", version=None, platform=None, exes=None, verbose=False, verify=True
+):
     """Get the latest MODFLOW binary executables from a github site
     (https://github.com/MODFLOW-USGS/executables) for the specified operating
     system and put them in the specified path.
@@ -757,11 +761,13 @@ def getmfexes(pth=".", version=None, platform=None, exes=None, verbose=False,
             raise TypeError(msg)
 
     # Determine path for file download and then download and unzip
-    assets = get_repo_assets(github_repo=_get_default_repo(), version=version,
-                             verify=verify)
+    assets = get_repo_assets(
+        github_repo=_get_default_repo(), version=version, verify=verify
+    )
     download_url = assets[zipname]
-    download_and_unzip(download_url, download_dir, verbose=verbose,
-                       verify=verify)
+    download_and_unzip(
+        download_url, download_dir, verbose=verbose, verify=verify
+    )
 
     if exes is not None:
         # make sure pth exists
