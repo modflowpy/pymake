@@ -1118,9 +1118,9 @@ def compare_budget(
     lst2.append(lst2obj.get_cumulative())
 
     icnt = 0
-    v0 = np.zeros(2, dtype=np.float)
-    v1 = np.zeros(2, dtype=np.float)
-    err = np.zeros(2, dtype=np.float)
+    v0 = np.zeros(2, dtype=float)
+    v1 = np.zeros(2, dtype=float)
+    err = np.zeros(2, dtype=float)
 
     # Process cumulative and incremental
     for idx in range(2):
@@ -1312,9 +1312,9 @@ def compare_swrbudget(
     lst2.append(lst2obj.get_cumulative())
 
     icnt = 0
-    v0 = np.zeros(2, dtype=np.float)
-    v1 = np.zeros(2, dtype=np.float)
-    err = np.zeros(2, dtype=np.float)
+    v0 = np.zeros(2, dtype=float)
+    v1 = np.zeros(2, dtype=float)
+    err = np.zeros(2, dtype=float)
 
     # Open output file
     if outfile is not None:
