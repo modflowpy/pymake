@@ -13,9 +13,9 @@
 import os
 import sys
 import shutil
+import requests
 import time
 import timeit
-import requests
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 import tarfile
 
@@ -259,6 +259,7 @@ def download_and_unzip(
     -------
 
     """
+
     # create download directory
     if not os.path.exists(pth):
         if verbose:
@@ -441,6 +442,47 @@ def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
     )
 
 
+def _get_zipname(platform):
+    """Determine zipfile name for platform.
+
+    Parameters
+    ----------
+    platform : str
+        Platform that will run the executables.  Valid values include mac,
+        linux, win32 and win64.  If platform is None, then routine will
+        download the latest asset from the github repository.
+
+    Returns
+    -------
+    zipfile : str
+        Name of zipfile for platform
+
+    """
+    if platform is None:
+        if sys.platform.lower() == "darwin":
+            platform = "mac"
+        elif sys.platform.lower().startswith("linux"):
+            platform = "linux"
+        elif "win" in sys.platform.lower():
+            is_64bits = sys.maxsize > 2 ** 32
+            if is_64bits:
+                platform = "win64"
+            else:
+                platform = "win32"
+        else:
+            errmsg = (
+                "Could not determine platform"
+                ".  sys.platform is {}".format(sys.platform)
+            )
+            raise Exception(errmsg)
+    else:
+        msg = "unknown platform detected ({})".format(platform)
+        success = platform in ["mac", "linux", "win32", "win64"]
+        if not success:
+            raise ValueError(msg)
+    return "{}.zip".format(platform)
+
+
 def _get_default_repo():
     """Return the default repo name.
 
@@ -451,6 +493,22 @@ def _get_default_repo():
 
     """
     return "MODFLOW-USGS/executables"
+
+
+def _get_default_url():
+    """Return the default executables url path.
+
+    Returns
+    -------
+    default_url : str
+        default url for executables repository repo name
+
+    """
+
+    return (
+        "https://github.com/{}/".format(_get_default_repo())
+        + "releases/latest/download/"
+    )
 
 
 def _get_default_json(tag_name=None):
@@ -470,12 +528,16 @@ def _get_default_json(tag_name=None):
 
     """
     # set default tag name - update with each executables release
-    if tag_name is None:
-        tag_name = "5.0"
-    url = "https://github.com/{}/".format(
-        _get_default_repo()
-    ) + "releases/download/{}/".format(tag_name)
-    json_obj = {"tag_name": tag_name}
+    if tag_name is not None:
+        url = "https://github.com/{}/".format(
+            _get_default_repo()
+        ) + "releases/latest/download/{}/".format(tag_name)
+        json_obj = {"tag_name": tag_name}
+    else:
+        url = (
+            "https://github.com/{}/".format(_get_default_repo())
+            + "releases/latest/download/"
+        )
 
     # define asset names and paths for assets
     names = ["mac.zip", "linux.zip", "win32.zip", "win64.zip"]
@@ -666,7 +728,10 @@ def get_repo_assets(
         result_dict = {}
         for asset in assets:
             k = asset["name"]
-            v = asset["browser_download_url"]
+            if version is None:
+                v = github_repo + "/{}".format(k)
+            else:
+                v = asset["browser_download_url"]
             result_dict[k] = v
 
     return result_dict
@@ -698,7 +763,12 @@ def repo_latest_version(github_repo=None):
 
 
 def getmfexes(
-    pth=".", version=None, platform=None, exes=None, verbose=False, verify=True
+    pth=".",
+    version=None,
+    platform=None,
+    exes=None,
+    verbose=False,
+    verify=True,
 ):
     """Get the latest MODFLOW binary executables from a github site
     (https://github.com/MODFLOW-USGS/executables) for the specified operating
@@ -727,29 +797,7 @@ def getmfexes(
     download_dir = pth
 
     # Determine the platform in order to construct the zip file name
-    if platform is None:
-        if sys.platform.lower() == "darwin":
-            platform = "mac"
-        elif sys.platform.lower().startswith("linux"):
-            platform = "linux"
-        elif "win" in sys.platform.lower():
-            is_64bits = sys.maxsize > 2 ** 32
-            if is_64bits:
-                platform = "win64"
-            else:
-                platform = "win32"
-        else:
-            errmsg = (
-                "Could not determine platform"
-                ".  sys.platform is {}".format(sys.platform)
-            )
-            raise Exception(errmsg)
-    else:
-        msg = "unknown platform detected ({})".format(platform)
-        success = platform in ["mac", "linux", "win32", "win64"]
-        if not success:
-            raise ValueError(msg)
-    zipname = "{}.zip".format(platform)
+    zipname = _get_zipname(platform)
 
     # Evaluate exes keyword
     if exes is not None:
@@ -761,12 +809,99 @@ def getmfexes(
             raise TypeError(msg)
 
     # Determine path for file download and then download and unzip
-    assets = get_repo_assets(
-        github_repo=_get_default_repo(), version=version, verify=verify
-    )
-    download_url = assets[zipname]
+    if version is None:
+        download_url = _get_default_url() + zipname
+    else:
+        assets = get_repo_assets(
+            github_repo=_get_default_repo(), version=version, verify=verify
+        )
+        download_url = assets[zipname]
     download_and_unzip(
-        download_url, download_dir, verbose=verbose, verify=verify
+        download_url,
+        download_dir,
+        verbose=verbose,
+        verify=verify,
+    )
+
+    if exes is not None:
+        # make sure pth exists
+        if not os.path.exists(pth):
+            if verbose:
+                print("Creating the directory:\n    {}".format(pth))
+            os.makedirs(pth)
+
+        # move select files to pth
+        for f in os.listdir(download_dir):
+            src = os.path.join(download_dir, f)
+            dst = os.path.join(pth, f)
+            for exe in exes:
+                if exe in f:
+                    shutil.move(src, dst)
+                    break
+
+        # remove the download directory
+        if os.path.isdir(download_dir):
+            if verbose:
+                print("Removing folder " + download_dir)
+            shutil.rmtree(download_dir)
+
+    return
+
+
+def getmfnightly(
+    pth=".",
+    platform=None,
+    exes=None,
+    verbose=False,
+    verify=True,
+):
+    """Get the latest MODFLOW 6 binary nightly-build executables from github
+    (https://github.com/MODFLOW-USGS/modflow6-nightly-build/) for the specified
+    operating system and put them in the specified path.
+
+    Parameters
+    ----------
+    pth : str
+        Location to put the executables (default is current working directory)
+    platform : str
+        Platform that will run the executables.  Valid values include mac,
+        linux, win32 and win64.  If platform is None, then routine will
+        download the latest asset from the github repository.
+    exes : str or list of strings
+        executable or list of executables to retain
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
+    verify : bool
+        boolean indicating if the url request should be verified
+
+    """
+    # set download directory to path in case a selection of files
+    download_dir = pth
+
+    # Determine the platform in order to construct the zip file name
+    zipname = _get_zipname(platform)
+
+    # Evaluate exes keyword
+    if exes is not None:
+        download_dir = os.path.join(".", "download_dir")
+        if isinstance(exes, str):
+            exes = tuple(exes)
+        elif isinstance(exes, (int, float)):
+            msg = "exes keyword must be a string or a list/tuple of strings"
+            raise TypeError(msg)
+
+    # Determine path for file download and then download and unzip
+    # https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest/download/
+    download_url = (
+        "https://github.com/MODFLOW-USGS/"
+        + "modflow6-nightly-build/releases/latest/download/"
+        + zipname
+    )
+    download_and_unzip(
+        download_url,
+        download_dir,
+        verbose=verbose,
+        verify=verify,
     )
 
     if exes is not None:

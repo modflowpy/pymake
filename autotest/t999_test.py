@@ -140,8 +140,25 @@ def test_download_and_unzip_and_zip():
     return
 
 
+def test_nightly_download_and_unzip():
+    pth = "./temp/t999"
+    pymake.getmfnightly(pth, verbose=True)
+    for f in os.listdir(pth):
+        fpth = os.path.join(pth, f)
+        print("downloaded: {}".format(fpth))
+        if not os.path.isdir(fpth):
+            errmsg = "{} not executable".format(fpth)
+            assert which(fpth) is not None, errmsg
+
+    # clean up directory
+    if os.path.isdir(pth):
+        print("\nRemoving folder " + pth)
+        shutil.rmtree(pth)
+
+
 if __name__ == "__main__":
     test_previous_assets()
     test_latest_version()
     test_latest_assets()
+    test_nightly_download_and_unzip()
     test_download_and_unzip_and_zip()
