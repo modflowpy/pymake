@@ -527,12 +527,14 @@ def _get_default_json(tag_name=None):
         file names and download links
 
     """
-    # set default tag name - update with each executables release
+    # initialize json_obj dictionary
+    json_obj = {"tag_name": tag_name}
+
+    # create appropriate url
     if tag_name is not None:
         url = "https://github.com/{}/".format(
             _get_default_repo()
         ) + "releases/latest/download/{}/".format(tag_name)
-        json_obj = {"tag_name": tag_name}
     else:
         url = (
             "https://github.com/{}/".format(_get_default_repo())

@@ -30,7 +30,7 @@ def which(program):
 
 def test_latest_version():
     version = pymake.repo_latest_version()
-    test_version = "4.0"
+    test_version = "5.0"
     msg = (
         "returned version ({}) ".format(version)
         + "is not greater than or equal to "
