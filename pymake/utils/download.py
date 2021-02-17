@@ -731,10 +731,10 @@ def get_repo_assets(
         for asset in assets:
             k = asset["name"]
             if version is None:
-                v = github_repo + "/{}".format(k)
+                value = github_repo + "/{}".format(k)
             else:
-                v = asset["browser_download_url"]
-            result_dict[k] = v
+                value = asset["browser_download_url"]
+            result_dict[k] = value
 
     return result_dict
 
