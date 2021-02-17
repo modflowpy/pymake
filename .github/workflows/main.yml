@@ -78,11 +78,6 @@ jobs:
           pip install matplotlib
           pip install https://github.com/modflowpy/flopy/zipball/develop
 
-      - name: Install pytest timer on Linux
-        if: runner.os == 'Linux'
-        run: |
-          pip install pytest-timer[termcolor]
-
       - name: Setup symbolic link to gfortran on Linux
         if: runner.os == 'Linux'
         run: |
@@ -114,7 +109,7 @@ jobs:
       - name: Run pytest
         shell: bash
         run: |
-          pytest -v --cov=pymake --cov-report=xml autotest/
+          pytest -v --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         shell: bash

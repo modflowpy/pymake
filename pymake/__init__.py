@@ -50,6 +50,7 @@ from .utils.usgsprograms import usgs_program_data
 from .utils.download import (
     download_and_unzip,
     getmfexes,
+    getmfnightly,
     repo_latest_version,
     get_repo_assets,
     zip_all,
