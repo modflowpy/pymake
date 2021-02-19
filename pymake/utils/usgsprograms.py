@@ -21,8 +21,8 @@ A table listing the available pymake targets is included below:
 import os
 import sys
 import json
-import requests
 import datetime
+import requests
 from collections import OrderedDict
 
 
@@ -394,11 +394,11 @@ class usgs_program_data:
                 json.dump(prog_data, f, indent=4)
 
         # write code.md
-        f = open("code.md", "w")
+        file_obj = open("code.md", "w")
         line = "| Program | Version | UTC Date |"
-        f.write(line + "\n")
+        file_obj.write(line + "\n")
         line = "| ------- | ------- | ---- |"
-        f.write(line + "\n")
+        file_obj.write(line + "\n")
         for target, target_dict in prog_data.items():
             keys = list(target_dict.keys())
             line = "| {} | {} |".format(target, target_dict["version"])
@@ -408,8 +408,8 @@ class usgs_program_data:
             else:
                 line += " |"
             line += "\n"
-            f.write(line)
-        f.close()
+            file_obj.write(line)
+        file_obj.close()
 
         return
 
