@@ -47,6 +47,7 @@ target_keys = (
     "standard_switch",
     "double_switch",
     "shared_object",
+    "url_download_asset_date",
 )
 
 
@@ -100,7 +101,10 @@ class usgs_program_data:
             # programmatically build a dictionary for each target
             d = OrderedDict()
             for idx, key in enumerate(target_keys):
-                v = t[idx + 1]
+                if key in ("url_download_asset_date",):
+                    v = None
+                else:
+                    v = t[idx + 1]
                 if key in (
                     "current",
                     "standard_switch",
@@ -286,7 +290,11 @@ class usgs_program_data:
 
     @staticmethod
     def export_json(
-        fpth="code.json", prog_data=None, current=False, update=True
+        fpth="code.json",
+        prog_data=None,
+        current=False,
+        update=True,
+        write_markdown=False,
     ):
         """Export USGS program data as a json file.
 
@@ -306,6 +314,10 @@ class usgs_program_data:
             with values in the USGS program database. If False, existing
             targets in the user-specified program database will not be
             updated. Default is True.
+        write_markdown : bool
+            If True, write markdown file that includes the target name,
+            version, and the last-modified date of the download asset (url).
+            Default is False.
 
 
         Returns
@@ -349,23 +361,26 @@ class usgs_program_data:
                     if key in ukeys:
                         prog_data[key] = udata[key]
 
-        # update the date of each asset
+        # update the date of each asset if standard code.json object
         for target, target_dict in prog_data.items():
-            url = target_dict["url"]
-            header = requests.head(url)
-            keys = list(header.headers.keys())
-            for key in ("Last-Modified", "Date"):
-                if key in keys:
-                    url_date = header.headers[key]
-                    url_data_obj = datetime.datetime.strptime(
-                        url_date, "%a, %d %b %Y %H:%M:%S %Z"
-                    )
-                    datetime_obj_utc = url_data_obj.replace(
-                        tzinfo=datetime.timezone.utc
-                    )
-                    datetime_str = datetime_obj_utc.strftime("%m/%d/%Y")
-                    prog_data[target]["url_download_asset_date"] = datetime_str
-                    break
+            if "url" in target_dict.keys():
+                url = target_dict["url"]
+                header = requests.head(url)
+                keys = list(header.headers.keys())
+                for key in ("Last-Modified", "Date"):
+                    if key in keys:
+                        url_date = header.headers[key]
+                        url_data_obj = datetime.datetime.strptime(
+                            url_date, "%a, %d %b %Y %H:%M:%S %Z"
+                        )
+                        datetime_obj_utc = url_data_obj.replace(
+                            tzinfo=datetime.timezone.utc
+                        )
+                        datetime_str = datetime_obj_utc.strftime("%m/%d/%Y")
+                        prog_data[target][
+                            "url_download_asset_date"
+                        ] = datetime_str
+                        break
 
         # export file
         try:
@@ -394,22 +409,23 @@ class usgs_program_data:
                 json.dump(prog_data, f, indent=4)
 
         # write code.md
-        file_obj = open("code.md", "w")
-        line = "| Program | Version | UTC Date |"
-        file_obj.write(line + "\n")
-        line = "| ------- | ------- | ---- |"
-        file_obj.write(line + "\n")
-        for target, target_dict in prog_data.items():
-            keys = list(target_dict.keys())
-            line = "| {} | {} |".format(target, target_dict["version"])
-            date_key = "url_download_asset_date"
-            if date_key in keys:
-                line += " {} |".format(target_dict[date_key])
-            else:
-                line += " |"
-            line += "\n"
-            file_obj.write(line)
-        file_obj.close()
+        if prog_data is not None and write_markdown:
+            file_obj = open("code.md", "w")
+            line = "| Program | Version | UTC Date |"
+            file_obj.write(line + "\n")
+            line = "| ------- | ------- | ---- |"
+            file_obj.write(line + "\n")
+            for target, target_dict in prog_data.items():
+                keys = list(target_dict.keys())
+                line = "| {} | {} |".format(target, target_dict["version"])
+                date_key = "url_download_asset_date"
+                if date_key in keys:
+                    line += " {} |".format(target_dict[date_key])
+                else:
+                    line += " |"
+                line += "\n"
+                file_obj.write(line)
+            file_obj.close()
 
         return
 
@@ -444,7 +460,7 @@ class usgs_program_data:
                 try:
                     for kk in value.keys():
                         if kk not in target_keys:
-                            raise KeyError(msg)
+                            raise KeyError(msg + ' - key ("{}")'.format(kk))
                 except:
                     raise KeyError(msg)
 
