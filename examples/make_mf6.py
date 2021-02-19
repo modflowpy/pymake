@@ -1,9 +1,9 @@
-from pymake import build_apps
+import pymake
 
 
 # Download and compile the MODFLOW 6 distribution
 def make_mf6():
-    build_apps(("mf6",))
+    pymake.build_apps(("mf6",), verbose=True)
 
     return
 

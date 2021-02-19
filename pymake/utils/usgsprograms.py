@@ -21,6 +21,8 @@ A table listing the available pymake targets is included below:
 import os
 import sys
 import json
+import requests
+import datetime
 from collections import OrderedDict
 
 
@@ -347,6 +349,24 @@ class usgs_program_data:
                     if key in ukeys:
                         prog_data[key] = udata[key]
 
+        # update the date of each asset
+        for target, target_dict in prog_data.items():
+            url = target_dict["url"]
+            header = requests.head(url)
+            keys = list(header.headers.keys())
+            for key in ("Last-Modified", "Date"):
+                if key in keys:
+                    url_date = header.headers[key]
+                    url_data_obj = datetime.datetime.strptime(
+                        url_date, "%a, %d %b %Y %H:%M:%S %Z"
+                    )
+                    datetime_obj_utc = url_data_obj.replace(
+                        tzinfo=datetime.timezone.utc
+                    )
+                    datetime_str = datetime_obj_utc.strftime("%m/%d/%Y")
+                    prog_data[target]["url_download_asset_date"] = datetime_str
+                    break
+
         # export file
         try:
             with open(fpth, "w") as f:
@@ -372,6 +392,24 @@ class usgs_program_data:
             dst = os.path.join(appdir, fpth)
             with open(dst, "w") as f:
                 json.dump(prog_data, f, indent=4)
+
+        # write code.md
+        f = open("code.md", "w")
+        line = "| Program | Version | UTC Date |"
+        f.write(line + "\n")
+        line = "| ------- | ------- | ---- |"
+        f.write(line + "\n")
+        for target, target_dict in prog_data.items():
+            keys = list(target_dict.keys())
+            line = "| {} | {} |".format(target, target_dict["version"])
+            date_key = "url_download_asset_date"
+            if date_key in keys:
+                line += " {} |".format(target_dict[date_key])
+            else:
+                line += " |"
+            line += "\n"
+            f.write(line)
+        f.close()
 
         return
 

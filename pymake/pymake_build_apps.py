@@ -27,6 +27,7 @@ USGS applications are built if no list is passed to
 import os
 import sys
 from datetime import datetime
+import shutil
 
 from .utils.usgsprograms import usgs_program_data
 from .pymake import Pymake
@@ -89,6 +90,16 @@ def build_apps(
                 type(pymake_object), type(Pymake())
             )
             raise TypeError(msg)
+
+    # clean any existing temporary directories
+    temp_pths = (
+        os.path.join(".", "obj_temp"),
+        os.path.join(".", "mod_temp"),
+        os.path.join(".", "src_temp"),
+    )
+    for pth in temp_pths:
+        if os.path.isdir(pth):
+            shutil.rmtree(pth)
 
     # set object to clean after each build
     pmobj.makeclean = True
@@ -197,6 +208,9 @@ def build_apps(
             # build the code
             if build_target:
                 pmobj.build(modify_exe_name=update_target_name)
+            # add target to build_targets list, if necessary
+            else:
+                pmobj.update_build_targets()
 
         # calculate download and compile time
         end_downcomp = datetime.now()
