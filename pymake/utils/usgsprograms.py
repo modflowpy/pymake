@@ -102,17 +102,17 @@ class usgs_program_data:
             d = OrderedDict()
             for idx, key in enumerate(target_keys):
                 if key in ("url_download_asset_date",):
-                    v = None
+                    value = None
                 else:
-                    v = t[idx + 1]
+                    value = t[idx + 1]
                 if key in (
                     "current",
                     "standard_switch",
                     "double_switch",
                     "shared_object",
                 ):
-                    v = _str_to_bool(v)
-                d[key] = v
+                    value = _str_to_bool(value)
+                d[key] = value
 
             # make it possible to access each key with a dot (.)
             d = dotdict(d)
