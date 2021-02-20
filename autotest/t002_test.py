@@ -8,7 +8,7 @@ import flopy
 import pytest
 
 # determine if running on a continuous integration server
-is_CI = 'CI' in os.environ
+is_CI = "CI" in os.environ
 
 # define program data
 target = "swtv4"

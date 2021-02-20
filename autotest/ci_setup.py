@@ -9,9 +9,7 @@ mf6_exdir = os.path.join(temp_pth, "mf6examples")
 
 
 def download_mf6_examples(verbose=False):
-    """Download mf6 examples and return location of folder
-
-    """
+    """Download mf6 examples and return location of folder"""
 
     target = "mf6"
     pm = pymake.Pymake(verbose=True)
@@ -31,7 +29,7 @@ def download_mf6_examples(verbose=False):
     print("copying files to...{}".format(mf6_exdir))
     shutil.copytree(temp_dir, mf6_exdir)
 
-    print('removing...{} directory'.format(temp_download_dir))
+    print("removing...{} directory".format(temp_download_dir))
     shutil.rmtree(temp_download_dir)
 
     return os.path.abspath(mf6_exdir)
@@ -44,9 +42,7 @@ def examples_list(verbose=False):
     -------
 
     """
-    exclude_models = (
-        "lnf",
-    )
+    exclude_models = ("lnf",)
     exclude_examples = (
         "sagehen",
         "ex-gwt-keating",
@@ -68,7 +64,7 @@ def examples_list(verbose=False):
             for file_name in fileList:
                 if file_name.lower() == "mfsim.nam":
                     if verbose:
-                        print('Found directory: {}'.format(dirName))
+                        print("Found directory: {}".format(dirName))
                     src_folders.append(dirName)
     src_folders = sorted(src_folders)
 

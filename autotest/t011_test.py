@@ -19,7 +19,9 @@ def export_code_json():
 
     # make the json file
     fpth = os.path.join(cpth, "code.test.json")
-    pymake.usgs_program_data.export_json(fpth=fpth, current=True)
+    pymake.usgs_program_data.export_json(
+        fpth=fpth, current=True, write_markdown=True
+    )
 
     # check that the json file was made
     msg = "did not make...{}".format(fpth)
@@ -78,6 +80,10 @@ def test_usgsprograms_export_json():
     prog_dict = pymake.usgs_program_data().get_program_dict()
     for key, value in json_dict.items():
         temp_dict = prog_dict[key]
+        # fill keys that are programmatically filled
+        fill_keys = ("url_download_asset_date",)
+        for fill_key in fill_keys:
+            temp_dict[fill_key] = value[fill_key]
         msg = (
             "json dictionary for {} key ".format(key)
             + "is not equal to the .usgs_prog_data dictionary"

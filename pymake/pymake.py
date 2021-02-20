@@ -782,10 +782,23 @@ class Pymake:
             raise FileNotFoundError("could not build {}".format(self.target))
         # add target to list of targets
         else:
-            if os.path.abspath(self.target) not in self.build_targets:
-                self.build_targets.append(os.path.abspath(self.target))
+            self.update_build_targets()
 
         return self.returncode
+
+    def update_build_targets(self):
+        """Add target to build_targets list if it is not in the list
+
+        Returns
+        -------
+
+        """
+        if os.path.abspath(self.target) not in self.build_targets:
+            if self.verbose:
+                print("adding {} to build_targets list".format(self.target))
+            self.build_targets.append(os.path.abspath(self.target))
+
+        return
 
     def update_target(self, target, modify_target=False):
         """Update target name with executable extension on Windows and
