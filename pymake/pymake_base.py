@@ -1024,14 +1024,18 @@ def _create_win_batch(
             raise Exception("Could not find cpvars: {}".format(cpvars))
         intel_setvars = '"' + os.path.normpath(cpvars) + '" ' + arch
     elif latest_version is not None:
-        cpvars = "C:\\Program Files (x86)\\Intel\\oneAPI\\compiler\\" + \
-                 "{}\\env\\vars.bat".format(latest_version)
+        cpvars = (
+            "C:\\Program Files (x86)\\Intel\\oneAPI\\compiler\\"
+            + "{}\\env\\vars.bat".format(latest_version)
+        )
         if not os.path.isfile(cpvars):
             raise Exception("Could not find cpvars: {}".format(cpvars))
         intel_setvars = '"{}"'.format(cpvars)
     else:
-        err_msg = "OneAPI or stand alone version of Intel compilers " + \
-                  "is not installed"
+        err_msg = (
+            "OneAPI or stand alone version of Intel compilers "
+            + "is not installed"
+        )
         raise ValueError(err_msg)
 
     # open the batch file
