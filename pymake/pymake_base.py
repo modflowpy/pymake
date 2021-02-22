@@ -1007,25 +1007,38 @@ def _create_win_batch(
     -------
 
     """
-    # get path to compilervars batch file
+    # determine intel version
+    # stand alone intel installation
     iflist = ["IFORT_COMPILER{}".format(i) for i in range(30, 12, -1)]
-    found = False
     for ift in iflist:
-        cpvars = os.environ.get(ift)
-        if cpvars is not None:
-            found = True
+        stand_alone_intel = os.environ.get(ift)
+        if stand_alone_intel is not None:
             break
-    if not found:
-        raise Exception("Pymake could not find IFORT compiler.")
-    cpvars += os.path.join("bin", "compilervars.bat")
-    if not os.path.isfile(cpvars):
-        raise Exception("Could not find cpvars: {}".format(cpvars))
+    # oneAPI
+    latest_version = os.environ.get("LATEST_VERSION")
+
+    # process intel version
+    if stand_alone_intel is not None:
+        cpvars = os.path.join(stand_alone_intel, "bin", "compilervars.bat")
+        if not os.path.isfile(cpvars):
+            raise Exception("Could not find cpvars: {}".format(cpvars))
+        intel_setvars = '"' + os.path.normpath(cpvars) + '" ' + arch
+    elif latest_version is not None:
+        cpvars = "C:\\Program Files (x86)\\Intel\\oneAPI\\compiler\\" + \
+                 "{}\\env\\vars.bat".format(latest_version)
+        if not os.path.isfile(cpvars):
+            raise Exception("Could not find cpvars: {}".format(cpvars))
+        intel_setvars = '"{}"'.format(cpvars)
+    else:
+        err_msg = "OneAPI or stand alone version of Intel compilers " + \
+                  "is not installed"
+        raise ValueError(err_msg)
 
     # open the batch file
     f = open(batchfile, "w")
 
     # write the compilervars batch command to batchfile
-    line = "call " + '"' + os.path.normpath(cpvars) + '" ' + arch + "\n"
+    line = "call " + intel_setvars + "\n"
     f.write(line)
 
     # assume that header files may be in other folders, so make a list
