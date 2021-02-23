@@ -571,6 +571,16 @@ def _get_linker_flags(
     # set outgoing syslibs
     syslibs_out = []
 
+    # add option to statically link intel provided libraries on osx and linux
+    if sharedobject:
+        if osname in (
+            "darwin",
+            "linux",
+        ):
+            if fext is not None:
+                if fc in ["ifort", "mpiifort"]:
+                    syslibs_out.append("static-intel")
+
     # add linker switch for a shared object
     if sharedobject:
         gnu_compiler = True
