@@ -548,6 +548,23 @@ class Pymake:
         """
         if self._get_base_target() in ("libmf6",):
             self.sharedobject = True
+        else:
+            self.sharedobject = False
+
+            # remove any shared compiler options
+            for flag in (
+                "-fPIC",
+                "-shared",
+                "-dll",
+                "-dynamiclib",
+                "-static-intel",
+            ):
+                if self.fflags is not None:
+                    self.fflags = self.fflags.replace(flag, "")
+                if self.cflags is not None:
+                    self.cflags = self.cflags.replace(flag, "")
+                if self.syslibs is not None:
+                    self.syslibs = self.syslibs.replace(flag, "")
         return
 
     def _set_extrafiles(self):
@@ -681,8 +698,8 @@ class Pymake:
                         self.fc,
                         [],
                         self.debug,
-                        self.double,
-                        self.sharedobject,
+                        double=self.double,
+                        sharedobject=self.sharedobject,
                     )
                 )
         if self.cc != "none":
