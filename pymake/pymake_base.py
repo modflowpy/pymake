@@ -402,10 +402,16 @@ def _pymake_initialize(
         files = []
     for fpth in files:
         if not os.path.isfile(fpth):
-            msg = "Current working directory: {}\n".format(os.getcwd())
-            msg += "Error in extrafiles: {}\n".format(extrafiles)
-            msg += "Could not find file: {}".format(fpth)
-            raise FileNotFoundError(msg)
+            # check if fpp file has been replaced by a free format file
+            if fpth.endswith(".fpp"):
+                fpth2 = fpth.replace(".fpp", ".f90")
+                if os.path.isfile(fpth):
+                    fpth = fpth2
+                else:
+                    msg = "Current working directory: {}\n".format(os.getcwd())
+                    msg += "Error in extrafiles: {}\n".format(extrafiles)
+                    msg += "Could not find file: {}".format(fpth)
+                    raise FileNotFoundError(msg)
         if inplace:
             dst = os.path.normpath(os.path.relpath(fpth, os.getcwd()))
         else:
@@ -471,7 +477,7 @@ def _get_extra_exclude_files(extrafiles):
         else:
             raise Exception(
                 "extrafiles must be either a list of files "
-                "or the name of a text file that contains a list"
+                "or the name of a text file that contains a list "
                 "of files."
             )
     return files
