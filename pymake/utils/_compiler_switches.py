@@ -313,6 +313,10 @@ def _get_fortran_flags(
             os_macro = _get_os_macro(osname)
             if os_macro is not None:
                 flags.append(os_macro)
+
+            # add preprocessing flag for MODFLOW 6 targets
+            if target in ("mf6", "libmf6", "zbud6", "mf5to6"):
+                flags.append("cpp")
         elif fc in ["ifort", "mpiifort"]:
             if osname == "win32":
                 flags += ["heap-arrays:0", "fpe:0", "traceback", "nologo"]
@@ -331,6 +335,10 @@ def _get_fortran_flags(
                 flags += ["no-heap-arrays", "fpe0", "traceback"]
                 if double:
                     flags += ["r8", "autodouble"]
+
+            # add preprocessing flag for MODFLOW 6 targets
+            if target in ("mf6", "libmf6", "zbud6", "mf5to6"):
+                flags.append("fpp")
 
         # Add passed fortran flags - assume that flags have - or / as the
         # first character. fortran flags starting with O are excluded

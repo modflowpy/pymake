@@ -369,6 +369,14 @@ def _update_mf2005_files(srcdir, fc, cc, arch, double):
     -------
 
     """
+    # Remove six src folders
+    dlist = ("hydprograms",)
+    for d in dlist:
+        dname = os.path.join(srcdir, d)
+        if os.path.isdir(dname):
+            print('Removing..."{}"'.format(dname))
+            shutil.rmtree(os.path.join(srcdir, d))
+
     # update utl7.f
     tag = "IBINARY=0"
     fpth = os.path.join(srcdir, "utl7.f")
