@@ -250,7 +250,10 @@ def _update_mt3dms_files(srcdir, fc, cc, arch, double):
         os.path.join(srcdir, "mt_adv5.for"),
     )
 
-    for file_list in ["mt_btn5.for", "mt_utl5.for"]:
+    for file_list in (
+        "mt_btn5.for",
+        "mt_utl5.for",
+    ):
         fpth = os.path.join(srcdir, file_list)
         with open(fpth) as f:
             lines = f.readlines()

@@ -720,6 +720,11 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
                     pass
             elif fc == "gfortran":
                 fflags += ["-O1", "-fno-second-underscore"]
+        elif target in ("mt3dms", "swtv4"):
+            if fc == "gfortran":
+                fflags += [
+                    "-fallow-argument-mismatch",
+                ]
         elif target in ("mf6", "libmf6", "zbud6"):
             if fc == "gfortran":
                 fflags += [
