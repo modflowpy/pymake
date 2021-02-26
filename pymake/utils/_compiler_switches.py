@@ -722,9 +722,13 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
                 fflags += ["-O1", "-fno-second-underscore"]
         elif target in ("mt3dms", "swtv4"):
             if fc == "gfortran":
-                fflags += [
-                    "-fallow-argument-mismatch",
-                ]
+                opt = "-fallow-argument-mismatch"
+                if _check_gnu_switch_available(
+                    opt, compiler=fc, verbose=verbose
+                ):
+                    fflags += [
+                        "-fallow-argument-mismatch",
+                    ]
         elif target in ("mf6", "libmf6", "zbud6"):
             if fc == "gfortran":
                 fflags += [
