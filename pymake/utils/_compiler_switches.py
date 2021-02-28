@@ -720,7 +720,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
                     pass
             elif fc == "gfortran":
                 fflags += ["-O1", "-fno-second-underscore"]
-        elif target in ("mt3dms", "swtv4"):
+        elif target in ("mt3dms", "swtv4", "gsflow"):
             if fc == "gfortran":
                 opt = "-fallow-argument-mismatch"
                 if _check_gnu_switch_available(
