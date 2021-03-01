@@ -716,10 +716,29 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
                         "-assume:underscore",
                     ]
                 else:
-                    # fflags.append('-fp-model source')
                     pass
             elif fc == "gfortran":
                 fflags += ["-O1", "-fno-second-underscore"]
+                opt = "-fallow-argument-mismatch"
+                if _check_gnu_switch_available(
+                    opt, compiler=fc, verbose=verbose
+                ):
+                    fflags += [
+                        opt,
+                    ]
+        elif target in (
+            "mf2000",
+            "mt3dms",
+            "swtv4",
+        ):
+            if fc == "gfortran":
+                opt = "-fallow-argument-mismatch"
+                if _check_gnu_switch_available(
+                    opt, compiler=fc, verbose=verbose
+                ):
+                    fflags += [
+                        opt,
+                    ]
         elif target in ("mf6", "libmf6", "zbud6"):
             if fc == "gfortran":
                 fflags += [
