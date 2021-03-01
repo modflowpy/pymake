@@ -6,3 +6,4 @@ pip install pytest pytest-cov coverage
 pip install pydotplus appdirs
 pip install matplotlib
 pip install https://github.com/modflowpy/flopy/zipball/develop
+

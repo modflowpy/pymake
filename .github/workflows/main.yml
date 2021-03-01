@@ -9,9 +9,11 @@ jobs:
 
   pymake_lint:
     name: pymake linting
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
 
     if: github.repository_owner == 'modflowpy'
     steps:
@@ -48,7 +50,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: 3.8
+        python-version: [3.8]
         os: [ ubuntu-latest, macos-latest, windows-latest ]
     defaults:
       run:
@@ -115,7 +117,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: 3.8
+        python-version: [3.8]
     defaults:
       run:
         shell: bash
@@ -220,8 +222,6 @@ jobs:
     name: pymake rtd
     needs: pymakeCI-os
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2.3.4
