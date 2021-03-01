@@ -220,7 +220,7 @@ jobs:
 
   pymake_rtd:
     name: pymake rtd
-    needs: pymakeCI-os
+    needs: pymakeCI-os-gcc
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
