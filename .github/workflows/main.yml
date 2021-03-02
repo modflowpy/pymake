@@ -342,6 +342,8 @@ jobs:
     name: pymake rtd
     needs: pymakeCI-os-gcc
     runs-on: ubuntu-latest
+    if:
+      github.event_name == 'push'
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2.3.4

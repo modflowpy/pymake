@@ -9,4 +9,8 @@ LATEST_VERSION=$(ls -1 /opt/intel/oneapi/compiler/ | grep -v latest | sort | tai
 # shellcheck source=/dev/null
 source /opt/intel/oneapi/compiler/"$LATEST_VERSION"/env/vars.sh
 
+# print intel compiler versions
+ifort --version
+icc --version
+
 pytest -v --durations=0 --cov=pymake --cov-report=xml autotest/
