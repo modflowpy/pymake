@@ -114,8 +114,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-        os_script: [ifortvars_linux.sh, ifortvars_macos.sh, ifortvars_windows.bat]
+        include:
+          - os: ubuntu-latest
+            os_script: ifortvars_linux.sh
+          - os: macos-latest
+            os_script: ifortvars_macos.sh
+          - os: windows-latest
+            os_script: ifortvars_windows.bat
     defaults:
       run:
         shell: bash
