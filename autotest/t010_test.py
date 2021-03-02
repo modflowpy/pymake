@@ -6,6 +6,12 @@ import pymake
 
 import pytest
 
+# use the line below to set fortran compiler using environmental variables
+# if sys.platform.lower() == "win32":
+#     os.environ["CC"] = "icl"
+# else:
+#     os.environ["CC"] = "icc"
+
 # define program data
 target = "gridgen"
 if sys.platform.lower() == "win32":
@@ -27,7 +33,11 @@ exe_name = os.path.join(dstpth, target)
 pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
-pm.cc = "g++"
+env_var = os.environ.get("CC")
+if env_var is not None:
+    pm.cc = env_var
+else:
+    pm.cc = "g++"
 pm.fc = None
 pm.inplace = True
 
@@ -117,6 +127,6 @@ def test_clean_up():
 if __name__ == "__main__":
     test_download()
     test_compile()
-    for cmd in biscayne_cmds:
-        run_gridgen(cmd)
+    # for cmd in biscayne_cmds:
+    #     run_gridgen(cmd)
     test_clean_up()
