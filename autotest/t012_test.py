@@ -125,6 +125,7 @@ def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
+@pytest.mark.all
 @pytest.mark.parametrize("ex,cf", examples)
 def test_gsflow(ex, cf):
     assert run_gsflow(ex, cf), "could not run {}-{}".format(ex, cf)

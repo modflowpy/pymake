@@ -3,6 +3,8 @@ import sys
 import shutil
 import pymake
 
+import pytest
+
 # define program data
 target = "mfnwt"
 if sys.platform.lower() == "win32":
@@ -100,6 +102,7 @@ def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
+@pytest.mark.all
 def test_makefile():
     build_with_makefile()
 

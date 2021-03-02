@@ -104,6 +104,7 @@ def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
+@pytest.mark.all
 @pytest.mark.parametrize("cmd", biscayne_cmds)
 def test_gridgen(cmd):
     assert run_gridgen(cmd), "could not run {}".format(cmd)

@@ -110,6 +110,7 @@ def test_compile():
     return
 
 
+@pytest.mark.all
 @pytest.mark.parametrize("fn", name_files)
 def test_mfusg(fn):
     run_mfusg(fn)

@@ -218,6 +218,7 @@ def test_download_exes():
     pymake.getmfexes(dstpth, exes=("mf2005", "mfusg", "mf6"), verbose=True)
 
 
+@pytest.mark.all
 @pytest.mark.parametrize("fn", name_files)
 def test_modpath7(fn):
     assert run_modpath7(fn), "could not run {}".format(fn)

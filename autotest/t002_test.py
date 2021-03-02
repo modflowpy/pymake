@@ -140,6 +140,7 @@ def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
+@pytest.mark.all
 @pytest.mark.parametrize("fn", name_files)
 def test_seawat(fn):
     run_seawat(fn)

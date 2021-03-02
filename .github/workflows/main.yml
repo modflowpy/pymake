@@ -96,7 +96,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --runall --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
