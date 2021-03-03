@@ -128,11 +128,13 @@ def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
+@pytest.mark.all
 @pytest.mark.parametrize("ws", sim_dirs)
 def test_mf6(ws):
     assert run_mf6(ws), "could not run {}".format(ws)
 
 
+@pytest.mark.all
 def test_makefile():
     assert build_with_makefile(), "could not compile {} with makefile".format(
         target

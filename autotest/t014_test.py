@@ -6,13 +6,15 @@ import pymake
 import pytest
 
 # define program data
-targets = ["libmf6", "crt", "vs2dt", "zonbud3"]
+targets = [
+    "crt",
+    "vs2dt",
+    "zonbud3",
+]
 
 app_extension = ""
-shared_extension = ".so"
 if sys.platform.lower() == "win32":
     app_extension = ".exe"
-    shared_extension = ".dll"
 
 for idx, target in enumerate(targets):
     target_dict = pymake.usgs_program_data.get_target(target)

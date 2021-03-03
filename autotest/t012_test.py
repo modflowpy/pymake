@@ -6,6 +6,14 @@ import flopy
 
 import pytest
 
+# use the line below to set fortran compiler using environmental variables
+# os.environ["FC"] = "ifort"
+# if sys.platform.lower() == "win32":
+#     os.environ["CC"] = "icl"
+# else:
+#     os.environ["CC"] = "icc"
+
+
 # define program data
 target = "gsflow"
 if sys.platform.lower() == "win32":
@@ -15,7 +23,7 @@ if sys.platform.lower() == "win32":
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
-dstpth = os.path.join("temp")
+dstpth = os.path.join("temp", "t012")
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
 
@@ -34,6 +42,7 @@ exes = [egsflow]
 pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
+pm.makeclean = True
 
 
 def copy_example_dir(epth):
@@ -125,6 +134,7 @@ def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
+@pytest.mark.all
 @pytest.mark.parametrize("ex,cf", examples)
 def test_gsflow(ex, cf):
     assert run_gsflow(ex, cf), "could not run {}-{}".format(ex, cf)

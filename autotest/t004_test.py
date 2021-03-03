@@ -96,6 +96,7 @@ def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
+@pytest.mark.all
 @pytest.mark.parametrize("fn", sim_files)
 def test_modpath6(fn):
     assert run_modpath6(fn), "could not run {}".format(fn)

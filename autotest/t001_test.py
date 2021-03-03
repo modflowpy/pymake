@@ -7,6 +7,11 @@ import flopy
 
 import pytest
 
+# use the line below to set fortran compiler using environmental variables
+# os.environ["FC"] = "ifort"
+# os.environ["CC"] = "icc"
+
+
 # define program data
 target = "mf2005"
 if sys.platform.lower() == "win32":
@@ -52,7 +57,7 @@ for idx, namefile in enumerate(name_files):
 pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
-pm.fflags = "-O3 -fbacktrace"
+pm.fflags = "-O3"
 pm.cflags = "-O3"
 
 
@@ -179,6 +184,7 @@ def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
+@pytest.mark.all
 @pytest.mark.parametrize("fn", name_files)
 def test_mf2005(fn):
     run_mf2005(fn)

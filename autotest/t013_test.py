@@ -4,10 +4,13 @@ import shutil
 import pymake
 import flopy
 
+import pytest
+
 # working directory
 cpth = os.path.abspath(os.path.join("temp", "t013"))
 
 
+@pytest.mark.all
 def test_gnu_make():
     os.makedirs(cpth, exist_ok=True)
 
@@ -71,6 +74,7 @@ def test_gnu_make():
     return
 
 
+@pytest.mark.all
 def test_clean_up():
     shutil.rmtree(cpth)
 

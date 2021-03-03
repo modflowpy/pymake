@@ -214,10 +214,12 @@ def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
+@pytest.mark.all
 def test_download_exes():
     pymake.getmfexes(dstpth, exes=("mf2005", "mfusg", "mf6"), verbose=True)
 
 
+@pytest.mark.all
 @pytest.mark.parametrize("fn", name_files)
 def test_modpath7(fn):
     assert run_modpath7(fn), "could not run {}".format(fn)

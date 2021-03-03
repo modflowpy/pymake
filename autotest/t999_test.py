@@ -4,6 +4,8 @@ import sys
 import shutil
 import pymake
 
+import pytest
+
 
 def which(program):
     """
@@ -28,6 +30,7 @@ def which(program):
     return None
 
 
+@pytest.mark.all
 def test_latest_version():
     version = pymake.repo_latest_version()
     test_version = "5.0"
@@ -42,6 +45,7 @@ def test_latest_version():
     return
 
 
+@pytest.mark.all
 def test_latest_assets():
     mfexes_repo_name = "MODFLOW-USGS/executables"
     assets = pymake.get_repo_assets(mfexes_repo_name)
@@ -54,6 +58,7 @@ def test_latest_assets():
     return
 
 
+@pytest.mark.all
 def test_previous_assets():
     # hack for failure of OSX on github actions
     env = "GITHUB_ACTIONS"
@@ -82,6 +87,7 @@ def test_previous_assets():
         print("available assets: {}".format(", ".join(assets.keys())))
 
 
+@pytest.mark.all
 def test_download_and_unzip_and_zip():
     exclude_files = ["code.json"]
     pth = "./temp/t999"
@@ -141,6 +147,7 @@ def test_download_and_unzip_and_zip():
     return
 
 
+@pytest.mark.all
 def test_nightly_download_and_unzip():
     pth = "./temp/t999"
     pymake.getmfnightly(pth, verbose=True)

@@ -171,6 +171,7 @@ def test_compile_mt3dms():
     assert pm.build() == 0, "could not compile {}".format(pm.target)
 
 
+@pytest.mark.all
 def test_download_exes():
     pymake.getmfexes(dstpth, exes=("mfnwt", "mf6"), verbose=True)
     return
@@ -193,6 +194,7 @@ def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
+@pytest.mark.all
 @pytest.mark.parametrize("ws", sim_dirs)
 def test_mt3dusgs(ws):
     assert run_mt3dusgs(ws), "could not run {}".format(ws)

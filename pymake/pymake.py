@@ -131,6 +131,16 @@ class Pymake:
         if verbose is not None:
             self.verbose = verbose
 
+        # reset fortran and c/c++ if fc and cc environmental variables are set
+        env_var = os.environ.get("FC")
+        if env_var is not None:
+            if env_var != self.fc:
+                self.fc = env_var
+        env_var = os.environ.get("CC")
+        if env_var is not None:
+            if env_var != self.cc:
+                self.cc = env_var
+
     def reset(self, target):
         """Reset PyMake object variables for a target
 
@@ -192,7 +202,7 @@ class Pymake:
 
     def _arg_parser(self):
         """Setup argparse object for Pymake object using only optional
-        command lone arguments.
+        command line arguments.
 
         Returns
         -------
