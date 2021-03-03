@@ -21,7 +21,7 @@ if sys.platform.lower() == "win32":
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
-dstpth = os.path.join("temp")
+dstpth = os.path.join("temp", "t010")
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
 
@@ -40,6 +40,7 @@ else:
     pm.cc = "g++"
 pm.fc = None
 pm.inplace = True
+pm.makeclean = True
 
 biscayne_cmds = [
     "buildqtg action01_buildqtg.dfn",
