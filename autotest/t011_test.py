@@ -20,7 +20,7 @@ def export_code_json():
     # make the json file
     fpth = os.path.join(cpth, "code.test.json")
     pymake.usgs_program_data.export_json(
-        fpth=fpth, current=True, write_markdown=True
+        fpth=fpth, current=True, write_markdown=True, verbose=True,
     )
 
     # check that the json file was made
