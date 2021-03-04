@@ -129,6 +129,14 @@ def build_apps(
         if idt == 0:
             fc0 = pmobj.fc
             cc0 = pmobj.cc
+            fflags0 = pmobj.fflags
+            cflags0 = pmobj.cflags
+            syslibs0 = pmobj.syslibs
+        # reset fortran, c/c++, and syslib flags
+        else:
+            pmobj.fflags = fflags0
+            pmobj.cflags = cflags0
+            pmobj.syslibs = syslibs0
 
         # reset compilers
         if target in ("gridgen",):

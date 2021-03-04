@@ -313,10 +313,6 @@ def _get_fortran_flags(
             os_macro = _get_os_macro(osname)
             if os_macro is not None:
                 flags.append(os_macro)
-
-            # add preprocessing flag for MODFLOW 6 targets
-            if target in ("mf6", "libmf6", "zbud6", "mf5to6"):
-                flags.append("cpp")
         elif fc in ["ifort", "mpiifort"]:
             if osname == "win32":
                 flags += ["heap-arrays:0", "fpe:0", "traceback", "nologo"]
@@ -335,10 +331,6 @@ def _get_fortran_flags(
                 flags += ["no-heap-arrays", "fpe0", "traceback"]
                 if double:
                     flags += ["r8", "autodouble"]
-
-            # add preprocessing flag for MODFLOW 6 targets
-            if target in ("mf6", "libmf6", "zbud6", "mf5to6"):
-                flags.append("fpp")
 
         # Add passed fortran flags - assume that flags have - or / as the
         # first character. fortran flags starting with O are excluded
@@ -551,7 +543,6 @@ def _get_linker_flags(
     """
     # get list of unique fortran and c/c++ file extensions
     fext = _get_fortran_files(srcfiles, extensions=True)
-    cext = _get_c_files(srcfiles, extensions=True)
 
     # remove .exe extension of necessary
     if fc is not None:
@@ -561,8 +552,12 @@ def _get_linker_flags(
 
     # set linker compiler
     compiler = None
-    if fext is not None:
-        compiler = fc
+    if len(srcfiles) < 1:
+        if fc is not None:
+            compiler = fc
+    else:
+        if fext is not None:
+            compiler = fc
     if compiler is None:
         compiler = cc
 
@@ -581,22 +576,19 @@ def _get_linker_flags(
 
     # add option to statically link intel provided libraries on osx and linux
     if sharedobject:
-        if osname in (
-            "darwin",
-            "linux",
-        ):
-            if fext is not None:
-                if fc in ["ifort", "mpiifort"]:
+        if osname in ("darwin", "linux",):
+            if compiler == fc:
+                if fc in ("ifort", "mpiifort",):
                     syslibs_out.append("static-intel")
 
     # add linker switch for a shared object
     if sharedobject:
         gnu_compiler = True
-        if fext is not None:
-            if fc in ["ifort", "mpiifort"]:
+        if compiler == fc:
+            if fc in ("ifort", "mpiifort",):
                 gnu_compiler = False
         else:
-            if cc in ["icc", "mpiicc", "icl", "cl"]:
+            if cc in ("icc", "mpiicc", "icl", "cl",):
                 gnu_compiler = False
         if osname == "win32":
             if gnu_compiler:
@@ -620,11 +612,11 @@ def _get_linker_flags(
         isstatic = False
         isgfortran = False
         if osname == "win32":
-            if fext is not None and fc in ["gfortran"]:
+            if compiler == fc and fc in ("gfortran",):
                 isstatic = True
                 isgfortran = True
             if not isstatic:
-                if cext is not None and cc in ["gcc", "g++"]:
+                if compiler == cc and cc in ("gcc", "g++",):
                     isstatic = True
         if isstatic:
             syslibs_out.append("static")
@@ -637,11 +629,11 @@ def _get_linker_flags(
     # add -nologo switch for compiling on windows with intel compilers
     if osname == "win32":
         addswitch = False
-        if fext is not None:
-            if fc in ["ifort", "mpiifort"]:
+        if compiler == fc:
+            if fc in ("ifort", "mpiifort",):
                 addswitch = True
         else:
-            if cc in ["icl", "cl"]:
+            if cc in ("icl", "cl",):
                 addswitch = True
         if addswitch:
             syslibs_out.append("nologo")
@@ -726,11 +718,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
                     fflags += [
                         opt,
                     ]
-        elif target in (
-            "mf2000",
-            "mt3dms",
-            "swtv4",
-        ):
+        elif target in ("mf2000", "mt3dms", "swtv4",):
             if fc == "gfortran":
                 opt = "-fallow-argument-mismatch"
                 if _check_gnu_switch_available(

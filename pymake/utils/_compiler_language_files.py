@@ -117,6 +117,64 @@ def _get_iso_c(srcfiles):
     return iso_c
 
 
+def _preprocess_file(srcfiles):
+    """Determine if the file should be preprocessed.
+
+    Parameters
+    ----------
+    srcfiles : str or list
+        source file path or list of source file paths
+
+    Returns
+    -------
+    preprocess : bool
+        flag indicating if the file should be preprocessed
+
+    """
+    if isinstance(srcfiles, str):
+        srcfiles = [srcfiles]
+
+    preprocess = False
+    for srcfile in srcfiles:
+        if os.path.exists(srcfile):
+            # open the file
+            f = open(srcfile, "rb")
+
+            # read the file
+            lines = f.read()
+
+            # decode the file
+            lines = lines.decode("ascii", "replace").splitlines()
+
+            # develop a list of modules in the file
+            for line in lines:
+                linelist = line.strip().split()
+                if len(linelist) == 0:
+                    continue
+                if linelist[0].lower() in (
+                    "#define",
+                    "#undef",
+                    "#ifdef",
+                    "#ifndef",
+                    "#if",
+                    "#error",
+                ):
+                    preprocess = True
+                    break
+
+            # terminate file content search if preprocess is True
+            if preprocess:
+                break
+
+        else:
+            msg = "_preprocess_file: could not " + "open {}".format(
+                os.path.basename(srcfile)
+            )
+            raise FileNotFoundError(msg)
+
+    return preprocess
+
+
 def _get_srcfiles(srcdir, include_subdir):
     """Get a list of source files in source file directory srcdir
 

@@ -223,6 +223,46 @@ def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
     return req
 
 
+def _request_header(url, max_requests=10, verbose=False):
+    """Get the headers from a url
+
+    Parameters
+    ----------
+    url : str
+        url address for the zip file
+    max_requests : int
+        number of url download request attempts (default is 10)
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
+        (default is False)
+
+    Returns
+    -------
+    header : request header object
+        request header object for url
+
+    """
+    for idx in range(max_requests):
+        if verbose:
+            msg = "open request attempt {} of {}".format(idx + 1, max_requests)
+            print(msg)
+
+        header = requests.head(url, allow_redirects=True)
+        if header.status_code != 200:
+            if idx < max_requests - 1:
+                time.sleep(13)
+                continue
+            else:
+                msg = "Cannot open request from:\n" + "    {}\n\n".format(url)
+                print(msg)
+                header.raise_for_status()
+
+        # successful header request
+        break
+
+    return header
+
+
 def download_and_unzip(
     url,
     pth="./",
@@ -819,10 +859,7 @@ def getmfexes(
         )
         download_url = assets[zipname]
     download_and_unzip(
-        download_url,
-        download_dir,
-        verbose=verbose,
-        verify=verify,
+        download_url, download_dir, verbose=verbose, verify=verify,
     )
 
     if exes is not None:
@@ -851,11 +888,7 @@ def getmfexes(
 
 
 def getmfnightly(
-    pth=".",
-    platform=None,
-    exes=None,
-    verbose=False,
-    verify=True,
+    pth=".", platform=None, exes=None, verbose=False, verify=True,
 ):
     """Get the latest MODFLOW 6 binary nightly-build executables from github
     (https://github.com/MODFLOW-USGS/modflow6-nightly-build/) for the specified
@@ -900,10 +933,7 @@ def getmfnightly(
         + zipname
     )
     download_and_unzip(
-        download_url,
-        download_dir,
-        verbose=verbose,
-        verify=verify,
+        download_url, download_dir, verbose=verbose, verify=verify,
     )
 
     if exes is not None:

@@ -22,8 +22,11 @@ import os
 import sys
 import json
 import datetime
-import requests
+
+# import requests
 from collections import OrderedDict
+
+from .download import _request_header
 
 
 class dotdict(dict):
@@ -295,6 +298,7 @@ class usgs_program_data:
         current=False,
         update=True,
         write_markdown=False,
+        verbose=False,
     ):
         """Export USGS program data as a json file.
 
@@ -318,6 +322,8 @@ class usgs_program_data:
             If True, write markdown file that includes the target name,
             version, and the last-modified date of the download asset (url).
             Default is False.
+        verbose : bool
+            boolean for verbose output to terminal
 
 
         Returns
@@ -365,7 +371,7 @@ class usgs_program_data:
         for target, target_dict in prog_data.items():
             if "url" in target_dict.keys():
                 url = target_dict["url"]
-                header = requests.head(url)
+                header = _request_header(url, verbose=verbose)
                 keys = list(header.headers.keys())
                 for key in ("Last-Modified", "Date"):
                     if key in keys:
