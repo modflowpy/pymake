@@ -84,6 +84,8 @@ def clean_up():
     return
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_download():
     if os.path.isdir(mp6pth):
         shutil.rmtree(mp6pth)
@@ -92,16 +94,20 @@ def test_download():
     assert pm.download, "could not download {} distribution".format(target)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
-@pytest.mark.all
+@pytest.mark.regression
 @pytest.mark.parametrize("fn", sim_files)
 def test_modpath6(fn):
     assert run_modpath6(fn), "could not run {}".format(fn)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_clean_up():
     clean_up()
 

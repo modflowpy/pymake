@@ -170,6 +170,8 @@ def cleanup():
     return
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_download():
     # Remove the existing target download directory if it exists
     if os.path.isdir(mfpth):
@@ -180,17 +182,21 @@ def test_download():
     assert pm.download, "could not download {}".format(target)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
-@pytest.mark.all
+@pytest.mark.regression
 @pytest.mark.parametrize("fn", name_files)
 def test_mf2005(fn):
     run_mf2005(fn)
     return
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_cleanup():
     cleanup()
 

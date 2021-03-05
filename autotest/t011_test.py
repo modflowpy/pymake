@@ -33,7 +33,7 @@ def export_code_json():
     return fpth
 
 
-@pytest.mark.all
+@pytest.mark.requests
 def test_usgsprograms():
     print("test_usgsprograms()")
     upd = pymake.usgs_program_data().get_program_dict()
@@ -46,14 +46,14 @@ def test_usgsprograms():
     assert all_keys == get_keys, msg
 
 
-@pytest.mark.all
+@pytest.mark.requests
 def test_target_key_error():
     print("test_target_key_error()")
     with pytest.raises(KeyError):
         pymake.usgs_program_data.get_target("error")
 
 
-@pytest.mark.all
+@pytest.mark.requests
 def test_target_keys():
     print("test_target_keys()")
     prog_dict = pymake.usgs_program_data().get_program_dict()
@@ -69,7 +69,7 @@ def test_target_keys():
         assert target_dict == test_dict, msg
 
 
-@pytest.mark.all
+@pytest.mark.requests
 def test_usgsprograms_export_json():
     # export code.json and return json file path
     fpth = export_code_json()
@@ -98,7 +98,7 @@ def test_usgsprograms_export_json():
         assert value == temp_dict, msg
 
 
-@pytest.mark.all
+@pytest.mark.requests
 def test_usgsprograms_load_json_error():
     print("test_usgsprograms_load_json_error()")
 
@@ -114,7 +114,7 @@ def test_usgsprograms_load_json_error():
         pymake.usgs_program_data.load_json(fpth=fpth)
 
 
-@pytest.mark.all
+@pytest.mark.requests
 def test_usgsprograms_load_json():
     print("test_usgsprograms_load_json()")
 
@@ -128,7 +128,7 @@ def test_usgsprograms_load_json():
     assert json_dict is not None, msg
 
 
-@pytest.mark.all
+@pytest.mark.requests
 def test_usgsprograms_list_json_error():
     print("test_usgsprograms_list_json_error()")
 
@@ -140,7 +140,7 @@ def test_usgsprograms_list_json_error():
         pymake.usgs_program_data.list_json(fpth=fpth)
 
 
-@pytest.mark.all
+@pytest.mark.requests
 def test_usgsprograms_list_json():
     print("test_usgsprograms_list_json()")
 
@@ -151,21 +151,21 @@ def test_usgsprograms_list_json():
     pymake.usgs_program_data.list_json(fpth=fpth)
 
 
-@pytest.mark.all
+@pytest.mark.requests
 def test_shared():
     print("test_shared()")
     target_dict = pymake.usgs_program_data.get_target("libmf6")
     assert target_dict.shared_object, "libmf6 is a shared object"
 
 
-@pytest.mark.all
+@pytest.mark.requests
 def test_not_shared():
     print("test_not_shared()")
     target_dict = pymake.usgs_program_data.get_target("mf6")
     assert not target_dict.shared_object, "mf6 is not a shared object"
 
 
-@pytest.mark.all
+@pytest.mark.requests
 def test_clean_up():
     shutil.rmtree(cpth)
 

@@ -10,4 +10,4 @@ source /opt/intel/oneapi/setvars.sh
 ifort --version
 icc --version
 
-pytest -v --runall --durations=0 --cov=pymake --cov-report=xml autotest/
+pytest -v -m regression --durations=0 --cov=pymake --cov-report=xml autotest/

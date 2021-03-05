@@ -44,6 +44,8 @@ def clean_up(epth):
     os.remove(epth)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 @pytest.mark.parametrize("target", targets)
 def test_compile(target):
     assert (
@@ -54,6 +56,8 @@ def test_compile(target):
     ), "could not compile {}".format(target)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 @pytest.mark.parametrize("epth", exe_names)
 def test_clean_up(epth):
     clean_up(epth)

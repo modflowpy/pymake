@@ -200,6 +200,8 @@ def clean_up():
     return
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_download():
     # Remove the existing target download directory if it exists
     if os.path.isdir(mp7pth):
@@ -210,21 +212,25 @@ def test_download():
     assert pm.download, "could not download {} distribution".format(target)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
-@pytest.mark.all
+@pytest.mark.regression
 def test_download_exes():
     pymake.getmfexes(dstpth, exes=("mf2005", "mfusg", "mf6"), verbose=True)
 
 
-@pytest.mark.all
+@pytest.mark.regression
 @pytest.mark.parametrize("fn", name_files)
 def test_modpath7(fn):
     assert run_modpath7(fn), "could not run {}".format(fn)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_clean_up():
     clean_up()
 

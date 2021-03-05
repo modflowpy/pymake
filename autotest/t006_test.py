@@ -88,6 +88,8 @@ def clean_up():
     return
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_download():
     # Remove the existing mf2005 directory if it exists
     if os.path.isdir(mfnwtpth):
@@ -98,15 +100,20 @@ def test_download():
     assert pm.download, "could not download {} distribution".format(target)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
-@pytest.mark.all
+@pytest.mark.base
+@pytest.mark.regression
 def test_makefile():
     build_with_makefile()
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_clean_up():
     clean_up()
 
