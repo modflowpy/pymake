@@ -13,4 +13,4 @@ source /opt/intel/oneapi/compiler/"$LATEST_VERSION"/env/vars.sh
 ifort --version
 icc --version
 
-pytest -v --durations=0 --cov=pymake --cov-report=xml autotest/
+pytest -v --runall --durations=0 --cov=pymake --cov-report=xml autotest/
