@@ -23,7 +23,6 @@ import sys
 import json
 import datetime
 
-# import requests
 from collections import OrderedDict
 
 from .download import _request_header

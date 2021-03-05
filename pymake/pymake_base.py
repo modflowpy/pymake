@@ -384,7 +384,9 @@ def _pymake_initialize(
             )
             if excludefiles:
                 shutil.copytree(
-                    src, dst, ignore=shutil.ignore_patterns(*excludefiles),
+                    src,
+                    dst,
+                    ignore=shutil.ignore_patterns(*excludefiles),
                 )
             else:
                 shutil.copytree(src, dst)
