@@ -870,7 +870,6 @@ def _pymake_compile(
                 for switch in tfflags:
                     cmdlist.append(switch)
                 # add preprocessor option, if necessary
-                preprocess = _preprocess_file(srcfile)
                 if _preprocess_file(srcfile):
                     if fc == "gfortran":
                         pp_tag = "-cpp"
