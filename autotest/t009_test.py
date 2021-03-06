@@ -197,12 +197,14 @@ def test_compile():
 
 
 @pytest.mark.regression
+@pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 def test_download_exes():
     pymake.getmfexes(dstpth, exes=("mfnwt", "mf6"), verbose=True)
     return
 
 
 @pytest.mark.regression
+@pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 @pytest.mark.parametrize("ws", sim_dirs)
 def test_mt3dusgs(ws):
     assert run_mt3dusgs(ws), "could not run {}".format(ws)
