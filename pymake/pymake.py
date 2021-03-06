@@ -480,6 +480,8 @@ class Pymake:
             "gsflow",
         ):
             self.include_subdirs = True
+        else:
+            self.include_subdirs = False
 
         return
 

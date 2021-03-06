@@ -2,6 +2,8 @@ import os
 import shutil
 import pymake
 
+import pytest
+
 # define program data
 target = "mflgr"
 
@@ -49,10 +51,12 @@ def clean_up():
     return
 
 
+@pytest.mark.base
 def test_compile():
     assert compile_code() == 0, "could not compile {}".format(target)
 
 
+@pytest.mark.base
 def test_clean_up():
     clean_up()
 

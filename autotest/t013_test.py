@@ -6,21 +6,30 @@ import flopy
 
 import pytest
 
+# use the line below to set fortran compiler using environmental variables
+# if sys.platform.lower() == "win32":
+#     os.environ["CC"] = "icl"
+# else:
+#     os.environ["CC"] = "icc"
+
 # working directory
 cpth = os.path.abspath(os.path.join("temp", "t013"))
 
 
-@pytest.mark.all
-def test_gnu_make():
+@pytest.mark.base
+@pytest.mark.regression
+def test_pymake_makefile():
     os.makedirs(cpth, exist_ok=True)
 
     target = "triangle"
     pm = pymake.Pymake(verbose=True)
     pm.makefile = True
     pm.makeclean = True
-    pm.cc = "gcc"
+    # pm.cc = "gcc"
 
     if sys.platform.lower() == "win32":
+        if pm.cc == "icl":
+            return
         target += ".exe"
 
     # get current directory
@@ -74,11 +83,12 @@ def test_gnu_make():
     return
 
 
-@pytest.mark.all
+@pytest.mark.base
+@pytest.mark.regression
 def test_clean_up():
     shutil.rmtree(cpth)
 
 
 if __name__ == "__main__":
-    test_gnu_make()
+    test_pymake_makefile()
     test_clean_up()

@@ -114,6 +114,8 @@ def run_mf6(ws):
     return success
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_download():
     # Remove the existing mf6 directory if it exists
     if os.path.isdir(mf6pth):
@@ -124,23 +126,28 @@ def test_download():
     assert pm.download, "could not download {} distribution".format(target)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, "could not compile {}".format(target)
 
 
-@pytest.mark.all
+@pytest.mark.regression
 @pytest.mark.parametrize("ws", sim_dirs)
 def test_mf6(ws):
     assert run_mf6(ws), "could not run {}".format(ws)
 
 
-@pytest.mark.all
+@pytest.mark.base
+@pytest.mark.regression
 def test_makefile():
     assert build_with_makefile(), "could not compile {} with makefile".format(
         target
     )
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_sharedobject():
     pm.target = "libmf6"
     prog_dict = pymake.usgs_program_data.get_target(pm.target)
@@ -153,6 +160,8 @@ def test_sharedobject():
     assert pm.build() == 0, "could not compile {}".format(pm.target)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_clean_up():
     clean_up()
 

@@ -65,6 +65,7 @@ from .utils._compiler_language_files import (
     _get_ordered_srcfiles,
     _get_c_files,
     _get_fortran_files,
+    _preprocess_file,
 )
 
 # define temporary directories
@@ -863,10 +864,18 @@ def _pymake_compile(
                 for switch in tcflags:  # mja
                     cmdlist.append(switch)  # mja
             else:  # mja
+                # build command list
                 cmdlist.append(fc)
                 cmdlist.append(optlevel)
                 for switch in tfflags:
                     cmdlist.append(switch)
+                # add preprocessor option, if necessary
+                if _preprocess_file(srcfile):
+                    if fc == "gfortran":
+                        pp_tag = "-cpp"
+                    else:
+                        pp_tag = "-fpp"
+                    cmdlist.append(pp_tag)
 
             # add search path for any c and c++ header files
             if iscfile:
@@ -1086,6 +1095,9 @@ def _create_win_batch(
             cmd = fc + " " + optlevel + " "
             for switch in fflags:
                 cmd += switch + " "
+            # add preprocessor option, if necessary
+            if _preprocess_file(srcfile):
+                cmd += "/fpp" + " "
             cmd += "/c" + " "
             cmd += "/module:{0}\\ ".format(moddir_temp)
             cmd += "/object:{0}\\ ".format(objdir_temp)
@@ -1181,6 +1193,12 @@ def _create_makefile(
     # get list of unique fortran and c/c++ file extensions
     fext = _get_fortran_files(srcfiles, extensions=True)
     cext = _get_c_files(srcfiles, extensions=True)
+
+    # determine if the fortran file should be preprocessed
+    if fext is None:
+        preprocess = False
+    else:
+        preprocess = _preprocess_file(_get_fortran_files(srcfiles))
 
     # set exe_name
     exe_name = os.path.splitext(os.path.basename(target))[0]
@@ -1423,6 +1441,8 @@ def _create_makefile(
         for idx, flag in enumerate(tfflags):
             if "-D_" in flag:
                 tfflags[idx] = "$(OS_macro)"
+        if preprocess:
+            tfflags.append("-cpp")
         line += "\t\tFFLAGS ?= {}\n".format(" ".join(tfflags))
         line += "\tendif\n"
         line += "else\n"
@@ -1439,6 +1459,8 @@ def _create_makefile(
         for idx, flag in enumerate(tfflags):
             if "-D__" in flag:
                 tfflags[idx] = "$(OS_macro)"
+        if preprocess:
+            tfflags.append("-cpp")
         line += "\t\tFFLAGS ?= {}\n".format(" ".join(tfflags))
         line += "\tendif\n"
         line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
@@ -1454,6 +1476,8 @@ def _create_makefile(
         for idx, flag in enumerate(tfflags):
             if "-D__" in flag:
                 tfflags[idx] = "$(OS_macro)"
+        if preprocess:
+            tfflags.append("-fpp")
         line += "\t\tFFLAGS ?= {}\n".format(" ".join(tfflags))
         line += "\t\tMODSWITCH = -module $(MODDIR)\n"
         line += "\tendif\n"
