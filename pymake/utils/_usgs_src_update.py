@@ -351,72 +351,6 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
     return
 
 
-def _update_utl7(srcdir):
-    tag = "IBINARY=0"
-    fpth = os.path.join(srcdir, "utl7.f")
-    if os.path.isfile(fpth):
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            if tag in line:
-                rtag = "JAUX=0"
-                if rtag not in lines[idx + 1]:
-                    indent = len(line) - len(line.lstrip())
-                    line += indent * " " + "{}\n".format(rtag)
-            f.write(line)
-        f.close()
-
-
-def _update_swt(srcdir):
-    # update gwf2swt7.f
-    tag = "EST(J,I,N)=0.0"
-    fpth = os.path.join(srcdir, "gwf2swt7.f")
-    if os.path.isfile(fpth):
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            if tag in line:
-                rtag = "PCS(J,I,N)=0.0"
-                if rtag not in lines[idx + 1]:
-                    indent = len(line) - len(line.lstrip())
-                    line += indent * " " + "{}\n".format(rtag)
-            f.write(line)
-        f.close()
-
-
-def _update_swi(srcdir, double):
-    prec = 4
-    if double:
-        prec = 8
-    tags = (
-        "INTEGER, PARAMETER :: VERSIZE = 4",
-        "(i,csolver(i),i=1,3)",
-    )
-    tagrs = (
-        "INTEGER, PARAMETER :: VERSIZE = {}".format(prec),
-        "(i,csolver(i),i=1,2)",
-    )
-    for file_name in ("gwf2swi27.f", "gwf2swi27.fpp"):
-        fpth = os.path.join(srcdir, file_name)
-        if os.path.isfile(fpth):
-            with open(fpth) as f:
-                lines = f.readlines()
-            f = open(fpth, "w")
-            for idx, line in enumerate(lines):
-                # skip comments
-                if line.lower()[0] not in (
-                    "!",
-                    "c",
-                ):
-                    for tag, tagr in zip(tags, tagrs):
-                        if tag in line:
-                            line = line.replace(tag, tagr)
-                f.write(line)
-            f.close()
-
-
 def _update_mf2005_files(srcdir, fc, cc, arch, double):
     """Update MODFLOW2005 source files
 
@@ -477,16 +411,16 @@ def _update_mfnwt_files(srcdir, fc, cc, arch, double):
     -------
 
     """
+    # remove lrestart.f
+    fpth = os.path.join(srcdir, "Irestart.f")
+    if os.path.exists(fpth):
+        os.remove(fpth)
+
     # update utl7.f
     _update_utl7(srcdir)
 
     # update gwf2swt7.f
     _update_swt(srcdir)
-
-    # remove lrestart.f
-    fpth = os.path.join(srcdir, "Irestart.f")
-    if os.path.exists(fpth):
-        os.remove(fpth)
 
     # update gwf2swi27.f or gwf2swi27.f
     _update_swi(srcdir, double)
@@ -657,17 +591,7 @@ def _update_mflgr_files(srcdir, fc, cc, arch, double):
 
     """
     # update gwf2swt7.f
-    tag = "EST(J,I,N)=0.0"
-    fpth = os.path.join(srcdir, "gwf2swt7.f")
-    with open(fpth) as f:
-        lines = f.readlines()
-    f = open(fpth, "w")
-    for line in lines:
-        if tag in line:
-            indent = len(line) - len(line.lstrip())
-            line += indent * " " + "PCS(J,I,N)=0.0\n"
-        f.write(line)
-    f.close()
+    _update_swt(srcdir)
 
 
 def _update_mp6_files(srcdir, fc, cc, arch, double):
@@ -797,3 +721,70 @@ def _update_vs2dt_files(srcdir, fc, cc, arch, double):
     )
 
     return
+
+
+# common source file replacement functions
+def _update_utl7(srcdir):
+    tag = "IBINARY=0"
+    fpth = os.path.join(srcdir, "utl7.f")
+    if os.path.isfile(fpth):
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, "w")
+        for idx, line in enumerate(lines):
+            if tag in line:
+                rtag = "JAUX=0"
+                if rtag not in lines[idx + 1]:
+                    indent = len(line) - len(line.lstrip())
+                    line += indent * " " + "{}\n".format(rtag)
+            f.write(line)
+        f.close()
+
+
+def _update_swt(srcdir):
+    # update gwf2swt7.f
+    tag = "EST(J,I,N)=0.0"
+    fpth = os.path.join(srcdir, "gwf2swt7.f")
+    if os.path.isfile(fpth):
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, "w")
+        for idx, line in enumerate(lines):
+            if tag in line:
+                rtag = "PCS(J,I,N)=0.0"
+                if rtag not in lines[idx + 1]:
+                    indent = len(line) - len(line.lstrip())
+                    line += indent * " " + "{}\n".format(rtag)
+            f.write(line)
+        f.close()
+
+
+def _update_swi(srcdir, double):
+    prec = 4
+    if double:
+        prec = 8
+    tags = (
+        "INTEGER, PARAMETER :: VERSIZE = 4",
+        "(i,csolver(i),i=1,3)",
+    )
+    tagrs = (
+        "INTEGER, PARAMETER :: VERSIZE = {}".format(prec),
+        "(i,csolver(i),i=1,2)",
+    )
+    for file_name in ("gwf2swi27.f", "gwf2swi27.fpp"):
+        fpth = os.path.join(srcdir, file_name)
+        if os.path.isfile(fpth):
+            with open(fpth) as f:
+                lines = f.readlines()
+            f = open(fpth, "w")
+            for idx, line in enumerate(lines):
+                # skip comments
+                if line.lower()[0] not in (
+                    "!",
+                    "c",
+                ):
+                    for tag, tagr in zip(tags, tagrs):
+                        if tag in line:
+                            line = line.replace(tag, tagr)
+                f.write(line)
+            f.close()
