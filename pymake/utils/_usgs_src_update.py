@@ -354,9 +354,9 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
 def _update_utl7(srcdir):
     tag = "IBINARY=0"
     fpth = os.path.join(srcdir, "utl7.f")
-    with open(fpth) as f:
-        lines = f.readlines()
     if os.path.isfile(fpth):
+        with open(fpth) as f:
+            lines = f.readlines()
         f = open(fpth, "w")
         for idx, line in enumerate(lines):
             if tag in line:
