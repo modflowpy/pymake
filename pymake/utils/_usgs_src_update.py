@@ -356,32 +356,34 @@ def _update_utl7(srcdir):
     fpth = os.path.join(srcdir, "utl7.f")
     with open(fpth) as f:
         lines = f.readlines()
-    f = open(fpth, "w")
-    for idx, line in enumerate(lines):
-        if tag in line:
-            rtag = "JAUX=0"
-            if rtag not in lines[idx + 1]:
-                indent = len(line) - len(line.lstrip())
-                line += indent * " " + "{}\n".format(rtag)
-        f.write(line)
-    f.close()
+    if os.path.isfile(fpth):
+        f = open(fpth, "w")
+        for idx, line in enumerate(lines):
+            if tag in line:
+                rtag = "JAUX=0"
+                if rtag not in lines[idx + 1]:
+                    indent = len(line) - len(line.lstrip())
+                    line += indent * " " + "{}\n".format(rtag)
+            f.write(line)
+        f.close()
 
 
 def _update_swt(srcdir):
     # update gwf2swt7.f
     tag = "EST(J,I,N)=0.0"
     fpth = os.path.join(srcdir, "gwf2swt7.f")
-    with open(fpth) as f:
-        lines = f.readlines()
-    f = open(fpth, "w")
-    for idx, line in enumerate(lines):
-        if tag in line:
-            rtag = "PCS(J,I,N)=0.0"
-            if rtag not in lines[idx + 1]:
-                indent = len(line) - len(line.lstrip())
-                line += indent * " " + "{}\n".format(rtag)
-        f.write(line)
-    f.close()
+    if os.path.isfile(fpth):
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, "w")
+        for idx, line in enumerate(lines):
+            if tag in line:
+                rtag = "PCS(J,I,N)=0.0"
+                if rtag not in lines[idx + 1]:
+                    indent = len(line) - len(line.lstrip())
+                    line += indent * " " + "{}\n".format(rtag)
+            f.write(line)
+        f.close()
 
 
 def _update_swi(srcdir, double):
