@@ -399,6 +399,8 @@ def _update_mf2005_files(srcdir, fc, cc, arch, double):
     if double:
         prec = 8
     fpth = os.path.join(srcdir, "gwf2swi27.f")
+    if not os.path.isfile(fpth):
+        fpth = os.path.join(srcdir, "gwf2swi27.fpp")
     with open(fpth) as f:
         lines = f.readlines()
     f = open(fpth, "w")
