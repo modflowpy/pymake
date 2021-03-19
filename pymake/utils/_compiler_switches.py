@@ -763,6 +763,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
                     "-Wunused-variable",
                     "-pedantic",
                     "-std=f2008",
+                    "-Wcharacter-truncation",
                 ]
 
         # add additional fflags from the command line
