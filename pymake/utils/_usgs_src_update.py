@@ -729,6 +729,17 @@ def _update_vs2dt_files(srcdir, fc, cc, arch, double):
 
 # common source file replacement functions
 def _update_utl7(srcdir):
+    """Update utl7.f source file
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+
+    Returns
+    -------
+
+    """
     tag = "IBINARY=0"
     fpth = os.path.join(srcdir, "utl7.f")
     if os.path.isfile(fpth):
@@ -746,6 +757,17 @@ def _update_utl7(srcdir):
 
 
 def _update_swt(srcdir):
+    """Update gwf2swt7.f source file
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+
+    Returns
+    -------
+
+    """
     # update gwf2swt7.f
     tag = "EST(J,I,N)=0.0"
     fpth = os.path.join(srcdir, "gwf2swt7.f")
@@ -764,6 +786,20 @@ def _update_swt(srcdir):
 
 
 def _update_swi(srcdir, double):
+    """Update gwf2swi27.f and gwf2swi27.fpp source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
     prec = 4
     if double:
         prec = 8
@@ -795,7 +831,17 @@ def _update_swi(srcdir, double):
 
 
 def _update_pcg(srcdir):
-    # update pcg7.f
+    """Update pcg7.f source file
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+
+    Returns
+    -------
+
+    """
     find_block = """                IF (NPCOND.EQ.1) THEN
                   IF (IR.GT.0) THEN
                     FV = CV(IR)
