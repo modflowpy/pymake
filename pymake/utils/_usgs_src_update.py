@@ -6,6 +6,7 @@ import os
 import sys
 import shutil
 import types
+import re
 
 from .usgsprograms import usgs_program_data
 
@@ -388,6 +389,9 @@ def _update_mf2005_files(srcdir, fc, cc, arch, double):
 
     # update gwf2swt7.f
     _update_swt(srcdir)
+
+    # update pcg7.f
+    _update_pcg(srcdir)
 
 
 def _update_mfnwt_files(srcdir, fc, cc, arch, double):
@@ -788,3 +792,55 @@ def _update_swi(srcdir, double):
                             line = line.replace(tag, tagr)
                 f.write(line)
             f.close()
+
+
+def _update_pcg(srcdir):
+    # update pcg7.f
+    find_block = """                IF (NPCOND.EQ.1) THEN
+                  IF (IR.GT.0) THEN
+                    FV = CV(IR)
+C                 MODIFIED FROM HILL(1990) 9/27/90: 2 REPLACES 1
+                    IF (K.EQ.NLAY .AND. ((J+I).GT.2)) FV = DZERO
+                    IF (CD(IR).NE.0.) FCR = (F/CD(IR))*(CC(IR)+FV)
+                  ENDIF
+                  IF (IC.GT.0) THEN
+                    FV = CV(IC)
+                    IF (K.EQ.NLAY .AND. (I.GT.1)) FV = DZERO
+                    IF (CD(IC).NE.0.) FCC = (H/CD(IC))*(CR(IC)+FV)
+                  ENDIF
+                  IF (IL.GT.0) THEN
+                    IF (CD(IL).NE.0.) FCV = (S/CD(IL))*(CR(IL)+CC(IL))
+                  ENDIF
+                ENDIF
+    """
+    replace_block = """                IF (NPCOND.EQ.1) THEN
+                  IF (IR.GT.0) THEN
+C                 MODIFIED FROM HILL(1990) 9/27/90: 2 REPLACES 1
+                    IF (K.EQ.NLAY .AND. ((J+I).GT.2)) THEN
+                      FV = DZERO
+                    ELSE
+                      FV = CV(IR)
+                    END IF
+                    IF (CD(IR).NE.0.) FCR = (F/CD(IR))*(CC(IR)+FV)
+                  ENDIF
+                  IF (IC.GT.0) THEN
+                    IF (K.EQ.NLAY .AND. (I.GT.1)) THEN
+                      FV = DZERO
+                    ELSE
+                      FV = CV(IC)
+                    END IF
+                    IF (CD(IC).NE.0.) FCC = (H/CD(IC))*(CR(IC)+FV)
+                  ENDIF
+                  IF (IL.GT.0) THEN
+                    IF (CD(IL).NE.0.) FCV = (S/CD(IL))*(CR(IL)+CC(IL))
+                  ENDIF
+                ENDIF
+    """
+    fpth = os.path.join(srcdir, "pcg7.f")
+    if os.path.isfile(fpth):
+        with open(fpth) as f:
+            input_str = f.read()
+        input_str = input_str.replace(find_block, replace_block)
+        f = open(fpth, "w")
+        f.write(input_str)
+        f.close()
