@@ -6,7 +6,6 @@ import os
 import sys
 import shutil
 import types
-import re
 
 from .usgsprograms import usgs_program_data
 
