@@ -389,6 +389,9 @@ def _update_mf2005_files(srcdir, fc, cc, arch, double):
     # update gwf2swt7.f
     _update_swt(srcdir)
 
+    # update pcg7.f
+    _update_pcg(srcdir)
+
 
 def _update_mfnwt_files(srcdir, fc, cc, arch, double):
     """Update MODFLOW-NWT source files
@@ -725,6 +728,17 @@ def _update_vs2dt_files(srcdir, fc, cc, arch, double):
 
 # common source file replacement functions
 def _update_utl7(srcdir):
+    """Update utl7.f source file
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+
+    Returns
+    -------
+
+    """
     tag = "IBINARY=0"
     fpth = os.path.join(srcdir, "utl7.f")
     if os.path.isfile(fpth):
@@ -742,6 +756,17 @@ def _update_utl7(srcdir):
 
 
 def _update_swt(srcdir):
+    """Update gwf2swt7.f source file
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+
+    Returns
+    -------
+
+    """
     # update gwf2swt7.f
     tag = "EST(J,I,N)=0.0"
     fpth = os.path.join(srcdir, "gwf2swt7.f")
@@ -760,6 +785,20 @@ def _update_swt(srcdir):
 
 
 def _update_swi(srcdir, double):
+    """Update gwf2swi27.f and gwf2swi27.fpp source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
     prec = 4
     if double:
         prec = 8
@@ -788,3 +827,65 @@ def _update_swi(srcdir, double):
                             line = line.replace(tag, tagr)
                 f.write(line)
             f.close()
+
+
+def _update_pcg(srcdir):
+    """Update pcg7.f source file
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+
+    Returns
+    -------
+
+    """
+    find_block = """                IF (NPCOND.EQ.1) THEN
+                  IF (IR.GT.0) THEN
+                    FV = CV(IR)
+C                 MODIFIED FROM HILL(1990) 9/27/90: 2 REPLACES 1
+                    IF (K.EQ.NLAY .AND. ((J+I).GT.2)) FV = DZERO
+                    IF (CD(IR).NE.0.) FCR = (F/CD(IR))*(CC(IR)+FV)
+                  ENDIF
+                  IF (IC.GT.0) THEN
+                    FV = CV(IC)
+                    IF (K.EQ.NLAY .AND. (I.GT.1)) FV = DZERO
+                    IF (CD(IC).NE.0.) FCC = (H/CD(IC))*(CR(IC)+FV)
+                  ENDIF
+                  IF (IL.GT.0) THEN
+                    IF (CD(IL).NE.0.) FCV = (S/CD(IL))*(CR(IL)+CC(IL))
+                  ENDIF
+                ENDIF
+    """
+    replace_block = """                IF (NPCOND.EQ.1) THEN
+                  IF (IR.GT.0) THEN
+C                 MODIFIED FROM HILL(1990) 9/27/90: 2 REPLACES 1
+                    IF (K.EQ.NLAY .AND. ((J+I).GT.2)) THEN
+                      FV = DZERO
+                    ELSE
+                      FV = CV(IR)
+                    END IF
+                    IF (CD(IR).NE.0.) FCR = (F/CD(IR))*(CC(IR)+FV)
+                  ENDIF
+                  IF (IC.GT.0) THEN
+                    IF (K.EQ.NLAY .AND. (I.GT.1)) THEN
+                      FV = DZERO
+                    ELSE
+                      FV = CV(IC)
+                    END IF
+                    IF (CD(IC).NE.0.) FCC = (H/CD(IC))*(CR(IC)+FV)
+                  ENDIF
+                  IF (IL.GT.0) THEN
+                    IF (CD(IL).NE.0.) FCV = (S/CD(IL))*(CR(IL)+CC(IL))
+                  ENDIF
+                ENDIF
+    """
+    fpth = os.path.join(srcdir, "pcg7.f")
+    if os.path.isfile(fpth):
+        with open(fpth) as f:
+            input_str = f.read()
+        input_str = input_str.replace(find_block, replace_block)
+        f = open(fpth, "w")
+        f.write(input_str)
+        f.close()

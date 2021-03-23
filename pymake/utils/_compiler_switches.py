@@ -332,9 +332,18 @@ def _get_fortran_flags(
                 if double:
                     flags += ["r8", "autodouble"]
 
+        # process passed fortran flags - check for flags with a space between
+        # the flag and a setting
+        for idx, flag in enumerate(fflags[1:]):
+            if flag[0] not in ("/", "-"):
+                fflags[idx] += " {}".format(flag)
+                fflags[idx + 1] = ""
+
         # Add passed fortran flags - assume that flags have - or / as the
         # first character. fortran flags starting with O are excluded
         for flag in fflags:
+            if len(flag) < 1:
+                continue
             if flag[1] != "O":
                 if flag[1:] not in flags:
                     flags.append(flag[1:])
@@ -476,9 +485,18 @@ def _get_c_flags(
                     if not use_iso_c and cfiles is not None:
                         flags.append("D_UF")
 
+        # process passed c flags - check for flags with a space between
+        # the flag and a setting
+        for idx, flag in enumerate(cflags[1:]):
+            if flag[0] not in ("/", "-"):
+                cflags[idx] += " {}".format(flag)
+                cflags[idx + 1] = ""
+
         # add passed c flags - assume that flags have - or / as the
         # first character. c flags starting with O are excluded
         for flag in cflags:
+            if len(flag) < 1:
+                continue
             if flag[1] != "O":
                 if flag[1:] not in flags:
                     flags.append(flag[1:])
@@ -661,9 +679,18 @@ def _get_linker_flags(
         if addswitch:
             syslibs_out.append("nologo")
 
+    # process passed syslibs switches - check for switches with a space between
+    # the switch and a setting
+    for idx, flag in enumerate(syslibs[1:]):
+        if flag[0] not in ("/", "-"):
+            syslibs[idx] += " {}".format(flag)
+            syslibs[idx + 1] = ""
+
     # add passed syslibs switches - assume that flags have - or / as the
     # first character.
     for switch in syslibs:
+        if len(switch) < 1:
+            continue
         if switch[1:] not in syslibs_out:
             syslibs_out.append(switch[1:])
 
@@ -754,7 +781,11 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
                     fflags += [
                         opt,
                     ]
-        elif target in ("mf6", "libmf6", "zbud6"):
+        elif target in (
+            "mf6",
+            "libmf6",
+            "zbud6",
+        ):
             if fc == "gfortran":
                 fflags += [
                     "-Wtabs",
