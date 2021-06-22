@@ -1023,30 +1023,40 @@ def _create_win_batch(
 
     """
     # determine intel version
-    # stand alone intel installation
-    iflist = ["IFORT_COMPILER{}".format(i) for i in range(30, 12, -1)]
-    for ift in iflist:
-        stand_alone_intel = os.environ.get(ift)
-        if stand_alone_intel is not None:
-            break
+    intel_setvars = None
     # oneAPI
-    latest_version = os.environ.get("LATEST_VERSION")
-
-    # process intel version
-    if stand_alone_intel is not None:
-        cpvars = os.path.join(stand_alone_intel, "bin", "compilervars.bat")
-        if not os.path.isfile(cpvars):
-            raise Exception("Could not find cpvars: {}".format(cpvars))
-        intel_setvars = '"' + os.path.normpath(cpvars) + '" ' + arch
-    elif latest_version is not None:
-        cpvars = (
-            "C:\\Program Files (x86)\\Intel\\oneAPI\\compiler\\"
-            + "{}\\env\\vars.bat".format(latest_version)
-        )
-        if not os.path.isfile(cpvars):
-            raise Exception("Could not find cpvars: {}".format(cpvars))
-        intel_setvars = '"{}"'.format(cpvars)
-    else:
+    oneapi_list = ("LATEST_VERSION", "ONEAPI_ROOT")
+    for on_env_var in oneapi_list:
+        latest_version = os.environ.get(on_env_var)
+        if latest_version is not None:
+            if on_env_var == oneapi_list[0]:
+                cpvars = (
+                    "C:\\Program Files (x86)\\Intel\\oneAPI\\compiler\\"
+                    + "{}\\env\\vars.bat".format(latest_version)
+                )
+            else:
+                cpvars = (
+                    "C:\\Program Files (x86)\\Intel\\oneAPI\\" + "setvars.bat"
+                )
+            if not os.path.isfile(cpvars):
+                raise Exception("Could not find cpvars: {}".format(cpvars))
+            intel_setvars = '"{}"'.format(cpvars)
+            break
+    # stand alone intel installation
+    if intel_setvars is None:
+        iflist = ["IFORT_COMPILER{}".format(i) for i in range(30, 12, -1)]
+        for ift in iflist:
+            stand_alone_intel = os.environ.get(ift)
+            if stand_alone_intel is not None:
+                cpvars = os.path.join(
+                    stand_alone_intel, "bin", "compilervars.bat"
+                )
+                if not os.path.isfile(cpvars):
+                    raise Exception("Could not find cpvars: {}".format(cpvars))
+                intel_setvars = '"' + os.path.normpath(cpvars) + '" ' + arch
+                break
+    # check if either OneAPI or stand alone intel is installed
+    if intel_setvars is None:
         err_msg = (
             "OneAPI or stand alone version of Intel compilers "
             + "is not installed"
