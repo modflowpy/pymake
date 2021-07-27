@@ -779,7 +779,7 @@ def get_repo_assets(
     return result_dict
 
 
-def repo_latest_version(github_repo=None):
+def repo_latest_version(github_repo=None, verify=True):
     """Return a string of the latest version number (tag) contained in a github
     repository release.
 
@@ -799,7 +799,7 @@ def repo_latest_version(github_repo=None):
         github_repo = _get_default_repo()
 
     # get json
-    json_obj = _repo_json(github_repo)
+    json_obj = _repo_json(github_repo, verify=verify)
 
     return json_obj["tag_name"]
 
