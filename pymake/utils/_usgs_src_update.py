@@ -479,31 +479,10 @@ def _update_gsflow_files(srcdir, fc, cc, arch, double):
             if ext in [".mod", ".o", ".a"]:
                 os.remove(fpth)
 
-    # edit and remove os specific files
-    if sys.platform.lower() == "win32":
-        if "ifort" not in fc:
-            tag = "FORM='BINARY'"
-            new_tag = "FORM='UNFORMATTED', ACCESS='STREAM'"
-            fpth = os.path.join(srcdir, "prms", "utils_prms_windows.f90")
-            if os.path.isfile(fpth):
-                with open(fpth) as f:
-                    lines = f.readlines()
-                f = open(fpth, "w")
-                for line in lines:
-                    if tag in line:
-                        line = line.replace(tag, new_tag)
-                    f.write(line)
-                f.close()
-
-        fpths = [
-            os.path.join(srcdir, "prms", "utils_prms_linux.f90"),
-            os.path.join(srcdir, "prms", "utils_prms.f90"),
-        ]
-    else:
-        fpths = [
-            os.path.join(srcdir, "prms", "utils_prms_linux.f90"),
-            os.path.join(srcdir, "prms", "utils_prms_windows.f90"),
-        ]
+    # remove specific files
+    fpths = [
+        os.path.join(srcdir, "modflow", "gwf2ag1_NWT_rsr.f"),
+    ]
     for fpth in fpths:
         if os.path.isfile(fpth):
             os.remove(fpth)
