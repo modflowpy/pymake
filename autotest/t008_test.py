@@ -43,7 +43,6 @@ else:
 pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
-pm.dryrun = False
 pm.makefile = True
 pm.inplace = True
 
@@ -71,10 +70,17 @@ def build_with_makefile():
 
         # build MODFLOW 6 with makefile
         print("build {} with makefile".format(target))
-        os.system("make")
+        return_code = os.system("make")
 
+        # test if
+        if sys.platform.lower() == "win32" and pm.fc == "ifort":
+            if return_code != 0:
+                success = True
+            else:
+                success = False
         # verify that MODFLOW 6 was made
-        success = os.path.isfile(epth)
+        else:
+            success = os.path.isfile(epth)
 
     return success
 

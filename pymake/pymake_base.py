@@ -1424,7 +1424,7 @@ def _create_makefile(
         target, fc, cc, debug, fflags, cflags, verbose=verbose
     )
     line = "# set the optimization level (OPTLEVEL) if not defined\n"
-    line += "OPTLEVEL ?= {}\n\n".format(optlevel)
+    line += "OPTLEVEL ?= {}\n\n".format(optlevel.replace("/", "-"))
     f.write(line)
 
     # fortran flags
@@ -1442,7 +1442,7 @@ def _create_makefile(
         tfflags = _get_fortran_flags(
             target,
             "gfortran",
-            fflags,
+            [],
             debug,
             double,
             osname="win32",
@@ -1460,7 +1460,7 @@ def _create_makefile(
         tfflags = _get_fortran_flags(
             target,
             "gfortran",
-            fflags,
+            [],
             debug,
             double,
             osname="linux",
@@ -1477,7 +1477,7 @@ def _create_makefile(
         tfflags = _get_fortran_flags(
             target,
             "ifort",
-            fflags,
+            [],
             debug,
             double,
             osname="linux",
@@ -1572,7 +1572,7 @@ def _create_makefile(
             target,
             None,
             "gcc",
-            syslibs,
+            [],
             srcfiles,
             osname="win32",
             verbose=verbose,
@@ -1584,7 +1584,7 @@ def _create_makefile(
             target,
             None,
             "clang",
-            syslibs,
+            [],
             srcfiles,
             osname="win32",
             verbose=verbose,
@@ -1598,7 +1598,7 @@ def _create_makefile(
             target,
             "gfortran",
             "gcc",
-            syslibs,
+            [],
             srcfiles,
             osname="win32",
             verbose=verbose,
@@ -1614,7 +1614,7 @@ def _create_makefile(
             target,
             None,
             "gcc",
-            syslibs,
+            [],
             srcfiles,
             osname="linux",
             verbose=verbose,
@@ -1626,7 +1626,7 @@ def _create_makefile(
             target,
             None,
             "clang",
-            syslibs,
+            [],
             srcfiles,
             osname="linux",
             verbose=verbose,
@@ -1642,7 +1642,7 @@ def _create_makefile(
             target,
             "gfortran",
             "gcc",
-            syslibs,
+            [],
             srcfiles,
             osname="linux",
             verbose=verbose,
@@ -1655,7 +1655,7 @@ def _create_makefile(
             target,
             "ifort",
             "icc",
-            syslibs,
+            [],
             srcfiles,
             osname="linux",
             verbose=verbose,
@@ -1665,10 +1665,29 @@ def _create_makefile(
     line += "endif\n\n"
     f.write(line)
 
+    # check for windows error condition
+    line = "# check for Windows error condition\n"
+    line += "ifeq ($(detected_OS), Windows)\n"
+    if fext is not None:
+        line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
+        line += "\t\tWINDOWSERROR = $(FC)\n"
+        line += "\tendif\n"
+    if cext is not None:
+        line += "\tifeq ($(CC), $(filter $(CC), icl))\n"
+        line += "\t\tWINDOWSERROR = $(CC)\n"
+        line += "\tendif\n"
+    line += "endif\n\n"
+    f.write(line)
+
     # task functions
     line = "# Define task functions\n"
     line += "# Create the bin directory and compile and link the program\n"
-    line += "all: makedirs | $(PROGRAM)\n\n"
+    line += "all: windowscheck makedirs | $(PROGRAM)\n\n"
+    line += "# test for windows error\n"
+    line += "windowscheck:\n"
+    line += "ifdef WINDOWSERROR\n"
+    line += "\t$(error cannot use makefile on windows with $(WINDOWSERROR))\n"
+    line += "endif\n\n"
     line += "# Make the bin directory for the executable\n"
     line += "makedirs:\n"
     line += "\tmkdir -p $(BINDIR)\n"
