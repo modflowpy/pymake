@@ -72,7 +72,8 @@ def build_with_makefile():
         print("build {} with makefile".format(target))
         return_code = os.system("make")
 
-        # test if
+        # test if running on Windows with ifort, if True the makefile
+        # should fail
         if sys.platform.lower() == "win32" and pm.fc == "ifort":
             if return_code != 0:
                 success = True
