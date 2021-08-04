@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import shutil
 import pymake
 
@@ -33,10 +34,9 @@ pm.inplace = True
 def build_with_makefile():
     success = True
     if os.path.isfile("makefile"):
-        # remove existing target
-        if os.path.isfile(epth):
-            print("Removing " + target)
-            os.remove(epth)
+        # wait to delete on windows
+        if sys.platform.lower() == "win32":
+            time.sleep(6)
 
         print("Removing temporary build directories")
         dirs_temp = [
@@ -48,13 +48,25 @@ def build_with_makefile():
             if os.path.isdir(d):
                 shutil.rmtree(d)
 
+        # clean prior to make
+        print("clean {} with makefile".format(target))
+        os.system("make clean")
+
         # build MODFLOW-NWT with makefile
         print("build {} with makefile".format(target))
-        os.system("make")
+        return_code = os.system("make")
 
-        # verify that MODFLOW-NWT was made
+        # test if running on Windows with ifort, if True the makefile
+        # should fail
         errmsg = "{} created by makefile does not exist.".format(target)
-        success = os.path.isfile(epth)
+        if sys.platform.lower() == "win32" and pm.fc == "ifort":
+            if return_code != 0:
+                success = True
+            else:
+                success = False
+        # verify that MODFLOW-NWT was made
+        else:
+            success = os.path.isfile(epth)
     else:
         errmsg = "makefile does not exist"
 
