@@ -116,6 +116,19 @@ def _update_triangle_files(srcdir, fc, cc, arch, double):
     dirname = prog_dict.dirname
     dstpth = os.path.join(rootdir, dirname)
 
+    # modify long to long long on windows
+    if "win32" in sys.platform.lower() and cc in ("icl", "cl"):
+        src = os.path.join(rootdir, "triangle.c")
+        with open(src, "r") as f:
+            lines = f.readlines()
+            for idx, line in enumerate(lines):
+                lines[idx] = line.replace(
+                    "unsigned long", "unsigned long long"
+                )
+        with open(src, "w") as f:
+            for line in lines:
+                f.write(line)
+
     # make destination directory
     if not os.path.exists(dstpth):
         os.makedirs(dstpth)
