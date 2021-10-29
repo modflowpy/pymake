@@ -145,7 +145,7 @@ def main(
         path for excludefiles file that contains filename of source files
         to exclude from the build
     sharedobject : bool
-        boolean indicating a shared object (.so or .dll) will be built
+        boolean indicating a shared object will be built
     appdir : str
         path for executable
     verbose : bool
@@ -692,7 +692,7 @@ def _pymake_compile(
         boolean indicating if pymake was used to compile source code on
         Windows using Intel compilers
     sharedobject : bool
-        boolean indicating a shared object (.so or .dll) will be built
+        boolean indicating a shared object will be built
     verbose : bool
         boolean indicating if output will be printed to the terminal
     inplace : bool
@@ -836,6 +836,9 @@ def _pymake_compile(
             if _get_osname() == "win32":
                 if ext.lower() != ".dll":
                     target = program_path + ".dll"
+            if _get_osname() == "darwin":
+                if ext.lower() != ".dylib":
+                    target = program_path + ".dylib"
             else:
                 if ext.lower() != ".so":
                     target = program_path + ".so"

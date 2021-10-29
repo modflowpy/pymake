@@ -187,7 +187,7 @@ class usgs_program_data:
         """
         # remove path and extension from key
         key = os.path.basename(key)
-        if key.endswith(".exe") or key.endswith(".dll") or key.endswith(".so"):
+        if key.endswith(".exe") or key.endswith(".dll") or key.endswith(".so") or key.endswith(".dylib"):
             key = os.path.splitext(key)[0]
 
         # return program attributes
