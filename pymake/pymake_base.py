@@ -836,7 +836,7 @@ def _pymake_compile(
             if _get_osname() == "win32":
                 if ext.lower() != ".dll":
                     target = program_path + ".dll"
-            if _get_osname() == "darwin":
+            elif _get_osname() == "darwin":
                 if ext.lower() != ".dylib":
                     target = program_path + ".dylib"
             else:
