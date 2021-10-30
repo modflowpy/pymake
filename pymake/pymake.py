@@ -865,7 +865,7 @@ class Pymake:
                 ext = ".so"
             else:
                 ext = None
-        
+
         if ext is not None:
             filename, file_extension = os.path.splitext(target)
             if file_extension.lower() != ext:
