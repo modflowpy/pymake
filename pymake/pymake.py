@@ -531,6 +531,8 @@ class Pymake:
             target = target[:-4]
         elif target.lower().endswith(".so"):
             target = target[:-3]
+        elif target.lower().endswith(".dylib"):
+            target = target[:-6]
         return target
 
     def _set_srcdir2(self):
@@ -853,11 +855,17 @@ class Pymake:
                 ext = ".dll"
             else:
                 ext = ".exe"
+        elif sys.platform.lower() == "darwin":
+            if self.sharedobject:
+                ext = ".dylib"
+            else:
+                ext = None
         else:
             if self.sharedobject:
                 ext = ".so"
             else:
                 ext = None
+
         if ext is not None:
             filename, file_extension = os.path.splitext(target)
             if file_extension.lower() != ext:

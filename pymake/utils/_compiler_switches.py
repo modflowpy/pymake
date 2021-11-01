@@ -102,6 +102,7 @@ def _get_base_app_name(value):
     if (
         value.endswith(".exe")
         or value.endswith(".dll")
+        or value.endswith(".dylib")
         or value.endswith(".so")
     ):
         value = os.path.splitext(value)[0]
@@ -257,7 +258,7 @@ def _get_fortran_flags(
         boolean indicating a compiler switch will be used to create an
         executable with double precision real variables.
     sharedobject : bool
-        boolean indicating a shared object (.so or .dll) will be built
+        boolean indicating a shared object will be built
     osname : str
         optional lower case OS name. If not passed it will be determined
         using sys.platform
@@ -388,7 +389,7 @@ def _get_c_flags(
     srcfiles : list
         list of source file names
     sharedobject : bool
-        boolean indicating a shared object (.so or .dll) will be built
+        boolean indicating a shared object will be built
     osname : str
         optional lower case OS name. If not passed it will be determined
         using sys.platform
@@ -542,7 +543,7 @@ def _get_linker_flags(
     srcfiles : list
         list of source file names
     sharedobject : bool
-        boolean indicating a shared object (.so or .dll) will be built
+        boolean indicating a shared object will be built
     osname : str
         optional lower case OS name. If not passed it will be determined
         using sys.platform
