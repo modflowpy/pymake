@@ -1,6 +1,7 @@
 #!/bin/bash
 
 python -m pip install --upgrade pip
+pip install wheel
 pip install .
 pip install pytest pytest-cov coverage
 pip install pydotplus appdirs
