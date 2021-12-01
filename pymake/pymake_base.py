@@ -391,7 +391,9 @@ def _pymake_initialize(
             )
             if excludefiles:
                 shutil.copytree(
-                    src, dst, ignore=shutil.ignore_patterns(*excludefiles),
+                    src,
+                    dst,
+                    ignore=shutil.ignore_patterns(*excludefiles),
                 )
             else:
                 shutil.copytree(src, dst)
@@ -1565,7 +1567,13 @@ def _create_makefile(
     # c/c++ compiler used for linking
     if fext is None:
         _, tsyslibs = _get_linker_flags(
-            target, None, "gcc", [], srcfiles, osname="win32", verbose=verbose,
+            target,
+            None,
+            "gcc",
+            [],
+            srcfiles,
+            osname="win32",
+            verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
         line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
@@ -1601,7 +1609,13 @@ def _create_makefile(
     # c/c++ compiler used for linking
     if fext is None:
         _, tsyslibs = _get_linker_flags(
-            target, None, "gcc", [], srcfiles, osname="linux", verbose=verbose,
+            target,
+            None,
+            "gcc",
+            [],
+            srcfiles,
+            osname="linux",
+            verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
         line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))

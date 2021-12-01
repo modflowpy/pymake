@@ -810,7 +810,10 @@ def _update_swi(srcdir, double):
             f = open(fpth, "w")
             for idx, line in enumerate(lines):
                 # skip comments
-                if line.lower()[0] not in ("!", "c",):
+                if line.lower()[0] not in (
+                    "!",
+                    "c",
+                ):
                     for tag, tagr in zip(tags, tagrs):
                         if tag in line:
                             line = line.replace(tag, tagr)

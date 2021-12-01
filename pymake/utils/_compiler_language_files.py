@@ -24,7 +24,12 @@ def _get_fortran_files(srcfiles, extensions=False):
     files_out = []
     for srcfile in srcfiles:
         ext = os.path.splitext(srcfile)[1]
-        if ext.lower() in (".f", ".for", ".f90", ".fpp",):
+        if ext.lower() in (
+            ".f",
+            ".for",
+            ".f90",
+            ".fpp",
+        ):
             if extensions:
                 # save unique extension
                 if ext not in files_out:
@@ -56,7 +61,10 @@ def _get_c_files(srcfiles, extensions=False):
     files_out = []
     for srcfile in srcfiles:
         ext = os.path.splitext(srcfile)[1]
-        if ext.lower() in (".c", ".cpp",):
+        if ext.lower() in (
+            ".c",
+            ".cpp",
+        ):
             if extensions:
                 if ext not in files_out:
                     files_out.append(ext)

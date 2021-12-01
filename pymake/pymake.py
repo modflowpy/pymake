@@ -210,7 +210,9 @@ class Pymake:
 
         """
         loc_dict = _get_arg_dict()
-        parser = argparse.ArgumentParser(description=__description__,)
+        parser = argparse.ArgumentParser(
+            description=__description__,
+        )
         for _, value in loc_dict.items():
             tag = value["tag"][0]
             # only process optional command line variables
@@ -769,7 +771,11 @@ class Pymake:
 
                 # execute select replace function
                 replace_function(
-                    self.srcdir, self.fc, self.cc, self.arch, self.double,
+                    self.srcdir,
+                    self.fc,
+                    self.cc,
+                    self.arch,
+                    self.double,
                 )
 
             # write message
