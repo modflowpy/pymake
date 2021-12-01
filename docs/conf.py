@@ -31,8 +31,8 @@ if stderr:
 # -- Project information -----------------------------------------------------
 
 project = "pymake"
-copyright = u"2020, Joseph D. Hughes"
-author = u"Joseph D. Hughes"
+copyright = "2020, Joseph D. Hughes"
+author = "Joseph D. Hughes"
 
 # The version.
 version = __version__
