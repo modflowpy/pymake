@@ -189,7 +189,7 @@ def test_compile():
 
 
 @pytest.mark.regression
-@pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
+# @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 @pytest.mark.parametrize("fn", name_files)
 def test_mf2005(fn):
     run_mf2005(fn)

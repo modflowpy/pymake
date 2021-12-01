@@ -594,33 +594,19 @@ def _get_linker_flags(
 
     # add option to statically link intel provided libraries on osx and linux
     if sharedobject:
-        if osname in (
-            "darwin",
-            "linux",
-        ):
+        if osname in ("darwin", "linux",):
             if compiler == fc:
-                if fc in (
-                    "ifort",
-                    "mpiifort",
-                ):
+                if fc in ("ifort", "mpiifort",):
                     syslibs_out.append("static-intel")
 
     # add linker switch for a shared object
     if sharedobject:
         gnu_compiler = True
         if compiler == fc:
-            if fc in (
-                "ifort",
-                "mpiifort",
-            ):
+            if fc in ("ifort", "mpiifort",):
                 gnu_compiler = False
         else:
-            if cc in (
-                "icc",
-                "mpiicc",
-                "icl",
-                "cl",
-            ):
+            if cc in ("icc", "mpiicc", "icl", "cl",):
                 gnu_compiler = False
         if osname == "win32":
             if gnu_compiler:
@@ -648,10 +634,7 @@ def _get_linker_flags(
                 isstatic = True
                 isgfortran = True
             if not isstatic:
-                if compiler == cc and cc in (
-                    "gcc",
-                    "g++",
-                ):
+                if compiler == cc and cc in ("gcc", "g++",):
                     isstatic = True
         if isstatic:
             syslibs_out.append("static")
@@ -665,16 +648,10 @@ def _get_linker_flags(
     if osname == "win32":
         addswitch = False
         if compiler == fc:
-            if fc in (
-                "ifort",
-                "mpiifort",
-            ):
+            if fc in ("ifort", "mpiifort",):
                 addswitch = True
         else:
-            if cc in (
-                "icl",
-                "cl",
-            ):
+            if cc in ("icl", "cl",):
                 addswitch = True
         if addswitch:
             syslibs_out.append("nologo")
@@ -768,11 +745,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
                     fflags += [
                         opt,
                     ]
-        elif target in (
-            "mf2000",
-            "mt3dms",
-            "swtv4",
-        ):
+        elif target in ("mf2000", "mt3dms", "swtv4",):
             if fc == "gfortran":
                 opt = "-fallow-argument-mismatch"
                 if _check_gnu_switch_available(
@@ -781,11 +754,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
                     fflags += [
                         opt,
                     ]
-        elif target in (
-            "mf6",
-            "libmf6",
-            "zbud6",
-        ):
+        elif target in ("mf6", "libmf6", "zbud6",):
             if fc == "gfortran":
                 fflags += [
                     "-Wtabs",

@@ -859,10 +859,7 @@ def getmfexes(
         )
         download_url = assets[zipname]
     download_and_unzip(
-        download_url,
-        download_dir,
-        verbose=verbose,
-        verify=verify,
+        download_url, download_dir, verbose=verbose, verify=verify,
     )
 
     if exes is not None:
@@ -891,11 +888,7 @@ def getmfexes(
 
 
 def getmfnightly(
-    pth=".",
-    platform=None,
-    exes=None,
-    verbose=False,
-    verify=True,
+    pth=".", platform=None, exes=None, verbose=False, verify=True,
 ):
     """Get the latest MODFLOW 6 binary nightly-build executables from github
     (https://github.com/MODFLOW-USGS/modflow6-nightly-build/) for the specified
@@ -940,10 +933,7 @@ def getmfnightly(
         + zipname
     )
     download_and_unzip(
-        download_url,
-        download_dir,
-        verbose=verbose,
-        verify=verify,
+        download_url, download_dir, verbose=verbose, verify=verify,
     )
 
     if exes is not None:

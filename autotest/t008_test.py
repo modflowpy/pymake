@@ -45,6 +45,7 @@ pm.target = target
 pm.appdir = dstpth
 pm.makefile = True
 pm.inplace = True
+pm.networkx = True
 
 
 def build_with_makefile():

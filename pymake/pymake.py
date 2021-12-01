@@ -118,6 +118,7 @@ class Pymake:
         self.keep = None
         self.zip = None
         self.inplace = None
+        self.networkx = None
 
         # set class variables with default values from arg_dict
         for key, value in _get_arg_dict().items():
@@ -209,9 +210,7 @@ class Pymake:
 
         """
         loc_dict = _get_arg_dict()
-        parser = argparse.ArgumentParser(
-            description=__description__,
-        )
+        parser = argparse.ArgumentParser(description=__description__,)
         for _, value in loc_dict.items():
             tag = value["tag"][0]
             # only process optional command line variables
@@ -770,11 +769,7 @@ class Pymake:
 
                 # execute select replace function
                 replace_function(
-                    self.srcdir,
-                    self.fc,
-                    self.cc,
-                    self.arch,
-                    self.double,
+                    self.srcdir, self.fc, self.cc, self.arch, self.double,
                 )
 
             # write message
@@ -804,6 +799,7 @@ class Pymake:
                 appdir=self.appdir,
                 verbose=self.verbose,
                 inplace=self.inplace,
+                networkx=self.networkx,
             )
 
         # issue error if target was not built
