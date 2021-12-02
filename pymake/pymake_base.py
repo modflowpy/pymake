@@ -1733,14 +1733,14 @@ def _create_makefile(
         windows_line_ending = b"\r\n"
         unix_line_ending = b"\n"
         for file in ("makefile", makedefaults):
-            with open(file, 'rb') as f:
+            with open(file, "rb") as f:
                 content = f.read()
 
             # replace windows line endings
             content = content.replace(windows_line_ending, unix_line_ending)
 
             # rewrite the file
-            with open(file, 'wb') as f:
+            with open(file, "wb") as f:
                 f.write(content)
 
     return
