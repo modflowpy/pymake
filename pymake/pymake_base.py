@@ -96,6 +96,7 @@ def main(
     appdir=None,
     verbose=False,
     inplace=False,
+    networkx=False,
 ):
     """Main pymake function.
 
@@ -154,6 +155,12 @@ def main(
         boolean indicating that the source files in srcdir, srcdir2, and
         defined in extrafiles will be used directly. If inplace is True,
         source files will be copied to a directory named srcdir_temp.
+        (default is False)
+    networkx : bool
+        boolean indicating that the NetworkX python package will be used to
+        create the Directed Acyclic Graph (DAG) used to determine the order
+        source files are compiled in. The NetworkX package tends to result in
+        a unique DAG more often than the standard algorithm used in pymake.
         (default is False)
 
     Returns
@@ -236,7 +243,7 @@ def main(
         )
 
         # get ordered list of files to compile
-        srcfiles = _get_ordered_srcfiles(srcfiles)
+        srcfiles = _get_ordered_srcfiles(srcfiles, networkx)
 
         # set intelwin flag to True in compiling on windows with Intel compilers
         intelwin = False
@@ -1218,18 +1225,9 @@ def _create_makefile(
 
     # build heading
     heading = (
-        "# makefile created on {}\n".format(datetime.datetime.now())
-        + "# by pymake (version {}) ".format(__version__)
-        + "for the '{}' executable \n".format(exe_name)
+        f"# makefile created by pymake (version {__version__}) "
+        f"for the '{exe_name}' executable.\n"
     )
-    heading += "# using the"
-    if fext is not None:
-        heading += " '{}' fortran".format(fc)
-        if cext is not None:
-            heading += " and"
-    if cext is not None:
-        heading += " '{}' c/c++".format(cc)
-    heading += " compiler(s).\n"
 
     # open makefile
     f = open("makefile", "w")
@@ -1238,7 +1236,7 @@ def _create_makefile(
     f.write(heading + "\n")
 
     #  write include file
-    line = "\ninclude ./{}\n\n".format(makedefaults)
+    line = f"\ninclude ./{makedefaults}\n\n"
     f.write(line)
 
     # determine the directories with source files
@@ -1262,16 +1260,16 @@ def _create_makefile(
     line = "# Define the source file directories\n"
     f.write(line)
     vpaths = []
-    for idx, dir in enumerate(dirs):
-        vpaths.append("SOURCEDIR{}".format(idx + 1))
-        line = "{}={}\n".format(vpaths[idx], dir)
+    for idx, source_dir in enumerate(dirs):
+        vpaths.append(f"SOURCEDIR{idx + 1}")
+        line = f"{vpaths[idx]}={source_dir}\n"
         f.write(line)
     f.write("\n")
 
     # write vpath
     f.write("VPATH = \\\n")
     for idx, sd in enumerate(vpaths):
-        f.write("${" + "{}".format(sd) + "} ")
+        f.write("${" + f"{sd}" + "} ")
         if idx + 1 < len(vpaths):
             f.write("\\")
         f.write("\n")
@@ -1281,18 +1279,18 @@ def _create_makefile(
     line = ".SUFFIXES: "
     if fext is not None:
         for ext in fext:
-            line += "{} ".format(ext)
+            line += f"{ext} "
     if cext is not None:
         for ext in cext:
-            line += "{} ".format(ext)
+            line += f"{ext} "
     line += objext
-    f.write("{}\n".format(line))
+    f.write(f"{line}\n")
     f.write("\n")
 
     f.write("OBJECTS = \\\n")
     for idx, srcfile in enumerate(srcfiles):
         objpth = os.path.splitext(os.path.basename(srcfile))[0] + objext
-        f.write("$(OBJDIR)/{}".format(objpth))
+        f.write(f"$(OBJDIR)/{objpth}")
         if idx + 1 < len(srcfiles):
             f.write(" \\")
         f.write("\n")
@@ -1308,17 +1306,17 @@ def _create_makefile(
 
     if fext is not None:
         for ext in fext:
-            f.write("$(OBJDIR)/%{} : %{}\n".format(objext, ext))
+            f.write(f"$(OBJDIR)/%{objext} : %{ext}\n")
             f.write("\t@mkdir -p $(@D)\n")
             line = (
                 "\t$(FC) $(OPTLEVEL) $(FFLAGS) -c $< -o $@ "
                 + "$(INCSWITCH) $(MODSWITCH)\n"
             )
-            f.write("{}\n".format(line))
+            f.write(f"{line}\n")
 
     if cext is not None:
         for ext in cext:
-            f.write("$(OBJDIR)/%{} : %{}\n".format(objext, ext))
+            f.write(f"$(OBJDIR)/%{objext} : %{ext}\n")
             f.write("\t@mkdir -p $(@D)\n")
             line = (
                 "\t$(CC) $(OPTLEVEL) $(CFLAGS) -c $< -o $@ " + "$(INCSWITCH)\n"
@@ -1367,20 +1365,20 @@ def _create_makefile(
         "# Define the directories for the object and module files\n"
         + "# and the executable and its path.\n"
     )
-    line += "BINDIR = {}\n".format(dpth)
-    line += "OBJDIR = {}\n".format(objdir_temp)
-    line += "MODDIR = {}\n".format(moddir_temp)
+    line += f"BINDIR = {dpth}\n"
+    line += f"OBJDIR = {objdir_temp}\n"
+    line += f"MODDIR = {moddir_temp}\n"
     line += "INCSWITCH = -I $(OBJDIR)\n"
     line += "MODSWITCH = -J $(MODDIR)\n\n"
     f.write(line)
 
     line = "# define program name\n"
-    line += "PROGRAM = $(BINDIR)/{}\n\n".format(exe_name)
+    line += f"PROGRAM = $(BINDIR)/{exe_name}\n\n"
     f.write(line)
 
     line = "# define os dependent program name\n"
     line += "ifeq ($(detected_OS), Windows)\n"
-    line += "\tPROGRAM = $(BINDIR)/{}.exe\n".format(exe_name)
+    line += f"\tPROGRAM = $(BINDIR)/{exe_name}.exe\n"
     line += "endif\n\n"
     f.write(line)
 

@@ -141,6 +141,7 @@ def make_plots(
     level=3,
     extension=".png",
     verbose=False,
+    networkx=False,
 ):
     """Create plots of module dependencies.
 
@@ -159,6 +160,12 @@ def make_plots(
         output extension (default is .png)
     verbose : bool
         boolean indicating if output will be printed to the terminal
+    networkx : bool
+        boolean indicating that the NetworkX python package will be used to
+        create the Directed Acyclic Graph (DAG) used to determine the order
+        source files are compiled in. The NetworkX package tends to result in
+        a unique DAG more often than the standard algorithm used in pymake.
+        (default is False)
 
     Returns
     -------
@@ -171,7 +178,9 @@ def make_plots(
         )
         raise ModuleNotFoundError(msg)
 
-    srcfiles = _get_ordered_srcfiles(_get_srcfiles(srcdir, include_subdir))
+    srcfiles = _get_ordered_srcfiles(
+        _get_srcfiles(srcdir, include_subdir), networkx=networkx
+    )
     nodelist = _get_f_nodelist(srcfiles)
     for idx, n in enumerate(nodelist):
         if verbose:

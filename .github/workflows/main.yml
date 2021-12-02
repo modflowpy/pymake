@@ -41,9 +41,42 @@ jobs:
       - name: Run pylint
         run: pylint --jobs=0 --errors-only ./pymake
 
+  pymake_setup:
+    name: standard installation
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+
+      # check out repo
+      - name: Checkout pymake repo
+        uses: actions/checkout@v2.3.4
+
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v2.2.2
+        with:
+          python-version: 3.9
+
+      - name: Upgrade pip and install wheel
+        run: |
+          python -m pip install --upgrade pip
+          pip install wheel
+
+      - name: Base pymake installation
+        run: |
+          pip install . --use-feature=in-tree-build
+
+      - name: Print pymake version
+        run: |
+          python -c "import pymake; print(pymake.__version__)"
+
   pymakeCI-os-gcc:
     name: pymake CI gcc on different OSs
-    needs: pymake_lint
+    needs: [pymake_lint, pymake_setup]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -109,7 +142,7 @@ jobs:
 
   pymakeCI-os-intel:
     name: pymake CI intel on different OSs
-    needs: pymake_lint
+    needs: [pymake_lint, pymake_setup]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -233,7 +266,7 @@ jobs:
 
   pymakeCI-gcc-prev:
     name: pymake CI GCC 9 and 8
-    needs: pymake_lint
+    needs: [pymake_lint, pymake_setup]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -290,7 +323,7 @@ jobs:
 
   pymakeCI-requests:
     name: pymake CI requests
-    needs: pymake_lint
+    needs: [pymake_lint, pymake_setup]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -324,7 +357,7 @@ jobs:
 
   pymakeCI-python-prev:
     name: pymake CI with previous python versions
-    needs: pymake_lint
+    needs: [pymake_lint, pymake_setup]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

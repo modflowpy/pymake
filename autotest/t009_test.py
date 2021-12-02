@@ -205,6 +205,7 @@ def test_download_exes():
 
 @pytest.mark.regression
 @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
+@pytest.mark.skipif(sys.platform == "win32", reason="do not run on OSX")
 @pytest.mark.parametrize("ws", sim_dirs)
 def test_mt3dusgs(ws):
     assert run_mt3dusgs(ws), "could not run {}".format(ws)

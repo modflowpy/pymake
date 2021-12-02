@@ -118,6 +118,7 @@ class Pymake:
         self.keep = None
         self.zip = None
         self.inplace = None
+        self.networkx = None
 
         # set class variables with default values from arg_dict
         for key, value in _get_arg_dict().items():
@@ -806,6 +807,7 @@ class Pymake:
                 appdir=self.appdir,
                 verbose=self.verbose,
                 inplace=self.inplace,
+                networkx=self.networkx,
             )
 
         # issue error if target was not built

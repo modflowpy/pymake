@@ -1,7 +1,7 @@
 """Private functions for processing c/c++ and fortran files
 """
 import os
-from ._dag import _order_source_files, _order_c_source_files
+from ._dag import _order_f_source_files, _order_c_source_files
 
 
 def _get_fortran_files(srcfiles, extensions=False):
@@ -24,7 +24,12 @@ def _get_fortran_files(srcfiles, extensions=False):
     files_out = []
     for srcfile in srcfiles:
         ext = os.path.splitext(srcfile)[1]
-        if ext.lower() in [".f", ".for", ".f90", ".fpp"]:
+        if ext.lower() in (
+            ".f",
+            ".for",
+            ".f90",
+            ".fpp",
+        ):
             if extensions:
                 # save unique extension
                 if ext not in files_out:
@@ -56,7 +61,10 @@ def _get_c_files(srcfiles, extensions=False):
     files_out = []
     for srcfile in srcfiles:
         ext = os.path.splitext(srcfile)[1]
-        if ext.lower() in [".c", ".cpp"]:
+        if ext.lower() in (
+            ".c",
+            ".cpp",
+        ):
             if extensions:
                 if ext not in files_out:
                     files_out.append(ext)
@@ -212,10 +220,10 @@ def _get_srcfiles(srcdir, include_subdir):
             or file.lower().endswith(".cpp")
         ):
             srcfiles.append(os.path.relpath(file, os.getcwd()))
-    return srcfiles
+    return sorted(srcfiles)
 
 
-def _get_ordered_srcfiles(all_srcfiles):
+def _get_ordered_srcfiles(all_srcfiles, networkx):
     """Create a list of ordered source files (both fortran and c). Ordering is
     build using a directed acyclic graph to determine module dependencies.
 
@@ -223,6 +231,9 @@ def _get_ordered_srcfiles(all_srcfiles):
     ----------
     all_srcfiles : list
         list of all fortran and c/c++ source files
+    networkx : bool
+        boolean indicating if the NetworkX python package should be used
+        to determine the DAG.
 
     Returns
     -------
@@ -246,9 +257,9 @@ def _get_ordered_srcfiles(all_srcfiles):
     # order the source files using the directed acyclic graph in _dag.py
     ordered_srcfiles = []
     if ffiles:
-        ordered_srcfiles += _order_source_files(ffiles)
+        ordered_srcfiles += _order_f_source_files(ffiles, networkx)
 
     if cfiles:
-        ordered_srcfiles += _order_c_source_files(cfiles)
+        ordered_srcfiles += _order_c_source_files(cfiles, networkx)
 
     return ordered_srcfiles
