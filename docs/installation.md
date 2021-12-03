@@ -1,5 +1,11 @@
 # pymake Installation
 
+To install a stable version from PyPI:
+
+```
+pip install mfpymake
+```
+
 To install pymake directly from the git repository type:
 
 ```
