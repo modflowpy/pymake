@@ -59,8 +59,15 @@ class DirectedAcyclicGraph(object):
                     for nn in node.dependencies:
                         ts.add_edge(node.name, nn.name)
 
+            # test if the graph is acyclic
+            if not nx.is_directed_acyclic_graph(ts):
+                raise ValueError(
+                    "Circular dependencies are present. Cannot determine "
+                    "source file compilation order."
+                )
+
             # generate the DAG
-            order = tuple(nx.topological_sort(ts))[::-1]
+            order = tuple(reversed(tuple(nx.topological_sort(ts))))
 
             # build sort_list from the DAG and add dependencies from node_dict
             for name in order:
@@ -68,6 +75,7 @@ class DirectedAcyclicGraph(object):
                 for dependency in node_dict[name]:
                     node.add_dependency(dependency)
                 sort_list.append(node)
+
         # use the original pymake DAG algorithm
         else:
             # build a list of nodes with no dependencies

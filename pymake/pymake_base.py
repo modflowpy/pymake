@@ -40,6 +40,7 @@ The script could be run from the command line using:
 
 """
 import os
+import sys
 import traceback
 import shutil
 import datetime
@@ -1365,9 +1366,12 @@ def _create_makefile(
         "# Define the directories for the object and module files\n"
         + "# and the executable and its path.\n"
     )
-    line += f"BINDIR = {dpth}\n"
-    line += f"OBJDIR = {objdir_temp}\n"
-    line += f"MODDIR = {moddir_temp}\n"
+    tpth = dpth.replace("\\", "/")
+    line += f"BINDIR = {tpth}\n"
+    tpth = objdir_temp.replace("\\", "/")
+    line += f"OBJDIR = {tpth}\n"
+    tpth = moddir_temp.replace("\\", "/")
+    line += f"MODDIR = {tpth}\n"
     line += "INCSWITCH = -I $(OBJDIR)\n"
     line += "MODSWITCH = -J $(MODDIR)\n\n"
     f.write(line)
@@ -1723,5 +1727,20 @@ def _create_makefile(
 
     # close the makedefaults
     f.close()
+
+    # replace windows line endings
+    if sys.platform == "win32":
+        windows_line_ending = b"\r\n"
+        unix_line_ending = b"\n"
+        for file in ("makefile", makedefaults):
+            with open(file, "rb") as f:
+                content = f.read()
+
+            # replace windows line endings
+            content = content.replace(windows_line_ending, unix_line_ending)
+
+            # rewrite the file
+            with open(file, "wb") as f:
+                f.write(content)
 
     return
