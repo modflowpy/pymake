@@ -1,32 +1,33 @@
 # pymake
+
 Python package for compiling MODFLOW-based programs.
 
-
 ### Version 1.2.2
+
 ![pymake continuous integration](https://github.com/modflowpy/pymake/workflows/pymake%20continuous%20integration/badge.svg)
 [![codecov](https://codecov.io/gh/modflowpy/pymake/branch/master/graph/badge.svg)](https://codecov.io/gh/modflowpy/pymake)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/fe4275a3cfb84acf9c84aba7b4ae2086)](https://www.codacy.com/gh/modflowpy/pymake/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/pymake&amp;utm_campaign=Badge_Grade)
 [![Documentation Status](https://readthedocs.org/projects/mfpymake/badge/?version=latest)](https://mfpymake.readthedocs.io/en/latest/?badge=latest)
 
-This is a python package for compiling MODFLOW-based and other Fortran, C, and 
-C++ programs. The package determines the build order using a directed acyclic 
-graph and then compiles the source files using GNU compilers (`gcc`, `g++`, 
+This is a python package for compiling MODFLOW-based and other Fortran, C, and
+C++ programs. The package determines the build order using a directed acyclic
+graph and then compiles the source files using GNU compilers (`gcc`, `g++`,
 `gfortran`) or Intel compilers (`ifort`, `icc`).
 
 pymake can be run from the command line or it can be called from within python.
 By default, pymake sets the optimization level, Fortran flags, C/C++ flags, and
-linker flags that are consistent with those used to compile MODFLOW-based 
+linker flags that are consistent with those used to compile MODFLOW-based
 programs released by the USGS.
 
-pymake includes example scripts for building MODFLOW 6, MODFLOW-2005, 
-MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7, 
-GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, and SUTRA. Example scripts for 
-creating the utility programs CRT, Triangle, and GRIDGEN are also included.
-The scripts download the distribution file from the USGS (and other 
-organizations) and compile the source into a binary executable.
+pymake includes example scripts for building MODFLOW 6, MODFLOW-2005,
+MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7,
+GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, and SUTRA. Example scripts for
+creating the utility programs CRT, Triangle, and GRIDGEN are also included. The
+scripts download the distribution file from the USGS (and other organizations)
+and compile the source into a binary executable.
 
-Note that if gfortran is used to compile MODFLOW-based codes, the `openspec.f` 
-and `FILESPEC.inc` (MT3DMS) files will automatically be changed to the 
+Note that if gfortran is used to compile MODFLOW-based codes, the `openspec.f`
+and `FILESPEC.inc` (MT3DMS) files will automatically be changed to the
 following so that binary files are created properly using standard Fortran:
 
 ```
@@ -40,8 +41,8 @@ c -- end of include file
 
 ## Command Line Usage
 
-pymake can be used to compile MODFLOW 6 directly from the command line using 
-the Intel Fortran compiler `ifort` from a subdirectory at the same level as 
+pymake can be used to compile MODFLOW 6 directly from the command line using
+the Intel Fortran compiler `ifort` from a subdirectory at the same level as
 the `src` subdirectory by specifying:
 
 ```
@@ -54,7 +55,7 @@ To see help for running from command line, use the following statement.
 python -m pymake -h
 ```
 
-The help message identifies required positional arguments and optional 
+The help message identifies required positional arguments and optional
 arguments that can be provided to overide default values.
 
 ```
@@ -114,27 +115,27 @@ Note that the source directory should not contain any bad or duplicate source fi
 
 ```
 
-Note that command line arguments for Fortran flags, C/C++ flags, and syslib 
-libraries should be enclosed in quotes and start with a space prior to the 
-first value (`-ff ' -O3'`) or use an equal sign separating the command line 
-argument and the values (`-ff='-O3'`). The command line argument to use an 
-`-O3` optimization level when compiling MODFLOW 6 with the `ifort` compiler 
+Note that command line arguments for Fortran flags, C/C++ flags, and syslib
+libraries should be enclosed in quotes and start with a space prior to the
+first value (`-ff ' -O3'`) or use an equal sign separating the command line
+argument and the values (`-ff='-O3'`). The command line argument to use an
+`-O3` optimization level when compiling MODFLOW 6 with the `ifort` compiler
 would be:
 
 ```
 python -m pymake ../src/ ../bin/mf6 -mc --subdirs -fc ifort -ff='-O3'
 ```
- 
 
 ## From Python
 
 ### Script to compile MODFLOW 6
 
-When using the pymake object (`Pymake()`) only the positional arguments 
-(`srcdir`, `target`) need to be specified in the script. 
+When using the pymake object (`Pymake()`) only the positional arguments
+(`srcdir`, `target`) need to be specified in the script.
 
 ```python
 import pymake
+
 pm = pymake.Pymake()
 pm.srcdir = '../src'
 pm.target = 'mf6'
@@ -142,16 +143,16 @@ pm.include_subdirs = True
 pm.build()
 ```
 
-It is suggested that optional variables required for successful compiling and 
-linking be manually specified in the script to mininimize the potential for 
+It is suggested that optional variables required for successful compiling and
+linking be manually specified in the script to mininimize the potential for
 unsuccessful builds. For MODFLOW 6, subdirectories in the `src` subdirectory
-need to be included and '`pm.include_subdirs = True`' has been specified in
-the script. Custom optimization levels and compiler flags could be specified
-to get consistent builds. 
+need to be included and '`pm.include_subdirs = True`' has been specified in the
+script. Custom optimization levels and compiler flags could be specified to get
+consistent builds.
 
-Non-default values for the optional arguments can specified as command line 
-arguments. For example, MODFLOW 6 could be compiled using Intel compilers 
-instead of the default GNU compilers with the script listed above by 
+Non-default values for the optional arguments can specified as command line
+arguments. For example, MODFLOW 6 could be compiled using Intel compilers
+instead of the default GNU compilers with the script listed above by
 specifying:
 
 ```
@@ -162,15 +163,15 @@ python mymf6script.py -fc ifort -cc icc
 
 The following scripts can be run directly from the command line to build
 MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000,
-MODPATH 6, MODPATH 7, MT3DMS, MT3D-USGS, and SEAWAT binaries on Linux, Mac,
-and Windows. The scripts will download the distribution file from the USGS 
+MODPATH 6, MODPATH 7, MT3DMS, MT3D-USGS, and SEAWAT binaries on Linux, Mac, and
+Windows. The scripts will download the distribution file from the USGS
 (requires internet connection), unzip the file, and compile the source.  
-MT3DMS will be downloaded from the University of Alabama and Triangle will be 
-downloaded from 
-[netlib.org](http://www.netlib.org/voronoi/triangle.zip). The scripts use the 
-`pymake.build_apps()` method which download and unzip the distribution files 
-and set all of the pymake settings required to build the program. Available 
-example scripts include: 
+MT3DMS will be downloaded from the University of Alabama and Triangle will be
+downloaded from
+[netlib.org](http://www.netlib.org/voronoi/triangle.zip). The scripts use the
+`pymake.build_apps()` method which download and unzip the distribution files
+and set all of the pymake settings required to build the program. Available
+example scripts include:
 
 * `make_modflow6.py`
 * `make_mf2005.py`
@@ -189,14 +190,13 @@ example scripts include:
 * `make_gridgen.py`
 * `make_triangle.py`
 
-Optional command line arguments can be used to customize the build (`-fc`, 
-`-cc`, `--fflags`, etc.). MODFLOW 6 could be built using intel compilers and 
+Optional command line arguments can be used to customize the build (`-fc`,
+`-cc`, `--fflags`, etc.). MODFLOW 6 could be built using intel compilers and
 an `O3` optimation level by specifying:
 
 ```
 python make_mf6.py -fc=ifort --fflags='-O3'
 ```
-
 
 ## Installation
 
