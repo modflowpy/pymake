@@ -1,10 +1,7 @@
-# Exclude files
 global-exclude .DS_Store *.pyc *.pyo *.pyd *.swp *.bak *~ .* *.sh *.yml *.md *.toml
-prune */__pycache__
-# exclude directories
 exclude docs/*
 exclude autotest/*
-# include specific files
 include pymake/utils/usgsprograms.txt
-include pymake/examples/*.bat
-include pymake/examples/*.py
+include examples/*.bat
+include examples/*.py
+
