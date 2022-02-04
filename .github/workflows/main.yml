@@ -83,7 +83,7 @@ jobs:
 
       - name: Base pymake installation
         run: |
-          pip install . --use-feature=in-tree-build
+          pip install .
 
       - name: Print pymake version
         run: |

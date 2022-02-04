@@ -116,6 +116,7 @@ class Pymake:
         self.zip = None
         self.inplace = None
         self.networkx = None
+        self.meson = None
 
         # set class variables with default values from arg_dict
         for key, value in _get_arg_dict().items():
