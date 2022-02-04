@@ -1,9 +1,10 @@
 import os
-import sys
 import shutil
-import pymake
+import sys
 
 import pytest
+
+import pymake
 
 # define program data
 targets = [
@@ -37,9 +38,7 @@ exe_names = [os.path.join(appdir, target) for target in targets]
 
 
 def clean_up(epth):
-    assert os.path.isfile(epth), "{} does not exist".format(
-        os.path.basename(epth)
-    )
+    assert os.path.isfile(epth), f"{os.path.basename(epth)} does not exist"
     print("Removing " + os.path.basename(epth))
     os.remove(epth)
 
@@ -53,7 +52,7 @@ def test_compile(target):
             target, download_dir=dstpth, appdir=appdir, verbose=True
         )
         == 0
-    ), "could not compile {}".format(target)
+    ), f"could not compile {target}"
 
 
 @pytest.mark.base

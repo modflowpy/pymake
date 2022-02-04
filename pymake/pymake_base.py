@@ -39,34 +39,34 @@ The script could be run from the command line using:
     python myscript.py ../src myapp -fc=ifort -cc=icc
 
 """
-import os
-import sys
-import traceback
-import shutil
 import datetime
 import inspect
+import os
+import shutil
+import sys
+import traceback
 
 from .config import __version__
-from .utils._Popen_wrapper import (
-    _process_Popen_initialize,
-    _process_Popen_command,
-    _process_Popen_stdout,
-    _process_Popen_communicate,
+from .utils._compiler_language_files import (
+    _get_c_files,
+    _get_fortran_files,
+    _get_ordered_srcfiles,
+    _get_srcfiles,
+    _preprocess_file,
 )
 from .utils._compiler_switches import (
-    _get_osname,
-    _get_optlevel,
     _get_c_flags,
     _get_fortran_flags,
     _get_linker_flags,
+    _get_optlevel,
     _get_os_macro,
+    _get_osname,
 )
-from .utils._compiler_language_files import (
-    _get_srcfiles,
-    _get_ordered_srcfiles,
-    _get_c_files,
-    _get_fortran_files,
-    _preprocess_file,
+from .utils._Popen_wrapper import (
+    _process_Popen_command,
+    _process_Popen_communicate,
+    _process_Popen_initialize,
+    _process_Popen_stdout,
 )
 
 # define temporary directories
@@ -98,6 +98,7 @@ def main(
     verbose=False,
     inplace=False,
     networkx=False,
+    meson=False,
 ):
     """Main pymake function.
 
@@ -163,6 +164,9 @@ def main(
         source files are compiled in. The NetworkX package tends to result in
         a unique DAG more often than the standard algorithm used in pymake.
         (default is False)
+    meson : bool
+        boolean indicating that the executable should be built using the
+        meson build system. (default is False)
 
     Returns
     -------
@@ -216,12 +220,10 @@ def main(
 
         # write summary information
         if verbose:
-            print("\nsource files are in:\n    {}\n".format(srcdir))
-            print("executable name to be created:\n    {}\n".format(target))
+            print(f"\nsource files are in:\n    {srcdir}\n")
+            print(f"executable name to be created:\n    {target}\n")
             if srcdir2 is not None:
-                msg = "additional source files are in:\n" + "     {}\n".format(
-                    srcdir2
-                )
+                msg = "additional source files are in:\n" + f"     {srcdir2}\n"
                 print(msg)
 
         # make sure the path for the target exists
@@ -229,7 +231,7 @@ def main(
         if pth == "":
             pth = "."
         if not os.path.exists(pth):
-            print("creating target path - {}\n".format(pth))
+            print(f"creating target path - {pth}\n")
             os.makedirs(pth)
 
         # initialize
@@ -276,6 +278,7 @@ def main(
             arch,
             intelwin,
             sharedobject,
+            meson,
             verbose,
         )
 
@@ -302,8 +305,8 @@ def main(
             _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose)
     else:
         msg = (
-            "Nothing to do, the srcdir ({}) ".format(srcdir)
-            + "and/or target ({}) ".format(target)
+            f"Nothing to do, the srcdir ({srcdir}) "
+            + f"and/or target ({target}) "
             + "are not specified."
         )
         raise ValueError(msg)
@@ -417,9 +420,9 @@ def _pymake_initialize(
                 if os.path.isfile(fpth):
                     fpth = fpth2
                 else:
-                    msg = "Current working directory: {}\n".format(os.getcwd())
-                    msg += "Error in extrafiles: {}\n".format(extrafiles)
-                    msg += "Could not find file: {}".format(fpth)
+                    msg = f"Current working directory: {os.getcwd()}\n"
+                    msg += f"Error in extrafiles: {extrafiles}\n"
+                    msg += f"Could not find file: {fpth}"
                     raise FileNotFoundError(msg)
         if inplace:
             dst = os.path.normpath(os.path.relpath(fpth, os.getcwd()))
@@ -428,7 +431,7 @@ def _pymake_initialize(
             if os.path.isfile(dst):
                 raise ValueError(
                     "Error with extrafile.  Name conflicts with "
-                    "an existing source file: {}".format(dst)
+                    f"an existing source file: {dst}"
                 )
         if not inplace:
             shutil.copy(fpth, dst)
@@ -535,7 +538,7 @@ def _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose=False):
         for ext in delext:
             if f.endswith(ext):
                 if verbose:
-                    print("    removing...{}".format(f))
+                    print(f"    removing...{f}")
                 os.remove(f)
 
     # shared object intermediate files
@@ -548,7 +551,7 @@ def _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose=False):
         for ext in delext:
             if fpth.endswith(ext):
                 if verbose:
-                    print("    removing...'{}'".format(fpth))
+                    print(f"    removing...'{fpth}'")
                 os.remove(fpth)
 
     # remove temporary directories
@@ -561,15 +564,15 @@ def _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose=False):
     if not inplace:
         if os.path.isdir(srcdir_temp):
             if verbose:
-                print("removing...'{}'".format(srcdir_temp))
+                print(f"removing...'{srcdir_temp}'")
             shutil.rmtree(srcdir_temp)
     if os.path.isdir(objdir_temp):
         if verbose:
-            print("removing...'{}'".format(objdir_temp))
+            print(f"removing...'{objdir_temp}'")
         shutil.rmtree(objdir_temp)
     if os.path.isdir(moddir_temp):
         if verbose:
-            print("removing...'{}'".format(moddir_temp))
+            print(f"removing...'{moddir_temp}'")
         shutil.rmtree(moddir_temp)
 
     # remove the windows batchfile
@@ -607,7 +610,7 @@ def _create_openspec(srcfiles, verbose):
             fpth = os.path.join(dpth, file)
             if os.path.isfile(fpth):
                 if verbose:
-                    print('replacing..."{}"'.format(fpth))
+                    print(f'replacing..."{fpth}"')
                 f = open(fpth, "w")
                 line = (
                     "c -- created by pymake_base.py\n"
@@ -663,6 +666,7 @@ def _pymake_compile(
     arch,
     intelwin,
     sharedobject,
+    meson,
     verbose,
 ):
     """Standard compile method.
@@ -703,6 +707,9 @@ def _pymake_compile(
         boolean indicating a shared object will be built
     verbose : bool
         boolean indicating if output will be printed to the terminal
+    meson : bool
+        boolean indicating that the executable should be built using the
+        meson build system. (default is False)
     inplace : bool
         boolean indicating that the source files in srcdir, srcdir2, and
         defined in extrafiles will be used directly. If inplace is True,
@@ -717,10 +724,7 @@ def _pymake_compile(
     """
     # write pymake setting
     if verbose:
-        msg = (
-            "\nPymake settings in {}\n".format(_pymake_compile.__name__)
-            + 40 * "-"
-        )
+        msg = f"\nPymake settings in {_pymake_compile.__name__}\n" + 40 * "-"
         print(msg)
         frame = inspect.currentframe()
         fnargs, _, _, values = inspect.getargvalues(frame)
@@ -730,7 +734,7 @@ def _pymake_compile(
                 value = "None"
             elif isinstance(value, list):
                 value = ", ".join(value)
-            print(" {}={}".format(arg, value))
+            print(f" {arg}={value}")
 
     # initialize returncode
     returncode = 0
@@ -778,7 +782,7 @@ def _pymake_compile(
     # non-zero error code
     if os.path.isfile(target):
         if verbose:
-            msg = "removing existing target with same name: {}".format(target)
+            msg = f"removing existing target with same name: {target}"
             print(msg)
         os.remove(target)
 
@@ -810,7 +814,7 @@ def _pymake_compile(
                 os.remove(batchfile)
             except:
                 if verbose:
-                    print("could not remove '{}'".format(batchfile))
+                    print(f"could not remove '{batchfile}'")
 
         # Create target using a batch file on Windows
         try:
@@ -834,7 +838,7 @@ def _pymake_compile(
                 batchfile,
             ]
         except:
-            errmsg = "Could not make x64 target: {}\n".format(target)
+            errmsg = f"Could not make x64 target: {target}\n"
             errmsg += traceback.print_exc()
             print(errmsg)
 
@@ -891,15 +895,15 @@ def _pymake_compile(
             # add search path for any c and c++ header files
             if iscfile:
                 for sd in searchdir:
-                    cmdlist.append("-I{}".format(sd))
+                    cmdlist.append(f"-I{sd}")
             # put object files and module files in objdir_temp and moddir_temp
             else:
-                cmdlist.append("-I{}".format(objdir_temp))
+                cmdlist.append(f"-I{objdir_temp}")
                 if fc in ["ifort", "mpiifort"]:
                     cmdlist.append("-module")
                     cmdlist.append(moddir_temp + "/")
                 else:
-                    cmdlist.append("-J{}".format(moddir_temp))
+                    cmdlist.append(f"-J{moddir_temp}")
 
             cmdlist.append("-c")
             cmdlist.append(srcfile)
@@ -946,17 +950,19 @@ def _pymake_compile(
             if idx == 0:
                 if intelwin:
                     msg = (
-                        "\nCompiling '{}' ".format(os.path.basename(target))
+                        f"\nCompiling '{os.path.basename(target)}' "
                         + "for Windows using Intel compilers..."
                     )
                 else:
-                    msg = "\nCompiling object files for " + "'{}'...".format(
-                        os.path.basename(target)
+                    msg = (
+                        "\nCompiling object files for "
+                        + f"'{os.path.basename(target)}'"
                     )
                 print(msg)
             if idx > 0 and idx == ilink:
-                msg = "\nLinking object files " + "to make '{}'...".format(
-                    os.path.basename(target)
+                msg = (
+                    "\nLinking object files "
+                    + f"to make '{os.path.basename(target)}'..."
                 )
                 print(msg)
 
@@ -976,7 +982,7 @@ def _pymake_compile(
             # evaluate return code
             returncode = proc.returncode
             if returncode != 0:
-                msg = "compilation failed on '{}'".format(" ".join(cmdlist))
+                msg = f"compilation failed on '{' '.join(cmdlist)}'"
                 print(msg)
                 break
 
@@ -1043,19 +1049,19 @@ def _create_win_batch(
             if on_env_var == oneapi_list[0]:
                 cpvars = (
                     "C:\\Program Files (x86)\\Intel\\oneAPI\\compiler\\"
-                    + "{}\\env\\vars.bat".format(latest_version)
+                    + f"{latest_version}\\env\\vars.bat"
                 )
             else:
                 cpvars = (
                     "C:\\Program Files (x86)\\Intel\\oneAPI\\" + "setvars.bat"
                 )
             if not os.path.isfile(cpvars):
-                raise Exception("Could not find cpvars: {}".format(cpvars))
-            intel_setvars = '"{}"'.format(cpvars)
+                raise Exception(f"Could not find cpvars: {cpvars}")
+            intel_setvars = f'"{cpvars}"'
             break
     # stand alone intel installation
     if intel_setvars is None:
-        iflist = ["IFORT_COMPILER{}".format(i) for i in range(30, 12, -1)]
+        iflist = [f"IFORT_COMPILER{i}" for i in range(30, 12, -1)]
         for ift in iflist:
             stand_alone_intel = os.environ.get(ift)
             if stand_alone_intel is not None:
@@ -1063,7 +1069,7 @@ def _create_win_batch(
                     stand_alone_intel, "bin", "compilervars.bat"
                 )
                 if not os.path.isfile(cpvars):
-                    raise Exception("Could not find cpvars: {}".format(cpvars))
+                    raise Exception(f"Could not find cpvars: {cpvars}")
                 intel_setvars = '"' + os.path.normpath(cpvars) + '" ' + arch
                 break
     # check if either OneAPI or stand alone intel is installed
@@ -1104,7 +1110,7 @@ def _create_win_batch(
 
             # add search path for any header files
             for sd in searchdir:
-                cmd += "/I{} ".format(sd)
+                cmd += f"/I{sd} "
 
             obj = os.path.join(
                 objdir_temp,
@@ -1120,10 +1126,10 @@ def _create_win_batch(
             if _preprocess_file(srcfile):
                 cmd += "/fpp" + " "
             cmd += "/c" + " "
-            cmd += "/module:{0}\\ ".format(moddir_temp)
-            cmd += "/object:{0}\\ ".format(objdir_temp)
+            cmd += f"/module:{moddir_temp}\\ "
+            cmd += f"/object:{objdir_temp}\\ "
             cmd += srcfile
-        f.write("echo {}\n".format(cmd))
+        f.write(f"echo {cmd}\n")
         f.write(cmd + "\n")
 
     # write commands to link
@@ -1140,7 +1146,7 @@ def _create_win_batch(
     for switch in lflags:
         cmd += " " + switch
     cmd += "\n"
-    f.write("echo {}\n".format(cmd))
+    f.write(f"echo {cmd}\n")
     f.write(cmd)
 
     # close the batch file
@@ -1205,7 +1211,7 @@ def _create_makefile(
     """
     # write a message
     if verbose:
-        msg = "\nWriting makefile and {}".format(makedefaults)
+        msg = f"\nWriting makefile and {makedefaults}"
         print(msg)
 
     # set object extension
@@ -1303,7 +1309,7 @@ def _create_makefile(
         line = "\t-$(CC) $(OPTLEVEL) -o $@ $(OBJECTS) $(LDFLAGS)\n"
     else:
         line = "\t-$(FC) $(OPTLEVEL) -o $@ $(OBJECTS) $(LDFLAGS)\n"
-    f.write("{}\n".format(line))
+    f.write(f"{line}\n")
 
     if fext is not None:
         for ext in fext:
@@ -1322,7 +1328,7 @@ def _create_makefile(
             line = (
                 "\t$(CC) $(OPTLEVEL) $(CFLAGS) -c $< -o $@ " + "$(INCSWITCH)\n"
             )
-            f.write("{}\n".format(line))
+            f.write(f"{line}\n")
 
     # close the makefile
     f.close()
@@ -1429,7 +1435,7 @@ def _create_makefile(
         target, fc, cc, debug, fflags, cflags, verbose=verbose
     )
     line = "# set the optimization level (OPTLEVEL) if not defined\n"
-    line += "OPTLEVEL ?= {}\n\n".format(optlevel.replace("/", "-"))
+    line += f"OPTLEVEL ?= {optlevel.replace('/', '-')}\n\n"
     f.write(line)
 
     # fortran flags
@@ -1458,7 +1464,7 @@ def _create_makefile(
                 tfflags[idx] = "$(OS_macro)"
         if preprocess:
             tfflags.append("-cpp")
-        line += "\t\tFFLAGS ?= {}\n".format(" ".join(tfflags))
+        line += f"\t\tFFLAGS ?= {' '.join(tfflags)}\n"
         line += "\tendif\n"
         line += "else\n"
         line += "\tifeq ($(FC), gfortran)\n"
@@ -1476,7 +1482,7 @@ def _create_makefile(
                 tfflags[idx] = "$(OS_macro)"
         if preprocess:
             tfflags.append("-cpp")
-        line += "\t\tFFLAGS ?= {}\n".format(" ".join(tfflags))
+        line += f"\t\tFFLAGS ?= {' '.join(tfflags)}\n"
         line += "\tendif\n"
         line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
         tfflags = _get_fortran_flags(
@@ -1493,7 +1499,7 @@ def _create_makefile(
                 tfflags[idx] = "$(OS_macro)"
         if preprocess:
             tfflags.append("-fpp")
-        line += "\t\tFFLAGS ?= {}\n".format(" ".join(tfflags))
+        line += f"\t\tFFLAGS ?= {' '.join(tfflags)}\n"
         line += "\t\tMODSWITCH = -module $(MODDIR)\n"
         line += "\tendif\n"
         line += "endif\n\n"
@@ -1513,7 +1519,7 @@ def _create_makefile(
             osname="win32",
             verbose=verbose,
         )
-        line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
+        line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
         line += "\tendif\n"
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
         tcflags = _get_c_flags(
@@ -1525,7 +1531,7 @@ def _create_makefile(
             osname="win32",
             verbose=verbose,
         )
-        line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
+        line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
         line += "\tendif\n"
         line += "else\n"
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
@@ -1538,7 +1544,7 @@ def _create_makefile(
             osname="linux",
             verbose=verbose,
         )
-        line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
+        line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
         line += "\tendif\n"
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
         tcflags = _get_c_flags(
@@ -1550,7 +1556,7 @@ def _create_makefile(
             osname="linux",
             verbose=verbose,
         )
-        line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
+        line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
         line += "\tendif\n"
         line += "\tifeq ($(CC), $(filter $(CC), icc mpiicc icpc))\n"
         tcflags = _get_c_flags(
@@ -1562,7 +1568,7 @@ def _create_makefile(
             osname="linux",
             verbose=verbose,
         )
-        line += "\t\tCFLAGS ?= {}\n".format(" ".join(tcflags))
+        line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
         line += "\tendif\n"
         line += "endif\n\n"
         f.write(line)
@@ -1583,7 +1589,7 @@ def _create_makefile(
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
-        line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
+        line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
         _, tsyslibs = _get_linker_flags(
             target,
@@ -1595,7 +1601,7 @@ def _create_makefile(
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
-        line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
+        line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
     # fortran compiler used for linking
     else:
@@ -1609,7 +1615,7 @@ def _create_makefile(
             verbose=verbose,
         )
         line += "\tifeq ($(FC), $(filter $(FC), gfortran))\n"
-        line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
+        line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
     # linux and osx
     line += "else\n"
@@ -1625,7 +1631,7 @@ def _create_makefile(
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
-        line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
+        line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
         _, tsyslibs = _get_linker_flags(
             target,
@@ -1637,7 +1643,7 @@ def _create_makefile(
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
-        line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
+        line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
     # fortran compiler used for linking
     else:
@@ -1652,7 +1658,7 @@ def _create_makefile(
             osname="linux",
             verbose=verbose,
         )
-        line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
+        line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
         # ifort compiler
         line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
@@ -1665,7 +1671,7 @@ def _create_makefile(
             osname="linux",
             verbose=verbose,
         )
-        line += "\t\tLDFLAGS ?= {}\n".format(" ".join(tsyslibs))
+        line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
     line += "endif\n\n"
     f.write(line)

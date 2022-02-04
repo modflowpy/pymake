@@ -3,8 +3,8 @@ releases.
 
 """
 import os
-import sys
 import shutil
+import sys
 import types
 
 from .usgsprograms import usgs_program_data
@@ -184,7 +184,7 @@ def _update_mt3dms_files(srcdir, fc, cc, arch, double):
     for f in ["ReadMe_MT3DMS.pdf", "upgrade.pdf"]:
         fpth = os.path.join(rootdir, f)
         if os.path.isfile(fpth):
-            print('Removing..."{}"'.format(f))
+            print(f'Removing..."{f}"')
             os.remove(fpth)
 
     # remove some unneeded folders
@@ -192,7 +192,7 @@ def _update_mt3dms_files(srcdir, fc, cc, arch, double):
     for d in dir_list:
         dname = os.path.join(rootdir, d)
         if os.path.isdir(dname):
-            print('Removing..."{}"'.format(dname))
+            print(f'Removing..."{dname}"')
             shutil.rmtree(dname)
 
     # make destination directory
@@ -216,14 +216,14 @@ def _update_mt3dms_files(srcdir, fc, cc, arch, double):
             dst_file = os.path.join(dst_dir, file_)
             if os.path.exists(dst_file):
                 os.remove(dst_file)
-            print("{} -> {}".format(src_file, dst_dir))
+            print(f"{src_file} -> {dst_dir}")
             # shutil.copy(src_file, dst_dir)
             shutil.move(src_file, dst_file)
 
     # remove the original source directory
     dname = os.path.join(rootdir, "src")
     if os.path.isdir(dname):
-        print('Removing..."{}"'.format(dname))
+        print(f'Removing..."{dname}"')
         shutil.rmtree(dname)
 
     # remove some unneeded files
@@ -231,7 +231,7 @@ def _update_mt3dms_files(srcdir, fc, cc, arch, double):
     for f in file_list:
         dname = os.path.join(srcdir, f)
         if os.path.isfile(dname):
-            print('Removing..."{}"'.format(dname))
+            print(f'Removing..."{dname}"')
             os.remove(dname)
 
     # Replace the getcl command with getarg
@@ -306,7 +306,7 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
     for d in dlist:
         dname = os.path.join(srcdir, d)
         if os.path.isdir(dname):
-            print('Removing..."{}"'.format(dname))
+            print(f'Removing..."{dname}"')
             shutil.rmtree(os.path.join(srcdir, d))
 
     # rename all source files to lower case so compilation doesn't
@@ -334,7 +334,7 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
                     line = (
                         "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
                     )
-                f.write("{}\n".format(line))
+                f.write(f"{line}\n")
             f.close()
     else:
         # must be windows
@@ -358,7 +358,7 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
                     line = (
                         "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
                     )
-                f.write("{}\n".format(line))
+                f.write(f"{line}\n")
             f.close()
 
     return
@@ -529,7 +529,7 @@ def _update_mf2000_files(srcdir, fc, cc, arch, double):
     for d in dlist:
         dname = os.path.join(srcdir, d)
         if os.path.isdir(dname):
-            print('Removing..."{}"'.format(dname))
+            print(f'Removing..."{dname}"')
             shutil.rmtree(os.path.join(srcdir, d))
 
     # Move src files and serial src file to src directory
@@ -694,12 +694,12 @@ def _update_vs2dt_files(srcdir, fc, cc, arch, double):
     f1 = os.path.join(srcdir, "..", "vs2dt3_3.f")
     f1 = os.path.abspath(f1)
     if not os.path.isfile(f1):
-        raise IOError("{} does not exist".format(f1))
+        raise IOError(f"{f1} does not exist")
     f2 = os.path.join(srcdir, "vs2dt3_3.f")
     f2 = os.path.abspath(f2)
     shutil.move(f1, f2)
     if not os.path.isfile(f2):
-        raise IOError("{} does not exist".format(f2))
+        raise IOError(f"{f2} does not exist")
 
     f1 = open(os.path.join(srcdir, "vs2dt3_3.f"), "r")
     f2 = open(os.path.join(srcdir, "vs2dt3_3.f.tmp"), "w")
@@ -742,7 +742,7 @@ def _update_utl7(srcdir):
                 rtag = "JAUX=0"
                 if rtag not in lines[idx + 1]:
                     indent = len(line) - len(line.lstrip())
-                    line += indent * " " + "{}\n".format(rtag)
+                    line += indent * " " + f"{rtag}\n"
             f.write(line)
         f.close()
 
@@ -771,7 +771,7 @@ def _update_swt(srcdir):
                 rtag = "PCS(J,I,N)=0.0"
                 if rtag not in lines[idx + 1]:
                     indent = len(line) - len(line.lstrip())
-                    line += indent * " " + "{}\n".format(rtag)
+                    line += indent * " " + f"{rtag}\n"
             f.write(line)
         f.close()
 
@@ -799,7 +799,7 @@ def _update_swi(srcdir, double):
         "(i,csolver(i),i=1,3)",
     )
     tagrs = (
-        "INTEGER, PARAMETER :: VERSIZE = {}".format(prec),
+        f"INTEGER, PARAMETER :: VERSIZE = {prec}",
         "(i,csolver(i),i=1,2)",
     )
     for file_name in ("gwf2swi27.f", "gwf2swi27.fpp"):

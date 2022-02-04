@@ -136,9 +136,7 @@ def _get_f_nodelist(srcfiles):
             f = open(srcfile, "rb")
         except:
             print(
-                "get_f_nodelist: could not open {}".format(
-                    os.path.basename(srcfile)
-                )
+                f"get_f_nodelist: could not open {os.path.basename(srcfile)}"
             )
             sourcefile_module_dict[srcfile] = []
             continue
@@ -177,7 +175,7 @@ def _get_f_nodelist(srcfiles):
                         # print 'adding dependency: ', srcfile, mlocation
                         node.add_dependency(nodedict[mlocation])
         except:
-            print("get_f_nodelist: {} key does not exist".format(srcfile))
+            print(f"get_f_nodelist: {srcfile} key does not exist")
 
     return nodelist
 
@@ -263,9 +261,8 @@ def _order_c_source_files(srcfiles, networkx):
             f = open(srcfile, "rb")
         except:
             print(
-                "order_c_source_files: could not open {}".format(
-                    os.path.basename(srcfile)
-                )
+                "order_c_source_files: could not open "
+                + f"{os.path.basename(srcfile)}"
             )
             sourcefile_module_dict[srcfile] = []
             continue
@@ -314,9 +311,7 @@ def _order_c_source_files(srcfiles, networkx):
                         # print 'adding dependency: ', srcfile, mlocation
                         node.add_dependency(nodedict[mlocation])
         except:
-            msg = "order_c_source_files: " + "{} key does not exist".format(
-                srcfile
-            )
+            msg = "order_c_source_files: " + f"{srcfile} key does not exist"
             print(msg)
 
     dag = _get_dag(nodelist, networkx=networkx)

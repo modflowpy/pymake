@@ -11,13 +11,14 @@
 
 """
 import os
-import sys
 import shutil
-import requests
+import sys
+import tarfile
 import time
 import timeit
-from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
-import tarfile
+from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
+
+import requests
 
 
 class pymakeZipFile(ZipFile):
@@ -202,7 +203,7 @@ def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
     """
     for idx in range(max_requests):
         if verbose:
-            msg = "open request attempt {} of {}".format(idx + 1, max_requests)
+            msg = f"open request attempt {idx + 1} of {max_requests}"
             print(msg)
         try:
             req = requests.get(
@@ -213,7 +214,7 @@ def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
                 time.sleep(13)
                 continue
             else:
-                msg = "Cannot open request from:\n" + "    {}\n\n".format(url)
+                msg = "Cannot open request from:\n" + f"    {url}\n\n"
                 print(msg)
                 req.raise_for_status()
 
@@ -244,7 +245,7 @@ def _request_header(url, max_requests=10, verbose=False):
     """
     for idx in range(max_requests):
         if verbose:
-            msg = "open request attempt {} of {}".format(idx + 1, max_requests)
+            msg = f"open request attempt {idx + 1} of {max_requests}"
             print(msg)
 
         header = requests.head(url, allow_redirects=True)
@@ -253,7 +254,7 @@ def _request_header(url, max_requests=10, verbose=False):
                 time.sleep(13)
                 continue
             else:
-                msg = "Cannot open request from:\n" + "    {}\n\n".format(url)
+                msg = "Cannot open request from:\n" + f"    {url}\n\n"
                 print(msg)
                 header.raise_for_status()
 
@@ -303,11 +304,11 @@ def download_and_unzip(
     # create download directory
     if not os.path.exists(pth):
         if verbose:
-            print("Creating the directory:\n    {}".format(pth))
+            print(f"Creating the directory:\n    {pth}")
         os.makedirs(pth)
 
     if verbose:
-        print("Attempting to download the file:\n    {}".format(url))
+        print(f"Attempting to download the file:\n    {url}")
 
     # define the filename
     file_name = os.path.join(pth, url.split("/")[-1])
@@ -332,13 +333,9 @@ def download_and_unzip(
         len_file_size = len(file_size)
         file_size = int(file_size)
 
-        bfmt = "{:" + "{}".format(len_file_size) + ",d}"
-        sbfmt = (
-            "{:>" + "{}".format(len(bfmt.format(int(file_size)))) + "s} bytes"
-        )
-        msg = "   file size: {}".format(
-            sbfmt.format(bfmt.format(int(file_size)))
-        )
+        bfmt = "{:" + f"{len_file_size}" + ",d}"
+        sbfmt = "{:>" + f"{len(bfmt.format(int(file_size)))}" + "s} bytes"
+        msg = f"   file size: {sbfmt.format(bfmt.format(int(file_size)))}"
         if verbose:
             print(msg)
     else:
@@ -348,7 +345,7 @@ def download_and_unzip(
     for idx in range(max_requests):
         # print download attempt message
         if verbose:
-            print(" download attempt: {}".format(idx + 1))
+            print(f" download attempt: {idx + 1}")
 
         # connection established - download the file
         download_size = 0
@@ -365,15 +362,16 @@ def download_and_unzip(
                         # write information to the screen
                         if verbose:
                             if file_size > 0:
+                                download_percent = float(
+                                    download_size
+                                ) / float(file_size)
                                 msg = (
                                     "     downloaded "
                                     + sbfmt.format(bfmt.format(download_size))
                                     + " of "
                                     + bfmt.format(int(file_size))
                                     + " bytes"
-                                    + " ({:10.4%})".format(
-                                        float(download_size) / float(file_size)
-                                    )
+                                    + f" ({download_percent:10.4%})"
                                 )
                             else:
                                 msg = (
@@ -408,18 +406,14 @@ def download_and_unzip(
     toc = timeit.default_timer()
     tsec = toc - tic
     if verbose:
-        print("\ntotal download time: {} seconds".format(tsec))
+        print(f"\ntotal download time: {tsec} seconds")
 
     if success:
         if file_size > 0:
             if verbose:
-                print(
-                    "download speed:      {} MB/s".format(
-                        file_size / (1e6 * tsec)
-                    )
-                )
+                print(f"download speed:      {file_size / (1e6 * tsec)} MB/s")
     else:
-        msg = "could not download...{}".format(url)
+        msg = f"could not download...{url}"
         raise ConnectionError(msg)
 
     # Unzip the file, and delete zip file if successful.
@@ -431,7 +425,7 @@ def download_and_unzip(
             # write a message
             if not verbose:
                 sys.stdout.write("\n")
-            print("uncompressing...'{}'".format(file_name))
+            print(f"uncompressing...'{file_name}'")
 
             # extract the files
             z.extractall(pth)
@@ -504,23 +498,22 @@ def _get_zipname(platform):
         elif sys.platform.lower().startswith("linux"):
             platform = "linux"
         elif "win" in sys.platform.lower():
-            is_64bits = sys.maxsize > 2 ** 32
+            is_64bits = sys.maxsize > 2**32
             if is_64bits:
                 platform = "win64"
             else:
                 platform = "win32"
         else:
             errmsg = (
-                "Could not determine platform"
-                ".  sys.platform is {}".format(sys.platform)
+                f"Could not determine platform. sys.platform is {sys.platform}"
             )
             raise Exception(errmsg)
     else:
-        msg = "unknown platform detected ({})".format(platform)
+        msg = f"unknown platform detected ({platform})"
         success = platform in ["mac", "linux", "win32", "win64"]
         if not success:
             raise ValueError(msg)
-    return "{}.zip".format(platform)
+    return f"{platform}.zip"
 
 
 def _get_default_repo():
@@ -546,7 +539,7 @@ def _get_default_url():
     """
 
     return (
-        "https://github.com/{}/".format(_get_default_repo())
+        f"https://github.com/{_get_default_repo()}/"
         + "releases/latest/download/"
     )
 
@@ -572,12 +565,13 @@ def _get_default_json(tag_name=None):
 
     # create appropriate url
     if tag_name is not None:
-        url = "https://github.com/{}/".format(
-            _get_default_repo()
-        ) + "releases/latest/download/{}/".format(tag_name)
+        url = (
+            f"https://github.com/{_get_default_repo()}/"
+            + f"releases/latest/download/{tag_name}/"
+        )
     else:
         url = (
-            "https://github.com/{}/".format(_get_default_repo())
+            f"https://github.com/{_get_default_repo()}/"
             + "releases/latest/download/"
         )
 
@@ -663,12 +657,12 @@ def _repo_json(
         file names and download links
 
     """
-    repo_url = "https://api.github.com/repos/{}".format(github_repo)
+    repo_url = f"https://api.github.com/repos/{github_repo}"
 
     if tag_name is None:
-        request_url = "{}/releases/latest".format(repo_url)
+        request_url = f"{repo_url}/releases/latest"
     else:
-        request_url = "{}/releases".format(repo_url)
+        request_url = f"{repo_url}/releases"
         success, _, json_cat = _get_request_json(
             request_url, verbose=verbose, verify=verify
         )
@@ -680,7 +674,7 @@ def _repo_json(
                     break
             if request_url is None:
                 msg = (
-                    "Could not find tag_name ('{}') ".format(tag_name)
+                    f"Could not find tag_name ('{tag_name}') "
                     + "in release catalog"
                 )
                 if error_return:
@@ -699,8 +693,8 @@ def _repo_json(
 
     msg = "Requesting asset data "
     if tag_name is not None:
-        msg += "for tag_name '{}' ".format(tag_name)
-    msg += "from: {}".format(request_url)
+        msg += f"for tag_name '{tag_name}' "
+    msg += f"from: {request_url}"
     if verbose:
         print(msg)
 
@@ -712,7 +706,7 @@ def _repo_json(
     # evaluate request errors
     if not success:
         if github_repo == _get_default_repo():
-            msg = "will use default values for {}".format(github_repo)
+            msg = f"will use default values for {github_repo}"
             if verbose:
                 print(msg)
             json_obj = _get_default_json(tag_name)
@@ -771,7 +765,7 @@ def get_repo_assets(
         for asset in assets:
             k = asset["name"]
             if version is None:
-                value = github_repo + "/{}".format(k)
+                value = github_repo + f"/{k}"
             else:
                 value = asset["browser_download_url"]
             result_dict[k] = value
@@ -869,7 +863,7 @@ def getmfexes(
         # make sure pth exists
         if not os.path.exists(pth):
             if verbose:
-                print("Creating the directory:\n    {}".format(pth))
+                print(f"Creating the directory:\n    {pth}")
             os.makedirs(pth)
 
         # move select files to pth
@@ -950,7 +944,7 @@ def getmfnightly(
         # make sure pth exists
         if not os.path.exists(pth):
             if verbose:
-                print("Creating the directory:\n    {}".format(pth))
+                print(f"Creating the directory:\n    {pth}")
             os.makedirs(pth)
 
         # move select files to pth

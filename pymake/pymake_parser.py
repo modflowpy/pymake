@@ -13,6 +13,7 @@ accessed using:
 """
 
 import argparse
+
 from .config import __description__
 
 
@@ -237,6 +238,13 @@ def _get_arg_dict():
             "help": """Use networkx package to build Directed Acyclic Graph
                      use to determine the order source files are compiled
                      in. (default is False)""",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
+        },
+        "meson": {
+            "tag": ("--mb", "--meson-build"),
+            "help": """Use meson to build executable. (default is False)""",
             "default": False,
             "choices": None,
             "action": "store_true",

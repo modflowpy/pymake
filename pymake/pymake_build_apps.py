@@ -25,12 +25,12 @@ USGS applications are built if no list is passed to
 
 """
 import os
+import shutil
 import sys
 from datetime import datetime
-import shutil
 
-from .utils.usgsprograms import usgs_program_data
 from .pymake import Pymake
+from .utils.usgsprograms import usgs_program_data
 
 
 def build_apps(
@@ -86,8 +86,9 @@ def build_apps(
         if isinstance(pymake_object, Pymake):
             pmobj = pymake_object
         else:
-            msg = "pymake_object ({}) is not of type {}".format(
-                type(pymake_object), type(Pymake())
+            msg = (
+                f"pymake_object ({type(pymake_object)}) "
+                + f"is not of type {type(Pymake())}"
             )
             raise TypeError(msg)
 
@@ -121,8 +122,8 @@ def build_apps(
         if idt == 0:
             if pmobj.verbose:
                 print(
-                    "{} will be built ".format(target)
-                    + 'for the "{}" operating system\n'.format(sys.platform)
+                    f"{target} will be built "
+                    + f'for the "{sys.platform}" operating system\n'
                 )
 
         # save initial compiler settings
@@ -226,13 +227,13 @@ def build_apps(
         if pmobj.verbose:
             print(
                 "elapsed download and compile time (hh:mm:ss.ms): "
-                + "{}\n".format(elapsed)
+                + f"{elapsed}\n"
             )
 
     end_time = datetime.now()
     elapsed = end_time - start_time
     if pmobj.verbose:
-        print("elapsed time (hh:mm:ss.ms): {}\n".format(elapsed))
+        print(f"elapsed time (hh:mm:ss.ms): {elapsed}\n")
 
     # compress targets
     if pmobj.returncode == 0:

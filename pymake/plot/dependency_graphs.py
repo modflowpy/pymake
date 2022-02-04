@@ -18,8 +18,8 @@
 import os
 
 from ..utils._compiler_language_files import (
-    _get_srcfiles,
     _get_ordered_srcfiles,
+    _get_srcfiles,
 )
 from ..utils._dag import _get_f_nodelist
 
@@ -45,9 +45,8 @@ def to_pydot(dag, filename="mygraph.png"):
     """
     # evaluate if pydot plus is installed
     if pydot is None:
-        msg = "pydotplus must be installed to use " + "{}".format(
-            make_plots.__module__ + "." + make_plots.__name__
-        )
+        msg_str = make_plots.__module__ + "." + make_plots.__name__
+        msg = f"pydotplus must be installed to use {msg_str}"
         raise ModuleNotFoundError(msg)
 
     # Create the graph
@@ -173,9 +172,8 @@ def make_plots(
     """
     # evaluate if pydot plus is installed
     if pydot is None:
-        msg = "pydotplus must be installed to use " + "{}".format(
-            make_plots.__module__ + "." + make_plots.__name__
-        )
+        msg_str = make_plots.__module__ + "." + make_plots.__name__
+        msg = f"pydotplus must be installed to use {msg_str}"
         raise ModuleNotFoundError(msg)
 
     srcfiles = _get_ordered_srcfiles(
@@ -184,11 +182,9 @@ def make_plots(
     nodelist = _get_f_nodelist(srcfiles)
     for idx, n in enumerate(nodelist):
         if verbose:
-            print("{:<3d}: {}".format(idx + 1, os.path.basename(n.name)))
+            print(f"{idx + 1:<3d}: {os.path.basename(n.name)}")
             for jdx, m in enumerate(n.dependencies):
-                msg = "     {:<3d}: {}".format(
-                    jdx + 1, os.path.basename(m.name)
-                )
+                msg = f"     {jdx + 1:<3d}: {os.path.basename(m.name)}"
                 print(msg)
 
     if not os.path.isdir(outdir):
@@ -212,7 +208,7 @@ def make_plots(
         elif extension == ".dot":
             graph.write_dot(filename)
         else:
-            raise Exception("unknown file extension: {}".format(extension))
+            raise Exception(f"unknown file extension: {extension}")
 
     return
 

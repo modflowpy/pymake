@@ -1,11 +1,11 @@
 import os
-import sys
 import shutil
+import sys
+
+import flopy
+import pytest
 
 import pymake
-import flopy
-
-import pytest
 
 # determine if running on a continuous integration server
 is_CI = "CI" in os.environ
@@ -65,7 +65,7 @@ def edit_namefile(namefile):
     for line in lines:
         if "global" in line.lower():
             continue
-        f.write("{}\n".format(line))
+        f.write(f"{line}\n")
     f.close()
 
 
@@ -93,7 +93,7 @@ def run_seawat(fn):
     success, buff = flopy.run_model(
         epth, os.path.basename(fn), model_ws=os.path.dirname(fn), silent=False
     )
-    errmsg = "could not run...{}".format(os.path.basename(fn))
+    errmsg = f"could not run...{os.path.basename(fn)}"
     assert success, errmsg
     return
 
@@ -119,7 +119,7 @@ def build_seawat_dependency_graphs():
             # test that the dependency figure for the SEAWAT main exists
             findf = os.path.join(deppth, "swt_v4.f.png")
             success = os.path.isfile(findf)
-            assert success, "could not find {}".format(findf)
+            assert success, f"could not find {findf}"
 
     assert success, "could not build dependency graphs"
 
@@ -135,13 +135,13 @@ def test_download():
 
     # download the target
     pm.download_target(target, download_path=dstpth)
-    assert pm.download, "could not download {}".format(target)
+    assert pm.download, f"could not download {target}"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
-    assert pm.build() == 0, "could not compile {}".format(target)
+    assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.regression

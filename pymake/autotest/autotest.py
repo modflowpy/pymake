@@ -50,6 +50,7 @@ to a dedicated GitHub repository.
 import os
 import shutil
 import textwrap
+
 import numpy as np
 
 ignore_ext = (
@@ -202,7 +203,7 @@ def setup_comparison(namefile, dst, remove_existing=True):
                     action = dirs[idx]
                 break
     if action is not None:
-        dst = os.path.join(dst, "{}".format(action))
+        dst = os.path.join(dst, f"{action}")
         if not os.path.isdir(dst):
             try:
                 os.mkdir(dst)
@@ -210,15 +211,15 @@ def setup_comparison(namefile, dst, remove_existing=True):
                 print("Could not make " + dst)
         # clean directory
         else:
-            print("cleaning...{}".format(dst))
+            print(f"cleaning...{dst}")
             for root, dirs, files in os.walk(dst):
                 for f in files:
                     tpth = os.path.join(root, f)
-                    print("  removing...{}".format(tpth))
+                    print(f"  removing...{tpth}")
                     os.remove(tpth)
                 for d in dirs:
                     tdir = os.path.join(root, d)
-                    print("  removing...{}".format(tdir))
+                    print(f"  removing...{tdir}")
                     shutil.rmtree(tdir)
         # copy files
         cmppth = os.path.join(src, action)
@@ -458,7 +459,7 @@ def get_sim_name(namefiles, rootpth=None):
         dst = ""
         if idx < len(t):
             for d in t[idx + 1 : -1]:
-                dst += "{}_".format(d)
+                dst += f"{d}_"
 
         # add namefile basename without extension
         dst += t[-1].replace(".nam", "")
@@ -618,7 +619,7 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
     action = get_mf6_comparison(src)
 
     if action is not None:
-        dst = os.path.join(dst, "{}".format(action))
+        dst = os.path.join(dst, f"{action}")
         if not os.path.isdir(dst):
             try:
                 os.mkdir(dst)
@@ -626,15 +627,15 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
                 print("Could not make " + dst)
         # clean directory
         else:
-            print("cleaning...{}".format(dst))
+            print(f"cleaning...{dst}")
             for root, dirs, files in os.walk(dst):
                 for f in files:
                     tpth = os.path.join(root, f)
-                    print("  removing...{}".format(tpth))
+                    print(f"  removing...{tpth}")
                     os.remove(tpth)
                 for d in dirs:
                     tdir = os.path.join(root, d)
-                    print("  removing...{}".format(tdir))
+                    print(f"  removing...{tdir}")
                     shutil.rmtree(tdir)
         # copy files
         cmppth = os.path.join(src, action)
@@ -1090,8 +1091,8 @@ def compare_budget(
     # Determine if there are two files to compare
     if lst_file1 is None or lst_file2 is None:
         print("lst_file1 or lst_file2 is None")
-        print("lst_file1: {}".format(lst_file1))
-        print("lst_file2: {}".format(lst_file2))
+        print(f"lst_file1: {lst_file1}")
+        print(f"lst_file2: {lst_file2}")
         return True
 
     # Open output file
@@ -1145,8 +1146,9 @@ def compare_budget(
                     maxcolname = max(maxcolname, len(colname))
 
                 s = 2 * "\n"
-                s += "STRESS PERIOD: {} TIME STEP: {}".format(
-                    kper[jdx] + 1, kstp[jdx] + 1
+                s += (
+                    f"STRESS PERIOD: {kper[jdx] + 1} "
+                    + f"TIME STEP: {kstp[jdx] + 1}"
                 )
                 f.write(s)
 
@@ -1157,15 +1159,17 @@ def compare_budget(
 
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
-                        s = "{:<21} {:>21} {:>21} {:>21}\n".format(
-                            "Budget Entry", "Model 1", "Model 2", "Difference"
+                        s = (
+                            f"{'Budget Entry':<21} {'Model 1':>21} "
+                            + f"{'Model 2':>21} {'Difference':>21}\n"
                         )
                         f.write(s)
                         s = 87 * "-" + "\n"
                         f.write(s)
                     diff = t0[colname] - t1[colname]
-                    s = "{:<21} {:>21} {:>21} {:>21}\n".format(
-                        colname, t0[colname], t1[colname], diff
+                    s = (
+                        f"{colname:<21} {t0[colname]:>21} "
+                        + f"{t1[colname]:>21} {diff:>21}\n"
                     )
                     f.write(s)
 
@@ -1182,15 +1186,12 @@ def compare_budget(
                     icnt += 1
                     if outfile is not None:
                         e = (
-                            '"{} {}" percent difference ({})'.format(
-                                headers[idx], direction[kdx], t
-                            )
-                            + " for stress period {} and time step {} > {}.".format(
-                                kper[jdx] + 1, kstp[jdx] + 1, max_pd
-                            )
-                            + " Reference value = {}. Simulated value = {}.".format(
-                                v0[kdx], v1[kdx]
-                            )
+                            f'"{headers[idx]} {direction[kdx]}" '
+                            + f"percent difference ({t})"
+                            + f" for stress period {kper[jdx] + 1} "
+                            + f"and time step {kstp[jdx] + 1} > {max_pd}."
+                            + f" Reference value = {v0[kdx]}. "
+                            + f"Simulated value = {v1[kdx]}."
                         )
                         e = textwrap.fill(
                             e,
@@ -1198,7 +1199,7 @@ def compare_budget(
                             initial_indent="    ",
                             subsequent_indent="    ",
                         )
-                        f.write("{}\n".format(e))
+                        f.write(f"{e}\n")
                         f.write("\n")
 
     # Close output file
@@ -1344,8 +1345,9 @@ def compare_swrbudget(
                     maxcolname = max(maxcolname, len(colname))
 
                 s = 2 * "\n"
-                s += "STRESS PERIOD: {} TIME STEP: {}".format(
-                    kper[jdx] + 1, kstp[jdx] + 1
+                s += (
+                    f"STRESS PERIOD: {kper[jdx] + 1} "
+                    + f"TIME STEP: {kstp[jdx] + 1}"
                 )
                 f.write(s)
 
@@ -1356,15 +1358,17 @@ def compare_swrbudget(
 
                 for i, colname in enumerate(t0.dtype.names):
                     if i == 0:
-                        s = "{:<21} {:>21} {:>21} {:>21}\n".format(
-                            "Budget Entry", "Model 1", "Model 2", "Difference"
+                        s = (
+                            f"{'Budget Entry':<21} {'Model 1':>21} "
+                            + f"{'Model 2':>21} {'Difference':>21}\n"
                         )
                         f.write(s)
                         s = 87 * "-" + "\n"
                         f.write(s)
                     diff = t0[colname] - t1[colname]
-                    s = "{:<21} {:>21} {:>21} {:>21}\n".format(
-                        colname, t0[colname], t1[colname], diff
+                    s = (
+                        f"{colname:<21} {t0[colname]:>21} "
+                        + f"{t1[colname]:>21} {diff:>21}\n"
                     )
                     f.write(s)
 
@@ -1380,15 +1384,12 @@ def compare_swrbudget(
                 if abs(t) > max_pd:
                     icnt += 1
                     e = (
-                        '"{} {}" percent difference ({})'.format(
-                            headers[idx], direction[kdx], t
-                        )
-                        + " for stress period {} and time step {} > {}.".format(
-                            kper[jdx] + 1, kstp[jdx] + 1, max_pd
-                        )
-                        + " Reference value = {}. Simulated value = {}.".format(
-                            v0[kdx], v1[kdx]
-                        )
+                        f'"{headers[idx]} {direction[kdx]}" '
+                        + f"percent difference ({t})"
+                        + f" for stress period {kper[jdx] + 1} "
+                        + f"and time step {kstp[jdx] + 1} > {max_pd}."
+                        + f" Reference value = {v0[kdx]}. "
+                        + f"Simulated value = {v1[kdx]}."
                     )
                     e = textwrap.fill(
                         e,
@@ -1396,7 +1397,7 @@ def compare_swrbudget(
                         initial_indent="    ",
                         subsequent_indent="    ",
                     )
-                    f.write("{}\n".format(e))
+                    f.write(f"{e}\n")
                     f.write("\n")
 
     # Close output file
@@ -1573,39 +1574,35 @@ def compare_heads(
     # confirm that there are two files to compare
     if hfpth1 is None or hfpth2 is None:
         print("hfpth1 or hfpth2 is None")
-        print("hfpth1: {}".format(hfpth1))
-        print("hfpth2: {}".format(hfpth2))
+        print(f"hfpth1: {hfpth1}")
+        print(f"hfpth2: {hfpth2}")
         return True
 
     # make sure the file paths exist
     if not os.path.isfile(hfpth1) or not os.path.isfile(hfpth2):
         print("hfpth1 or hfpth2 is not a file")
-        print("hfpth1 isfile: {}".format(os.path.isfile(hfpth1)))
-        print("hfpth2 isfile: {}".format(os.path.isfile(hfpth2)))
+        print(f"hfpth1 isfile: {os.path.isfile(hfpth1)}")
+        print(f"hfpth2 isfile: {os.path.isfile(hfpth2)}")
         return False
 
     # Open output file
     if outfile is not None:
         f = open(outfile, "w")
         f.write("Created by pymake.autotest.compare\n")
-        f.write(
-            "Performing {} to {} comparison\n".format(
-                text.upper(), text2.upper()
-            )
-        )
+        f.write(f"Performing {text.upper()} to {text2.upper()} comparison\n")
 
         if exfile is not None:
-            f.write("Using exclusion file {}\n".format(exfile))
+            f.write(f"Using exclusion file {exfile}\n")
         if exarr is not None:
             f.write("Using exclusion array\n")
 
-        msg = "{} is a ".format(hfpth1)
+        msg = f"{hfpth1} is a "
         if status1 == dbs:
             msg += "binary file."
         else:
             msg += "ascii file."
         f.write(msg + "\n")
-        msg = "{} is a ".format(hfpth2)
+        msg = f"{hfpth2} is a "
         if status2 == dbs:
             msg += "binary file."
         else:
@@ -1621,8 +1618,9 @@ def compare_heads(
             try:
                 exd = np.genfromtxt(exfile).flatten()
             except:
-                e = "Could not read exclusion " + "file {}".format(
-                    os.path.basename(exfile)
+                e = (
+                    "Could not read exclusion "
+                    + f"file {os.path.basename(exfile)}"
                 )
                 print(e)
                 return False
@@ -1688,25 +1686,22 @@ def compare_heads(
     times2 = headobj2.get_times()
     for (t1, t2) in zip(times1, times2):
         if not np.allclose([t1], [t2]):
-            msg = "times in two head files are not " + "equal ({},{})".format(
-                t1, t2
-            )
+            msg = "times in two head files are not " + f"equal ({t1},{t2})"
             raise ValueError(msg)
 
     kstpkper = headobj1.get_kstpkper()
 
+    line_separator = 15 * "-"
     header = (
-        "{:>15s} {:>15s} {:>15s} {:>15s}\n".format(
-            " ", " ", "MAXIMUM", "EXCEEDS"
-        )
-        + "{:>15s} {:>15s} {:>15s} {:>15s}\n".format(
-            "STRESS PERIOD", "TIME STEP", "HEAD DIFFERENCE", "CRITERIA"
-        )
-        + "{0:>15s} {0:>15s} {0:>15s} {0:>15s}\n".format(15 * "-")
+        f"{' ':>15s} {' ':>15s} {'MAXIMUM':>15s} {'EXCEEDS':>15s}\n"
+        + f"{'STRESS PERIOD':>15s} {'TIME STEP':>15s} "
+        + f"{'HEAD DIFFERENCE':>15s} {'CRITERIA':>15s}\n"
+        + f"{line_separator:>15s} {line_separator:>15s} "
+        + f"{line_separator:>15s} {line_separator:>15s}\n"
     )
 
     if verbose:
-        print("Comparing results for {} times".format(len(times1)))
+        print(f"Comparing results for {len(times1)} times")
 
     icnt = 0
     # Process cumulative and incremental
@@ -1728,9 +1723,9 @@ def compare_heads(
             # reshape exd to the shape of the head arrays
             if idx == 0:
                 e = (
-                    "shape of exclusion data ({})".format(exd.shape)
+                    f"shape of exclusion data ({exd.shape})"
                     + "can not be reshaped to the size of the "
-                    + "head arrays ({})".format(h1.shape)
+                    + f"head arrays ({h1.shape})"
                 )
                 if h1.flatten().shape != exd.shape:
                     raise ValueError(e)
@@ -1755,11 +1750,7 @@ def compare_heads(
                 sexceed = ""
             kk1 = kstpkper[idx][1] + 1
             kk0 = kstpkper[idx][0] + 1
-            f.write(
-                "{:15d} {:15d} {:15.6g} {:15s}\n".format(
-                    kk1, kk0, diffmax, sexceed
-                )
-            )
+            f.write(f"{kk1:15d} {kk0:15d} {diffmax:15.6g} {sexceed:15s}\n")
 
         if diffmax >= htol:
             icnt += 1
@@ -1767,15 +1758,15 @@ def compare_heads(
                 if difftol:
                     ee = (
                         "Maximum absolute head difference "
-                        + "({}) -- ".format(diffmax)
-                        + "{} tolerance exceeded at ".format(htol)
-                        + "{} node location(s)".format(indices[0].shape[0])
+                        + f"({diffmax}) -- "
+                        + f"{htol} tolerance exceeded at "
+                        + f"{indices[0].shape[0]} node location(s)"
                     )
                 else:
                     ee = (
                         "Maximum absolute head difference "
-                        + "({}) exceeded ".format(diffmax)
-                        + "at {} node location(s)".format(indices[0].shape[0])
+                        + f"({diffmax}) exceeded "
+                        + f"at {indices[0].shape[0]} node location(s)"
                     )
                 e = textwrap.fill(
                     ee + ":",
@@ -1785,12 +1776,12 @@ def compare_heads(
                 )
 
                 if verbose:
-                    f.write("{}\n".format(ee))
-                    print(ee + " at time {}".format(t1))
+                    f.write(f"{ee}\n")
+                    print(ee + f" at time {t1}")
 
                 e = ""
                 ncells = h1.flatten().shape[0]
-                fmtn = "{:" + "{}".format(len(str(ncells))) + "d}"
+                fmtn = "{:" + f"{len(str(ncells))}" + "d}"
                 for itupe in indices:
                     for jdx, ind in enumerate(itupe):
                         iv = np.unravel_index(ind, h1.shape)
@@ -1801,20 +1792,20 @@ def compare_heads(
                         # e += '    ' + fmtn.format(jdx + 1) + ' node: '
                         # e += fmtn.format(ind + 1)  # convert to one-based
                         e += "    " + fmtn.format(jdx + 1)
-                        e += " {}".format(iv)
+                        e += f" {iv}"
                         e += " -- "
-                        e += "h1: {:20} ".format(v1)
-                        e += "h2: {:20} ".format(v2)
-                        e += "diff: {:20}\n".format(d12)
+                        e += f"h1: {v1:20} "
+                        e += f"h2: {v2:20} "
+                        e += f"diff: {d12:20}\n"
                         if isinstance(maxerr, int):
                             if jdx + 1 >= maxerr:
                                 break
                     if verbose:
-                        f.write("{}\n".format(e))
+                        f.write(f"{e}\n")
                 # Write header again, unless it is the last record
                 if verbose:
                     if idx + 1 < len(times1):
-                        f.write("\n{}".format(header))
+                        f.write(f"\n{header}")
 
     # Close output file
     if outfile is not None:
@@ -1939,9 +1930,9 @@ def compare_concs(
 
     if not os.path.isfile(ufpth1) or not os.path.isfile(ufpth2):
         if not os.path.isfile(ufpth1):
-            print("  {} does not exist".format(ufpth1))
+            print(f"  {ufpth1} does not exist")
         if not os.path.isfile(ufpth2):
-            print("  {} does not exist".format(ufpth2))
+            print(f"  {ufpth2} does not exist")
         return True
 
     # Open output file
@@ -1961,25 +1952,27 @@ def compare_concs(
     nt = min(nt1, nt2)
 
     for (t1, t2) in zip(times1, times2):
-        assert np.allclose(
-            [t1], [t2]
-        ), "times in two ucn files are not " + "equal ({},{})".format(t1, t2)
+        assert np.allclose([t1], [t2]), (
+            "times in two ucn files are not " + f"equal ({t1},{t2})"
+        )
 
     if nt == nt1:
         kstpkper = uobj1.get_kstpkper()
     else:
         kstpkper = uobj2.get_kstpkper()
 
+    line_separator = 15 * "-"
     header = (
-        "{:>15s} {:>15s} {:>15s}\n".format(" ", " ", "MAXIMUM")
-        + "{:>15s} {:>15s} {:>15s}\n".format(
-            "STRESS PERIOD", "TIME STEP", "CONC DIFFERENCE"
-        )
-        + "{0:>15s} {0:>15s} {0:>15s}\n".format(15 * "-")
+        f"{' ':>15s} {' ':>15s} {'MAXIMUM':>15s}\n"
+        + f"{'STRESS PERIOD':>15s} {'TIME STEP':>15s} "
+        + f"{'CONC DIFFERENCE':>15s}\n"
+        + f"{line_separator:>15s} "
+        + f"{line_separator:>15s} "
+        + f"{line_separator:>15s}\n"
     )
 
     if verbose:
-        print("Comparing results for {} times".format(len(times1)))
+        print(f"Comparing results for {len(times1)} times")
 
     icnt = 0
     # Process cumulative and incremental
@@ -1997,9 +1990,9 @@ def compare_concs(
                 if idx < 1:
                     f.write(header)
                 f.write(
-                    "{:15d} {:15d} {:15.6g}\n".format(
-                        kstpkper[idx][1] + 1, kstpkper[idx][0] + 1, diffmax
-                    )
+                    f"{kstpkper[idx][1] + 1:15d} "
+                    + f"{kstpkper[idx][0] + 1:15d} "
+                    + f"{diffmax:15.6g}\n"
                 )
 
             if diffmax >= ctol:
@@ -2007,19 +2000,15 @@ def compare_concs(
                 if outfile is not None:
                     if difftol:
                         ee = (
-                            "Maximum concentration difference ({})".format(
-                                diffmax
-                            )
-                            + " -- {} tolerance exceeded at ".format(ctol)
-                            + "{} node location(s)".format(indices[0].shape[0])
+                            f"Maximum concentration difference ({diffmax})"
+                            + f" -- {ctol} tolerance exceeded at "
+                            + f"{indices[0].shape[0]} node location(s)"
                         )
                     else:
                         ee = (
                             "Maximum concentration difference "
-                            + "({}) exceeded ".format(diffmax)
-                            + "at {} node location(s)".format(
-                                indices[0].shape[0]
-                            )
+                            + f"({diffmax}) exceeded "
+                            + f"at {indices[0].shape[0]} node location(s)"
                         )
                     e = textwrap.fill(
                         ee + ":",
@@ -2027,25 +2016,25 @@ def compare_concs(
                         initial_indent="  ",
                         subsequent_indent="  ",
                     )
-                    f.write("{}\n".format(e))
+                    f.write(f"{e}\n")
                     if verbose:
-                        print(ee + " at time {}".format(time))
+                        print(ee + f" at time {time}")
                     e = ""
                     for itupe in indices:
                         for ind in itupe:
-                            e += "{} ".format(ind + 1)  # convert to one-based
+                            e += f"{ind + 1} "  # convert to one-based
                     e = textwrap.fill(
                         e,
                         width=70,
                         initial_indent="    ",
                         subsequent_indent="    ",
                     )
-                    f.write("{}\n".format(e))
+                    f.write(f"{e}\n")
                     # Write header again, unless it is the last record
                     if idx + 1 < len(times1):
-                        f.write("\n{}".format(header))
+                        f.write(f"\n{header}")
         except:
-            print("  could not process time={}".format(time))
+            print(f"  could not process time={time}")
             print("  terminating ucn processing...")
             break
 
@@ -2155,14 +2144,14 @@ def compare_stages(
     # confirm that there are two files to compare
     if sfpth1 is None or sfpth2 is None:
         print("spth1 or spth2 is None")
-        print("spth1: {}".format(sfpth1))
-        print("spth2: {}".format(sfpth2))
+        print(f"spth1: {sfpth1}")
+        print(f"spth2: {sfpth2}")
         return False
 
     if not os.path.isfile(sfpth1) or not os.path.isfile(sfpth2):
         print("spth1 or spth2 is not a file")
-        print("spth1 isfile: {}".format(os.path.isfile(sfpth1)))
-        print("spth2 isfile: {}".format(os.path.isfile(sfpth2)))
+        print(f"spth1 isfile: {os.path.isfile(sfpth1)}")
+        print(f"spth2 isfile: {os.path.isfile(sfpth2)}")
         return False
 
     # Open output file
@@ -2180,16 +2169,21 @@ def compare_stages(
     # get kswr, kstp, and kper
     kk = sobj1.get_kswrkstpkper()
 
+    line_separator = 15 * "-"
     header = (
-        "{:>15s} {:>15s} {:>15s} {:>15s}\n".format(" ", " ", " ", "MAXIMUM")
-        + "{:>15s} {:>15s} {:>15s} {:>15s}\n".format(
-            "STRESS PERIOD", "TIME STEP", "SWR TIME STEP", "STAGE DIFFERENCE"
-        )
-        + "{0:>15s} {0:>15s} {0:>15s} {0:>15s}\n".format(15 * "-")
+        f"{' ':>15s} {' ':>15s} {' ':>15s} {'MAXIMUM':>15s}\n"
+        + f"{'STRESS PERIOD':>15s} "
+        + f"{'TIME STEP':>15s} "
+        + f"{'SWR TIME STEP':>15s} "
+        + f"{'STAGE DIFFERENCE':>15s}\n"
+        + f"{line_separator:>15s} "
+        + f"{line_separator:>15s} "
+        + f"{line_separator:>15s} "
+        + f"{line_separator:>15s}\n"
     )
 
     if verbose:
-        print("Comparing results for {} times".format(len(times1)))
+        print(f"Comparing results for {len(times1)} times")
 
     icnt = 0
     # Process stage data
@@ -2212,9 +2206,10 @@ def compare_stages(
             if idx < 1:
                 f.write(header)
             f.write(
-                "{:15d} {:15d} {:15d} {:15.6g}\n".format(
-                    kon[2] + 1, kon[1] + 1, kon[0] + 1, diffmax
-                )
+                f"{kon[2] + 1:15d} "
+                + f"{kon[1] + 1:15d} "
+                + f"{kon[0] + 1:15d} "
+                + f"{diffmax:15.6g}\n"
             )
 
         if diffmax >= htol:
@@ -2222,15 +2217,15 @@ def compare_stages(
             if outfile is not None:
                 if difftol:
                     ee = (
-                        "Maximum head difference ({}) -- ".format(diffmax)
-                        + "{} tolerance exceeded at ".format(htol)
-                        + "{} node location(s)".format(indices[0].shape[0])
+                        f"Maximum head difference ({diffmax}) -- "
+                        + f"{htol} tolerance exceeded at "
+                        + f"{indices[0].shape[0]} node location(s)"
                     )
                 else:
                     ee = (
                         "Maximum head difference "
-                        + "({}) exceeded ".format(diffmax)
-                        + "at {} node location(s):".format(indices[0].shape[0])
+                        + f"({diffmax}) exceeded "
+                        + f"at {indices[0].shape[0]} node location(s):"
                     )
                 e = textwrap.fill(
                     ee + ":",
@@ -2238,23 +2233,23 @@ def compare_stages(
                     initial_indent="  ",
                     subsequent_indent="  ",
                 )
-                f.write("{}\n".format(e))
+                f.write(f"{e}\n")
                 if verbose:
-                    print(ee + " at time {}".format(time))
+                    print(ee + f" at time {time}")
                 e = ""
                 for itupe in indices:
                     for ind in itupe:
-                        e += "{} ".format(ind + 1)  # convert to one-based
+                        e += f"{ind + 1} "  # convert to one-based
                 e = textwrap.fill(
                     e,
                     width=70,
                     initial_indent="    ",
                     subsequent_indent="    ",
                 )
-                f.write("{}\n".format(e))
+                f.write(f"{e}\n")
                 # Write header again, unless it is the last record
                 if idx + 1 < len(times1):
-                    f.write("\n{}".format(header))
+                    f.write(f"\n{header}")
 
     # Close output file
     if outfile is not None:
@@ -2290,9 +2285,10 @@ def _calculate_diffmax(v1, v2):
         v1 = v1.flatten()
         v2 = v2.flatten()
     if v1.size != v2.size:
-        err = "Error: calculate_difference v1 size ({}) ".format(
-            v1.size
-        ) + "is not equal to v2 size ({})".format(v2.size)
+        err = (
+            f"Error: calculate_difference v1 size ({v1.size}) "
+            + f"is not equal to v2 size ({v2.size})"
+        )
         raise Exception(err)
 
     diff = abs(v1 - v2)
@@ -2325,9 +2321,10 @@ def _calculate_difftol(v1, v2, tol):
         v1 = v1.flatten()
         v2 = v2.flatten()
     if v1.size != v2.size:
-        err = "Error: calculate_difference v1 size ({}) ".format(
-            v1.size
-        ) + "is not equal to v2 size ({})".format(v2.size)
+        err = (
+            f"Error: calculate_difference v1 size ({v1.size}) "
+            + f"is not equal to v2 size ({v2.size})"
+        )
         raise Exception(err)
 
     diff = abs(v1 - v2)

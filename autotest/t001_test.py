@@ -1,11 +1,11 @@
 import os
-import sys
 import shutil
+import sys
+
+import flopy
+import pytest
 
 import pymake
-import flopy
-
-import pytest
 
 # use the line below to set fortran compiler using environmental variables
 # os.environ["FC"] = "ifort"
@@ -79,9 +79,7 @@ def run_mf2005(namefile, regression=True):
 
         # run test models
         exe_name = os.path.abspath(epth)
-        msg = "running model...{}".format(testname) + " using {}".format(
-            exe_name
-        )
+        msg = f"running model...{testname}" + f" using {exe_name}"
         print(msg)
         if os.path.exists(exe_name):
             success, buff = flopy.run_model(
@@ -90,7 +88,7 @@ def run_mf2005(namefile, regression=True):
         else:
             success = False
 
-        assert success, "base model {} ".format(nam) + "did not run."
+        assert success, f"base model {nam} " + "did not run."
 
         # If it is a regression run, then setup and run the model with the
         # release target and the reference target
@@ -100,9 +98,10 @@ def run_mf2005(namefile, regression=True):
             testpth_reg = os.path.join(testpth, testname_reg)
             pymake.setup(namefile, testpth_reg)
             # exe_name = os.path.abspath(target_previous)
-            msg = "running regression model...{}".format(
-                testname_reg
-            ) + " using {}".format(exe_name)
+            msg = (
+                "running regression model...{}".format(testname_reg)
+                + f" using {exe_name}"
+            )
             print(msg)
 
             if os.path.exists(exe_name):
@@ -112,9 +111,7 @@ def run_mf2005(namefile, regression=True):
             else:
                 success_reg = False
 
-            assert success_reg, (
-                "regression model {} ".format(nam) + "did not run."
-            )
+            assert success_reg, f"regression model {nam} " + "did not run."
 
         # compare results
         if success and success_reg:
@@ -137,10 +134,10 @@ def run_mf2005(namefile, regression=True):
             pymake.teardown(testpth)
         else:
             success = False
-            errmsg = "could not run...{}".format(os.path.basename(nam))
+            errmsg = f"could not run...{os.path.basename(nam)}"
     else:
         success = False
-        errmsg = "{} does not exist".format(target)
+        errmsg = f"{target} does not exist"
 
     assert success, errmsg
 
@@ -179,13 +176,13 @@ def test_download():
 
     # download the target
     pm.download_target(target, download_path=dstpth)
-    assert pm.download, "could not download {}".format(target)
+    assert pm.download, f"could not download {target}"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
-    assert pm.build() == 0, "could not compile {}".format(target)
+    assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.regression

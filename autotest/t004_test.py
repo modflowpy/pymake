@@ -1,11 +1,11 @@
 import os
-import sys
 import shutil
+import sys
 
+import flopy
 import pytest
 
 import pymake
-import flopy
 
 # define program data
 target = "mp6"
@@ -23,7 +23,7 @@ if not os.path.exists(dstpth):
 mp6pth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(mp6pth, "example-run")
 
-sim_files = ["EXAMPLE-{}.mpsim".format(n) for n in range(1, 10)]
+sim_files = [f"EXAMPLE-{n}.mpsim" for n in range(1, 10)]
 
 exe_name = target
 srcpth = os.path.join(mp6pth, prog_dict.srcdir)
@@ -39,17 +39,17 @@ def update_files(fn):
     replace_files = ["example-6", "example-7", "example-8"]
     for rf in replace_files:
         if rf in fn.lower():
-            fname1 = os.path.join(expth, "{}.locations".format(rf))
-            fname2 = os.path.join(expth, "{}_mod.locations".format(rf))
+            fname1 = os.path.join(expth, f"{rf}.locations")
+            fname2 = os.path.join(expth, f"{rf}_mod.locations")
             print(
                 "copy {} to {}".format(
                     os.path.basename(fname1), os.path.basename(fname2)
                 )
             )
             shutil.copy(fname1, fname2)
-            print("deleting {}".format(os.path.basename(fname1)))
+            print(f"deleting {os.path.basename(fname1)}")
             os.remove(fname1)
-            fname1 = os.path.join(expth, "{}.locations".format(rf.upper()))
+            fname1 = os.path.join(expth, f"{rf.upper()}.locations")
             print(
                 "renmae {} to {}".format(
                     os.path.basename(fname2), os.path.basename(fname1)
@@ -63,7 +63,7 @@ def run_modpath6(fn):
     if os.path.exists(epth):
         update_files(fn)
         # run the model
-        print("running model...{}".format(fn))
+        print(f"running model...{fn}")
         success, buff = flopy.run_model(epth, fn, model_ws=expth, silent=False)
     return success
 
@@ -91,19 +91,19 @@ def test_download():
         shutil.rmtree(mp6pth)
 
     pm.download_target(target, download_path=dstpth)
-    assert pm.download, "could not download {} distribution".format(target)
+    assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
-    assert pm.build() == 0, "could not compile {}".format(target)
+    assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.regression
 @pytest.mark.parametrize("fn", sim_files)
 def test_modpath6(fn):
-    assert run_modpath6(fn), "could not run {}".format(fn)
+    assert run_modpath6(fn), f"could not run {fn}"
 
 
 @pytest.mark.base

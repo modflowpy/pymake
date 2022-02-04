@@ -53,28 +53,25 @@ MODFLOW 6 was built.
 """
 
 
+import argparse
 import os
+import shutil
 import sys
 import time
-import shutil
-import argparse
 
 from .config import __description__
-from .utils._compiler_switches import (
-    _get_osname,
-    _get_optlevel,
-    _get_fortran_flags,
-    _get_c_flags,
-    _get_linker_flags,
-)
-from .utils.download import download_and_unzip, zip_all
 from .pymake_base import main
-from .pymake_parser import (
-    _get_arg_dict,
-    _parser_setup,
+from .pymake_parser import _get_arg_dict, _parser_setup
+from .utils._compiler_switches import (
+    _get_c_flags,
+    _get_fortran_flags,
+    _get_linker_flags,
+    _get_optlevel,
+    _get_osname,
 )
-from .utils.usgsprograms import usgs_program_data
 from .utils._usgs_src_update import _build_replace
+from .utils.download import download_and_unzip, zip_all
+from .utils.usgsprograms import usgs_program_data
 
 
 class Pymake:
@@ -181,7 +178,7 @@ class Pymake:
             print_value = getattr(self, key, value["default"])
             if isinstance(print_value, list):
                 print_value = ", ".join(print_value)
-            print(" {}={}".format(key, print_value))
+            print(f" {key}={print_value}")
         print("\n")
 
     def argv_reset_settings(self, args):
@@ -260,20 +257,19 @@ class Pymake:
             # delete the zip file if it exists
             if os.path.exists(zip_pth):
                 if self.verbose:
-                    msg = "Deleting existing zipfile '{}'".format(zip_pth)
+                    msg = f"Deleting existing zipfile '{zip_pth}'"
                     print(msg)
                 os.remove(zip_pth)
 
             # print a message describing the zip process
             if self.verbose:
-                msg = "Compressing files in '{}' ".format(
-                    appdir
-                ) + "directory to zip file '{}'".format(zip_pth)
+                msg = (
+                    f"Compressing files in '{appdir}' "
+                    + f"directory to zip file '{zip_pth}'"
+                )
                 print(msg)
                 for idx, target in enumerate(targets):
-                    msg = " {:>3d}. adding ".format(
-                        idx + 1
-                    ) + "'{}' to zipfile".format(target)
+                    msg = f" {idx + 1:>3d}. adding " + f"'{target}' to zipfile"
                     print(msg)
 
             # compress the compiled executables
@@ -291,10 +287,10 @@ class Pymake:
         """
         for target in self.build_targets:
             if os.path.exists(target):
-                msg = "removing '{}'".format(target)
+                msg = f"removing '{target}'"
                 os.remove(target)
             else:
-                msg = "'{}' does not exist".format(target)
+                msg = f"'{target}' does not exist"
             if self.verbose:
                 print(msg)
 
@@ -398,7 +394,7 @@ class Pymake:
         """
         if not self.download:
             # write message
-            msg = "downloading...'{}'".format(self.url)
+            msg = f"downloading...'{self.url}'"
             print(msg)
 
             # download the url
@@ -421,9 +417,7 @@ class Pymake:
         if self.download is not None:
             if self.download:
                 # write process information
-                msg = "cleaning temporary files in...'{}'".format(
-                    self.download_dir
-                )
+                msg = f"cleaning temporary files in...'{self.download_dir}'"
                 print(msg)
 
                 # reset self.download
@@ -442,17 +436,13 @@ class Pymake:
                             if self.verbose:
                                 print(
                                     "removing download "
-                                    + "directory...'{}'".format(
-                                        self.download_dir
-                                    )
+                                    + f"directory...'{self.download_dir}'"
                                 )
                             break
                         except:
                             if self.verbose:
-                                msg = "    removal attempt {:>2d} ".format(
-                                    itries + 1
-                                )
-                                msg += "of {:>2d}".format(ntries)
+                                msg = f"    removal attempt {itries + 1:>2d} "
+                                msg += f"of {ntries:>2d}"
                                 print(msg)
 
                     # wait prior to returning on windows
@@ -766,9 +756,7 @@ class Pymake:
             replace_function = _build_replace(self.target)
             if replace_function is not None:
                 if self.verbose:
-                    msg = "replacing select source files for " + "{}\n".format(
-                        self.target
-                    )
+                    msg = f"replacing select source files for {self.target}\n"
                     print(msg)
 
                 # execute select replace function
@@ -781,7 +769,7 @@ class Pymake:
                 )
 
             # write message
-            print("compiling...{}".format(self.target))
+            print(f"compiling...{self.target}")
 
             # build the target
             self.returncode = main(
@@ -808,11 +796,12 @@ class Pymake:
                 verbose=self.verbose,
                 inplace=self.inplace,
                 networkx=self.networkx,
+                meson=self.meson,
             )
 
         # issue error if target was not built
         if self.returncode != 0:
-            raise FileNotFoundError("could not build {}".format(self.target))
+            raise FileNotFoundError(f"could not build {self.target}")
         # add target to list of targets
         else:
             self.update_build_targets()
@@ -828,7 +817,7 @@ class Pymake:
         """
         if os.path.abspath(self.target) not in self.build_targets:
             if self.verbose:
-                print("adding {} to build_targets list".format(self.target))
+                print(f"adding {self.target} to build_targets list")
             self.build_targets.append(os.path.abspath(self.target))
 
         return

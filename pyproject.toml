@@ -6,3 +6,12 @@ build-backend = "setuptools.build_meta"
 [tool.black]
 line-length = 79
 target_version = ["py37"]
+
+[tool.flynt]
+line-length = 79
+verbose = true
+
+[tool.isort]
+profile = "black"
+src_paths = ["pymake", "autotest", "examples"]
+line_length = 79

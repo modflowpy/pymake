@@ -32,8 +32,23 @@ jobs:
           pip install https://github.com/modflowpy/flopy/zipball/develop
           pip install pylint flake8 black
 
+      - name: Run isort
+        run: |
+          echo "if isort check fails update isort using"
+          echo "  pip install isort --upgrade"
+          echo "and run"
+          echo "  isort ./flopy"
+          echo "and then commit the changes."
+          isort --verbose --check --diff ./pymake
+
       - name: Run black
-        run: black --check --line-length 79 ./pymake
+        run: |
+          echo "if black check fails update black using"
+          echo "  pip install black --upgrade"
+          echo "and run"
+          echo "  black ./flopy"
+          echo "and then commit the changes."
+          black --check --diff ./pymake
 
       - name: Run flake8
         run: flake8 --count --show-source ./pymake

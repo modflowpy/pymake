@@ -1,10 +1,11 @@
 import os
-import sys
 import shutil
-import pymake
-import flopy
+import sys
 
+import flopy
 import pytest
+
+import pymake
 
 # define program data
 target = "mfusg"
@@ -53,13 +54,9 @@ def edit_namefile(namefile):
     for line in lines:
         t = line.split()
         fn, ext = os.path.splitext(t[2])
-        f.write(
-            "{:15s} {:3s} {} ".format(
-                t[0], t[1], "{}{}".format(fn, ext.lower())
-            )
-        )
+        f.write(f"{t[0]:15s} {t[1]:3s} {fn}{ext.lower()} ")
         if len(t) > 3:
-            f.write("{}".format(t[3]))
+            f.write(f"{t[3]}")
         f.write("\n")
     f.close()
 
@@ -85,11 +82,11 @@ def run_mfusg(fn):
     # edit namefile
     edit_namefile(fn)
     # run test models
-    print("running model...{}".format(os.path.basename(fn)))
+    print(f"running model...{os.path.basename(fn)}")
     success, buff = flopy.run_model(
         epth, os.path.basename(fn), model_ws=os.path.dirname(fn), silent=False
     )
-    errmsg = "could not run {}".format(fn)
+    errmsg = f"could not run {fn}"
     assert success, errmsg
 
     return
@@ -104,13 +101,13 @@ def test_download():
 
     # download the modflow-usg release
     pm.download_target(target, download_path=dstpth)
-    assert pm.download, "could not download {}".format(target)
+    assert pm.download, f"could not download {target}"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
-    assert pm.build() == 0, "could not compile {}".format(target)
+    assert pm.build() == 0, f"could not compile {target}"
     return
 
 

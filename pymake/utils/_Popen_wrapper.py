@@ -2,7 +2,7 @@
 
 """
 import sys
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import PIPE, STDOUT, Popen
 
 PY3 = sys.version_info[0] >= 3
 
@@ -90,9 +90,10 @@ def _process_Popen_communicate(proc, verbose=True):
 
     # catch non-zero return code
     if proc.returncode != 0:
-        msg = "{} failed\n".format(
-            " ".join(proc.args)
-        ) + "\tstatus code {}\n".format(proc.returncode)
+        msg = (
+            f"{' '.join(proc.args)} failed\n"
+            + f"\tstatus code {proc.returncode}\n"
+        )
         print(msg)
 
     return stderr, stdout
@@ -117,7 +118,7 @@ def _process_Popen_stdout(proc):
         c = line.decode("utf-8")
         if c != "":
             c = c.rstrip("\r\n")
-            print("{}".format(c))
+            print(f"{c}")
         else:
             break
 

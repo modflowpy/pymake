@@ -1,10 +1,11 @@
 import os
-import sys
 import shutil
 import subprocess
-import pymake
+import sys
 
 import pytest
+
+import pymake
 
 # use the line below to set fortran compiler using environmental variables
 # if sys.platform.lower() == "win32":
@@ -93,7 +94,7 @@ def run_gridgen(cmd):
         testpth = os.path.abspath(expth)
 
         cmdlist = [prog] + cmd.split()
-        print("running {}".format(" ".join(cmdlist)))
+        print(f"running {' '.join(cmdlist)}")
         retcode = run_command(cmdlist, testpth)
         if retcode == 0:
             success = True
@@ -110,19 +111,19 @@ def test_download():
 
     # download the target
     pm.download_target(target, download_path=dstpth)
-    assert pm.download, "could not download {} distribution".format(target)
+    assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
-    assert pm.build() == 0, "could not compile {}".format(target)
+    assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.regression
 @pytest.mark.parametrize("cmd", biscayne_cmds)
 def test_gridgen(cmd):
-    assert run_gridgen(cmd), "could not run {}".format(cmd)
+    assert run_gridgen(cmd), f"could not run {cmd}"
 
 
 @pytest.mark.base

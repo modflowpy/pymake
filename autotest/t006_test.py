@@ -1,10 +1,11 @@
 import os
+import shutil
 import sys
 import time
-import shutil
-import pymake
 
 import pytest
+
+import pymake
 
 # define program data
 target = "mfnwt"
@@ -49,16 +50,16 @@ def build_with_makefile():
                 shutil.rmtree(d)
 
         # clean prior to make
-        print("clean {} with makefile".format(target))
+        print(f"clean {target} with makefile")
         os.system("make clean")
 
         # build MODFLOW-NWT with makefile
-        print("build {} with makefile".format(target))
+        print(f"build {target} with makefile")
         return_code = os.system("make")
 
         # test if running on Windows with ifort, if True the makefile
         # should fail
-        errmsg = "{} created by makefile does not exist.".format(target)
+        errmsg = f"{target} created by makefile does not exist."
         if sys.platform.lower() == "win32" and pm.fc == "ifort":
             if return_code != 0:
                 success = True
@@ -109,13 +110,13 @@ def test_download():
 
     # download the modflow 2005 release
     pm.download_target(target, download_path=dstpth)
-    assert pm.download, "could not download {} distribution".format(target)
+    assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
-    assert pm.build() == 0, "could not compile {}".format(target)
+    assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.base

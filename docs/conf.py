@@ -12,12 +12,11 @@
 #
 import os
 import sys
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 
 # add pymake root directory to the python path
 sys.path.insert(0, os.path.abspath(".."))
 from pymake import __version__
-
 
 # -- Create the pymake rst files ---------------------------------------------
 args = ("sphinx-apidoc", "-e", "-o", "source/", "../pymake/")
@@ -26,7 +25,7 @@ stdout, stderr = proc.communicate()
 if stdout:
     print(stdout.decode("utf-8"))
 if stderr:
-    print("Errors:\n{}".format(stderr.decode("utf-8")))
+    print(f"Errors:\n{stderr.decode('utf-8')}")
 
 # -- Project information -----------------------------------------------------
 
