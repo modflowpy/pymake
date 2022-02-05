@@ -1398,15 +1398,13 @@ def _create_makefile(
     line += "MODSWITCH = -J $(MODDIR)\n\n"
     f.write(line)
 
-    line = "# define program name\n"
-    line += f"PROGRAM = $(BINDIR)/{exe_name}{linux_ext}\n\n"
-    f.write(line)
-
     line = "# define os dependent program name\n"
     line += "ifeq ($(detected_OS), Windows)\n"
     line += f"\tPROGRAM = $(BINDIR)/{exe_name}{win_ext}\n"
-    line += "else ($(detected_OS), Darwin)\n"
+    line += "else ifeq ($(detected_OS), Darwin)\n"
     line += f"\tPROGRAM = $(BINDIR)/{exe_name}{macos_ext}\n"
+    line += "else\n"
+    line += f"\tPROGRAM = $(BINDIR)/{exe_name}{linux_ext}\n"
     line += "endif\n\n"
     f.write(line)
 
