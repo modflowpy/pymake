@@ -414,7 +414,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v -m base --durations=0
+          pytest -v --dist=loadscope -n=auto -m base --durations=0
 
   pymake_rtd:
     name: pymake rtd
