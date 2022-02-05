@@ -13,6 +13,14 @@ target = "mf6"
 if sys.platform.lower() == "win32":
     target += ".exe"
 
+sharedobject_target = "libmf6"
+if sys.platform.lower() == "win32":
+    sharedobject_target += ".dll"
+elif sys.platform.lower() == "darwin":
+    sharedobject_target += ".dylib"
+else:
+    sharedobject_target += ".so"
+
 # get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
@@ -45,12 +53,13 @@ pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
 pm.makefile = True
+pm.makeclean = True
 pm.inplace = True
 pm.networkx = True
 pm.meson = True
 
 
-def build_with_makefile():
+def build_with_makefile(makefile_target):
     success = False
     if os.path.isfile("makefile"):
         # wait to delete on windows
@@ -68,11 +77,11 @@ def build_with_makefile():
                 shutil.rmtree(d)
 
         # clean prior to make
-        print(f"clean {target} with makefile")
+        print(f"clean {makefile_target} with makefile")
         os.system("make clean")
 
         # build MODFLOW 6 with makefile
-        print(f"build {target} with makefile")
+        print(f"build {makefile_target} with makefile")
         return_code = os.system("make")
 
         # test if running on Windows with ifort, if True the makefile
@@ -82,9 +91,9 @@ def build_with_makefile():
                 success = True
             else:
                 success = False
-        # verify that MODFLOW 6 was made
+        # verify that target was made
         else:
-            success = os.path.isfile(epth)
+            success = os.path.isfile(os.path.join(dstpth, makefile_target))
 
     return success
 
@@ -151,21 +160,33 @@ def test_mf6(ws):
 @pytest.mark.base
 @pytest.mark.regression
 def test_makefile():
-    assert build_with_makefile(), f"could not compile {target} with makefile"
+    assert build_with_makefile(
+        target
+    ), f"could not compile {target} with makefile"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_sharedobject():
-    pm.target = "libmf6"
+    pm.target = sharedobject_target
     prog_dict = pymake.usgs_program_data.get_target(pm.target)
     pm.srcdir = os.path.join(mf6pth, prog_dict.srcdir)
     pm.srcdir2 = os.path.join(mf6pth, "src")
     pm.excludefiles = [os.path.join(pm.srcdir2, "mf6.f90")]
-    pm.makefile = False
+    pm.makefile = True
+    pm.makeclean = True
     pm.sharedobject = True
-    pm.inplace = False
+    pm.inplace = True
+    pm.dryrun = True
     assert pm.build() == 0, f"could not compile {pm.target}"
+
+
+@pytest.mark.base
+@pytest.mark.regression
+def test_sharedobject_makefile():
+    assert build_with_makefile(
+        sharedobject_target
+    ), f"could not compile {sharedobject_target} with makefile"
 
 
 @pytest.mark.base
@@ -181,4 +202,5 @@ if __name__ == "__main__":
         run_mf6(ws)
     test_makefile()
     test_sharedobject()
+    test_sharedobject_makefile()
     test_clean_up()

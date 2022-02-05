@@ -297,6 +297,7 @@ def main(
                 fflags,
                 cflags,
                 syslibs,
+                sharedobject,
                 verbose,
             )
 
@@ -402,7 +403,7 @@ def _pymake_initialize(
             else:
                 shutil.copytree(src, dst)
         else:
-            dst = os.path.normpath(os.path.relpath(commonsrc, srcdir_temp))
+            dst = os.path.relpath(os.path.abspath(os.path.abspath(commonsrc)))
 
         srcfiles += _get_srcfiles(dst, include_subdirs)
 
@@ -1168,6 +1169,7 @@ def _create_makefile(
     fflags,
     cflags,
     syslibs,
+    sharedobject,
     verbose,
     makedefaults="makedefaults",
 ):
@@ -1201,6 +1203,10 @@ def _create_makefile(
         user provided list of c or cpp compiler flags
     syslibs : list
         user provided syslibs
+    sharedobject : bool
+        boolean indicating a shared object will be built
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
     makedefaults : str
         name of the makedefaults file to create with makefile (default is
         makedefaults)
@@ -1213,6 +1219,16 @@ def _create_makefile(
     if verbose:
         msg = f"\nWriting makefile and {makedefaults}"
         print(msg)
+
+    # set executable extension
+    if sharedobject:
+        win_ext = ".dll"
+        macos_ext = ".dylib"
+        linux_ext = ".so"
+    else:
+        win_ext = ".exe"
+        macos_ext = ""
+        linux_ext = ""
 
     # set object extension
     objext = ".o"
@@ -1383,12 +1399,14 @@ def _create_makefile(
     f.write(line)
 
     line = "# define program name\n"
-    line += f"PROGRAM = $(BINDIR)/{exe_name}\n\n"
+    line += f"PROGRAM = $(BINDIR)/{exe_name}{linux_ext}\n\n"
     f.write(line)
 
     line = "# define os dependent program name\n"
     line += "ifeq ($(detected_OS), Windows)\n"
-    line += f"\tPROGRAM = $(BINDIR)/{exe_name}.exe\n"
+    line += f"\tPROGRAM = $(BINDIR)/{exe_name}{win_ext}\n"
+    line += "else ($(detected_OS), Darwin)\n"
+    line += f"\tPROGRAM = $(BINDIR)/{exe_name}{macos_ext}\n"
     line += "endif\n\n"
     f.write(line)
 
@@ -1457,6 +1475,7 @@ def _create_makefile(
             debug,
             double,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         for idx, flag in enumerate(tfflags):
@@ -1475,6 +1494,7 @@ def _create_makefile(
             debug,
             double,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         for idx, flag in enumerate(tfflags):
@@ -1492,6 +1512,7 @@ def _create_makefile(
             debug,
             double,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         for idx, flag in enumerate(tfflags):
@@ -1517,6 +1538,7 @@ def _create_makefile(
             debug,
             srcfiles,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
@@ -1529,6 +1551,7 @@ def _create_makefile(
             debug,
             srcfiles,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
@@ -1542,6 +1565,7 @@ def _create_makefile(
             debug,
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
@@ -1554,6 +1578,7 @@ def _create_makefile(
             debug,
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
@@ -1566,6 +1591,7 @@ def _create_makefile(
             debug,
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
@@ -1586,6 +1612,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
@@ -1598,6 +1625,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
@@ -1612,6 +1640,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += "\tifeq ($(FC), $(filter $(FC), gfortran))\n"
@@ -1628,6 +1657,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
@@ -1640,6 +1670,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
@@ -1656,6 +1687,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
@@ -1669,6 +1701,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
