@@ -69,10 +69,6 @@ from .utils._Popen_wrapper import (
     _process_Popen_stdout,
 )
 
-# define temporary directories
-objdir_temp = os.path.join(".", "obj_temp")
-moddir_temp = os.path.join(".", "mod_temp")
-
 
 def main(
     srcdir=None,
@@ -177,10 +173,11 @@ def main(
 
     if srcdir is not None and target is not None:
 
+        objdir_temp, moddir_temp, srcdir_temp = get_temporary_directories(
+            appdir=appdir
+        )
         if inplace:
             srcdir_temp = srcdir
-        else:
-            srcdir_temp = os.path.join(".", "src_temp")
 
         # process appdir
         if appdir is not None:
@@ -242,6 +239,8 @@ def main(
             extrafiles,
             excludefiles,
             include_subdirs,
+            objdir_temp,
+            moddir_temp,
             srcdir_temp,
         )
 
@@ -303,7 +302,15 @@ def main(
 
         # clean up temporary files
         if makeclean and returncode == 0:
-            _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose)
+            _clean_temp_files(
+                target,
+                intelwin,
+                inplace,
+                objdir_temp,
+                moddir_temp,
+                srcdir_temp,
+                verbose,
+            )
     else:
         msg = (
             f"Nothing to do, the srcdir ({srcdir}) "
@@ -322,6 +329,8 @@ def _pymake_initialize(
     extrafiles,
     excludefiles,
     include_subdirs,
+    objdir_temp,
+    moddir_temp,
     srcdir_temp,
 ):
     """Remove temp source directory and target, and then copy source into
@@ -344,6 +353,10 @@ def _pymake_initialize(
     include_subdirs : bool
         boolean indicating source files in srcdir subdirectories should be
         included in the build
+    objdir_temp : str
+        path for temporary directory that will contain the object files.
+    moddir_temp : str
+        path for temporary directory that will contain the module files.
     srcdir_temp : str
         path for directory that will contain the source files. If
         srcdir_temp is the same as srcdir then the original source files
@@ -458,6 +471,35 @@ def _pymake_initialize(
     return srcfiles
 
 
+def get_temporary_directories(appdir=None):
+    """Get paths to temporary object, module, and source files
+
+    Parameters
+    ----------
+    appdir : str
+        path for executable
+
+    Returns
+    -------
+    obj_temp : str
+        path to temporary object files
+    mod_temp : str
+        path to temporary module files
+    src_temp : str
+        path to temporary source files
+
+    """
+    if appdir is None:
+        base_pth = "."
+    else:
+        base_pth = appdir
+    return (
+        os.path.join(base_pth, "obj_temp"),
+        os.path.join(base_pth, "mod_temp"),
+        os.path.join(base_pth, "src_temp"),
+    )
+
+
 def _get_extra_exclude_files(extrafiles):
     """Get extrafiles to include in compilation from a file or a list.
 
@@ -496,7 +538,15 @@ def _get_extra_exclude_files(extrafiles):
     return files
 
 
-def _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose=False):
+def _clean_temp_files(
+    target,
+    intelwin,
+    inplace,
+    objdir_temp,
+    moddir_temp,
+    srcdir_temp,
+    verbose=False,
+):
     """Cleanup intermediate files. Remove mod and object files, and remove the
     temporary source directory.
 
@@ -512,6 +562,10 @@ def _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose=False):
         defined in extrafiles will be used directly. If inplace is True,
         source files will be copied to a directory named srcdir_temp.
         (default is False)
+    objdir_temp : str
+        path for temporary directory that will contain the object files.
+    moddir_temp : str
+        path for temporary directory that will contain the module files.
     srcdir_temp : str
         path for directory that will contain the source files. If
         srcdir_temp is the same as srcdir then the original source files
@@ -743,6 +797,11 @@ def _pymake_compile(
     # initialize ilink
     ilink = 0
 
+    # get temporary object and module directories
+    objdir_temp, moddir_temp, _ = get_temporary_directories(
+        os.path.dirname(target)
+    )
+
     # set optimization levels
     optlevel = _get_optlevel(
         target, fc, cc, debug, fflags, cflags, verbose=verbose
@@ -828,6 +887,8 @@ def _pymake_compile(
                 tfflags,
                 tcflags,
                 tlflags,
+                objdir_temp,
+                moddir_temp,
                 srcfiles,
                 target,
                 arch,
@@ -1003,6 +1064,8 @@ def _create_win_batch(
     fflags,
     cflags,
     lflags,
+    objdir_temp,
+    moddir_temp,
     srcfiles,
     target,
     arch,
@@ -1029,6 +1092,10 @@ def _create_win_batch(
     lflags : list
         linker compiler flags, which are a combination of user provided list
         of compiler flags for the compiler to used for linking
+    objdir_temp : str
+        path for temporary directory that will contain the object files.
+    moddir_temp : str
+        path for temporary directory that will contain the module files.
     srcfiles : list
         list of source file names
     target : str
@@ -1383,7 +1450,12 @@ def _create_makefile(
     else:
         dpth = "."
 
-    # write
+    # get temporary directories
+    objdir_temp, moddir_temp, _ = get_temporary_directories(
+        os.path.dirname(target)
+    )
+
+    # write header
     line = (
         "# Define the directories for the object and module files\n"
         + "# and the executable and its path.\n"

@@ -16,6 +16,7 @@ import pymake
 # working directory
 dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 
+
 @pytest.mark.base
 @pytest.mark.regression
 def test_pymake_makefile():
@@ -86,6 +87,8 @@ def test_pymake_makefile():
 @pytest.mark.base
 @pytest.mark.regression
 def test_clean_up():
+    print("Removing test files and directories")
+
     shutil.rmtree(dstpth)
 
 

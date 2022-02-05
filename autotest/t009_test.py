@@ -143,11 +143,7 @@ def run_mt3dusgs(temp_dir):
 
 
 def clean_up():
-    print("Removing temporary build directories")
-    dirs_temp = (os.path.join("obj_temp"), os.path.join("mod_temp"), dstpth)
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
+    print("Removing test files and directories")
 
     # finalize pymake object
     pm.finalize()
@@ -156,6 +152,13 @@ def clean_up():
         if os.path.isfile(epth):
             print("Removing '" + epth + "'")
             os.remove(epth)
+
+    dirs_temp = (dstpth,)
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+
+    return
 
 
 @pytest.mark.base

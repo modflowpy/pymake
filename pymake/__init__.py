@@ -44,7 +44,7 @@ from .config import (
 # plot
 from .plot.dependency_graphs import make_plots, to_pydot
 from .pymake import Pymake
-from .pymake_base import main
+from .pymake_base import get_temporary_directories, main
 from .pymake_build_apps import build_apps
 from .pymake_parser import parser
 from .utils.download import (

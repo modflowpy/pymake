@@ -145,6 +145,8 @@ def run_mf2005(namefile, regression=True):
 
 
 def cleanup():
+    print("Removing test files and directories")
+
     # clean up makefile
     print("Removing makefile")
     files = ["makefile", "makedefaults"]
@@ -152,18 +154,18 @@ def cleanup():
         if os.path.isfile(fpth):
             os.remove(fpth)
 
-    print("Removing temporary build directories")
-    dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp")]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
-
     # finalize pymake object
     pm.finalize()
 
     if os.path.isfile(epth):
         print("Removing " + target)
         os.remove(epth)
+
+    dirs_temp = [dstpth]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+
     return
 
 

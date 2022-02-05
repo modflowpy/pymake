@@ -31,6 +31,8 @@ def compile_code():
 
 
 def clean_up():
+    print("Removing test files and directories")
+
     # clean up download directory
     print("Removing folder " + mflgrpth)
     if os.path.isdir(mflgrpth):

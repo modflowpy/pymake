@@ -8,6 +8,7 @@ import pymake
 
 dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 
+
 def initialize_working_dir():
     # make sure the test directory exists
     os.makedirs(dstpth, exist_ok=True)

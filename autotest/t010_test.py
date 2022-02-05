@@ -59,10 +59,7 @@ biscayne_cmds = [
 
 
 def clean_up():
-    # clean up
-    print("Removing folder " + pth)
-    if os.path.isdir(pth):
-        shutil.rmtree(pth)
+    print("Removing test files and directories")
 
     # finalize pymake object
     pm.finalize()
@@ -70,6 +67,11 @@ def clean_up():
     if os.path.isfile(exe_name):
         print("Removing " + target)
         os.remove(exe_name)
+
+    print("Removing folder " + pth)
+    if os.path.isdir(pth):
+        shutil.rmtree(pth)
+
     return
 
 

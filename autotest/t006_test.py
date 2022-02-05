@@ -77,6 +77,8 @@ def build_with_makefile():
 
 
 def clean_up():
+    print("Removing test files and directories")
+
     # clean up make file
     print("Removing makefile")
     files = ["makefile", "makedefaults"]
@@ -85,7 +87,7 @@ def clean_up():
             os.remove(fpth)
 
     print("Removing temporary build directories")
-    dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp")]
+    dirs_temp = [dstpth]
     for d in dirs_temp:
         if os.path.isdir(d):
             shutil.rmtree(d)

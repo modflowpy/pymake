@@ -99,6 +99,11 @@ def run_gsflow(example, control_file):
 
 
 def clean_up():
+    print("Removing test files and directories")
+
+    # finalize pymake object
+    pm.finalize()
+
     # clean up downloaded directories
     if os.path.isdir(gsflowpth):
         print("Removing folder " + gsflowpth)
@@ -111,13 +116,16 @@ def clean_up():
             print("Removing example folder " + example)
             shutil.rmtree(pth)
 
-    # finalize pymake object
-    pm.finalize()
-
     # clean up compiled executables
     if os.path.isfile(egsflow):
         print("Removing...'" + egsflow + "'")
         os.remove(egsflow)
+
+    dirs_temp = [dstpth]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+
     return
 
 

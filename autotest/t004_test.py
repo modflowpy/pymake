@@ -69,11 +69,7 @@ def run_modpath6(fn):
 
 
 def clean_up():
-    print("Removing temporary build directories")
-    dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp")]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
+    print("Removing test files and directories")
 
     # finalize pymake object
     pm.finalize()
@@ -81,6 +77,12 @@ def clean_up():
     if os.path.isfile(epth):
         print("Removing " + target)
         os.remove(epth)
+
+    dirs_temp = [dstpth]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+
     return
 
 

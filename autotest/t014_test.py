@@ -38,6 +38,8 @@ exe_names = [os.path.join(appdir, target) for target in targets]
 
 
 def clean_up(epth):
+    print("Removing test files and directories")
+
     assert os.path.isfile(epth), f"{os.path.basename(epth)} does not exist"
     print("Removing " + os.path.basename(epth))
     os.remove(epth)
