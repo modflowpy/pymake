@@ -1963,9 +1963,9 @@ def compare_concs(
     nt = min(nt1, nt2)
 
     for (t1, t2) in zip(times1, times2):
-        assert np.allclose([t1], [t2]), (
-            "times in two ucn files are not " + f"equal ({t1},{t2})"
-        )
+        if not np.allclose([t1], [t2]):
+            msg = f"times in two ucn files are not equal ({t1},{t2})"
+            raise ValueError(msg)
 
     if nt == nt1:
         kstpkper = uobj1.get_kstpkper()
