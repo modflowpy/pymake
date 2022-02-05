@@ -25,7 +25,7 @@ else:
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
-dstpth = os.path.join("temp")
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
 
@@ -107,7 +107,7 @@ def clean_up():
             os.remove(fpth)
 
     print("Removing temporary build directories")
-    dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp")]
+    dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp"), dstpth]
     for d in dirs_temp:
         if os.path.isdir(d):
             shutil.rmtree(d)
@@ -197,10 +197,10 @@ def test_clean_up():
 
 if __name__ == "__main__":
     test_download()
-    test_compile()
-    for ws in sim_dirs:
-        run_mf6(ws)
-    test_makefile()
+    # test_compile()
+    # for ws in sim_dirs:
+    #     run_mf6(ws)
+    # test_makefile()
     test_sharedobject()
     test_sharedobject_makefile()
-    test_clean_up()
+    # test_clean_up()

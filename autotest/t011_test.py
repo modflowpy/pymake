@@ -6,12 +6,11 @@ import pytest
 
 import pymake
 
-cpth = os.path.abspath(os.path.join("temp", "t011"))
-
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 
 def initialize_working_dir():
     # make sure the test directory exists
-    os.makedirs(cpth, exist_ok=True)
+    os.makedirs(dstpth, exist_ok=True)
 
 
 def export_code_json():
@@ -19,7 +18,7 @@ def export_code_json():
     initialize_working_dir()
 
     # make the json file
-    fpth = os.path.join(cpth, "code.test.json")
+    fpth = os.path.join(dstpth, "code.test.json")
     pymake.usgs_program_data.export_json(
         fpth=fpth,
         current=True,
@@ -105,7 +104,7 @@ def test_usgsprograms_load_json_error():
 
     initialize_working_dir()
 
-    fpth = os.path.join(cpth, "code.test.error.json")
+    fpth = os.path.join(dstpth, "code.test.error.json")
     my_dict = {"mf2005": {"bad": 12, "key": True}}
     pymake.usgs_program_data.export_json(
         fpth=fpth, prog_data=my_dict, update=False
@@ -136,7 +135,7 @@ def test_usgsprograms_list_json_error():
     # make sure the example directory exists
     initialize_working_dir()
 
-    fpth = os.path.join(cpth, "does.not.exist.json")
+    fpth = os.path.join(dstpth, "does.not.exist.json")
     with pytest.raises(IOError):
         pymake.usgs_program_data.list_json(fpth=fpth)
 
@@ -168,7 +167,7 @@ def test_not_shared():
 
 @pytest.mark.requests
 def test_clean_up():
-    shutil.rmtree(cpth)
+    shutil.rmtree(dstpth)
 
 
 if __name__ == "__main__":

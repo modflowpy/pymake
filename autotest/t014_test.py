@@ -26,7 +26,7 @@ for idx, target in enumerate(targets):
     targets[idx] = target + extension
 
 # set up paths
-dstpth = os.path.join("temp", "t014")
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
     os.makedirs(dstpth)
 
