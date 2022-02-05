@@ -167,7 +167,7 @@ jobs:
             os_script: ifortvars_linux.sh
           - os: macos-latest
             os_script: ifortvars_macos.sh
-          - os: windows-latest
+          - os: windows-2019
             os_script: ifortvars_windows.bat
     defaults:
       run:
