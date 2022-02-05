@@ -1,5 +1,6 @@
 import os
 import shutil
+
 import pymake
 
 temp_pth = "temp"
@@ -17,7 +18,7 @@ def download_mf6_examples(verbose=False):
 
     # download the modflow 6 release
     pm.download_target(target, download_path=temp_pth)
-    assert pm.download, "could not download {} distribution".format(target)
+    assert pm.download, f"could not download {target} distribution"
 
     # get program dictionary
     prog_dict = pymake.usgs_program_data.get_target(target)
@@ -26,10 +27,10 @@ def download_mf6_examples(verbose=False):
     temp_download_dir = os.path.join(temp_pth, prog_dict.dirname)
     temp_dir = os.path.join(temp_download_dir, "examples")
 
-    print("copying files to...{}".format(mf6_exdir))
+    print(f"copying files to...{mf6_exdir}")
     shutil.copytree(temp_dir, mf6_exdir)
 
-    print("removing...{} directory".format(temp_download_dir))
+    print(f"removing...{temp_download_dir} directory")
     shutil.rmtree(temp_download_dir)
 
     return os.path.abspath(mf6_exdir)
@@ -64,7 +65,7 @@ def examples_list(verbose=False):
             for file_name in fileList:
                 if file_name.lower() == "mfsim.nam":
                     if verbose:
-                        print("Found directory: {}".format(dirName))
+                        print(f"Found directory: {dirName}")
                     src_folders.append(dirName)
     src_folders = sorted(src_folders)
 
@@ -73,9 +74,9 @@ def examples_list(verbose=False):
     for idx, folder in enumerate(src_folders):
         if verbose:
             if idx == 0:
-                print("\n\nMODFLOW 6 examples:\n{}".format(78 * "-"))
-            print("{:>3d}: {}".format(idx + 1, folder))
-        f.write("{}\n".format(os.path.abspath(folder)))
+                print(f"\n\nMODFLOW 6 examples:\n{78 * '-'}")
+            print(f"{idx + 1:>3d}: {folder}")
+        f.write(f"{os.path.abspath(folder)}\n")
     f.close()
 
     return

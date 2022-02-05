@@ -1,7 +1,8 @@
 """Private functions for processing c/c++ and fortran files
 """
 import os
-from ._dag import _order_f_source_files, _order_c_source_files
+
+from ._dag import _order_c_source_files, _order_f_source_files
 
 
 def _get_fortran_files(srcfiles, extensions=False):
@@ -117,9 +118,7 @@ def _get_iso_c(srcfiles):
             if iso_c:
                 break
         else:
-            msg = "get_iso_c: could not " + "open {}".format(
-                os.path.basename(srcfile)
-            )
+            msg = "get_iso_c: could not " + f"open {os.path.basename(srcfile)}"
             raise FileNotFoundError(msg)
 
     return iso_c
@@ -175,8 +174,9 @@ def _preprocess_file(srcfiles):
                 break
 
         else:
-            msg = "_preprocess_file: could not " + "open {}".format(
-                os.path.basename(srcfile)
+            msg = (
+                "_preprocess_file: could not "
+                + f"open {os.path.basename(srcfile)}"
             )
             raise FileNotFoundError(msg)
 

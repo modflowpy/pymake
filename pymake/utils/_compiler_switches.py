@@ -4,15 +4,15 @@ appropriate linker flags for defined targets.
 import os
 import sys
 
+from ._compiler_language_files import (
+    _get_c_files,
+    _get_fortran_files,
+    _get_iso_c,
+)
 from ._Popen_wrapper import (
-    _process_Popen_initialize,
     _process_Popen_command,
     _process_Popen_communicate,
-)
-from ._compiler_language_files import (
-    _get_fortran_files,
-    _get_c_files,
-    _get_iso_c,
+    _process_Popen_initialize,
 )
 
 
@@ -60,7 +60,7 @@ def _check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
 
     # write a message
     if verbose:
-        msg = "  {} switch available: {}".format(switch, avail)
+        msg = f"  {switch} switch available: {avail}"
         print(msg)
 
     return avail
@@ -337,7 +337,7 @@ def _get_fortran_flags(
         # the flag and a setting
         for idx, flag in enumerate(fflags[1:]):
             if flag[0] not in ("/", "-"):
-                fflags[idx] += " {}".format(flag)
+                fflags[idx] += f" {flag}"
                 fflags[idx + 1] = ""
 
         # Add passed fortran flags - assume that flags have - or / as the
@@ -490,7 +490,7 @@ def _get_c_flags(
         # the flag and a setting
         for idx, flag in enumerate(cflags[1:]):
             if flag[0] not in ("/", "-"):
-                cflags[idx] += " {}".format(flag)
+                cflags[idx] += f" {flag}"
                 cflags[idx + 1] = ""
 
         # add passed c flags - assume that flags have - or / as the
@@ -684,7 +684,7 @@ def _get_linker_flags(
     # the switch and a setting
     for idx, flag in enumerate(syslibs[1:]):
         if flag[0] not in ("/", "-"):
-            syslibs[idx] += " {}".format(flag)
+            syslibs[idx] += f" {flag}"
             syslibs[idx + 1] = ""
 
     # add passed syslibs switches - assume that flags have - or / as the
@@ -814,10 +814,10 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
         else:
             if verbose:
                 msg = (
-                    "{} fortran code ".format(target)
+                    f"{target} fortran code "
                     + "will be built with the following predefined flags:\n"
                 )
-                msg += "    {}\n".format(" ".join(fflags))
+                msg += f"    {' '.join(fflags)}\n"
                 print(msg)
 
     return fflags
@@ -892,10 +892,10 @@ def _set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
         else:
             if verbose:
                 msg = (
-                    "{} c/c++ code ".format(target)
+                    f"{target} c/c++ code "
                     + "will be built with the following predefined flags:\n"
                 )
-                msg += "    {}\n".format(" ".join(cflags))
+                msg += f"    {' '.join(cflags)}\n"
                 print(msg)
 
     return cflags
@@ -960,7 +960,7 @@ def _set_syslibs(
         print("\nosname:  ", osname)
         print("fc:      ", fc)
         print("cc:      ", cc)
-        print("default: {}\n".format(default_syslibs))
+        print(f"default: {default_syslibs}\n")
 
     # set default syslibs
     if default_syslibs:
@@ -995,8 +995,8 @@ def _set_syslibs(
 
     # write syslibs
     if verbose:
-        msg = "{} will use the following predefined syslibs:\n".format(target)
-        msg += "    '{}'\n".format(" ".join(syslibs))
+        msg = f"{target} will use the following predefined syslibs:\n"
+        msg += f"    '{' '.join(syslibs)}'\n"
         print(msg)
 
     return syslibs

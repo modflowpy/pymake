@@ -1,10 +1,11 @@
 import os
-import sys
 import shutil
-import pymake
-import flopy
+import sys
 
+import flopy
 import pytest
+
+import pymake
 
 # use the line below to set fortran compiler using environmental variables
 # os.environ["FC"] = "ifort"
@@ -58,7 +59,7 @@ def copy_example_dir(epth):
         try:
             shutil.copytree(src, dst)
         except:
-            msg = "could not move files from {} to '{}'".format(src, dst)
+            msg = f"could not move files from {src} to '{dst}'"
             raise NameError(msg)
 
         # edit the control file for a shorter run
@@ -93,7 +94,7 @@ def run_gsflow(example, control_file):
             egsflow, control_file, model_ws=model_ws, silent=False
         )
         if not success:
-            errmsg = "could not run {}".format(control_file)
+            errmsg = f"could not run {control_file}"
     return success
 
 
@@ -129,19 +130,19 @@ def test_download():
 
     # download the target
     pm.download_target(target, download_path=dstpth)
-    assert pm.download, "could not download {} distribution".format(target)
+    assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
-    assert pm.build() == 0, "could not compile {}".format(target)
+    assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.regression
 @pytest.mark.parametrize("ex,cf", examples)
 def test_gsflow(ex, cf):
-    assert run_gsflow(ex, cf), "could not run {}-{}".format(ex, cf)
+    assert run_gsflow(ex, cf), f"could not run {ex}-{cf}"
 
 
 @pytest.mark.base
@@ -155,5 +156,5 @@ if __name__ == "__main__":
     test_download()
     test_compile()
     for ex, cf in examples:
-        assert run_gsflow(ex, cf), "could not run {}-{}".format(ex, cf)
+        assert run_gsflow(ex, cf), f"could not run {ex}-{cf}"
     test_clean_up()

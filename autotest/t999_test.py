@@ -1,10 +1,11 @@
 # Test the download_and_unzip functionality of pymake
 import os
-import sys
 import shutil
-import pymake
+import sys
 
 import pytest
+
+import pymake
 
 
 def which(program):
@@ -35,13 +36,13 @@ def test_latest_version():
     version = pymake.repo_latest_version()
     test_version = "5.0"
     msg = (
-        "returned version ({}) ".format(version)
+        f"returned version ({version}) "
         + "is not greater than or equal to "
-        + "defined version ({})".format(test_version)
+        + f"defined version ({test_version})"
     )
     if version is not None:
         assert float(version) >= float(test_version), msg
-        print("returned version...{}".format(version))
+        print(f"returned version...{version}")
     return
 
 
@@ -52,8 +53,8 @@ def test_latest_assets():
     keys = assets.keys()
     test_keys = ["mac.zip", "linux.zip", "win32.zip", "win64.zip"]
     for key in keys:
-        print("evaluating the availability of...{}".format(key))
-        msg = "unknown key ({}) found in github repo assets".format(key)
+        print(f"evaluating the availability of...{key}")
+        msg = f"unknown key ({key}) found in github repo assets"
         assert key in test_keys, msg
     return
 
@@ -74,17 +75,18 @@ def test_previous_assets():
     assets = pymake.get_repo_assets(
         mfexes_repo_name, version=version, error_return=True
     )
-    msg = "failed to get release {} ".format(
-        version
-    ) + "from the '{}' repo".format(mfexes_repo_name)
+    msg = (
+        "failed to get release {} ".format(version)
+        + f"from the '{mfexes_repo_name}' repo"
+    )
     if allow_failure:
         if not isinstance(assets, dict):
             print(msg)
         else:
-            print("available assets: {}".format(", ".join(assets.keys())))
+            print(f"available assets: {', '.join(assets.keys())}")
     else:
         assert isinstance(assets, dict), msg
-        print("available assets: {}".format(", ".join(assets.keys())))
+        print(f"available assets: {', '.join(assets.keys())}")
 
 
 @pytest.mark.requests
@@ -95,12 +97,12 @@ def test_download_and_unzip_and_zip():
     for f in os.listdir(pth):
         fpth = os.path.join(pth, f)
         if not os.path.isdir(fpth) and f not in exclude_files:
-            errmsg = "{} not executable".format(fpth)
+            errmsg = f"{fpth} not executable"
             assert which(fpth) is not None, errmsg
 
     # zip up exe's using files
     zip_pth = os.path.join("temp", "ziptest01.zip")
-    print("creating '{}'".format(zip_pth))
+    print(f"creating '{zip_pth}'")
     success = pymake.zip_all(
         zip_pth, file_pths=[os.path.join(pth, e) for e in os.listdir(pth)]
     )
@@ -109,21 +111,21 @@ def test_download_and_unzip_and_zip():
 
     # zip up exe's using directories
     zip_pth = os.path.join("temp", "ziptest02.zip")
-    print("creating '{}'".format(zip_pth))
+    print(f"creating '{zip_pth}'")
     success = pymake.zip_all(zip_pth, dir_pths=pth)
     assert success, "could not create zipfile using directories"
     os.remove(zip_pth)
 
     # zip up exe's using directories and a pattern
     zip_pth = os.path.join("temp", "ziptest03.zip")
-    print("creating '{}'".format(zip_pth))
+    print(f"creating '{zip_pth}'")
     success = pymake.zip_all(zip_pth, dir_pths=pth, patterns="mf")
     assert success, "could not create zipfile using directories and a pattern"
     os.remove(zip_pth)
 
     # zip up exe's using files and directories
     zip_pth = os.path.join("temp", "ziptest04.zip")
-    print("creating '{}'".format(zip_pth))
+    print(f"creating '{zip_pth}'")
     success = pymake.zip_all(
         zip_pth,
         file_pths=[os.path.join(pth, e) for e in os.listdir(pth)],
@@ -153,9 +155,9 @@ def test_nightly_download_and_unzip():
     pymake.getmfnightly(pth, verbose=True)
     for f in os.listdir(pth):
         fpth = os.path.join(pth, f)
-        print("downloaded: {}".format(fpth))
+        print(f"downloaded: {fpth}")
         if not os.path.isdir(fpth):
-            errmsg = "{} not executable".format(fpth)
+            errmsg = f"{fpth} not executable"
             assert which(fpth) is not None, errmsg
 
     # clean up directory

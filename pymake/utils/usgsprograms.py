@@ -18,12 +18,10 @@ A table listing the available pymake targets is included below:
    :header-rows: 1
 
 """
+import datetime
+import json
 import os
 import sys
-import json
-import datetime
-
-from collections import OrderedDict
 
 from .download import _request_header
 
@@ -70,7 +68,7 @@ def _str_to_bool(s):
     elif s == "False":
         return False
     else:
-        msg = 'Invalid string passed - "{}"'.format(s)
+        msg = f'Invalid string passed - "{s}"'
         raise ValueError(msg)
 
 
@@ -93,7 +91,7 @@ class usgs_program_data:
         fpth = os.path.join(pth, program_data_file)
         url_in = open(fpth, "r").read().split("\n")
 
-        program_data = OrderedDict()
+        program_data = {}
         for line in url_in[1:]:
             # skip blank lines
             if len(line.strip()) < 1:
@@ -101,7 +99,7 @@ class usgs_program_data:
             # parse comma separated line
             t = [item.strip() for item in line.split(sep=",")]
             # programmatically build a dictionary for each target
-            d = OrderedDict()
+            d = {}
             for idx, key in enumerate(target_keys):
                 if key in ("url_download_asset_date",):
                     value = None
@@ -137,11 +135,11 @@ class usgs_program_data:
 
         """
         if key not in self._program_dict:
-            msg = '"{}" key does not exist. Available keys: '.format(key)
+            msg = f'"{key}" key does not exist. Available keys: '
             for idx, k in enumerate(self._program_dict.keys()):
                 if idx > 0:
                     msg += ", "
-                msg += '"{}"'.format(k)
+                msg += f'"{k}"'
             raise KeyError(msg)
         return self._program_dict[key]
 
@@ -290,7 +288,7 @@ class usgs_program_data:
         targets.sort()
         msg = "Available targets:\n"
         for idx, target in enumerate(targets):
-            msg += "    {:02d} {}\n".format(idx + 1, target)
+            msg += f"    {idx + 1:02d} {target}\n"
         print(msg)
 
         return
@@ -341,13 +339,13 @@ class usgs_program_data:
         elif current:
             sel = "the current"
         print(
-            'writing a json file ("{}") '.format(fpth)
-            + "of {} USGS programs\n".format(sel)
-            + 'in the "{}" database.'.format(program_data_file)
+            f'writing a json file ("{fpth}") '
+            + f"of {sel} USGS programs\n"
+            + f'in the "{program_data_file}" database.'
         )
         if prog_data is not None:
             for idx, key in enumerate(prog_data.keys()):
-                print("    {:>2d}: {}".format(idx + 1, key))
+                print(f"    {idx + 1:>2d}: {key}")
         print("\n")
 
         # get usgs program data
@@ -356,7 +354,7 @@ class usgs_program_data:
         # process the program data
         if prog_data is None:
             if current:
-                tdict = OrderedDict()
+                tdict = {}
                 for key, value in udata.items():
                     if value.current:
                         tdict[key] = value
@@ -397,7 +395,7 @@ class usgs_program_data:
             with open(fpth, "w") as f:
                 json.dump(prog_data, f, indent=4)
         except:
-            msg = 'could not export json file "{}"'.format(fpth)
+            msg = f'could not export json file "{fpth}"'
             raise IOError(msg)
 
         # export code.json to --appdir directory, if the
@@ -427,10 +425,10 @@ class usgs_program_data:
             file_obj.write(line + "\n")
             for target, target_dict in prog_data.items():
                 keys = list(target_dict.keys())
-                line = "| {} | {} |".format(target, target_dict["version"])
+                line = f"| {target} | {target_dict['version']} |"
                 date_key = "url_download_asset_date"
                 if date_key in keys:
-                    line += " {} |".format(target_dict[date_key])
+                    line += f" {target_dict[date_key]} |"
                 else:
                     line += " |"
                 line += "\n"
@@ -464,13 +462,13 @@ class usgs_program_data:
             json_dict = None
 
         # check that the json file has valid keys
-        msg = 'invalid json format in "{}"'.format(fpth)
+        msg = f'invalid json format in "{fpth}"'
         if json_dict is not None:
             for key, value in json_dict.items():
                 try:
                     for kk in value.keys():
                         if kk not in target_keys:
-                            raise KeyError(msg + ' - key ("{}")'.format(kk))
+                            raise KeyError(msg + f' - key ("{kk}")')
                 except:
                     raise KeyError(msg)
 
@@ -492,13 +490,13 @@ class usgs_program_data:
         json_dict = usgs_program_data.load_json(fpth)
 
         if json_dict is not None:
-            print('Data in "{}"'.format(fpth))
+            print(f'Data in "{fpth}"')
             for key, value in json_dict.items():
-                print("  target: {}".format(key))
+                print(f"  target: {key}")
                 for kkey, vvalue in value.items():
-                    print("    {}: {}".format(kkey, vvalue))
+                    print(f"    {kkey}: {vvalue}")
         else:
-            msg = 'could not load json file "{}".'.format(fpth)
+            msg = f'could not load json file "{fpth}".'
             raise IOError(msg)
 
         # print continuation line

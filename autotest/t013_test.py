@@ -1,10 +1,11 @@
 import os
-import sys
 import shutil
-import pymake
-import flopy
+import sys
 
+import flopy
 import pytest
+
+import pymake
 
 # use the line below to set fortran compiler using environmental variables
 # if sys.platform.lower() == "win32":
@@ -42,12 +43,12 @@ def test_pymake_makefile():
     # build triangle and makefile
     assert (
         pymake.build_apps(target, clean=False, pymake_object=pm) == 0
-    ), "could not build {}".format(target)
+    ), f"could not build {target}"
 
     if os.path.isfile(os.path.join(cpth, "makefile")):
         print("cleaning with GNU make")
         # clean prior to make
-        print("clean {} with makefile".format(target))
+        print(f"clean {target} with makefile")
         success, buff = flopy.run_model(
             "make",
             None,
@@ -60,7 +61,7 @@ def test_pymake_makefile():
 
         # build triangle with makefile
         if success:
-            print("build {} with makefile".format(target))
+            print(f"build {target} with makefile")
             success, buff = flopy.run_model(
                 "make",
                 None,
@@ -78,7 +79,7 @@ def test_pymake_makefile():
 
     assert os.path.isfile(
         os.path.join(cpth, target)
-    ), "could not build {} with makefile".format(target)
+    ), f"could not build {target} with makefile"
 
     return
 

@@ -1,11 +1,12 @@
 import os
+import shutil
 import sys
 import time
-import shutil
-import pymake
-import flopy
 
+import flopy
 import pytest
+
+import pymake
 
 # define program data
 target = "mf6"
@@ -46,6 +47,7 @@ pm.appdir = dstpth
 pm.makefile = True
 pm.inplace = True
 pm.networkx = True
+pm.meson = True
 
 
 def build_with_makefile():
@@ -66,11 +68,11 @@ def build_with_makefile():
                 shutil.rmtree(d)
 
         # clean prior to make
-        print("clean {} with makefile".format(target))
+        print(f"clean {target} with makefile")
         os.system("make clean")
 
         # build MODFLOW 6 with makefile
-        print("build {} with makefile".format(target))
+        print(f"build {target} with makefile")
         return_code = os.system("make")
 
         # test if running on Windows with ifort, if True the makefile
@@ -115,7 +117,7 @@ def run_mf6(ws):
     exe_name = os.path.abspath(epth)
     if os.path.exists(exe_name):
         # run test models
-        print("running model...{}".format(os.path.basename(ws)))
+        print(f"running model...{os.path.basename(ws)}")
         success, buff = flopy.run_model(
             exe_name, None, model_ws=ws, silent=False
         )
@@ -131,27 +133,25 @@ def test_download():
 
     # download the modflow 6 release
     pm.download_target(target, download_path=dstpth)
-    assert pm.download, "could not download {} distribution".format(target)
+    assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
-    assert pm.build() == 0, "could not compile {}".format(target)
+    assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.regression
 @pytest.mark.parametrize("ws", sim_dirs)
 def test_mf6(ws):
-    assert run_mf6(ws), "could not run {}".format(ws)
+    assert run_mf6(ws), f"could not run {ws}"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_makefile():
-    assert build_with_makefile(), "could not compile {} with makefile".format(
-        target
-    )
+    assert build_with_makefile(), f"could not compile {target} with makefile"
 
 
 @pytest.mark.base
@@ -165,7 +165,7 @@ def test_sharedobject():
     pm.makefile = False
     pm.sharedobject = True
     pm.inplace = False
-    assert pm.build() == 0, "could not compile {}".format(pm.target)
+    assert pm.build() == 0, f"could not compile {pm.target}"
 
 
 @pytest.mark.base

@@ -1,9 +1,10 @@
+import json
 import os
 import shutil
-import json
-import pymake
 
 import pytest
+
+import pymake
 
 cpth = os.path.abspath(os.path.join("temp", "t011"))
 
@@ -27,7 +28,7 @@ def export_code_json():
     )
 
     # check that the json file was made
-    msg = "did not make...{}".format(fpth)
+    msg = f"did not make...{fpth}"
     assert os.path.isfile(fpth), msg
 
     return fpth
@@ -63,7 +64,7 @@ def test_target_keys():
         test_dict = prog_dict[target]
 
         msg = (
-            "dictionary from {} ".format(target)
+            f"dictionary from {target} "
             + "does not match dictionary from .get_target()"
         )
         assert target_dict == test_dict, msg
@@ -92,7 +93,7 @@ def test_usgsprograms_export_json():
         for fill_key in fill_keys:
             temp_dict[fill_key] = value[fill_key]
         msg = (
-            "json dictionary for {} key ".format(key)
+            f"json dictionary for {key} key "
             + "is not equal to the .usgs_prog_data dictionary"
         )
         assert value == temp_dict, msg
@@ -124,7 +125,7 @@ def test_usgsprograms_load_json():
     json_dict = pymake.usgs_program_data.load_json(fpth)
 
     # check that the json file was loaded
-    msg = "could not load {}".format(fpth)
+    msg = f"could not load {fpth}"
     assert json_dict is not None, msg
 
 

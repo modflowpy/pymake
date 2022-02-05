@@ -1,10 +1,11 @@
 import os
-import sys
 import shutil
-import pymake
-import flopy
+import sys
 
+import flopy
 import pytest
+
+import pymake
 
 # define program data
 target = "mp7"
@@ -162,16 +163,16 @@ def run_modpath7(fn):
             # fix any known problems
             replace_data(model_ws)
             # run the model
-            msg = "{}".format(exe)
+            msg = f"{exe}"
             if fpth is not None:
-                msg += " {}".format(os.path.basename(fpth))
+                msg += f" {os.path.basename(fpth)}"
             success, buff = flopy.run_model(
                 exe, fpth, model_ws=model_ws, silent=False
             )
 
         if success:
             # run the modpath model
-            print("running model...{}".format(fn))
+            print(f"running model...{fn}")
             exe = emp7
 
             fpth = os.path.basename(fn)
@@ -209,13 +210,13 @@ def test_download():
 
     # download the target
     pm.download_target(target, download_path=dstpth)
-    assert pm.download, "could not download {} distribution".format(target)
+    assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
-    assert pm.build() == 0, "could not compile {}".format(target)
+    assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.regression
@@ -226,7 +227,7 @@ def test_download_exes():
 @pytest.mark.regression
 @pytest.mark.parametrize("fn", name_files)
 def test_modpath7(fn):
-    assert run_modpath7(fn), "could not run {}".format(fn)
+    assert run_modpath7(fn), f"could not run {fn}"
 
 
 @pytest.mark.base

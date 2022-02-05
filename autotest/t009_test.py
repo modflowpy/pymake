@@ -1,10 +1,11 @@
 import os
-import sys
 import shutil
-import pymake
-import flopy
+import sys
 
+import flopy
 import pytest
+
+import pymake
 
 # define program data
 target = "mt3dusgs"
@@ -107,16 +108,16 @@ def run_mt3dusgs(temp_dir):
                 mf_nam = f
                 flow_model = "mf6"
 
-        msg = "A MODFLOW name file not present in {}".format(model_ws)
+        msg = f"A MODFLOW name file not present in {model_ws}"
         assert mf_nam is not None, msg
 
-        msg = "A MT3D-USGS name file not present in {}".format(model_ws)
+        msg = f"A MT3D-USGS name file not present in {model_ws}"
         assert mt_nam is not None, msg
 
         # run the flow model
-        msg = "{}".format(emfnwt)
+        msg = f"{emfnwt}"
         if mf_nam is not None:
-            msg += " {}".format(os.path.basename(mf_nam))
+            msg += f" {os.path.basename(mf_nam)}"
         if flow_model == "mfnwt":
             nam = mf_nam
             eapp = emfnwt
@@ -129,7 +130,7 @@ def run_mt3dusgs(temp_dir):
 
         # run the MT3D-USGS model
         if success:
-            print("running model...{}".format(mt_nam))
+            print(f"running model...{mt_nam}")
             success, buff = flopy.run_model(
                 emtusgs,
                 mt_nam,
@@ -166,13 +167,13 @@ def test_download_mt3dms():
 
     pm.target = "mt3dms"
     pm.download_target(pm.target, download_path=dstpth)
-    assert pm.download, "could not download {} distribution".format(pm.target)
+    assert pm.download, f"could not download {pm.target} distribution"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile_mt3dms():
-    assert pm.build() == 0, "could not compile {}".format(pm.target)
+    assert pm.build() == 0, f"could not compile {pm.target}"
 
 
 @pytest.mark.base
@@ -187,13 +188,13 @@ def test_download():
 
     # download the target
     pm.download_target(target, download_path=dstpth)
-    assert pm.download, "could not download {} distribution".format(target)
+    assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
-    assert pm.build() == 0, "could not compile {}".format(target)
+    assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.regression
@@ -208,7 +209,7 @@ def test_download_exes():
 @pytest.mark.skipif(sys.platform == "win32", reason="do not run on OSX")
 @pytest.mark.parametrize("ws", sim_dirs)
 def test_mt3dusgs(ws):
-    assert run_mt3dusgs(ws), "could not run {}".format(ws)
+    assert run_mt3dusgs(ws), f"could not run {ws}"
 
 
 @pytest.mark.base
