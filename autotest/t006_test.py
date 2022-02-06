@@ -32,6 +32,7 @@ pm.appdir = dstpth
 pm.makefile = True
 pm.makefiledir = dstpth
 pm.inplace = True
+pm.dryrun = False
 
 
 @contextlib.contextmanager
@@ -71,7 +72,7 @@ def build_with_makefile():
                     success = False
             # verify that MODFLOW-NWT was made
             else:
-                success = os.path.isfile(epth)
+                success = os.path.isfile(target)
         else:
             errmsg = "makefile does not exist"
 
