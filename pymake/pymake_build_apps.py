@@ -100,7 +100,7 @@ def build_apps(
         base_pth = os.path.dirname(appdir)
 
     # clean any existing temporary directories
-    temp_pths = get_temporary_directories(appdir)
+    temp_pths = get_temporary_directories(base_pth)
     for pth in temp_pths:
         if os.path.isdir(pth):
             shutil.rmtree(pth)
