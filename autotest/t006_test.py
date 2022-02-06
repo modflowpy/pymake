@@ -18,7 +18,7 @@ prog_dict = pymake.usgs_program_data.get_target(target)
 # set up paths
 dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
+    os.makedirs(dstpth, exist_ok=True)
 
 mfnwtpth = os.path.join(dstpth, prog_dict.dirname)
 

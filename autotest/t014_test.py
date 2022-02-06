@@ -28,11 +28,11 @@ for idx, target in enumerate(targets):
 # set up paths
 dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
+    os.makedirs(dstpth, exist_ok=True)
 
 appdir = os.path.join(dstpth, "bin")
 if not os.path.exists(appdir):
-    os.makedirs(appdir)
+    os.makedirs(appdir, exist_ok=True)
 
 exe_names = [os.path.join(appdir, target) for target in targets]
 
@@ -64,8 +64,11 @@ def test_clean_up(epth):
     clean_up(epth)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_finalize():
-    shutil.rmtree(dstpth)
+    if os.path.isdir(dstpth):
+        shutil.rmtree(dstpth)
 
 
 if __name__ == "__main__":

@@ -27,7 +27,7 @@ prog_dict = pymake.usgs_program_data.get_target(target)
 # set up paths
 dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
+    os.makedirs(dstpth, exist_ok=True)
 
 mf6ver = prog_dict.version
 mf6pth = os.path.join(dstpth, prog_dict.dirname)
@@ -114,7 +114,7 @@ def clean_up():
         os.remove(epth)
 
     print("Removing temporary build directories")
-    dirs_temp = list(pymake.get_temporary_directories(dstpth)) + [dstpth]
+    dirs_temp = [dstpth]
     for d in dirs_temp:
         if os.path.isdir(d):
             shutil.rmtree(d)

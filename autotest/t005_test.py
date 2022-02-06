@@ -14,7 +14,7 @@ prog_dict = pymake.usgs_program_data.get_target(target)
 # set up paths
 dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
+    os.makedirs(dstpth, exist_ok=True)
 
 mflgrpth = os.path.join(dstpth, prog_dict.dirname)
 
@@ -51,6 +51,11 @@ def clean_up():
         print("removing...'" + epth + "'")
         os.remove(epth)
 
+    dirs_temp = [dstpth]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+
     return
 
 
@@ -60,6 +65,7 @@ def test_compile():
 
 
 @pytest.mark.base
+@pytest.mark.regression
 def test_clean_up():
     clean_up()
 
