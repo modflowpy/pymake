@@ -107,6 +107,7 @@ class Pymake:
         self.cflags = None
         self.syslibs = None
         self.makefile = None
+        self.makefiledir = None
         self.srcdir2 = None
         self.extrafiles = None
         self.excludefiles = None
@@ -789,6 +790,7 @@ class Pymake:
                 syslibs=self.syslibs,
                 arch=self.arch,
                 makefile=self.makefile,
+                makefiledir=self.makefiledir,
                 srcdir2=self.srcdir2,
                 extrafiles=self.extrafiles,
                 excludefiles=self.excludefiles,

@@ -86,6 +86,7 @@ def main(
     syslibs=None,
     arch="intel64",
     makefile=False,
+    makefiledir=".",
     srcdir2=None,
     extrafiles=None,
     excludefiles=None,
@@ -135,6 +136,8 @@ def main(
         Architecture to use for Intel Compilers on Windows (default is intel64)
     makefile : bool
         boolean indicating if a GNU make makefile should be created
+    makefiledir : str
+        GNU make makefile path
     srcdir2 : str
         additional directory with common source files.
     extrafiles : str
@@ -297,6 +300,7 @@ def main(
                 cflags,
                 syslibs,
                 sharedobject,
+                makefiledir,
                 verbose,
             )
 
@@ -1237,6 +1241,7 @@ def _create_makefile(
     cflags,
     syslibs,
     sharedobject,
+    makefiledir,
     verbose,
     makedefaults="makedefaults",
 ):
@@ -1272,6 +1277,8 @@ def _create_makefile(
         user provided syslibs
     sharedobject : bool
         boolean indicating a shared object will be built
+    makefiledir : str
+        GNU make makefile path
     verbose : bool
         boolean indicating if output will be printed to the terminal
     makedefaults : str
@@ -1297,6 +1304,12 @@ def _create_makefile(
         macos_ext = ""
         linux_ext = ""
 
+    # set makefile directory
+    make_dir = makefiledir
+
+    # get temporary directories
+    objdir_temp, moddir_temp, _ = get_temporary_directories(make_dir)
+
     # set object extension
     objext = ".o"
 
@@ -1320,7 +1333,7 @@ def _create_makefile(
     )
 
     # open makefile
-    f = open("makefile", "w")
+    f = open(os.path.join(make_dir, "makefile"), "w")
 
     # write header
     f.write(heading + "\n")
@@ -1351,8 +1364,9 @@ def _create_makefile(
     f.write(line)
     vpaths = []
     for idx, source_dir in enumerate(dirs):
+        rel_source_dir = os.path.relpath(source_dir, make_dir)
         vpaths.append(f"SOURCEDIR{idx + 1}")
-        line = f"{vpaths[idx]}={source_dir}\n"
+        line = f"{vpaths[idx]}={rel_source_dir}\n"
         f.write(line)
     f.write("\n")
 
@@ -1417,7 +1431,7 @@ def _create_makefile(
     f.close()
 
     # open makedefaults
-    f = open(makedefaults, "w")
+    f = open(os.path.join(make_dir, makedefaults), "w")
 
     # replace makefile in heading with makedefaults
     heading = heading.replace("makefile", makedefaults)
@@ -1444,16 +1458,11 @@ def _create_makefile(
     f.write(line)
 
     # get path to executable
-    dpth = os.path.dirname(target)
+    dpth = make_dir
     if len(dpth) > 0:
-        dpth = os.path.relpath(dpth)
+        dpth = os.path.relpath(dpth, make_dir)
     else:
         dpth = "."
-
-    # get temporary directories
-    objdir_temp, moddir_temp, _ = get_temporary_directories(
-        os.path.dirname(target)
-    )
 
     # write header
     line = (
@@ -1462,9 +1471,9 @@ def _create_makefile(
     )
     tpth = dpth.replace("\\", "/")
     line += f"BINDIR = {tpth}\n"
-    tpth = objdir_temp.replace("\\", "/")
+    tpth = os.path.relpath(objdir_temp.replace("\\", "/"), make_dir)
     line += f"OBJDIR = {tpth}\n"
-    tpth = moddir_temp.replace("\\", "/")
+    tpth = os.path.relpath(moddir_temp.replace("\\", "/"), make_dir)
     line += f"MODDIR = {tpth}\n"
     line += "INCSWITCH = -I $(OBJDIR)\n"
     line += "MODSWITCH = -J $(MODDIR)\n\n"

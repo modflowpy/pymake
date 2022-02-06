@@ -160,6 +160,13 @@ def _get_arg_dict():
             "choices": None,
             "action": "store_true",
         },
+        "makefiledir": {
+            "tag": ("-md", "--makefile-dir"),
+            "help": "GNU make makefile directory. (default is '.')",
+            "default": ".",
+            "choices": None,
+            "action": "store_true",
+        },
         "srcdir2": {
             "tag": ("-cs", "--commonsrc"),
             "help": """Additional directory with common source files.
