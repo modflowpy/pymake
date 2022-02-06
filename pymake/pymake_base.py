@@ -1850,7 +1850,10 @@ def _create_makefile(
     if sys.platform == "win32":
         windows_line_ending = b"\r\n"
         unix_line_ending = b"\n"
-        for file in ("makefile", makedefaults):
+        for file in (
+            os.path.join(make_dir, "makefile"),
+            os.path.join(make_dir, makedefaults),
+        ):
             with open(file, "rb") as f:
                 content = f.read()
 
