@@ -16,9 +16,9 @@ if sys.platform.lower() == "win32":
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
-dstpth = os.path.join("temp")
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
+    os.makedirs(dstpth, exist_ok=True)
 
 mp7pth = os.path.join(dstpth, prog_dict.dirname)
 emp7 = os.path.abspath(os.path.join(dstpth, target))
@@ -184,11 +184,7 @@ def run_modpath7(fn):
 
 
 def clean_up():
-    print("Removing temporary build directories")
-    dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp")]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
+    print("Removing test files and directories")
 
     # finalize pymake object
     pm.finalize()
@@ -198,6 +194,12 @@ def clean_up():
         if os.path.isfile(epth):
             print("Removing...'" + epth + "'")
             os.remove(epth)
+
+    dirs_temp = [dstpth]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+
     return
 
 

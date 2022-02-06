@@ -1,3 +1,4 @@
+import contextlib
 import os
 import shutil
 import sys
@@ -13,13 +14,21 @@ target = "mf6"
 if sys.platform.lower() == "win32":
     target += ".exe"
 
+sharedobject_target = "libmf6"
+if sys.platform.lower() == "win32":
+    sharedobject_target += ".dll"
+elif sys.platform.lower() == "darwin":
+    sharedobject_target += ".dylib"
+else:
+    sharedobject_target += ".so"
+
 # get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
-dstpth = os.path.join("temp")
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
+    os.makedirs(dstpth, exist_ok=True)
 
 mf6ver = prog_dict.version
 mf6pth = os.path.join(dstpth, prog_dict.dirname)
@@ -45,46 +54,50 @@ pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
 pm.makefile = True
+pm.makeclean = True
+pm.makefiledir = dstpth
 pm.inplace = True
 pm.networkx = True
 pm.meson = True
 
 
-def build_with_makefile():
+@contextlib.contextmanager
+def working_directory(path):
+    """Changes working directory and returns to previous on exit."""
+    prev_cwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)
+
+
+def build_with_makefile(makefile_target):
     success = False
-    if os.path.isfile("makefile"):
-        # wait to delete on windows
-        if sys.platform.lower() == "win32":
-            time.sleep(6)
+    with working_directory(dstpth):
+        if os.path.isfile("makefile"):
+            # wait to delete on windows
+            if sys.platform.lower() == "win32":
+                time.sleep(6)
 
-        print("Removing temporary build directories")
-        dirs_temp = [
-            os.path.join("src_temp"),
-            os.path.join("obj_temp"),
-            os.path.join("mod_temp"),
-        ]
-        for d in dirs_temp:
-            if os.path.isdir(d):
-                shutil.rmtree(d)
+            # clean prior to make
+            print(f"clean {makefile_target} with makefile")
+            os.system("make clean")
 
-        # clean prior to make
-        print(f"clean {target} with makefile")
-        os.system("make clean")
+            # build MODFLOW 6 with makefile
+            print(f"build {makefile_target} with makefile")
+            return_code = os.system("make")
 
-        # build MODFLOW 6 with makefile
-        print(f"build {target} with makefile")
-        return_code = os.system("make")
-
-        # test if running on Windows with ifort, if True the makefile
-        # should fail
-        if sys.platform.lower() == "win32" and pm.fc == "ifort":
-            if return_code != 0:
-                success = True
+            # test if running on Windows with ifort, if True the makefile
+            # should fail
+            if sys.platform.lower() == "win32" and pm.fc == "ifort":
+                if return_code != 0:
+                    success = True
+                else:
+                    success = False
+            # verify that target was made
             else:
-                success = False
-        # verify that MODFLOW 6 was made
-        else:
-            success = os.path.isfile(epth)
+                success = os.path.isfile(makefile_target)
 
     return success
 
@@ -92,16 +105,13 @@ def build_with_makefile():
 def clean_up():
     # clean up makefile
     print("Removing makefile")
-    files = ["makefile", "makedefaults"]
+    files = [
+        os.path.join(dstpth, file_name)
+        for file_name in ("makefile", "makedefaults")
+    ]
     for fpth in files:
         if os.path.isfile(fpth):
             os.remove(fpth)
-
-    print("Removing temporary build directories")
-    dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp")]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
 
     # finalize pymake object
     pm.finalize()
@@ -109,6 +119,12 @@ def clean_up():
     if os.path.isfile(epth):
         print("Removing " + target)
         os.remove(epth)
+
+    print("Removing temporary build directories")
+    dirs_temp = [dstpth]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
     return
 
 
@@ -151,21 +167,34 @@ def test_mf6(ws):
 @pytest.mark.base
 @pytest.mark.regression
 def test_makefile():
-    assert build_with_makefile(), f"could not compile {target} with makefile"
+    assert build_with_makefile(
+        target
+    ), f"could not compile {target} with makefile"
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_sharedobject():
-    pm.target = "libmf6"
+    pm.target = sharedobject_target
     prog_dict = pymake.usgs_program_data.get_target(pm.target)
+    pm.appdir = dstpth
     pm.srcdir = os.path.join(mf6pth, prog_dict.srcdir)
     pm.srcdir2 = os.path.join(mf6pth, "src")
     pm.excludefiles = [os.path.join(pm.srcdir2, "mf6.f90")]
-    pm.makefile = False
+    pm.makefile = True
+    pm.makeclean = True
     pm.sharedobject = True
-    pm.inplace = False
+    pm.inplace = True
+    pm.dryrun = False
     assert pm.build() == 0, f"could not compile {pm.target}"
+
+
+@pytest.mark.base
+@pytest.mark.regression
+def test_sharedobject_makefile():
+    assert build_with_makefile(
+        sharedobject_target
+    ), f"could not compile {sharedobject_target} with makefile"
 
 
 @pytest.mark.base
@@ -175,10 +204,11 @@ def test_clean_up():
 
 
 if __name__ == "__main__":
-    test_download()
-    test_compile()
-    for ws in sim_dirs:
-        run_mf6(ws)
-    test_makefile()
+    # test_download()
+    # test_compile()
+    # for ws in sim_dirs:
+    #     run_mf6(ws)
+    # test_makefile()
     test_sharedobject()
-    test_clean_up()
+    test_sharedobject_makefile()
+    # test_clean_up()

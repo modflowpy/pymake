@@ -30,6 +30,7 @@ import sys
 from datetime import datetime
 
 from .pymake import Pymake
+from .pymake_base import get_temporary_directories
 from .utils.usgsprograms import usgs_program_data
 
 
@@ -92,12 +93,14 @@ def build_apps(
             )
             raise TypeError(msg)
 
+    # set base path for temporary directories
+    if appdir is None:
+        base_pth = "."
+    else:
+        base_pth = os.path.dirname(appdir)
+
     # clean any existing temporary directories
-    temp_pths = (
-        os.path.join(".", "obj_temp"),
-        os.path.join(".", "mod_temp"),
-        os.path.join(".", "src_temp"),
-    )
+    temp_pths = get_temporary_directories(base_pth)
     for pth in temp_pths:
         if os.path.isdir(pth):
             shutil.rmtree(pth)

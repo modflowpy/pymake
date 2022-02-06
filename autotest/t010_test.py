@@ -22,9 +22,9 @@ if sys.platform.lower() == "win32":
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
-dstpth = os.path.join("temp", "t010")
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
+    os.makedirs(dstpth, exist_ok=True)
 
 ver = prog_dict.version
 pth = os.path.join(dstpth, prog_dict.dirname)
@@ -59,10 +59,7 @@ biscayne_cmds = [
 
 
 def clean_up():
-    # clean up
-    print("Removing folder " + pth)
-    if os.path.isdir(pth):
-        shutil.rmtree(pth)
+    print("Removing test files and directories")
 
     # finalize pymake object
     pm.finalize()
@@ -70,6 +67,16 @@ def clean_up():
     if os.path.isfile(exe_name):
         print("Removing " + target)
         os.remove(exe_name)
+
+    print("Removing folder " + pth)
+    if os.path.isdir(pth):
+        shutil.rmtree(pth)
+
+    dirs_temp = [dstpth]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+
     return
 
 

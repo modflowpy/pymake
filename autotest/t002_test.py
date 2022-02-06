@@ -19,9 +19,9 @@ if sys.platform.lower() == "win32":
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
-dstpth = os.path.join("temp")
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
+    os.makedirs(dstpth, exist_ok=True)
 
 swtpth = os.path.join(dstpth, prog_dict.dirname)
 expth = os.path.join(swtpth, "examples")
@@ -70,11 +70,7 @@ def edit_namefile(namefile):
 
 
 def clean_up():
-    print("Removing temporary build directories")
-    dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp")]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
+    print("Removing test files and directories")
 
     # finalize pymake object
     pm.finalize()
@@ -82,6 +78,12 @@ def clean_up():
     if os.path.isfile(epth):
         print("Removing " + target)
         os.remove(epth)
+
+    dirs_temp = [dstpth]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+
     return
 
 
@@ -110,7 +112,7 @@ def build_seawat_dependency_graphs():
 
             # build dependencies output directory
             if not os.path.exists(deppth):
-                os.makedirs(deppth)
+                os.makedirs(deppth, exist_ok=True)
 
             # build dependency graphs
             print("building dependency graphs")

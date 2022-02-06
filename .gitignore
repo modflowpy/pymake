@@ -61,7 +61,7 @@ target/
 .idea/
 
 # files in the autotest directory
-autotest/temp/
+autotest/temp*/
 mod_temp/
 obj_temp/
 src_temp/

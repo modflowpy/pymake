@@ -1,3 +1,4 @@
+import contextlib
 import os
 import shutil
 import sys
@@ -16,9 +17,9 @@ if sys.platform.lower() == "win32":
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
-dstpth = os.path.join("temp")
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
+    os.makedirs(dstpth, exist_ok=True)
 
 mfnwtpth = os.path.join(dstpth, prog_dict.dirname)
 
@@ -29,47 +30,51 @@ pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
 pm.makefile = True
+pm.makefiledir = dstpth
 pm.inplace = True
+pm.dryrun = False
+
+
+@contextlib.contextmanager
+def working_directory(path):
+    """Changes working directory and returns to previous on exit."""
+    prev_cwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)
 
 
 def build_with_makefile():
     success = True
-    if os.path.isfile("makefile"):
-        # wait to delete on windows
-        if sys.platform.lower() == "win32":
-            time.sleep(6)
+    with working_directory(dstpth):
+        if os.path.isfile("makefile"):
+            # wait to delete on windows
+            if sys.platform.lower() == "win32":
+                time.sleep(6)
 
-        print("Removing temporary build directories")
-        dirs_temp = [
-            os.path.join("src_temp"),
-            os.path.join("obj_temp"),
-            os.path.join("mod_temp"),
-        ]
-        for d in dirs_temp:
-            if os.path.isdir(d):
-                shutil.rmtree(d)
+            # clean prior to make
+            print(f"clean {target} with makefile")
+            os.system("make clean")
 
-        # clean prior to make
-        print(f"clean {target} with makefile")
-        os.system("make clean")
+            # build MODFLOW-NWT with makefile
+            print(f"build {target} with makefile")
+            return_code = os.system("make")
 
-        # build MODFLOW-NWT with makefile
-        print(f"build {target} with makefile")
-        return_code = os.system("make")
-
-        # test if running on Windows with ifort, if True the makefile
-        # should fail
-        errmsg = f"{target} created by makefile does not exist."
-        if sys.platform.lower() == "win32" and pm.fc == "ifort":
-            if return_code != 0:
-                success = True
+            # test if running on Windows with ifort, if True the makefile
+            # should fail
+            errmsg = f"{target} created by makefile does not exist."
+            if sys.platform.lower() == "win32" and pm.fc == "ifort":
+                if return_code != 0:
+                    success = True
+                else:
+                    success = False
+            # verify that MODFLOW-NWT was made
             else:
-                success = False
-        # verify that MODFLOW-NWT was made
+                success = os.path.isfile(target)
         else:
-            success = os.path.isfile(epth)
-    else:
-        errmsg = "makefile does not exist"
+            errmsg = "makefile does not exist"
 
     assert success, errmsg
 
@@ -77,18 +82,17 @@ def build_with_makefile():
 
 
 def clean_up():
+    print("Removing test files and directories")
+
     # clean up make file
     print("Removing makefile")
-    files = ["makefile", "makedefaults"]
+    files = [
+        os.path.join(dstpth, file_name)
+        for file_name in ("makefile", "makedefaults")
+    ]
     for fpth in files:
         if os.path.isfile(fpth):
             os.remove(fpth)
-
-    print("Removing temporary build directories")
-    dirs_temp = [os.path.join("obj_temp"), os.path.join("mod_temp")]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
 
     # finalize pymake object
     pm.finalize()
@@ -97,6 +101,12 @@ def clean_up():
     if os.path.isfile(epth):
         print("Removing " + target)
         os.remove(epth)
+
+    print("Removing temporary build directories")
+    dirs_temp = [dstpth]
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
 
     return
 

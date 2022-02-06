@@ -14,13 +14,13 @@ import pymake
 #     os.environ["CC"] = "icc"
 
 # working directory
-cpth = os.path.abspath(os.path.join("temp", "t013"))
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 
 
 @pytest.mark.base
 @pytest.mark.regression
 def test_pymake_makefile():
-    os.makedirs(cpth, exist_ok=True)
+    os.makedirs(dstpth, exist_ok=True)
 
     target = "triangle"
     pm = pymake.Pymake(verbose=True)
@@ -38,14 +38,14 @@ def test_pymake_makefile():
 
     # change to working directory so triangle download directory is
     # a subdirectory in the working directory
-    os.chdir(cpth)
+    os.chdir(dstpth)
 
     # build triangle and makefile
     assert (
         pymake.build_apps(target, clean=False, pymake_object=pm) == 0
     ), f"could not build {target}"
 
-    if os.path.isfile(os.path.join(cpth, "makefile")):
+    if os.path.isfile(os.path.join(dstpth, "makefile")):
         print("cleaning with GNU make")
         # clean prior to make
         print(f"clean {target} with makefile")
@@ -53,7 +53,7 @@ def test_pymake_makefile():
             "make",
             None,
             cargs="clean",
-            model_ws=cpth,
+            model_ws=dstpth,
             report=True,
             normal_msg="rm -rf ./triangle",
             silent=False,
@@ -65,7 +65,7 @@ def test_pymake_makefile():
             success, buff = flopy.run_model(
                 "make",
                 None,
-                model_ws=cpth,
+                model_ws=dstpth,
                 report=True,
                 normal_msg="cc -O2 -o triangle ./obj_temp/triangle.o",
                 silent=False,
@@ -78,7 +78,7 @@ def test_pymake_makefile():
     os.chdir(cwd)
 
     assert os.path.isfile(
-        os.path.join(cpth, target)
+        os.path.join(dstpth, target)
     ), f"could not build {target} with makefile"
 
     return
@@ -87,7 +87,9 @@ def test_pymake_makefile():
 @pytest.mark.base
 @pytest.mark.regression
 def test_clean_up():
-    shutil.rmtree(cpth)
+    print("Removing test files and directories")
+
+    shutil.rmtree(dstpth)
 
 
 if __name__ == "__main__":

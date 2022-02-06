@@ -92,7 +92,7 @@ def test_previous_assets():
 @pytest.mark.requests
 def test_download_and_unzip_and_zip():
     exclude_files = ["code.json"]
-    pth = "./temp/t999"
+    pth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
     pymake.getmfexes(pth, verbose=True)
     for f in os.listdir(pth):
         fpth = os.path.join(pth, f)
@@ -101,7 +101,10 @@ def test_download_and_unzip_and_zip():
             assert which(fpth) is not None, errmsg
 
     # zip up exe's using files
-    zip_pth = os.path.join("temp", "ziptest01.zip")
+    zip_pth = os.path.join(
+        f"temp_{os.path.basename(__file__).replace('.py', '')}",
+        "ziptest01.zip",
+    )
     print(f"creating '{zip_pth}'")
     success = pymake.zip_all(
         zip_pth, file_pths=[os.path.join(pth, e) for e in os.listdir(pth)]
@@ -110,21 +113,30 @@ def test_download_and_unzip_and_zip():
     os.remove(zip_pth)
 
     # zip up exe's using directories
-    zip_pth = os.path.join("temp", "ziptest02.zip")
+    zip_pth = os.path.join(
+        f"temp_{os.path.basename(__file__).replace('.py', '')}",
+        "ziptest02.zip",
+    )
     print(f"creating '{zip_pth}'")
     success = pymake.zip_all(zip_pth, dir_pths=pth)
     assert success, "could not create zipfile using directories"
     os.remove(zip_pth)
 
     # zip up exe's using directories and a pattern
-    zip_pth = os.path.join("temp", "ziptest03.zip")
+    zip_pth = os.path.join(
+        f"temp_{os.path.basename(__file__).replace('.py', '')}",
+        "ziptest03.zip",
+    )
     print(f"creating '{zip_pth}'")
     success = pymake.zip_all(zip_pth, dir_pths=pth, patterns="mf")
     assert success, "could not create zipfile using directories and a pattern"
     os.remove(zip_pth)
 
     # zip up exe's using files and directories
-    zip_pth = os.path.join("temp", "ziptest04.zip")
+    zip_pth = os.path.join(
+        f"temp_{os.path.basename(__file__).replace('.py', '')}",
+        "ziptest04.zip",
+    )
     print(f"creating '{zip_pth}'")
     success = pymake.zip_all(
         zip_pth,
@@ -151,7 +163,7 @@ def test_download_and_unzip_and_zip():
 
 @pytest.mark.requests
 def test_nightly_download_and_unzip():
-    pth = "./temp/t999"
+    pth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
     pymake.getmfnightly(pth, verbose=True)
     for f in os.listdir(pth):
         fpth = os.path.join(pth, f)

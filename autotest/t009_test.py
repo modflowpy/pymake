@@ -14,9 +14,9 @@ target = "mt3dusgs"
 prog_dict = pymake.usgs_program_data.get_target(target)
 
 # set up paths
-dstpth = os.path.join("temp")
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
+    os.makedirs(dstpth, exist_ok=True)
 
 mtusgsver = prog_dict.version
 mtusgspth = os.path.join(dstpth, prog_dict.dirname)
@@ -143,11 +143,7 @@ def run_mt3dusgs(temp_dir):
 
 
 def clean_up():
-    print("Removing temporary build directories")
-    dirs_temp = (os.path.join("obj_temp"), os.path.join("mod_temp"), dstpth)
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
+    print("Removing test files and directories")
 
     # finalize pymake object
     pm.finalize()
@@ -156,6 +152,13 @@ def clean_up():
         if os.path.isfile(epth):
             print("Removing '" + epth + "'")
             os.remove(epth)
+
+    dirs_temp = (dstpth,)
+    for d in dirs_temp:
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+
+    return
 
 
 @pytest.mark.base
@@ -206,7 +209,7 @@ def test_download_exes():
 
 @pytest.mark.regression
 @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
-@pytest.mark.skipif(sys.platform == "win32", reason="do not run on OSX")
+@pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
 @pytest.mark.parametrize("ws", sim_dirs)
 def test_mt3dusgs(ws):
     assert run_mt3dusgs(ws), f"could not run {ws}"

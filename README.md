@@ -60,7 +60,7 @@ arguments that can be provided to overide default values.
 
 ```
 usage: __main__.py [-h] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e] [-dr] [-sd] [-ff FFLAGS]
-                   [-cf CFLAGS] [-sl {-lc,-lm}] [-mf] [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace] [--networkx]
+                   [-cf CFLAGS] [-sl {-lc,-lm}] [-mf] [-md] [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace] [--networkx] [--mb]
                    srcdir target
 
 This is the pymake program for compiling fortran, c, and c++ source files, such as the source files that come with MODFLOW. The program works by building a directed acyclic graph of the module
@@ -94,6 +94,7 @@ optional arguments:
                         Linker system libraries. Linker libraries should be enclosed in quotes and start with a blank space or separated from the name (-sl or --syslibs) with a equal sign
                         (-sl='-libgcc'). (default is None)
   -mf, --makefile       Create a GNU make makefile. (default is False)
+  -md, --makefile-dir   GNU make makefile directory. (default is '.')
   -cs COMMONSRC, --commonsrc COMMONSRC
                         Additional directory with common source files. (default is None)
   -ef EXTRAFILES, --extrafiles EXTRAFILES
@@ -109,10 +110,10 @@ optional arguments:
   --zip ZIP             Zip built executable. (default is False)
   --inplace             Source files in srcdir are used directly. (default is False)
   --networkx            Use networkx package to build Directed Acyclic Graph use to determine the order source files are compiled in. (default is False)
+  --mb, --meson-build   Use meson to build executable. (default is False)
 
 Note that the source directory should not contain any bad or duplicate source files as all source files in the source directory, the common source file directory (srcdir2), and the extra files
 (extrafiles) will be built and linked. Files can be excluded by using the excludefiles command line switch.
-
 ```
 
 Note that command line arguments for Fortran flags, C/C++ flags, and syslib

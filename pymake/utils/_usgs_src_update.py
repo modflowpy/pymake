@@ -131,7 +131,7 @@ def _update_triangle_files(srcdir, fc, cc, arch, double):
 
     # make destination directory
     if not os.path.exists(dstpth):
-        os.makedirs(dstpth)
+        os.makedirs(dstpth, exist_ok=True)
 
     # make src directory
     if not os.path.exists(srcdir):
@@ -197,7 +197,7 @@ def _update_mt3dms_files(srcdir, fc, cc, arch, double):
 
     # make destination directory
     if not os.path.exists(dstpth):
-        os.makedirs(dstpth)
+        os.makedirs(dstpth, exist_ok=True)
 
     # move the files
     for src_dir, _, files in os.walk(rootdir):

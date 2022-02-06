@@ -26,18 +26,20 @@ for idx, target in enumerate(targets):
     targets[idx] = target + extension
 
 # set up paths
-dstpth = os.path.join("temp", "t014")
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
-    os.makedirs(dstpth)
+    os.makedirs(dstpth, exist_ok=True)
 
 appdir = os.path.join(dstpth, "bin")
 if not os.path.exists(appdir):
-    os.makedirs(appdir)
+    os.makedirs(appdir, exist_ok=True)
 
 exe_names = [os.path.join(appdir, target) for target in targets]
 
 
 def clean_up(epth):
+    print("Removing test files and directories")
+
     assert os.path.isfile(epth), f"{os.path.basename(epth)} does not exist"
     print("Removing " + os.path.basename(epth))
     os.remove(epth)
@@ -62,8 +64,11 @@ def test_clean_up(epth):
     clean_up(epth)
 
 
+@pytest.mark.base
+@pytest.mark.regression
 def test_finalize():
-    shutil.rmtree(dstpth)
+    if os.path.isdir(dstpth):
+        shutil.rmtree(dstpth)
 
 
 if __name__ == "__main__":

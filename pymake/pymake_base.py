@@ -69,10 +69,6 @@ from .utils._Popen_wrapper import (
     _process_Popen_stdout,
 )
 
-# define temporary directories
-objdir_temp = os.path.join(".", "obj_temp")
-moddir_temp = os.path.join(".", "mod_temp")
-
 
 def main(
     srcdir=None,
@@ -90,6 +86,7 @@ def main(
     syslibs=None,
     arch="intel64",
     makefile=False,
+    makefiledir=".",
     srcdir2=None,
     extrafiles=None,
     excludefiles=None,
@@ -139,6 +136,8 @@ def main(
         Architecture to use for Intel Compilers on Windows (default is intel64)
     makefile : bool
         boolean indicating if a GNU make makefile should be created
+    makefiledir : str
+        GNU make makefile path
     srcdir2 : str
         additional directory with common source files.
     extrafiles : str
@@ -177,10 +176,11 @@ def main(
 
     if srcdir is not None and target is not None:
 
+        objdir_temp, moddir_temp, srcdir_temp = get_temporary_directories(
+            appdir=appdir
+        )
         if inplace:
             srcdir_temp = srcdir
-        else:
-            srcdir_temp = os.path.join(".", "src_temp")
 
         # process appdir
         if appdir is not None:
@@ -242,6 +242,8 @@ def main(
             extrafiles,
             excludefiles,
             include_subdirs,
+            objdir_temp,
+            moddir_temp,
             srcdir_temp,
         )
 
@@ -297,12 +299,22 @@ def main(
                 fflags,
                 cflags,
                 syslibs,
+                sharedobject,
+                makefiledir,
                 verbose,
             )
 
         # clean up temporary files
         if makeclean and returncode == 0:
-            _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose)
+            _clean_temp_files(
+                target,
+                intelwin,
+                inplace,
+                objdir_temp,
+                moddir_temp,
+                srcdir_temp,
+                verbose,
+            )
     else:
         msg = (
             f"Nothing to do, the srcdir ({srcdir}) "
@@ -321,6 +333,8 @@ def _pymake_initialize(
     extrafiles,
     excludefiles,
     include_subdirs,
+    objdir_temp,
+    moddir_temp,
     srcdir_temp,
 ):
     """Remove temp source directory and target, and then copy source into
@@ -343,6 +357,10 @@ def _pymake_initialize(
     include_subdirs : bool
         boolean indicating source files in srcdir subdirectories should be
         included in the build
+    objdir_temp : str
+        path for temporary directory that will contain the object files.
+    moddir_temp : str
+        path for temporary directory that will contain the module files.
     srcdir_temp : str
         path for directory that will contain the source files. If
         srcdir_temp is the same as srcdir then the original source files
@@ -402,7 +420,7 @@ def _pymake_initialize(
             else:
                 shutil.copytree(src, dst)
         else:
-            dst = os.path.normpath(os.path.relpath(commonsrc, srcdir_temp))
+            dst = os.path.relpath(os.path.abspath(os.path.abspath(commonsrc)))
 
         srcfiles += _get_srcfiles(dst, include_subdirs)
 
@@ -457,6 +475,35 @@ def _pymake_initialize(
     return srcfiles
 
 
+def get_temporary_directories(appdir=None):
+    """Get paths to temporary object, module, and source files
+
+    Parameters
+    ----------
+    appdir : str
+        path for executable
+
+    Returns
+    -------
+    obj_temp : str
+        path to temporary object files
+    mod_temp : str
+        path to temporary module files
+    src_temp : str
+        path to temporary source files
+
+    """
+    if appdir is None:
+        base_pth = "."
+    else:
+        base_pth = appdir
+    return (
+        os.path.join(base_pth, "obj_temp"),
+        os.path.join(base_pth, "mod_temp"),
+        os.path.join(base_pth, "src_temp"),
+    )
+
+
 def _get_extra_exclude_files(extrafiles):
     """Get extrafiles to include in compilation from a file or a list.
 
@@ -495,7 +542,15 @@ def _get_extra_exclude_files(extrafiles):
     return files
 
 
-def _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose=False):
+def _clean_temp_files(
+    target,
+    intelwin,
+    inplace,
+    objdir_temp,
+    moddir_temp,
+    srcdir_temp,
+    verbose=False,
+):
     """Cleanup intermediate files. Remove mod and object files, and remove the
     temporary source directory.
 
@@ -511,6 +566,10 @@ def _clean_temp_files(target, intelwin, inplace, srcdir_temp, verbose=False):
         defined in extrafiles will be used directly. If inplace is True,
         source files will be copied to a directory named srcdir_temp.
         (default is False)
+    objdir_temp : str
+        path for temporary directory that will contain the object files.
+    moddir_temp : str
+        path for temporary directory that will contain the module files.
     srcdir_temp : str
         path for directory that will contain the source files. If
         srcdir_temp is the same as srcdir then the original source files
@@ -742,6 +801,11 @@ def _pymake_compile(
     # initialize ilink
     ilink = 0
 
+    # get temporary object and module directories
+    objdir_temp, moddir_temp, _ = get_temporary_directories(
+        os.path.dirname(target)
+    )
+
     # set optimization levels
     optlevel = _get_optlevel(
         target, fc, cc, debug, fflags, cflags, verbose=verbose
@@ -827,6 +891,8 @@ def _pymake_compile(
                 tfflags,
                 tcflags,
                 tlflags,
+                objdir_temp,
+                moddir_temp,
                 srcfiles,
                 target,
                 arch,
@@ -1002,6 +1068,8 @@ def _create_win_batch(
     fflags,
     cflags,
     lflags,
+    objdir_temp,
+    moddir_temp,
     srcfiles,
     target,
     arch,
@@ -1028,6 +1096,10 @@ def _create_win_batch(
     lflags : list
         linker compiler flags, which are a combination of user provided list
         of compiler flags for the compiler to used for linking
+    objdir_temp : str
+        path for temporary directory that will contain the object files.
+    moddir_temp : str
+        path for temporary directory that will contain the module files.
     srcfiles : list
         list of source file names
     target : str
@@ -1168,6 +1240,8 @@ def _create_makefile(
     fflags,
     cflags,
     syslibs,
+    sharedobject,
+    makefiledir,
     verbose,
     makedefaults="makedefaults",
 ):
@@ -1201,6 +1275,12 @@ def _create_makefile(
         user provided list of c or cpp compiler flags
     syslibs : list
         user provided syslibs
+    sharedobject : bool
+        boolean indicating a shared object will be built
+    makefiledir : str
+        GNU make makefile path
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
     makedefaults : str
         name of the makedefaults file to create with makefile (default is
         makedefaults)
@@ -1213,6 +1293,22 @@ def _create_makefile(
     if verbose:
         msg = f"\nWriting makefile and {makedefaults}"
         print(msg)
+
+    # set executable extension
+    if sharedobject:
+        win_ext = ".dll"
+        macos_ext = ".dylib"
+        linux_ext = ".so"
+    else:
+        win_ext = ".exe"
+        macos_ext = ""
+        linux_ext = ""
+
+    # set makefile directory
+    make_dir = makefiledir
+
+    # get temporary directories
+    objdir_temp, moddir_temp, _ = get_temporary_directories(make_dir)
 
     # set object extension
     objext = ".o"
@@ -1237,7 +1333,7 @@ def _create_makefile(
     )
 
     # open makefile
-    f = open("makefile", "w")
+    f = open(os.path.join(make_dir, "makefile"), "w")
 
     # write header
     f.write(heading + "\n")
@@ -1268,8 +1364,9 @@ def _create_makefile(
     f.write(line)
     vpaths = []
     for idx, source_dir in enumerate(dirs):
+        rel_source_dir = os.path.relpath(source_dir, make_dir)
         vpaths.append(f"SOURCEDIR{idx + 1}")
-        line = f"{vpaths[idx]}={source_dir}\n"
+        line = f"{vpaths[idx]}={rel_source_dir}\n"
         f.write(line)
     f.write("\n")
 
@@ -1334,7 +1431,7 @@ def _create_makefile(
     f.close()
 
     # open makedefaults
-    f = open(makedefaults, "w")
+    f = open(os.path.join(make_dir, makedefaults), "w")
 
     # replace makefile in heading with makedefaults
     heading = heading.replace("makefile", makedefaults)
@@ -1361,34 +1458,34 @@ def _create_makefile(
     f.write(line)
 
     # get path to executable
-    dpth = os.path.dirname(target)
+    dpth = make_dir
     if len(dpth) > 0:
-        dpth = os.path.relpath(dpth)
+        dpth = os.path.relpath(dpth, make_dir)
     else:
         dpth = "."
 
-    # write
+    # write header
     line = (
         "# Define the directories for the object and module files\n"
         + "# and the executable and its path.\n"
     )
     tpth = dpth.replace("\\", "/")
     line += f"BINDIR = {tpth}\n"
-    tpth = objdir_temp.replace("\\", "/")
+    tpth = os.path.relpath(objdir_temp.replace("\\", "/"), make_dir)
     line += f"OBJDIR = {tpth}\n"
-    tpth = moddir_temp.replace("\\", "/")
+    tpth = os.path.relpath(moddir_temp.replace("\\", "/"), make_dir)
     line += f"MODDIR = {tpth}\n"
     line += "INCSWITCH = -I $(OBJDIR)\n"
     line += "MODSWITCH = -J $(MODDIR)\n\n"
     f.write(line)
 
-    line = "# define program name\n"
-    line += f"PROGRAM = $(BINDIR)/{exe_name}\n\n"
-    f.write(line)
-
     line = "# define os dependent program name\n"
     line += "ifeq ($(detected_OS), Windows)\n"
-    line += f"\tPROGRAM = $(BINDIR)/{exe_name}.exe\n"
+    line += f"\tPROGRAM = $(BINDIR)/{exe_name}{win_ext}\n"
+    line += "else ifeq ($(detected_OS), Darwin)\n"
+    line += f"\tPROGRAM = $(BINDIR)/{exe_name}{macos_ext}\n"
+    line += "else\n"
+    line += f"\tPROGRAM = $(BINDIR)/{exe_name}{linux_ext}\n"
     line += "endif\n\n"
     f.write(line)
 
@@ -1457,6 +1554,7 @@ def _create_makefile(
             debug,
             double,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         for idx, flag in enumerate(tfflags):
@@ -1475,6 +1573,7 @@ def _create_makefile(
             debug,
             double,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         for idx, flag in enumerate(tfflags):
@@ -1492,6 +1591,7 @@ def _create_makefile(
             debug,
             double,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         for idx, flag in enumerate(tfflags):
@@ -1517,6 +1617,7 @@ def _create_makefile(
             debug,
             srcfiles,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
@@ -1529,6 +1630,7 @@ def _create_makefile(
             debug,
             srcfiles,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
@@ -1542,6 +1644,7 @@ def _create_makefile(
             debug,
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
@@ -1554,6 +1657,7 @@ def _create_makefile(
             debug,
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
@@ -1566,6 +1670,7 @@ def _create_makefile(
             debug,
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
@@ -1586,6 +1691,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
@@ -1598,6 +1704,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
@@ -1612,6 +1719,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="win32",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += "\tifeq ($(FC), $(filter $(FC), gfortran))\n"
@@ -1628,6 +1736,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
@@ -1640,6 +1749,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
@@ -1656,6 +1766,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
@@ -1669,6 +1780,7 @@ def _create_makefile(
             [],
             srcfiles,
             osname="linux",
+            sharedobject=sharedobject,
             verbose=verbose,
         )
         line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
@@ -1738,7 +1850,10 @@ def _create_makefile(
     if sys.platform == "win32":
         windows_line_ending = b"\r\n"
         unix_line_ending = b"\n"
-        for file in ("makefile", makedefaults):
+        for file in (
+            os.path.join(make_dir, "makefile"),
+            os.path.join(make_dir, makedefaults),
+        ):
             with open(file, "rb") as f:
                 content = f.read()
 
