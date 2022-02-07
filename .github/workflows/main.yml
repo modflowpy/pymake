@@ -257,7 +257,7 @@ jobs:
         shell: cmd
         run: |
           call ".github/intel-scripts/ifortvars_windows.bat"
-          pytest -v -n=auto --dist=loadfile -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
