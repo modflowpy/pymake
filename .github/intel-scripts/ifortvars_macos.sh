@@ -9,3 +9,7 @@ source /opt/intel/oneapi/setvars.sh
 # print intel compiler versions
 ifort --version
 icc --version
+
+# run pytest
+pytest -v --dist=loadscope -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
+
