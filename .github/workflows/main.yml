@@ -251,14 +251,17 @@ jobs:
           CC: icc
         run: |
           .github/intel-scripts/${{ matrix.os_script }}
+          pytest -v --dist=loadscope -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: activate intel and test on Windows
         if: runner.os == 'Windows'
         env:
           FC: ifort
           CC: icl
+        shell: cmd
         run: |
-          .github/intel-scripts/${{ matrix.os_script }}
+          call ".github/intel-scripts/${{ matrix.os_script }}"
+          pytest -v --dist=loadscope -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
