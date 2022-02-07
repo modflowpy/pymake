@@ -60,6 +60,7 @@ def clean_up():
 
 
 @pytest.mark.base
+@pytest.mark.regression
 def test_compile():
     assert compile_code() == 0, f"could not compile {target}"
 

@@ -13,4 +13,6 @@ source /opt/intel/oneapi/compiler/"$LATEST_VERSION"/env/vars.sh
 ifort --version
 icc --version
 
-pytest -v -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
+# run pytest
+pytest -v -n=auto --dist=loadfile -m=regression --durations=0 --cov=pymake --cov-report=xml autotest/
+

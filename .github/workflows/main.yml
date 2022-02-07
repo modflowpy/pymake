@@ -18,10 +18,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2.3.4
 
-      - name: Set up Python 3.8
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Setup Graphviz
         uses: ts-graphviz/setup-graphviz@v1
@@ -91,7 +91,6 @@ jobs:
 
   pymakeCI-os-gcc:
     name: pymake CI gcc on different OSs
-    needs: [pymake_lint, pymake_setup]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -109,10 +108,10 @@ jobs:
         if: runner.os == 'Linux'
         uses: ts-graphviz/setup-graphviz@v1
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Install python packages
         run: |
@@ -144,7 +143,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadscope -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --dist=loadfile -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
@@ -157,7 +156,6 @@ jobs:
 
   pymakeCI-os-intel:
     name: pymake CI intel on different OSs
-    needs: [pymake_lint, pymake_setup]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -182,6 +180,7 @@ jobs:
       WINDOWS_CPP_COMPONENTS: intel.oneapi.win.cpp-compiler
       LINUX_CPP_COMPONENTS_WEB: intel.oneapi.lin.dpcpp-cpp-compiler-pro
       MACOS_CPP_COMPONENTS: intel.oneapi.mac.cpp-compiler
+      FC: ifort
 
     steps:
       - name: Checkout repo
@@ -194,7 +193,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Install python packages
         run: |
@@ -247,7 +246,6 @@ jobs:
       - name: activate intel and test on linux and macOS
         if: runner.os == 'Linux' || runner.os == 'macOS'
         env:
-          FC: ifort
           CC: icc
         run: |
           .github/intel-scripts/${{ matrix.os_script }}
@@ -255,10 +253,11 @@ jobs:
       - name: activate intel and test on Windows
         if: runner.os == 'Windows'
         env:
-          FC: ifort
           CC: icl
+        shell: cmd
         run: |
-          .github/intel-scripts/${{ matrix.os_script }}
+          call ".github/intel-scripts/ifortvars_windows.bat"
+          pytest -v -m=base --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
@@ -281,7 +280,6 @@ jobs:
 
   pymakeCI-gcc-prev:
     name: pymake CI GCC 9 and 8
-    needs: [pymake_lint, pymake_setup]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -301,7 +299,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Install python packages
         run: |
@@ -325,7 +323,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadscope -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --dist=loadfile -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
@@ -338,7 +336,6 @@ jobs:
 
   pymakeCI-requests:
     name: pymake CI requests
-    needs: [pymake_lint, pymake_setup]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -351,7 +348,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Install python packages
         run: |
@@ -359,7 +356,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadscope -n=auto -m requests --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --dist=loadfile -n=auto -m requests --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
@@ -372,7 +369,6 @@ jobs:
 
   pymakeCI-python-prev:
     name: pymake CI with previous python versions
-    needs: [pymake_lint, pymake_setup]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -414,7 +410,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadscope -n=auto -m base --durations=0
+          pytest -v --dist=loadfile -n=auto -m base --durations=0
 
   pymake_rtd:
     name: pymake rtd
