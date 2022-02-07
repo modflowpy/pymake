@@ -260,7 +260,7 @@ jobs:
           CC: icl
         shell: cmd
         run: |
-          call ".github/intel-scripts/${{ matrix.os_script }}"
+          call ".github/intel-scripts/ifortvars_windows.bat"
           pytest -v --dist=loadscope -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
