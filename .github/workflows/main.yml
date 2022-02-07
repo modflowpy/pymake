@@ -143,7 +143,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadscope -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --dist=loadfile -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
@@ -257,7 +257,7 @@ jobs:
         shell: cmd
         run: |
           call ".github/intel-scripts/ifortvars_windows.bat"
-          pytest -v -n=auto --dist=loadscope -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -n=auto --dist=loadfile -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
@@ -323,7 +323,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadscope -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --dist=loadfile -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
@@ -356,7 +356,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadscope -n=auto -m requests --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --dist=loadfile -n=auto -m requests --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
@@ -410,7 +410,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadscope -n=auto -m base --durations=0
+          pytest -v --dist=loadfile -n=auto -m base --durations=0
 
   pymake_rtd:
     name: pymake rtd
