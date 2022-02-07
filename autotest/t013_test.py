@@ -7,12 +7,6 @@ import pytest
 
 import pymake
 
-# use the line below to set fortran compiler using environmental variables
-# if sys.platform.lower() == "win32":
-#     os.environ["CC"] = "icl"
-# else:
-#     os.environ["CC"] = "icc"
-
 # working directory
 dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 
