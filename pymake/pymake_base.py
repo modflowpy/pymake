@@ -652,7 +652,6 @@ def _clean_temp_files(
                 print(f"removing...'{main_meson_file}'")
                 os.remove(main_meson_file)
 
-
     # remove the windows batchfile
     if intelwin:
         os.remove("compile.bat")

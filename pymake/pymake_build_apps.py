@@ -116,7 +116,6 @@ def build_apps(
         if pmobj.mesondir != mesondir:
             pmobj.mesondir = mesondir
 
-
     # clean any existing temporary directories
     temp_pths = get_temporary_directories(base_pth)
     for pth in temp_pths:
