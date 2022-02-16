@@ -37,6 +37,7 @@ examples = (
 pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = os.path.join(dstpth, "bin")
+pm.makeclean = True
 pm.meson = True
 pm.mesondir = os.path.join(dstpth)
 

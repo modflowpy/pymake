@@ -323,7 +323,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadfile -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --dist=loadfile -n=auto -m base --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
@@ -373,7 +373,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ 3.7 ]
+        python-version: [ 3.8, 3.7 ]
     defaults:
       run:
         shell: bash

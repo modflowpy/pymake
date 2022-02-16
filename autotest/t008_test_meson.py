@@ -50,14 +50,12 @@ pm.inplace = True
 pm.meson = True
 pm.makeclean = True
 pm.mesondir = os.path.join(dstpth)
+pm.verbose = True
 
 epth = os.path.join(pm.appdir, target)
 
 
 def clean_up():
-    # finalize pymake object
-    pm.finalize()
-
     if os.path.isfile(epth):
         print("Removing " + target)
         os.remove(epth)
@@ -120,6 +118,8 @@ def test_zbud():
     pmz.inplace = True
     pmz.meson = True
     pmz.mesondir = os.path.join(dstpth, prog_dict.dirname)
+    pmz.verbose = True
+
     assert pmz.build() == 0, f"could not compile {pmz.target}"
 
 
@@ -132,7 +132,7 @@ def test_clean_up():
 if __name__ == "__main__":
     test_download()
     test_compile()
-    # for ws in sim_dirs:
-    #     run_mf6(ws)
-    # test_zbud()
+    for ws in sim_dirs:
+        run_mf6(ws)
+    test_zbud()
     test_clean_up()

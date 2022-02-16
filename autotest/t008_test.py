@@ -58,7 +58,6 @@ pm.makeclean = True
 pm.makefiledir = dstpth
 pm.inplace = True
 pm.networkx = True
-pm.meson = True
 
 
 @contextlib.contextmanager
@@ -204,11 +203,11 @@ def test_clean_up():
 
 
 if __name__ == "__main__":
-    # test_download()
-    # test_compile()
-    # for ws in sim_dirs:
-    #     run_mf6(ws)
-    # test_makefile()
+    test_download()
+    test_compile()
+    for ws in sim_dirs:
+        run_mf6(ws)
+    test_makefile()
     test_sharedobject()
     test_sharedobject_makefile()
-    # test_clean_up()
+    test_clean_up()

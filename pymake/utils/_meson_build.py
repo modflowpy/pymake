@@ -14,6 +14,7 @@ from ._compiler_switches import (
     _get_linker_flags,
     _get_optlevel,
     _get_osname,
+    _get_prepend,
 )
 from ._file_utils import _get_extra_exclude_files, _get_extrafiles_common_path
 from ._Popen_wrapper import (
@@ -145,19 +146,25 @@ def meson_setup(
         if fc is not None:
             fc_env = os.environ.get("FC")
             if fc != fc_env:
-                command_list.append(f"FC={fc}")
-                # os.environ['FC'] = fc
+                if _get_osname() == "win32":
+                    os.environ["FC"] = fc
+                else:
+                    command_list.append(f"FC={fc}")
         if cc is not None:
             if cc in ("g++", "clang++"):
                 cc_env = os.environ.get("CXX")
                 if cc_env != cc:
-                    command_list.append(f"CXX={cc}")
-                    # os.environ['CC'] = cc
+                    if _get_osname() == "win32":
+                        os.environ["CCX"] = cc
+                    else:
+                        command_list.append(f"CXX={cc}")
             else:
                 cc_env = os.environ.get("CC")
                 if cc_env != cc:
-                    command_list.append(f"CC={cc}")
-                    # os.environ['CC'] = cc
+                    if _get_osname() == "win32":
+                        os.environ["CC"] = cc
+                    else:
+                        command_list.append(f"CC={cc}")
         command_list.append("meson")
         command_list.append("setup")
         command_list.append(build_dir)
@@ -467,7 +474,7 @@ def _create_main_meson_build(
             if fc == "gfortran":
                 fflags_meson.append("-cpp")
             else:
-                fflags_meson.append("-fpp")
+                fflags_meson.append(f"{_get_prepend(fc, _get_osname())}fpp")
     cc_meson = None
     cflags_meson = None
     if cext is not None:

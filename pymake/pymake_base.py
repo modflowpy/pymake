@@ -266,13 +266,14 @@ def main(
 
         # set intelwin flag to True in compiling on windows with Intel compilers
         intelwin = False
-        if _get_osname() == "win32":
-            if fc is not None:
-                if fc in ["ifort", "mpiifort"]:
-                    intelwin = True
-            if cc is not None:
-                if cc in ["cl", "icl"]:
-                    intelwin = True
+        if not meson:
+            if _get_osname() == "win32":
+                if fc is not None:
+                    if fc in ["ifort", "mpiifort"]:
+                        intelwin = True
+                if cc is not None:
+                    if cc in ["cl", "icl"]:
+                        intelwin = True
 
         # update openspec files based on intelwin
         if not intelwin:
@@ -652,8 +653,9 @@ def _clean_temp_files(
                 os.remove(main_meson_file)
 
     # remove the windows batchfile
-    if intelwin:
-        os.remove("compile.bat")
+    batch_file = "compile.bat"
+    if intelwin and os.path.isfile(batch_file):
+        os.remove(batch_file)
     return
 
 
