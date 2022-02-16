@@ -173,7 +173,7 @@ def meson_setup(
         command_list.append(f"--libdir={libdir}")
 
         if os.path.isdir(build_dir):
-            command_list.append(f"--wipe")
+            command_list.append("--wipe")
 
         command = " ".join(command_list)
         print(f"\n{command}\n")
@@ -293,9 +293,6 @@ def _meson_build(
         return returncode
 
     # create meson files
-    # get list of extra files from external file
-    files = _get_extra_exclude_files(extrafiles)
-
     # create dictionary with source file paths
     source_path_dict = {"main": srcdir}
     if srcdir2 is not None:
@@ -620,15 +617,13 @@ def _create_source_meson_build(source_path_dict, srcfiles):
     None
 
     """
+    # create a copy so original srcfiles list is not modified
     srcfiles_copy = srcfiles.copy()
-    keys = list(source_path_dict.keys())
-    library_keys = []
-    if len(keys) > 1:
-        library_keys = keys[1:]
 
+    # iterate over the files in each source directory
     for key, value in source_path_dict.items():
         with open(os.path.join(value, "meson.build"), "w") as f:
-            f.write(f"sources += files(\n")
+            f.write("sources += files(\n")
             pop_list = []
             for source_file in srcfiles_copy:
                 if os.path.relpath(value) in source_file:

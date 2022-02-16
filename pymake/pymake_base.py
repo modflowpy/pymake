@@ -313,7 +313,6 @@ def main(
                 arch,
                 intelwin,
                 sharedobject,
-                meson,
                 verbose,
             )
 
@@ -783,11 +782,6 @@ def _pymake_compile(
         boolean indicating a shared object will be built
     verbose : bool
         boolean indicating if output will be printed to the terminal
-    inplace : bool
-        boolean indicating that the source files in srcdir, srcdir2, and
-        defined in extrafiles will be used directly. If inplace is True,
-        source files will be copied to a directory named srcdir_temp.
-        (default is False)
 
     Returns
     -------
