@@ -472,6 +472,7 @@ class Pymake:
             "gridgen",
             "mf6beta",
             "gsflow",
+            "prms",
         ):
             self.include_subdirs = True
         else:

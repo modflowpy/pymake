@@ -100,9 +100,10 @@ def meson_build(
                 "Could not run 'meson install' using the meson build file "
                 + f"'{meson_test_path}'"
             )
+    else:
+        returncode = 1
 
-        return returncode
-
+    return returncode
 
 def meson_setup(
     mesondir,
@@ -295,17 +296,17 @@ def _meson_build(
     files = _get_extra_exclude_files(extrafiles)
 
     # create dictionary with source file paths
-    src_path_dict = {"main": srcdir}
+    source_path_dict = {"main": srcdir}
     if srcdir2 is not None:
-        src_path_dict["additional_srcdir"] = srcdir2
+        source_path_dict["additional_srcdir"] = srcdir2
 
     common_path = _get_extrafiles_common_path(extrafiles)
     if common_path is not None:
-        src_path_dict["extra"] = common_path
+        source_path_dict["extra"] = common_path
 
     # write meson.build files with directories in each source directory
     _create_source_meson_build(
-        src_path_dict,
+        source_path_dict,
         srcfiles,
     )
 
@@ -322,7 +323,7 @@ def _meson_build(
         cflags,
         syslibs,
         sharedobject,
-        src_path_dict,
+        source_path_dict,
         verbose,
     )
 
@@ -338,7 +339,7 @@ def _meson_build(
 def _create_main_meson_build(
     mesondir,
     target,
-    source_files,
+    srcfiles,
     debug,
     double,
     fc,
@@ -347,7 +348,7 @@ def _create_main_meson_build(
     cflags,
     syslibs,
     sharedobject,
-    src_path_dict,
+    source_path_dict,
     verbose,
 ):
     """Create the main meson build file
@@ -356,7 +357,7 @@ def _create_main_meson_build(
     ----------
     mesondir
     target
-    source_files
+    srcfiles
     debug
     double
     fc
@@ -365,7 +366,7 @@ def _create_main_meson_build(
     cflags
     syslibs
     sharedobject
-    src_path_dict
+    source_path_dict
     verbose
     Parameters
     -------
@@ -373,7 +374,7 @@ def _create_main_meson_build(
         Main meson.build file path
     target : str
         path for executable to create
-    source_files : list
+    srcfiles : list
         list of source file names
     debug : bool
         boolean indicating is a debug executable will be built
@@ -392,7 +393,7 @@ def _create_main_meson_build(
         user provided syslibs
     sharedobject : bool
         boolean indicating a shared object will be built
-    src_path_dict : dict
+    source_path_dict : dict
         dictionary with root directories containing source files. keys
         can be 'main', 'additional_srcdir', and 'extra' which correspond
         to the three possible locations of source files.
@@ -409,14 +410,15 @@ def _create_main_meson_build(
         c/cpp compiler that meson will use. None if no c/cpp source files
 
     """
+    appdir = os.path.relpath(os.path.dirname(target), mesondir)
     target = os.path.splitext((os.path.basename(target)))[0]
 
     # get main program file from list of source files
-    mainfile = _get_main(source_files)
+    mainfile = _get_main(srcfiles)
 
     # get list of unique fortran and c/c++ file extensions
-    fext = _get_fortran_files(source_files, extensions=True)
-    cext = _get_c_files(source_files, extensions=True)
+    fext = _get_fortran_files(srcfiles, extensions=True)
+    cext = _get_c_files(srcfiles, extensions=True)
 
     # remove main program file from source files and set linker language
     linker_language = None
@@ -439,7 +441,7 @@ def _create_main_meson_build(
             fc,
             cc,
             syslibs,
-            source_files,
+            srcfiles,
             sharedobject=sharedobject,
             verbose=verbose,
         )
@@ -462,7 +464,7 @@ def _create_main_meson_build(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        preprocess = _preprocess_file(source_files, meson=True)
+        preprocess = _preprocess_file(srcfiles, meson=True)
         if preprocess:
             if fc == "gfortran":
                 fflags_meson.append("-cpp")
@@ -481,7 +483,7 @@ def _create_main_meson_build(
             cc,
             cflags,
             debug,
-            srcfiles=source_files,
+            srcfiles=srcfiles,
             sharedobject=sharedobject,
             verbose=verbose,
         )
@@ -564,7 +566,7 @@ def _create_main_meson_build(
 
         # add source directories
         line = ""
-        for key, value in src_path_dict.items():
+        for key, value in source_path_dict.items():
             pth = os.path.relpath(value, mesondir)
             line += f"subdir('{pth}')\n"
         line += "\n"
@@ -574,7 +576,7 @@ def _create_main_meson_build(
         include_text = ""
         if "cpp" in languages:
             include_dirs = []
-            for key, value in src_path_dict.items():
+            for key, value in source_path_dict.items():
                 for root, dirs, files in os.walk(value):
                     for file in files:
                         if file.endswith(".h") or file.endswith(".hpp"):
@@ -592,24 +594,24 @@ def _create_main_meson_build(
         # add build command
         line = (
             f"executable('{target}', sources{include_text}"
-            + ", install: true)\n\n"
+            + f", install: true, install_dir: '{appdir}')\n\n"
         )
         f.write(line)
 
     return main_meson_file, fc_meson, cc_meson
 
 
-def _create_source_meson_build(src_path_dict, source_files):
+def _create_source_meson_build(source_path_dict, srcfiles):
     """Create meson.build files with a list of source files in the root of
-    each source file location defined in src_path_dict.
+    each source file location defined in source_path_dict.
 
     Parameters
     ----------
-    src_path_dict : dict
+    source_path_dict : dict
         dictionary with root directories containing source files. keys
         can be 'main', 'additional_srcdir', and 'extra' which correspond
         to the three possible locations of source files.
-    source_files : list
+    srcfiles : list
         list of source file names
 
     Returns
@@ -617,17 +619,17 @@ def _create_source_meson_build(src_path_dict, source_files):
     None
 
     """
-    source_files_copy = source_files.copy()
-    keys = list(src_path_dict.keys())
+    srcfiles_copy = srcfiles.copy()
+    keys = list(source_path_dict.keys())
     library_keys = []
     if len(keys) > 1:
         library_keys = keys[1:]
 
-    for key, value in src_path_dict.items():
+    for key, value in source_path_dict.items():
         with open(os.path.join(value, "meson.build"), "w") as f:
             f.write(f"sources += files(\n")
             pop_list = []
-            for source_file in source_files_copy:
+            for source_file in srcfiles_copy:
                 if os.path.relpath(value) in source_file:
                     pth = os.path.relpath(source_file, start=value)
                     temp_list = pth.split(os.path.sep)
@@ -640,6 +642,6 @@ def _create_source_meson_build(src_path_dict, source_files):
 
             # remove assigned source files
             for temp in pop_list:
-                source_files_copy.remove(temp)
+                srcfiles_copy.remove(temp)
 
     return

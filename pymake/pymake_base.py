@@ -346,6 +346,8 @@ def main(
                 objdir_temp,
                 moddir_temp,
                 srcdir_temp,
+                meson,
+                mesondir,
                 verbose,
             )
     else:
@@ -547,6 +549,8 @@ def _clean_temp_files(
     objdir_temp,
     moddir_temp,
     srcdir_temp,
+    meson,
+    mesondir,
     verbose=False,
 ):
     """Cleanup intermediate files. Remove mod and object files, and remove the
@@ -572,6 +576,11 @@ def _clean_temp_files(
         path for directory that will contain the source files. If
         srcdir_temp is the same as srcdir then the original source files
         will be used.
+    meson : bool
+        boolean indicating that the executable should be built using the
+        meson build system. (default is False)
+    mesondir : str
+        Main meson.build file path
     verbose : bool
         boolean indicating if output will be printed to the terminal
 
@@ -631,6 +640,18 @@ def _clean_temp_files(
         if verbose:
             print(f"removing...'{moddir_temp}'")
         shutil.rmtree(moddir_temp)
+    if meson:
+        meson_builddir = os.path.join(mesondir, "_build")
+        if os.path.isdir(meson_builddir):
+            if verbose:
+                print(f"removing...'{meson_builddir}'")
+            shutil.rmtree(meson_builddir)
+        main_meson_file = os.path.join(mesondir, "meson.build")
+        if os.path.isfile(main_meson_file):
+            if verbose:
+                print(f"removing...'{main_meson_file}'")
+                os.remove(main_meson_file)
+
 
     # remove the windows batchfile
     if intelwin:

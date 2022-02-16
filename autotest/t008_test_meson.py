@@ -48,6 +48,7 @@ pm.target = target
 pm.appdir = os.path.join(dstpth, "bin")
 pm.inplace = True
 pm.meson = True
+pm.makeclean = True
 pm.mesondir = os.path.join(dstpth)
 
 epth = os.path.join(pm.appdir, target)
@@ -133,5 +134,5 @@ if __name__ == "__main__":
     test_compile()
     # for ws in sim_dirs:
     #     run_mf6(ws)
-    test_zbud()
-    # test_clean_up()
+    # test_zbud()
+    test_clean_up()

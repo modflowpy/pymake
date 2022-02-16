@@ -22,3 +22,4 @@ mflgr      ,  2.0.0  ,  True   , https://water.usgs.gov/ogw/modflow-lgr/modflow-
 zonbud3    ,  3.01   ,  True   , https://water.usgs.gov/water-resources/software/ZONEBUDGET/zonbud3_01.exe                      , Zonbud.3_01         , Src                 ,    True           , False        , False
 mfnwt1.1.4 ,  1.1.4  ,  False  , https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.1.4.zip              , MODFLOW-NWT_1.1.4   , src                 ,    True           , False        , False
 mfnwt      ,  1.2.0  ,  True   , https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.2.0.zip              , MODFLOW-NWT_1.2.0   , src                 ,    True           , True         , False
+prms       ,  5.2.0  ,  True   , https://water.usgs.gov/water-resources/software/PRMS/prms5.2.0_linux.zip                       , prms5.2.0_linux     , src                 ,    True           , False        , False
