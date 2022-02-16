@@ -7,7 +7,7 @@ from subprocess import PIPE, STDOUT, Popen
 PY3 = sys.version_info[0] >= 3
 
 
-def _process_Popen_initialize(cmdlist, intelwin=False):
+def _process_Popen_initialize(cmdlist, intelwin=False, cwd=None):
     """Generic function to initialize a Popen process.
 
     Parameters
@@ -17,6 +17,8 @@ def _process_Popen_initialize(cmdlist, intelwin=False):
     intelwin : bool
         boolean indicating is Intel compilers are being used on Windows and
         if stderr should be sent to the terminal
+    cwd : str
+        path to execute Popen in (defaulr is None)
 
     Returns
     -------
@@ -29,7 +31,7 @@ def _process_Popen_initialize(cmdlist, intelwin=False):
     else:
         stderr = PIPE
 
-    return Popen(cmdlist, stdout=PIPE, stderr=stderr)
+    return Popen(cmdlist, stdout=PIPE, stderr=stderr, cwd=cwd)
 
 
 def _process_Popen_command(shellflg, cmdlist):

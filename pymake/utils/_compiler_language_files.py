@@ -22,6 +22,8 @@ def _get_fortran_files(srcfiles, extensions=False):
         list of fortran files or unique fortran file extensions
 
     """
+    if isinstance(srcfiles, (str,)):
+        srcfiles = [srcfiles]
     files_out = []
     for srcfile in srcfiles:
         ext = os.path.splitext(srcfile)[1]
@@ -124,13 +126,17 @@ def _get_iso_c(srcfiles):
     return iso_c
 
 
-def _preprocess_file(srcfiles):
+def _preprocess_file(srcfiles, meson=False):
     """Determine if the file should be preprocessed.
 
     Parameters
     ----------
     srcfiles : str or list
         source file path or list of source file paths
+    meson : bool
+        boolean indicating if the preprocess should be set to False
+        if all files with preprocessing directives have a *.F or *.F90
+        file extension. (default is False)
 
     Returns
     -------
@@ -166,7 +172,15 @@ def _preprocess_file(srcfiles):
                     "#if",
                     "#error",
                 ):
-                    preprocess = True
+                    if meson:
+                        file_extension = os.path.splitext(srcfile)[1]
+                        if file_extension not in (
+                            ".F",
+                            ".F90",
+                        ):
+                            preprocess = True
+                    else:
+                        preprocess = True
                     break
 
             # terminate file content search if preprocess is True
@@ -181,6 +195,68 @@ def _preprocess_file(srcfiles):
             raise FileNotFoundError(msg)
 
     return preprocess
+
+
+def _get_main(srcfiles):
+    """Determine if the file should be preprocessed.
+
+    Parameters
+    ----------
+    srcfiles : str or list
+        source file path or list of source file paths
+
+    Returns
+    -------
+    preprocess : bool
+        flag indicating if the file should be preprocessed
+
+    """
+    if isinstance(srcfiles, str):
+        srcfiles = [srcfiles]
+
+    main_file = None
+    for srcfile in srcfiles:
+        if os.path.exists(srcfile):
+            # open the file
+            f = open(srcfile, "rb")
+
+            # read the file
+            lines = f.read()
+
+            # decode the file
+            lines = lines.decode("ascii", "replace").splitlines()
+
+            # develop a list of modules in the file
+            for line in lines:
+                linetrim = line.strip().lower()
+                if len(linetrim) == 0:
+                    continue
+                for comment in (
+                    "!",
+                    "c",
+                    "/*",
+                    "*/",
+                    "//",
+                ):
+                    if linetrim.startswith(comment):
+                        continue
+                for main in (
+                    "int main(",
+                    "program ",
+                ):
+                    if linetrim.startswith(main):
+                        main_file = srcfile
+                        break
+
+            # terminate file content search if preprocess is True
+            if main_file is not None:
+                break
+
+        else:
+            msg = "_get_main: could not " + f"open {os.path.basename(srcfile)}"
+            raise FileNotFoundError(msg)
+
+    return main_file
 
 
 def _get_srcfiles(srcdir, include_subdir):
