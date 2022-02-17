@@ -62,6 +62,8 @@ from .utils._compiler_switches import (
     _get_os_macro,
     _get_osname,
 )
+from .utils._file_utils import _get_extra_exclude_files
+from .utils._meson_build import _meson_build
 from .utils._Popen_wrapper import (
     _process_Popen_command,
     _process_Popen_communicate,
@@ -96,6 +98,7 @@ def main(
     inplace=False,
     networkx=False,
     meson=False,
+    mesondir=".",
 ):
     """Main pymake function.
 
@@ -154,7 +157,7 @@ def main(
         boolean indicating if output will be printed to the terminal
     inplace : bool
         boolean indicating that the source files in srcdir, srcdir2, and
-        defined in extrafiles will be used directly. If inplace is True,
+        defined in extrafiles will be used directly. If inplace is False,
         source files will be copied to a directory named srcdir_temp.
         (default is False)
     networkx : bool
@@ -166,6 +169,8 @@ def main(
     meson : bool
         boolean indicating that the executable should be built using the
         meson build system. (default is False)
+    mesondir : str
+        Main meson.build file path
 
     Returns
     -------
@@ -173,6 +178,14 @@ def main(
         return code
 
     """
+
+    if meson:
+        if not inplace:
+            inplace = True
+            print(
+                f"Using meson to build {os.path.basename(target)}, "
+                + "ressetting inplace to True"
+            )
 
     if srcdir is not None and target is not None:
 
@@ -245,6 +258,7 @@ def main(
             objdir_temp,
             moddir_temp,
             srcdir_temp,
+            meson,
         )
 
         # get ordered list of files to compile
@@ -252,37 +266,56 @@ def main(
 
         # set intelwin flag to True in compiling on windows with Intel compilers
         intelwin = False
-        if _get_osname() == "win32":
-            if fc is not None:
-                if fc in ["ifort", "mpiifort"]:
-                    intelwin = True
-            if cc is not None:
-                if cc in ["cl", "icl"]:
-                    intelwin = True
+        if not meson:
+            if _get_osname() == "win32":
+                if fc is not None:
+                    if fc in ["ifort", "mpiifort"]:
+                        intelwin = True
+                if cc is not None:
+                    if cc in ["cl", "icl"]:
+                        intelwin = True
 
         # update openspec files based on intelwin
         if not intelwin:
             _create_openspec(srcfiles, verbose)
 
         # compile the executable
-        returncode = _pymake_compile(
-            srcfiles,
-            target,
-            fc,
-            cc,
-            expedite,
-            dryrun,
-            double,
-            debug,
-            fflags,
-            cflags,
-            syslibs,
-            arch,
-            intelwin,
-            sharedobject,
-            meson,
-            verbose,
-        )
+        if meson:
+            returncode = _meson_build(
+                target,
+                srcdir,
+                srcdir2,
+                extrafiles,
+                srcfiles,
+                debug,
+                double,
+                fc,
+                cc,
+                fflags,
+                cflags,
+                syslibs,
+                sharedobject,
+                mesondir,
+                verbose,
+            )
+        else:
+            returncode = _pymake_compile(
+                srcfiles,
+                target,
+                fc,
+                cc,
+                expedite,
+                dryrun,
+                double,
+                debug,
+                fflags,
+                cflags,
+                syslibs,
+                arch,
+                intelwin,
+                sharedobject,
+                verbose,
+            )
 
         # create makefile
         if makefile:
@@ -313,6 +346,8 @@ def main(
                 objdir_temp,
                 moddir_temp,
                 srcdir_temp,
+                meson,
+                mesondir,
                 verbose,
             )
     else:
@@ -336,6 +371,7 @@ def _pymake_initialize(
     objdir_temp,
     moddir_temp,
     srcdir_temp,
+    meson,
 ):
     """Remove temp source directory and target, and then copy source into
     source temp directory.
@@ -466,11 +502,13 @@ def _pymake_initialize(
         for fpth in remove_list:
             srcfiles.remove(fpth)
 
-    # if they don't exist, create directories for objects and mods
-    if not os.path.exists(objdir_temp):
-        os.makedirs(objdir_temp)
-    if not os.path.exists(moddir_temp):
-        os.makedirs(moddir_temp)
+    # if they don't exist and not compiling with meson,
+    # create directories for objects and module (*.mod) files.
+    if not meson:
+        if not os.path.exists(objdir_temp):
+            os.makedirs(objdir_temp)
+        if not os.path.exists(moddir_temp):
+            os.makedirs(moddir_temp)
 
     return srcfiles
 
@@ -504,44 +542,6 @@ def get_temporary_directories(appdir=None):
     )
 
 
-def _get_extra_exclude_files(extrafiles):
-    """Get extrafiles to include in compilation from a file or a list.
-
-    Parameters
-    ----------
-    extrafiles : str
-        path for extrafiles file that contains paths to additional source
-        files to include
-
-    Returns
-    -------
-    files : list
-        list of files in the extra files input file
-
-    """
-    if extrafiles is None:
-        files = None
-    else:
-        if isinstance(extrafiles, list):
-            files = extrafiles
-        elif os.path.isfile(extrafiles):
-            efpth = os.path.dirname(extrafiles)
-            with open(extrafiles, "r") as f:
-                files = []
-                for line in f:
-                    fname = line.strip().replace("\\", "/")
-                    if len(fname) > 0:
-                        fname = os.path.abspath(os.path.join(efpth, fname))
-                        files.append(fname)
-        else:
-            raise Exception(
-                "extrafiles must be either a list of files "
-                "or the name of a text file that contains a list "
-                "of files."
-            )
-    return files
-
-
 def _clean_temp_files(
     target,
     intelwin,
@@ -549,6 +549,8 @@ def _clean_temp_files(
     objdir_temp,
     moddir_temp,
     srcdir_temp,
+    meson,
+    mesondir,
     verbose=False,
 ):
     """Cleanup intermediate files. Remove mod and object files, and remove the
@@ -574,6 +576,11 @@ def _clean_temp_files(
         path for directory that will contain the source files. If
         srcdir_temp is the same as srcdir then the original source files
         will be used.
+    meson : bool
+        boolean indicating that the executable should be built using the
+        meson build system. (default is False)
+    mesondir : str
+        Main meson.build file path
     verbose : bool
         boolean indicating if output will be printed to the terminal
 
@@ -633,10 +640,22 @@ def _clean_temp_files(
         if verbose:
             print(f"removing...'{moddir_temp}'")
         shutil.rmtree(moddir_temp)
+    if meson:
+        meson_builddir = os.path.join(mesondir, "_build")
+        if os.path.isdir(meson_builddir):
+            if verbose:
+                print(f"removing...'{meson_builddir}'")
+            shutil.rmtree(meson_builddir)
+        main_meson_file = os.path.join(mesondir, "meson.build")
+        if os.path.isfile(main_meson_file):
+            if verbose:
+                print(f"removing...'{main_meson_file}'")
+                os.remove(main_meson_file)
 
     # remove the windows batchfile
-    if intelwin:
-        os.remove("compile.bat")
+    batch_file = "compile.bat"
+    if intelwin and os.path.isfile(batch_file):
+        os.remove(batch_file)
     return
 
 
@@ -725,7 +744,6 @@ def _pymake_compile(
     arch,
     intelwin,
     sharedobject,
-    meson,
     verbose,
 ):
     """Standard compile method.
@@ -766,14 +784,6 @@ def _pymake_compile(
         boolean indicating a shared object will be built
     verbose : bool
         boolean indicating if output will be printed to the terminal
-    meson : bool
-        boolean indicating that the executable should be built using the
-        meson build system. (default is False)
-    inplace : bool
-        boolean indicating that the source files in srcdir, srcdir2, and
-        defined in extrafiles will be used directly. If inplace is True,
-        source files will be copied to a directory named srcdir_temp.
-        (default is False)
 
     Returns
     -------

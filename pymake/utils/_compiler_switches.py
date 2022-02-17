@@ -750,7 +750,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
         if target == "mp7":
             if fc == "gfortran":
                 fflags.append("-ffree-line-length-512")
-        elif target == "gsflow":
+        elif target in ("gsflow", "prms"):
             if fc == "ifort":
                 if osname == "win32":
                     fflags += [
@@ -862,12 +862,15 @@ def _set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
         cc = _get_base_app_name(cc)
 
         if target == "triangle":
-            if osname in ["linux", "darwin"]:
+            if osname in ("linux", "darwin"):
                 if cc.startswith("g"):
                     cflags += ["-lm"]
             else:
                 cflags += ["-DNO_TIMER"]
-        elif target == "gsflow":
+        elif target in (
+            "gsflow",
+            "prms",
+        ):
             if cc in ["icc", "icpl", "icl"]:
                 if osname == "win32":
                     cflags += ["-D_CRT_SECURE_NO_WARNINGS"]
@@ -968,17 +971,17 @@ def _set_syslibs(
 
     # add additional syslibs for select programs
     if target == "triangle":
-        if osname in ["linux", "darwin"]:
+        if osname in ("linux", "darwin"):
             if fc is None:
                 lfc = True
             else:
                 lfc = fc.startswith("g")
             lcc = False
-            if cc in ["gcc", "g++", "clang", "clang++"]:
+            if cc in ("gcc", "g++", "clang", "clang++"):
                 lcc = True
             if lfc and lcc:
                 syslibs += ["-lm"]
-    elif target == "gsflow":
+    elif target in ("gsflow", "prms"):
         if "win32" not in osname:
             if "ifort" in fc:
                 syslibs += ["-nofor_main"]

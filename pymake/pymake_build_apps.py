@@ -41,6 +41,8 @@ def build_apps(
     appdir=None,
     verbose=None,
     release_precision=True,
+    meson=False,
+    mesondir=".",
     clean=True,
 ):
     """Build all of the current targets or a subset of targets.
@@ -62,6 +64,11 @@ def build_apps(
         version will be compiled along with a double precision version of
         the program for programs where the standard_switch and double_switch
         in usgsprograms.txt is True. default is True.
+    meson : bool
+        boolean indicating that the executable should be built using the
+        meson build system. (default is False)
+    mesondir : str
+        Main meson.build file path
     clean : bool
         boolean determining of final download should be removed
 
@@ -98,6 +105,16 @@ def build_apps(
         base_pth = "."
     else:
         base_pth = os.path.dirname(appdir)
+
+    # set meson variable if a pymake object was not passed in
+    if pymake_object is None:
+        pmobj.meson = meson
+        pmobj.mesondir = mesondir
+    else:
+        if pmobj.meson != meson:
+            pmobj.meson = meson
+        if pmobj.mesondir != mesondir:
+            pmobj.mesondir = mesondir
 
     # clean any existing temporary directories
     temp_pths = get_temporary_directories(base_pth)

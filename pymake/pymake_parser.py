@@ -256,6 +256,13 @@ def _get_arg_dict():
             "choices": None,
             "action": "store_true",
         },
+        "mesondir": {
+            "tag": ("-mbd", "--mesonbuild-dir"),
+            "help": "meson directory. (default is '.')",
+            "default": ".",
+            "choices": None,
+            "action": "store_true",
+        },
     }
 
 
