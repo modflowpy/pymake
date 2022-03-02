@@ -23,11 +23,6 @@ from ..utils._compiler_language_files import (
 )
 from ..utils._dag import _get_f_nodelist
 
-try:
-    import pydotplus.graphviz as pydot
-except:
-    pydot = None
-
 
 def to_pydot(dag, filename="mygraph.png"):
     """Create a png file of a Directed Acyclic Graph
@@ -44,7 +39,9 @@ def to_pydot(dag, filename="mygraph.png"):
 
     """
     # evaluate if pydot plus is installed
-    if pydot is None:
+    try:
+        import pydotplus.graphviz as pydot
+    except:
         msg_str = make_plots.__module__ + "." + make_plots.__name__
         msg = f"pydotplus must be installed to use {msg_str}"
         raise ModuleNotFoundError(msg)
@@ -171,7 +168,9 @@ def make_plots(
 
     """
     # evaluate if pydot plus is installed
-    if pydot is None:
+    try:
+        import pydotplus.graphviz as pydot
+    except:
         msg_str = make_plots.__module__ + "." + make_plots.__name__
         msg = f"pydotplus must be installed to use {msg_str}"
         raise ModuleNotFoundError(msg)

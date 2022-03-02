@@ -51,10 +51,7 @@ import os
 import shutil
 import textwrap
 
-try:
-    import numpy as np
-except ModuleNotFoundError:
-    np = None
+import numpy as np
 
 ignore_ext = (
     ".hds",
@@ -1057,8 +1054,6 @@ def compare_budget(
     except:
         msg = "flopy not available - cannot use compare_budget"
         raise ValueError(msg)
-    if np is None:
-        raise ModuleNotFoundError("install numpy using\n pip install numpy")
 
     # headers
     headers = ("INCREMENTAL", "CUMULATIVE")
@@ -1265,8 +1260,6 @@ def compare_swrbudget(
     except:
         msg = "flopy not available - cannot use compare_swrbudget"
         raise ValueError(msg)
-    if np is None:
-        raise ModuleNotFoundError("install numpy using\n pip install numpy")
 
     # headers
     headers = ("INCREMENTAL", "CUMULATIVE")
@@ -1487,8 +1480,6 @@ def compare_heads(
     except:
         msg = "flopy not available - cannot use compare_heads"
         raise ValueError(msg)
-    if np is None:
-        raise ModuleNotFoundError("install numpy using\n pip install numpy")
 
     if text2 is None:
         text2 = text
@@ -1885,8 +1876,6 @@ def compare_concs(
     except:
         msg = "flopy not available - cannot use compare_concs"
         raise ValueError(msg)
-    if np is None:
-        raise ModuleNotFoundError("install numpy using\n pip install numpy")
 
     # list of valid extensions
     valid_ext = ["ucn"]
