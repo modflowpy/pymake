@@ -332,6 +332,20 @@ def _get_fortran_flags(
                 flags += ["no-heap-arrays", "fpe0", "traceback"]
                 if double:
                     flags += ["r8", "autodouble"]
+        elif fc in ("ftn",):
+            if osname in ("win32", "darwin"):
+                raise ValueError(f"ftn compiler not supported on {osname}")
+            else:
+                if sharedobject:
+                    flags.append("f PIC")
+                else:
+                    if "f PIC" in flags:
+                        flags.remove("f PIC")
+                if debug:
+                    flags += ["g"]
+                flags += ["h noheap_allocate"]
+                if double:
+                    flags += ["s default64"]
 
         # process passed fortran flags - check for flags with a space between
         # the flag and a setting
@@ -613,6 +627,7 @@ def _get_linker_flags(
             if fc in (
                 "ifort",
                 "mpiifort",
+                "ftn",
             ):
                 gnu_compiler = False
         else:
@@ -621,6 +636,7 @@ def _get_linker_flags(
                 "mpiicc",
                 "icl",
                 "cl",
+                "clang",
             ):
                 gnu_compiler = False
         if osname == "win32":
@@ -789,6 +805,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
         ):
             if fc == "gfortran":
                 fflags += [
+                    "-fall-intrinsics",
                     "-Wtabs",
                     "-Wline-truncation",
                     "-Wunused-label",
