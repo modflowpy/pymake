@@ -1,0 +1,27 @@
+name: pymake rtd
+
+on:
+  schedule:
+    - cron: '0 3 * * 3' # run at 3 AM UTC every Wednesday
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+
+  pymake_rtd:
+    name: pymake rtd
+    runs-on: ubuntu-latest
+    if:
+      github.event_name == 'push'
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2.3.4
+
+      - name: Trigger RTDs build
+        if: github.ref == 'refs/heads/master'
+        uses: dfm/rtds-action@v1.0.2
+        with:
+          webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
+          webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
+          commit_ref: ${{ github.ref }}

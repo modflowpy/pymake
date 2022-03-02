@@ -1,0 +1,176 @@
+name: pymake gcc build
+
+on:
+  schedule:
+    - cron: '0 3 * * 3' # run at 3 AM UTC every Wednesday
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+
+  pymakeCI-os-gcc:
+    name: pymake CI gcc on different OSs
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2.3.4
+
+      - name: Setup Graphviz
+        if: runner.os == 'Linux'
+        uses: ts-graphviz/setup-graphviz@v1
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install python packages
+        run: |
+          .github/common/install-python.sh
+
+      - name: Setup symbolic link to gfortran on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
+          sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
+          sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
+
+      - name: Setup symbolic link to gfortran on macOS
+        if: runner.os == 'macOS'
+        run: |
+          sudo ln -fs /usr/local/bin/gfortran-10 /usr/local/bin/gfortran
+          sudo ln -fs /usr/local/bin/gcc-10 /usr/local/bin/gcc
+          sudo ln -fs /usr/local/bin/g++-10 /usr/local/bin/g++
+
+      - name: Print GNU compiler versions
+        run: |
+          gfortran --version
+          gcc --version
+          g++ --version
+
+      - name: Download examples for pytest runs
+        run: |
+          .github/common/download-examples.sh
+
+      - name: Run pytest
+        run: |
+          pytest -v --dist=loadfile -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
+
+      - name: Print coverage report before upload
+        run: |
+          coverage report
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1.0.15
+        with:
+          file: ./coverage.xml
+
+  pymakeCI-gcc-prev:
+    name: pymake CI GCC 9 and 8
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        gcc-version: [ 9, 8 ]
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2.3.4
+
+      - name: Setup Graphviz
+        uses: ts-graphviz/setup-graphviz@v1
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install python packages
+        run: |
+          .github/common/install-python.sh
+
+      - name: Setup symbolic link to gfortran on Linux
+        run: |
+          sudo ln -fs /usr/bin/gfortran-${{ matrix.gcc-version }} /usr/local/bin/gfortran
+          sudo ln -fs /usr/bin/gcc-${{ matrix.gcc-version }} /usr/local/bin/gcc
+          sudo ln -fs /usr/bin/g++-${{ matrix.gcc-version }} /usr/local/bin/g++
+
+      - name: Print GNU compiler versions
+        run: |
+          gfortran --version
+          gcc --version
+          g++ --version
+
+      - name: Download examples for pytest runs
+        run: |
+          .github/common/download-examples.sh
+
+      - name: Run pytest
+        run: |
+          pytest -v --dist=loadfile -n=auto -m base --durations=0 --cov=pymake --cov-report=xml autotest/
+
+      - name: Print coverage report before upload
+        run: |
+          coverage report
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1.0.15
+        with:
+          file: ./coverage.xml
+
+  pymakeCI-python-prev:
+    name: pymake CI with previous python versions
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ 3.8, 3.7 ]
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2.3.4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install python packages
+        run: |
+          .github/common/install-python.sh
+
+      - name: Setup symbolic link to gfortran on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
+          sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
+          sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
+
+      - name: Print GNU compiler versions
+        run: |
+          gfortran --version
+          gcc --version
+          g++ --version
+
+      - name: Download examples for pytest runs
+        run: |
+          .github/common/download-examples.sh
+
+      - name: Run pytest
+        run: |
+          pytest -v --dist=loadfile -n=auto -m base --durations=0
