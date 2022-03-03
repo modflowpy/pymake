@@ -1,10 +1,9 @@
 [build-system]
 # Minimum requirements for the build system to execute
 requires = [
-    "setuptools",
+    "setuptools>=45",
     "wheel",
-    "setuptools_scm[toml]>=3.4",
-    "setuptools_scm_git_archive",
+    "setuptools_scm>=6.2",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -20,3 +19,6 @@ verbose = true
 profile = "black"
 src_paths = ["pymake", "autotest", "examples"]
 line_length = 79
+
+[tool.setuptools_scm]
+fallback_version = "999"
