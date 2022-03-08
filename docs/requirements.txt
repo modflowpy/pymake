@@ -1,5 +1,9 @@
 numpy
 requests
+networkx
+meson
+ninja
+pydotplus
 nbsphinx
 nbsphinx_link
 Ipython
