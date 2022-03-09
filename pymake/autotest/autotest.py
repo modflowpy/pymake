@@ -1875,6 +1875,8 @@ def compare_concs(
     -------
 
     """
+    import numpy as np
+
     try:
         import flopy
     except:
@@ -2285,6 +2287,8 @@ def _calculate_diffmax(v1, v2):
         absolute value of the maximum difference.
 
     """
+    import numpy as np
+
     if v1.ndim > 1 or v2.ndim > 1:
         v1 = v1.flatten()
         v2 = v2.flatten()
