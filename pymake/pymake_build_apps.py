@@ -204,7 +204,7 @@ def build_apps(
         # reset meson
         if target in ("prms",):
             pmobj.meson = True
-            pmobj.inplace
+            pmobj.inplace = True
 
         # set target and srcdir
         pmobj.target = target
