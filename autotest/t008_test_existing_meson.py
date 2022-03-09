@@ -9,12 +9,29 @@ import pytest
 
 import pymake
 
+target = "mf6"
+ext = ""
+shared_ext = ".so"
+executables = [target, "zbud6", "mf5to6", "libmf6"]
+if sys.platform.lower() == "win32":
+    ext = ".exe"
+    shared_ext = ".dll"
+elif sys.platform.lower() == "darwin":
+    shared_ext = ".dylib"
+for idx, executable in enumerate(executables[:3]):
+    executables[idx] += ext
+executables[3] += shared_ext
+
+# get program dictionary
+prog_dict = pymake.usgs_program_data.get_target(target)
+
 # set up paths
 dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 if not os.path.exists(dstpth):
     os.makedirs(dstpth, exist_ok=True)
 
-mesondir = os.path.join(dstpth, "modflow6-develop")
+mf6pth = os.path.join(dstpth, prog_dict.dirname)
+mesondir = mf6pth
 
 
 def clean_up():
@@ -58,27 +75,33 @@ def test_build_with_existing_meson():
     # print fortran and c/c++ compilers
     print(f"fortran compiler={fc}\n" + f"c/c++ compiler={cc}\n")
 
-    # download modflow6 github repo
-    url = (
-        "https://github.com/MODFLOW-USGS/"
-        + "modflow6/archive/refs/heads/develop.zip"
-    )
-    success = pymake.download_and_unzip(
-        url,
-        pth=dstpth,
-    )
-    assert success, f"could not download modflow 6 from '{url}'"
+    pm = pymake.Pymake(verbose=True)
+    pm.target = target
+    pm.appdir = os.path.join(mesondir, "bin")
+    pm.meson = True
+    pm.makeclean = True
+    pm.mesondir = mesondir
+    pm.verbose = True
+
+    # download the modflow 6
+    pm.download_target(target, download_path=dstpth)
+    assert pm.download, f"could not download {target} distribution"
 
     # make modflow 6 with existing meson.build file
     returncode = pymake.meson_build(
         mesondir,
         fc,
         cc,
-        appdir=os.path.join(mesondir, "bin"),
+        appdir=pm.appdir,
     )
     assert (
         returncode == 0
-    ), "could not build modflow 6 using existing meson.build file"
+    ), "could not build modflow 6 applications using existing meson.build file"
+
+    # check that all of the executables exist
+    for executable in executables:
+        exe_pth = os.path.join(pm.appdir, executable)
+        assert os.path.isfile(exe_pth), f"{exe_pth} does not exist"
 
     # clean up test files
     clean_up()

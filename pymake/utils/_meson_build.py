@@ -151,6 +151,11 @@ def meson_setup(
                         os.environ["FC"] = fc
                     else:
                         command_list.append(f"FC={fc}")
+            else:
+                if _get_osname() == "win32":
+                    os.environ["FC"] = fc
+                else:
+                    command_list.append(f"FC={fc}")
         if cc is not None:
             if cc in ("g++", "clang++"):
                 cc_env = os.environ.get("CXX")
@@ -160,6 +165,11 @@ def meson_setup(
                             os.environ["CCX"] = cc
                         else:
                             command_list.append(f"CXX={cc}")
+                else:
+                    if _get_osname() == "win32":
+                        os.environ["CCX"] = cc
+                    else:
+                        command_list.append(f"CXX={cc}")
             else:
                 cc_env = os.environ.get("CC")
                 if cc_env is not None:
@@ -168,6 +178,12 @@ def meson_setup(
                             os.environ["CC"] = cc
                         else:
                             command_list.append(f"CC={cc}")
+                else:
+                    if _get_osname() == "win32":
+                        os.environ["CC"] = cc
+                    else:
+                        command_list.append(f"CC={cc}")
+
         command_list.append("meson")
         command_list.append("setup")
         command_list.append(build_dir)

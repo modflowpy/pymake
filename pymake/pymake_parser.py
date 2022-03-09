@@ -45,7 +45,13 @@ def _get_arg_dict():
             "tag": ("-fc",),
             "help": "Fortran compiler to use. (default is gfortran)",
             "default": "gfortran",
-            "choices": ["ifort", "mpiifort", "gfortran", "none"],
+            "choices": [
+                "ifort",
+                "mpiifort",
+                "gfortran",
+                "ftn",
+                "none",
+            ],
             "action": None,
         },
         "cc": {

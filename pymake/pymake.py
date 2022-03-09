@@ -124,7 +124,7 @@ class Pymake:
         for key, value in _get_arg_dict().items():
             setattr(self, key, value["default"])
 
-        # do not parse command line arguments if python is running script
+        # parse command line arguments if python is running script
         if sys.argv[0].lower().endswith(".py"):
             self._arg_parser()
 

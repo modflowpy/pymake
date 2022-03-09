@@ -7,6 +7,8 @@ temp_pth = "temp"
 if not os.path.exists(temp_pth):
     os.makedirs(temp_pth)
 mf6_exdir = os.path.join(temp_pth, "mf6examples")
+if os.path.isdir(mf6_exdir):
+    shutil.rmtree(mf6_exdir)
 
 
 def download_mf6_examples(verbose=False):

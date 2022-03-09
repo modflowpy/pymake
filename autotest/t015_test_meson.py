@@ -66,22 +66,6 @@ def copy_example_dir(epth):
             msg = f"could not move files from {src} to '{dst}'"
             raise NameError(msg)
 
-        # # edit the control file for a shorter run
-        # # sagehen
-        # example, control_file = examples[0]
-        # if epth == example:
-        #     fpth = os.path.join(dstpth, epth, "linux", control_file)
-        #     with open(fpth) as f:
-        #         lines = f.readlines()
-        #     with open(fpth, "w") as f:
-        #         idx = 0
-        #         while idx < len(lines):
-        #             line = lines[idx]
-        #             if "end_time" in line:
-        #                 line += "6\n1\n1981\n"
-        #                 idx += 3
-        #             f.write(line)
-        #             idx += 1
     return
 
 

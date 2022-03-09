@@ -1,6 +1,10 @@
 [build-system]
 # Minimum requirements for the build system to execute
-requires = ["setuptools", "wheel"]
+requires = [
+    "setuptools>=45",
+    "wheel",
+    "setuptools_scm>=6.2",
+]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
@@ -15,3 +19,6 @@ verbose = true
 profile = "black"
 src_paths = ["pymake", "autotest", "examples"]
 line_length = 79
+
+[tool.setuptools_scm]
+fallback_version = "999"
