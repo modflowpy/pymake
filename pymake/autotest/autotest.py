@@ -51,8 +51,6 @@ import os
 import shutil
 import textwrap
 
-import numpy as np
-
 ignore_ext = (
     ".hds",
     ".hed",
@@ -1049,6 +1047,7 @@ def compare_budget(
         than max_cumpd and max_incpd
 
     """
+    import numpy as np
     try:
         import flopy
     except:
@@ -1255,6 +1254,7 @@ def compare_swrbudget(
         than max_cumpd and max_incpd
 
     """
+    import numpy as np
     try:
         import flopy
     except:
@@ -1475,6 +1475,7 @@ def compare_heads(
         boolean indicating if the head differences are less than htol.
 
     """
+    import numpy as np
     try:
         import flopy
     except:
@@ -2317,6 +2318,7 @@ def _calculate_difftol(v1, v2, tol):
         specified tolerance.
 
     """
+    import numpy as np
     if v1.ndim > 1 or v2.ndim > 1:
         v1 = v1.flatten()
         v2 = v2.flatten()
