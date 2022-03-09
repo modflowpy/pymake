@@ -1048,6 +1048,7 @@ def compare_budget(
 
     """
     import numpy as np
+
     try:
         import flopy
     except:
@@ -1255,6 +1256,7 @@ def compare_swrbudget(
 
     """
     import numpy as np
+
     try:
         import flopy
     except:
@@ -1476,6 +1478,7 @@ def compare_heads(
 
     """
     import numpy as np
+
     try:
         import flopy
     except:
@@ -2319,6 +2322,7 @@ def _calculate_difftol(v1, v2, tol):
 
     """
     import numpy as np
+
     if v1.ndim > 1 or v2.ndim > 1:
         v1 = v1.flatten()
         v2 = v2.flatten()
