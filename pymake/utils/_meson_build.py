@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -77,8 +78,8 @@ def meson_build(
         return code
 
     """
-    meson_test_path = os.path.join(mesondir, "meson.build")
-    if os.path.isfile(meson_test_path):
+    meson_test_path = Path(mesondir) / "meson.build"
+    if Path(meson_test_path).is_file():
         # setup meson
         returncode = meson_setup(mesondir, fc=fc, cc=cc, appdir=appdir)
         # build and install executable(s) using meson
@@ -198,7 +199,7 @@ def meson_setup(
         )
         command_list.append(f"--libdir={libdir}")
 
-        if os.path.isdir(build_dir):
+        if Path(build_dir).is_dir():
             command_list.append("--wipe")
 
         command = " ".join(command_list)
@@ -313,7 +314,7 @@ def _meson_build(
         mesondir,
         fc=fc,
         cc=cc,
-        appdir=os.path.dirname(target),
+        appdir=Path(target).parent,
     )
     if returncode == 0:
         return returncode
@@ -356,7 +357,7 @@ def _meson_build(
         mesondir,
         fc=fc_meson,
         cc=cc_meson,
-        appdir=os.path.dirname(target),
+        appdir=Path(target).parent,
     )
 
 
@@ -435,7 +436,7 @@ def _create_main_meson_build(
 
     """
     appdir = os.path.relpath(os.path.dirname(target), mesondir)
-    target = os.path.splitext((os.path.basename(target)))[0]
+    target = Path(target).stem
 
     # get main program file from list of source files
     mainfile = _get_main(srcfiles)
@@ -449,7 +450,7 @@ def _create_main_meson_build(
     if mainfile is None:
         linker_language = "fortran"
     else:
-        main_ext = os.path.splitext((os.path.basename(mainfile)))[1].lower()
+        main_ext = Path(mainfile).suffix.lower()
         if fext is not None:
             if main_ext in fext:
                 linker_language = "fortran"
@@ -524,7 +525,7 @@ def _create_main_meson_build(
     )
     optlevel_int = int(optlevel.replace("-O", "").replace("/O", ""))
 
-    main_meson_file = os.path.join(mesondir, "meson.build")
+    main_meson_file = Path(mesondir) / "meson.build"
     with open(main_meson_file, "w") as f:
         line = f"project(\n\t'{target}',\n"
         for language in languages:
@@ -648,7 +649,8 @@ def _create_source_meson_build(source_path_dict, srcfiles):
 
     # iterate over the files in each source directory
     for key, value in source_path_dict.items():
-        with open(os.path.join(value, "meson.build"), "w") as f:
+        meson_build_pth = Path(value) / "meson.build"
+        with open(meson_build_pth, "w") as f:
             f.write("sources += files(\n")
             pop_list = []
             for source_file in srcfiles_copy:

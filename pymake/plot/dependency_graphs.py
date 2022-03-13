@@ -16,6 +16,7 @@
 
 """
 import os
+from pathlib import Path
 
 import pydotplus.graphviz as pydot
 
@@ -80,7 +81,7 @@ def _add_pydot_nodes(graph, node_dict, n, ilev, level):
     if n in node_dict:
         return
 
-    ttl = os.path.basename(n.name)
+    ttl = Path(n.name).name
     pydotnode = pydot.Node(ttl, style="filled", fillcolor="red", label=ttl)
     node_dict[n] = pydotnode
     graph.add_node(pydotnode)
@@ -167,16 +168,16 @@ def make_plots(
     nodelist = _get_f_nodelist(srcfiles)
     for idx, n in enumerate(nodelist):
         if verbose:
-            print(f"{idx + 1:<3d}: {os.path.basename(n.name)}")
+            print(f"{idx + 1:<3d}: {Path(n.name).name}")
             for jdx, m in enumerate(n.dependencies):
-                msg = f"     {jdx + 1:<3d}: {os.path.basename(m.name)}"
+                msg = f"     {jdx + 1:<3d}: {Path(m.name).name}"
                 print(msg)
 
-    if not os.path.isdir(outdir):
+    if not Path(outdir).is_dir():
         raise Exception("output directory does not exist")
 
     for n in nodelist:
-        filename = os.path.join(outdir, os.path.basename(n.name) + extension)
+        filename = Path(outdir) / Path(n.name).name + extension
         if verbose:
             print("Creating " + filename)
         graph = pydot.Dot(graph_type="digraph")

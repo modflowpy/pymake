@@ -42,6 +42,7 @@ The script could be run from the command line using:
 import datetime
 import inspect
 import os
+from pathlib import Path
 import shutil
 import sys
 import traceback
@@ -183,7 +184,7 @@ def main(
         if not inplace:
             inplace = True
             print(
-                f"Using meson to build {os.path.basename(target)}, "
+                f"Using meson to build {Path(target).name}, "
                 + "ressetting inplace to True"
             )
 
@@ -197,13 +198,13 @@ def main(
 
         # process appdir
         if appdir is not None:
-            target = os.path.join(appdir, target)
+            target = Path(appdir) / target
 
             # make appdir if it does not exist
-            if not os.path.isdir(appdir):
+            if not Path(appdir).is_dir():
                 os.makedirs(appdir)
         else:
-            target = os.path.join(".", target)
+            target = Path(".") / target
 
         # set fc and cc to None if they are passed as 'none'
         if fc == "none":
@@ -240,10 +241,10 @@ def main(
                 print(msg)
 
         # make sure the path for the target exists
-        pth = os.path.dirname(target)
+        pth = Path(target).parent
         if pth == "":
             pth = "."
-        if not os.path.exists(pth):
+        if not Path(pth).exists():
             print(f"creating target path - {pth}\n")
             os.makedirs(pth)
 
@@ -409,7 +410,7 @@ def _pymake_initialize(
 
     """
     # remove the target if it already exists
-    if os.path.isfile(target):
+    if Path(target).is_file():
         os.remove(target)
 
     inplace = False
@@ -421,11 +422,11 @@ def _pymake_initialize(
     excludefiles = _get_extra_exclude_files(excludefiles)
     if excludefiles:
         for idx, exclude_file in enumerate(excludefiles):
-            excludefiles[idx] = os.path.basename(exclude_file)
+            excludefiles[idx] = Path(exclude_file).name
 
     # remove srcdir_temp and copy in srcdir
     if not inplace:
-        if os.path.isdir(srcdir_temp):
+        if Path(srcdir_temp).is_dir():
             shutil.rmtree(srcdir_temp)
         if excludefiles:
             shutil.copytree(
@@ -467,11 +468,11 @@ def _pymake_initialize(
     if files is None:
         files = []
     for fpth in files:
-        if not os.path.isfile(fpth):
+        if not Path(fpth).is_file():
             # check if fpp file has been replaced by a free format file
             if fpth.endswith(".fpp"):
                 fpth2 = fpth.replace(".fpp", ".f90")
-                if os.path.isfile(fpth):
+                if Path(fpth).is_file():
                     fpth = fpth2
                 else:
                     msg = f"Current working directory: {os.getcwd()}\n"
@@ -481,8 +482,8 @@ def _pymake_initialize(
         if inplace:
             dst = os.path.normpath(os.path.relpath(fpth, os.getcwd()))
         else:
-            dst = os.path.join(srcdir_temp, os.path.basename(fpth))
-            if os.path.isfile(dst):
+            dst = Path(srcdir_temp) / Path(fpth).name
+            if Path(dst).is_file():
                 raise ValueError(
                     "Error with extrafile.  Name conflicts with "
                     f"an existing source file: {dst}"
@@ -497,7 +498,7 @@ def _pymake_initialize(
     if excludefiles:
         remove_list = []
         for fpth in srcfiles:
-            if os.path.basename(fpth) in excludefiles:
+            if Path(fpth).name in excludefiles:
                 remove_list.append(fpth)
         for fpth in remove_list:
             srcfiles.remove(fpth)
@@ -505,9 +506,9 @@ def _pymake_initialize(
     # if they don't exist and not compiling with meson,
     # create directories for objects and module (*.mod) files.
     if not meson:
-        if not os.path.exists(objdir_temp):
+        if not Path(objdir_temp).is_dir():
             os.makedirs(objdir_temp)
-        if not os.path.exists(moddir_temp):
+        if not Path(moddir_temp).is_dir():
             os.makedirs(moddir_temp)
 
     return srcfiles
@@ -536,9 +537,9 @@ def get_temporary_directories(appdir=None):
     else:
         base_pth = appdir
     return (
-        os.path.join(base_pth, "obj_temp"),
-        os.path.join(base_pth, "mod_temp"),
-        os.path.join(base_pth, "src_temp"),
+        Path(base_pth) / "obj_temp",
+        Path(base_pth) / "mod_temp",
+        Path(base_pth) / "src_temp",
     )
 
 
@@ -613,7 +614,7 @@ def _clean_temp_files(
     delext = [".exp", ".lib"]
     dpth = os.path.dirname(os.path.abspath(target))
     for f in os.listdir(dpth):
-        fpth = os.path.join(dpth, f)
+        fpth = Path(dpth) / f
         for ext in delext:
             if fpth.endswith(ext):
                 if verbose:
@@ -628,33 +629,33 @@ def _clean_temp_files(
         )
         print(msg)
     if not inplace:
-        if os.path.isdir(srcdir_temp):
+        if Path(srcdir_temp).is_dir():
             if verbose:
                 print(f"removing...'{srcdir_temp}'")
             shutil.rmtree(srcdir_temp)
-    if os.path.isdir(objdir_temp):
+    if Path(objdir_temp).is_dir():
         if verbose:
             print(f"removing...'{objdir_temp}'")
         shutil.rmtree(objdir_temp)
-    if os.path.isdir(moddir_temp):
+    if Path(moddir_temp).is_dir():
         if verbose:
             print(f"removing...'{moddir_temp}'")
         shutil.rmtree(moddir_temp)
     if meson:
-        meson_builddir = os.path.join(mesondir, "_build")
-        if os.path.isdir(meson_builddir):
+        meson_builddir = Path(mesondir) / "_build"
+        if Path(meson_builddir).is_dir():
             if verbose:
                 print(f"removing...'{meson_builddir}'")
             shutil.rmtree(meson_builddir)
-        main_meson_file = os.path.join(mesondir, "meson.build")
-        if os.path.isfile(main_meson_file):
+        main_meson_file = Path(mesondir) / "meson.build"
+        if Path(main_meson_file).is_file():
             if verbose:
                 print(f"removing...'{main_meson_file}'")
                 os.remove(main_meson_file)
 
     # remove the windows batchfile
     batch_file = "compile.bat"
-    if intelwin and os.path.isfile(batch_file):
+    if intelwin and Path(batch_file).is_file():
         os.remove(batch_file)
     return
 
@@ -678,15 +679,15 @@ def _create_openspec(srcfiles, verbose):
     # build list of directory paths from srcfiles
     dpths = []
     for fpth in srcfiles:
-        dpth = os.path.dirname(fpth)
+        dpth = Path(fpth).parent
         if dpth not in dpths:
             dpths.append(dpth)
 
     # replace files in directory paths if they exist
     for dpth in dpths:
         for file in files:
-            fpth = os.path.join(dpth, file)
-            if os.path.isfile(fpth):
+            fpth = Path(dpth) / file
+            if Path(fpth).is_file():
                 if verbose:
                     print(f'replacing..."{fpth}"')
                 f = open(fpth, "w")
@@ -721,9 +722,9 @@ def _check_out_of_date(srcfile, objfile):
 
     """
     stale = True
-    if os.path.exists(objfile):
-        t1 = os.path.getmtime(objfile)
-        t2 = os.path.getmtime(srcfile)
+    if Path(objfile).exists():
+        t1 = Path(objfile).stat().st_mtime
+        t2 = Path(srcfile).stat().st_mtime
         if t1 > t2:
             stale = False
     return stale
@@ -813,7 +814,7 @@ def _pymake_compile(
 
     # get temporary object and module directories
     objdir_temp, moddir_temp, _ = get_temporary_directories(
-        os.path.dirname(target)
+        Path(target).parent
     )
 
     # set optimization levels
@@ -854,7 +855,7 @@ def _pymake_compile(
 
     # clean exe prior to build so that test for exe below can return a
     # non-zero error code
-    if os.path.isfile(target):
+    if Path(target).is_file():
         if verbose:
             msg = f"removing existing target with same name: {target}"
             print(msg)
@@ -874,7 +875,7 @@ def _pymake_compile(
 
         # update target extension
         if sharedobject:
-            program_path, ext = os.path.splitext(target)
+            program_path, ext = Path(target).stem, Path(target).suffix
             if ext.lower() != ".dll":
                 target = program_path + ".dll"
         else:
@@ -883,7 +884,7 @@ def _pymake_compile(
 
         # delete the batch file if it exists
         batchfile = "compile.bat"
-        if os.path.isfile(batchfile):
+        if Path(batchfile).is_file():
             try:
                 os.remove(batchfile)
             except:
@@ -920,7 +921,7 @@ def _pymake_compile(
 
     else:
         if sharedobject:
-            program_path, ext = os.path.splitext(target)
+            program_path, ext = Path(target).stem, Path(target).suffix
             if _get_osname() == "win32":
                 if ext.lower() != ".dll":
                     target = program_path + ".dll"
@@ -938,7 +939,7 @@ def _pymake_compile(
         # assume that header files may be in other folders, so make a list
         searchdir = []
         for f in srcfiles:
-            dirname = os.path.dirname(f)
+            dirname = Path(f).parent
             if dirname not in searchdir:
                 searchdir.append(dirname)
 
@@ -947,7 +948,7 @@ def _pymake_compile(
         for srcfile in srcfiles:
             cmdlist = []
             iscfile = False
-            ext = os.path.splitext(srcfile)[1].lower()
+            ext = Path(srcfile).suffix.lower()
             if ext in [".c", ".cpp"]:  # mja
                 iscfile = True
                 cmdlist.append(cc)  # mja
@@ -987,7 +988,7 @@ def _pymake_compile(
             # object file name and location
             srcname, srcext = os.path.splitext(srcfile)
             srcname = srcname.split(os.path.sep)[-1]
-            objfile = os.path.join(objdir_temp, srcname + ".o")
+            objfile = Path(objdir_temp) / f"{srcname}.o"
             cmdlist.append("-o")
             cmdlist.append(objfile)
 
@@ -1026,19 +1027,19 @@ def _pymake_compile(
             if idx == 0:
                 if intelwin:
                     msg = (
-                        f"\nCompiling '{os.path.basename(target)}' "
+                        f"\nCompiling '{Path(target).name}' "
                         + "for Windows using Intel compilers..."
                     )
                 else:
                     msg = (
                         "\nCompiling object files for "
-                        + f"'{os.path.basename(target)}'"
+                        + f"'{Path(target).name}'"
                     )
                 print(msg)
             if idx > 0 and idx == ilink:
                 msg = (
                     "\nLinking object files "
-                    + f"to make '{os.path.basename(target)}'..."
+                    + f"to make '{Path(target).name}'..."
                 )
                 print(msg)
 
@@ -1137,7 +1138,7 @@ def _create_win_batch(
                 cpvars = (
                     "C:\\Program Files (x86)\\Intel\\oneAPI\\" + "setvars.bat"
                 )
-            if not os.path.isfile(cpvars):
+            if not Path(cpvars).is_file():
                 raise Exception(f"Could not find cpvars: {cpvars}")
             intel_setvars = f'"{cpvars}"'
             break
@@ -1150,7 +1151,7 @@ def _create_win_batch(
                 cpvars = os.path.join(
                     stand_alone_intel, "bin", "compilervars.bat"
                 )
-                if not os.path.isfile(cpvars):
+                if not Path(cpvars).is_file():
                     raise Exception(f"Could not find cpvars: {cpvars}")
                 intel_setvars = '"' + os.path.normpath(cpvars) + '" ' + arch
                 break
@@ -1172,16 +1173,12 @@ def _create_win_batch(
     # assume that header files may be in other folders, so make a list
     searchdir = []
     for s in srcfiles:
-        dirname = os.path.dirname(s)
+        dirname = Path(s).parent
         if dirname not in searchdir:
             searchdir.append(dirname)
 
     # write commands to build object files
-    line = (
-        "echo Creating object files to create '"
-        + os.path.basename(target)
-        + "'\n"
-    )
+    line = "echo Creating object files to create '" + Path(target).name + "'\n"
     f.write(line)
     for srcfile in srcfiles:
         if srcfile.endswith(".c") or srcfile.endswith(".cpp"):
@@ -1215,11 +1212,7 @@ def _create_win_batch(
         f.write(cmd + "\n")
 
     # write commands to link
-    line = (
-        "echo Linking object files to create '"
-        + os.path.basename(target)
-        + "'\n"
-    )
+    line = "echo Linking object files to create '" + Path(target).name + "'\n"
     f.write(line)
 
     # assemble the link command
@@ -1334,7 +1327,7 @@ def _create_makefile(
         preprocess = _preprocess_file(_get_fortran_files(srcfiles))
 
     # set exe_name
-    exe_name = os.path.splitext(os.path.basename(target))[0]
+    exe_name = Path(target).stem
 
     # build heading
     heading = (
@@ -1363,7 +1356,7 @@ def _create_makefile(
     files = _get_extra_exclude_files(extrafiles)
     if files is not None:
         for ef in files:
-            fdir = os.path.dirname(ef)
+            fdir = Path(ef).parent
             rdir = os.path.relpath(fdir, os.getcwd())
             rdir = rdir.replace("\\", "/")
             if rdir not in dirs:
@@ -1468,7 +1461,7 @@ def _create_makefile(
     f.write(line)
 
     # get path to executable
-    dpth = os.path.dirname(target)
+    dpth = Path(target).parent
     if len(dpth) > 0:
         dpth = os.path.relpath(dpth, make_dir)
     else:
@@ -1892,8 +1885,8 @@ def _create_makefile(
         windows_line_ending = b"\r\n"
         unix_line_ending = b"\n"
         for file in (
-            os.path.join(make_dir, "makefile"),
-            os.path.join(make_dir, makedefaults),
+            Path(make_dir) / "makefile",
+            Path(make_dir) / makedefaults,
         ):
             with open(file, "rb") as f:
                 content = f.read()

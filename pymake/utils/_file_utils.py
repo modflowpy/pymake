@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 
 def _get_extra_exclude_files(external_file):
@@ -22,8 +23,8 @@ def _get_extra_exclude_files(external_file):
     else:
         if isinstance(external_file, (list, tuple)):
             files = external_file
-        elif os.path.isfile(external_file):
-            efpth = os.path.dirname(external_file)
+        elif Path(external_file).is_file():
+            efpth = Path(external_file).parent
             with open(external_file, "r") as f:
                 files = []
                 for line in f:

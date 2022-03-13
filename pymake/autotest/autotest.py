@@ -48,6 +48,7 @@ to a dedicated GitHub repository.
 
 """
 import os
+from pathlib import Path
 import shutil
 import textwrap
 
@@ -88,11 +89,11 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
 
     """
     # Construct src pth from namefile or lgr file
-    src = os.path.dirname(namefile)
+    src = Path(namefile).parent
 
     # Create the destination folder, if required
     create_dir = False
-    if os.path.exists(dst):
+    if Path(dst).exists():
         if remove_existing:
             print("Removing folder " + dst)
             shutil.rmtree(dst)
@@ -105,7 +106,7 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
     # determine if a namefile is a lgr control file - get individual
     # name files out of the lgr control file
     namefiles = [namefile]
-    ext = os.path.splitext(namefile)[1]
+    ext = Path(namefile).suffix
     if ".lgr" in ext.lower():
         lines = [line.rstrip("\n") for line in open(namefile)]
         for line in lines:
@@ -115,14 +116,14 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
                 continue
             t = line.split()
             if ".nam" in t[0].lower():
-                fpth = os.path.join(src, t[0])
+                fpth = Path(src) / t[0]
                 namefiles.append(fpth)
 
     # Make list of files to copy
     files2copy = []
     for fpth in namefiles:
-        files2copy.append(os.path.basename(fpth))
-        ext = os.path.splitext(fpth)[1]
+        files2copy.append(Path(fpth).name)
+        ext = Path(fpth).suffix
         # copy additional files contained in the name file and
         # associated package files
         if ext.lower() == ".nam":
@@ -133,21 +134,21 @@ def setup(namefile, dst, remove_existing=True, extrafiles=None):
         if isinstance(extrafiles, str):
             extrafiles = [extrafiles]
         for fl in extrafiles:
-            files2copy.append(os.path.basename(fl))
+            files2copy.append(Path(fl).name)
 
     # Copy the files
     for f in files2copy:
-        srcf = os.path.join(src, f)
-        dstf = os.path.join(dst, f)
+        srcf = Path(src) / f
+        dstf = Path(dst) / f
 
         # Check to see if dstf is going into a subfolder, and create that
         # subfolder if it doesn't exist
-        sf = os.path.dirname(dstf)
-        if not os.path.isdir(sf):
+        sf = Path(dstf).parent
+        if not Path(sf).is_dir():
             os.makedirs(sf)
 
         # Now copy the file
-        if os.path.exists(srcf):
+        if Path(srcf).exists():
             print("Copy file '" + srcf + "' -> '" + dstf + "'")
             shutil.copy(srcf, dstf)
         else:
@@ -176,7 +177,7 @@ def setup_comparison(namefile, dst, remove_existing=True):
 
     """
     # Construct src pth from namefile
-    src = os.path.dirname(namefile)
+    src = Path(namefile).parent
     action = None
     for root, dirs, files in os.walk(src):
         dl = [d.lower() for d in dirs]
@@ -201,8 +202,8 @@ def setup_comparison(namefile, dst, remove_existing=True):
                     action = dirs[idx]
                 break
     if action is not None:
-        dst = os.path.join(dst, f"{action}")
-        if not os.path.isdir(dst):
+        dst = Path(dst) / f"{action}"
+        if not Path(dst).is_dir():
             try:
                 os.mkdir(dst)
             except:
@@ -212,37 +213,35 @@ def setup_comparison(namefile, dst, remove_existing=True):
             print(f"cleaning...{dst}")
             for root, dirs, files in os.walk(dst):
                 for f in files:
-                    tpth = os.path.join(root, f)
+                    tpth = Path(root) / f
                     print(f"  removing...{tpth}")
                     os.remove(tpth)
                 for d in dirs:
-                    tdir = os.path.join(root, d)
+                    tdir = Path(root) / d
                     print(f"  removing...{tdir}")
                     shutil.rmtree(tdir)
         # copy files
-        cmppth = os.path.join(src, action)
+        cmppth = Path(src) / action
         files = os.listdir(cmppth)
         files2copy = []
         if action.lower() == ".cmp":
             for file in files:
-                if ".cmp" in os.path.splitext(file)[1].lower():
-                    files2copy.append(os.path.join(cmppth, file))
+                if ".cmp" in Path(file).suffix.lower():
+                    files2copy.append(Path(cmppth) / file)
             for srcf in files2copy:
-                f = os.path.basename(srcf)
-                dstf = os.path.join(dst, f)
+                f = Path(srcf).name
+                dstf = Path(dst) / f
                 # Now copy the file
-                if os.path.exists(srcf):
+                if Path(srcf).exists():
                     print("Copy file '" + srcf + "' -> '" + dstf + "'")
                     shutil.copy(srcf, dstf)
                 else:
                     print(srcf + " does not exist")
         else:
             for file in files:
-                if ".nam" in os.path.splitext(file)[1].lower():
-                    files2copy.append(
-                        os.path.join(cmppth, os.path.basename(file))
-                    )
-                    nf = os.path.join(src, action, os.path.basename(file))
+                if ".nam" in Path(file).suffix.lower():
+                    files2copy.append(Path(cmppth) / Path(file).name)
+                    nf = Path(src) / action / Path(file).name
                     setup(nf, dst, remove_existing=remove_existing)
                     break
 
@@ -261,7 +260,7 @@ def teardown(src):
     -------
 
     """
-    if os.path.exists(src):
+    if Path(src).exists():
         print("Removing folder " + src)
         shutil.rmtree(src)
     return
@@ -281,9 +280,9 @@ def get_input_files(namefile):
         list of MODFLOW-based model input files
 
     """
-    srcdir = os.path.dirname(namefile)
+    srcdir = Path(namefile).parent
     filelist = []
-    fname = os.path.join(srcdir, namefile)
+    fname = Path(srcdir) / namefile
     with open(fname, "r") as f:
         lines = f.readlines()
 
@@ -293,7 +292,7 @@ def get_input_files(namefile):
             continue
         if line.strip()[0] in ["#", "!"]:
             continue
-        ext = os.path.splitext(ll[2])[1]
+        ext = Path(ll[2]).suffix
         if ext.lower() not in ignore_ext:
             if len(ll) > 3:
                 if "replace" in ll[3].lower():
@@ -305,7 +304,7 @@ def get_input_files(namefile):
     # list of files to copy.
     otherfiles = []
     for fname in filelist:
-        fname = os.path.join(srcdir, fname)
+        fname = Path(srcdir) / fname
         try:
             f = open(fname, "r")
             for line in f:
@@ -352,7 +351,7 @@ def get_namefiles(pth, exclude=None):
     namefiles = []
     for root, _, files in os.walk(pth):
         namefiles += [
-            os.path.join(root, file) for file in files if file.endswith(".nam")
+            Path(root) / file for file in files if file.endswith(".nam")
         ]
     if exclude is not None:
         if isinstance(exclude, str):
@@ -414,7 +413,7 @@ def get_entries_from_namefile(namefile, ftype=None, unit=None, extension=None):
                 entries.append((filename, ll[0], ll[1], status))
         elif extension is not None:
             filename = os.path.join(os.path.split(namefile)[0], ll[2])
-            ext = os.path.splitext(filename)[1]
+            ext = Path(filename).suffix
             if len(ext) > 0:
                 if ext[0] == ".":
                     ext = ext[1:]
@@ -498,7 +497,7 @@ def setup_mf6(
 
     # Create the destination folder
     create_dir = False
-    if os.path.exists(dst):
+    if Path(dst).exists():
         if remove_existing:
             print("Removing folder " + dst)
             shutil.rmtree(dst)
@@ -509,7 +508,7 @@ def setup_mf6(
         os.makedirs(dst)
 
     # Make list of files to copy
-    fname = os.path.join(src, mfnamefile)
+    fname = Path(src) / mfnamefile
     fname = os.path.abspath(fname)
     mf6inp, mf6outp = get_mf6_files(fname)
     files2copy = [mfnamefile] + mf6inp
@@ -517,11 +516,11 @@ def setup_mf6(
     # determine if there are any .ex files
     exinp = []
     for f in mf6outp:
-        ext = os.path.splitext(f)[1]
+        ext = Path(f).suffix
         if ext.lower() == ".hds":
-            pth = os.path.join(src, f + ".ex")
-            if os.path.isfile(pth):
-                exinp.append(f + ".ex")
+            pth = Path(src) / f"{f}.ex"
+            if Path(pth).is_file():
+                exinp.append(f"{f}.ex")
     if len(exinp) > 0:
         files2copy += exinp
     if extrafiles is not None:
@@ -529,20 +528,20 @@ def setup_mf6(
 
     # Copy the files
     for f in files2copy:
-        srcf = os.path.join(src, f)
-        dstf = os.path.join(dst, f)
+        srcf = Path(src) / f
+        dstf = Path(dst) / f
 
         # Check to see if dstf is going into a subfolder, and create that
         # subfolder if it doesn't exist
-        sf = os.path.dirname(dstf)
-        if not os.path.isdir(sf):
+        sf = Path(dstf).parent
+        if not Path(sf).is_dir():
             try:
                 os.mkdir(sf)
             except:
                 print("Could not make " + sf)
 
         # Now copy the file
-        if os.path.exists(srcf):
+        if Path(srcf).exists():
             print("Copy file '" + srcf + "' -> '" + dstf + "'")
             shutil.copy(srcf, dstf)
         else:
@@ -617,8 +616,8 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
     action = get_mf6_comparison(src)
 
     if action is not None:
-        dst = os.path.join(dst, f"{action}")
-        if not os.path.isdir(dst):
+        dst = Path(dst) / f"{action}"
+        if not Path(dst).is_dir():
             try:
                 os.mkdir(dst)
             except:
@@ -628,26 +627,26 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
             print(f"cleaning...{dst}")
             for root, dirs, files in os.walk(dst):
                 for f in files:
-                    tpth = os.path.join(root, f)
+                    tpth = Path(root) / f
                     print(f"  removing...{tpth}")
                     os.remove(tpth)
                 for d in dirs:
-                    tdir = os.path.join(root, d)
+                    tdir = Path(root) / d
                     print(f"  removing...{tdir}")
                     shutil.rmtree(tdir)
         # copy files
-        cmppth = os.path.join(src, action)
+        cmppth = Path(src) / action
         files = os.listdir(cmppth)
         files2copy = []
         if action.lower() == "compare" or action.lower() == ".cmp":
             for file in files:
-                if ".cmp" in os.path.splitext(file)[1].lower():
-                    files2copy.append(os.path.join(cmppth, file))
+                if ".cmp" in Path(file).suffix.lower():
+                    files2copy.append(Path(cmppth) / file)
             for srcf in files2copy:
-                f = os.path.basename(srcf)
-                dstf = os.path.join(dst, f)
+                f = Path(srcf).name
+                dstf = Path(dst) / f
                 # Now copy the file
-                if os.path.exists(srcf):
+                if Path(srcf).exists():
                     print("Copy file '" + srcf + "' -> '" + dstf + "'")
                     shutil.copy(srcf, dstf)
                 else:
@@ -656,7 +655,7 @@ def setup_mf6_comparison(src, dst, remove_existing=True):
             if "mf6" in action.lower():
                 for file in files:
                     if "mfsim.nam" in file.lower():
-                        srcf = os.path.join(cmppth, os.path.basename(file))
+                        srcf = Path(cmppth) / Path(file).name
                         files2copy.append(srcf)
                         srcdir = os.path.join(src, action)
                         setup_mf6(srcdir, dst, remove_existing=remove_existing)

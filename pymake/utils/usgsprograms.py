@@ -21,6 +21,7 @@ A table listing the available pymake targets is included below:
 import datetime
 import json
 import os
+from pathlib import Path
 import sys
 
 from .download import _request_header
@@ -87,8 +88,8 @@ class usgs_program_data:
 
         """
         # pth = os.path.dirname(os.path.abspath(pymake.__file__))
-        pth = os.path.dirname(os.path.abspath(__file__))
-        fpth = os.path.join(pth, program_data_file)
+        pth = Path(Path(__file__).resolve()).parent
+        fpth = Path(pth) / program_data_file
         url_in = open(fpth, "r").read().split("\n")
 
         program_data = {}
@@ -184,14 +185,14 @@ class usgs_program_data:
 
         """
         # remove path and extension from key
-        key = os.path.basename(key)
+        key = Path(key).name
         if (
             key.endswith(".exe")
             or key.endswith(".dll")
             or key.endswith(".so")
             or key.endswith(".dylib")
         ):
-            key = os.path.splitext(key)[0]
+            key = Path(key).stem
 
         # return program attributes
         return usgs_program_data()._target_data(key)
@@ -407,12 +408,12 @@ class usgs_program_data:
                 appdir = sys.argv[idx + 1]
 
         # make appdir if it does not already exist
-        if not os.path.isdir(appdir):
+        if not Path(appdir).is_dir():
             os.makedirs(appdir)
 
         # write code.json
         if appdir != ".":
-            dst = os.path.join(appdir, fpth)
+            dst = Path(appdir) / fpth
             with open(dst, "w") as f:
                 json.dump(prog_data, f, indent=4)
 
@@ -521,7 +522,7 @@ class usgs_program_data:
 
         """
         if temp_dict is not None:
-            if os.path.isfile(fpth):
+            if Path(fpth).is_file():
                 json_dict = usgs_program_data.load_json(fpth=fpth)
                 if json_dict is not None:
                     for key, value in temp_dict.items():

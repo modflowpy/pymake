@@ -2,6 +2,7 @@
 appropriate linker flags for defined targets.
 """
 import os
+from pathlib import Path
 import sys
 
 from ._compiler_language_files import (
@@ -98,14 +99,14 @@ def _get_base_app_name(value):
         application name base name with out directory path and extension
 
     """
-    value = os.path.basename(value)
+    value = Path(value).suffix
     if (
         value.endswith(".exe")
         or value.endswith(".dll")
         or value.endswith(".dylib")
         or value.endswith(".so")
     ):
-        value = os.path.splitext(value)[0]
+        value = Path(value).stem
 
     return value
 

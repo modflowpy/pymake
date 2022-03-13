@@ -25,6 +25,7 @@ USGS applications are built if no list is passed to
 
 """
 import os
+from pathlib import Path
 import shutil
 import sys
 from datetime import datetime
@@ -104,7 +105,7 @@ def build_apps(
     if appdir is None:
         base_pth = "."
     else:
-        base_pth = os.path.dirname(appdir)
+        base_pth = Path(appdir).par
 
     # set meson variable if a pymake object was not passed in
     if pymake_object is None:
@@ -119,7 +120,7 @@ def build_apps(
     # clean any existing temporary directories
     temp_pths = get_temporary_directories(base_pth)
     for pth in temp_pths:
-        if os.path.isdir(pth):
+        if Path(pth).is_dir():
             shutil.rmtree(pth)
 
     # set object to clean after each build
@@ -208,8 +209,10 @@ def build_apps(
 
         # set target and srcdir
         pmobj.target = target
-        pmobj.srcdir = os.path.join(
-            download_dir, code_dict[target].dirname, code_dict[target].srcdir
+        pmobj.srcdir = (
+            Path(download_dir)
+            / code_dict[target].dirname
+            / code_dict[target].srcdir
         )
 
         # determine if single, double, or both should be built

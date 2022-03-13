@@ -1,6 +1,7 @@
 """Private functions for processing c/c++ and fortran files
 """
 import os
+from pathlib import Path
 
 from ._dag import _order_c_source_files, _order_f_source_files
 
@@ -26,7 +27,7 @@ def _get_fortran_files(srcfiles, extensions=False):
         srcfiles = [srcfiles]
     files_out = []
     for srcfile in srcfiles:
-        ext = os.path.splitext(srcfile)[1]
+        ext = Path(srcfile).suffix
         if ext.lower() in (
             ".f",
             ".for",
@@ -63,7 +64,7 @@ def _get_c_files(srcfiles, extensions=False):
     """
     files_out = []
     for srcfile in srcfiles:
-        ext = os.path.splitext(srcfile)[1]
+        ext = Path(srcfile).suffix
         if ext.lower() in (
             ".c",
             ".cpp",
@@ -95,7 +96,7 @@ def _get_iso_c(srcfiles):
     """
     iso_c = False
     for srcfile in srcfiles:
-        if os.path.exists(srcfile):
+        if Path(srcfile).exists():
             # open the file
             f = open(srcfile, "rb")
 
@@ -120,7 +121,7 @@ def _get_iso_c(srcfiles):
             if iso_c:
                 break
         else:
-            msg = "get_iso_c: could not " + f"open {os.path.basename(srcfile)}"
+            msg = "get_iso_c: could not " + f"open {Path(srcfile).name}"
             raise FileNotFoundError(msg)
 
     return iso_c
@@ -149,7 +150,7 @@ def _preprocess_file(srcfiles, meson=False):
 
     preprocess = False
     for srcfile in srcfiles:
-        if os.path.exists(srcfile):
+        if Path(srcfile).exists():
             # open the file
             f = open(srcfile, "rb")
 
@@ -173,7 +174,7 @@ def _preprocess_file(srcfiles, meson=False):
                     "#error",
                 ):
                     if meson:
-                        file_extension = os.path.splitext(srcfile)[1]
+                        file_extension = Path(srcfile).suffix
                         if file_extension not in (
                             ".F",
                             ".F90",
@@ -188,10 +189,7 @@ def _preprocess_file(srcfiles, meson=False):
                 break
 
         else:
-            msg = (
-                "_preprocess_file: could not "
-                + f"open {os.path.basename(srcfile)}"
-            )
+            msg = "_preprocess_file: could not " + f"open {Path(srcfile).name}"
             raise FileNotFoundError(msg)
 
     return preprocess
@@ -216,7 +214,7 @@ def _get_main(srcfiles):
 
     main_file = None
     for srcfile in srcfiles:
-        if os.path.exists(srcfile):
+        if Path(srcfile).exists():
             # open the file
             f = open(srcfile, "rb")
 
@@ -253,7 +251,7 @@ def _get_main(srcfiles):
                 break
 
         else:
-            msg = "_get_main: could not " + f"open {os.path.basename(srcfile)}"
+            msg = "_get_main: could not " + f"open {Path(srcfile).name}"
             raise FileNotFoundError(msg)
 
     return main_file

@@ -55,6 +55,7 @@ MODFLOW 6 was built.
 
 import argparse
 import os
+from pathlib import Path
 import shutil
 import sys
 import time
@@ -239,12 +240,12 @@ class Pymake:
             # list of applications build at this time
             if len(self.build_targets) > 0:
                 for target in self.build_targets:
-                    targets.append(os.path.basename(target))
+                    targets.append(Path(target).name)
 
                     # set appdir based on first target, assumes that the path
                     # for all of the targets are the same
                     if appdir is None:
-                        appdir = os.path.dirname(target)
+                        appdir = Path(target).parent
             # determine files in appdir if no applications build at this
             # time (--keep command line argument)
             else:
@@ -258,7 +259,7 @@ class Pymake:
                 targets.append("code.json")
 
             # delete the zip file if it exists
-            if os.path.exists(zip_pth):
+            if Path(zip_pth).exists():
                 if self.verbose:
                     msg = f"Deleting existing zipfile '{zip_pth}'"
                     print(msg)
@@ -289,7 +290,7 @@ class Pymake:
 
         """
         for target in self.build_targets:
-            if os.path.exists(target):
+            if Path(target).exists():
                 msg = f"removing '{target}'"
                 os.remove(target)
             else:
@@ -347,7 +348,7 @@ class Pymake:
             self.verify = verify
             self.timeout = timeout
             self.download_path = download_path
-            self.download_dir = os.path.join(download_path, prog_dict.dirname)
+            self.download_dir = Path(download_path) / prog_dict.dirname
 
         return
 
@@ -426,7 +427,7 @@ class Pymake:
                 # reset self.download
                 self.download = None
 
-                if os.path.exists(self.download_dir):
+                if Path(self.download_dir).exists():
                     ntries = 10
                     for itries in range(ntries):
                         # wait to delete on windows
@@ -500,11 +501,11 @@ class Pymake:
             target = self.target
 
         if self.appdir is not None:
-            if os.path.dirname(self.target) != self.appdir:
-                target = os.path.join(self.appdir, os.path.basename(target))
+            if Path(self.target).parent != self.appdir:
+                target = Path(self.appdir) / Path(target).name
 
         build_target = True
-        if os.path.exists(target):
+        if Path(target).exists():
             if self.keep:
                 build_target = False
 
@@ -519,7 +520,7 @@ class Pymake:
             target name without path and extension
 
         """
-        target = os.path.basename(self.target)
+        target = Path(self.target).name
         if target.lower().endswith(".exe"):
             target = target[:-4]
         elif target.lower().endswith(".dll"):
@@ -542,7 +543,7 @@ class Pymake:
         """
         if self.srcdir2 is None:
             if self._get_base_target() in ("libmf6",):
-                self.srcdir2 = os.path.join(self.download_dir, "src")
+                self.srcdir2 = Path(self.download_dir) / "src"
         return
 
     def _set_sharedobject(self):
@@ -610,13 +611,13 @@ class Pymake:
 
             # evaluate extrafiles type
             if extrafiles:
-                srcdir = os.path.abspath(self.srcdir)
+                srcdir = Path(self.srcdir).resolve()
                 if isinstance(extrafiles, list):
                     for idx, value in enumerate(extrafiles):
-                        fpth = os.path.join(srcdir, value)
+                        fpth = Path(srcdir) / value
                         extrafiles[idx] = os.path.normpath(fpth)
                 elif isinstance(extrafiles, str):
-                    fpth = os.path.join(srcdir, extrafiles)
+                    fpth = Path(srcdir) / extrafiles
                     extrafiles = os.path.normpath(fpth)
                 else:
                     msg = (
@@ -643,7 +644,7 @@ class Pymake:
         if self.excludefiles is None:
             if self._get_base_target() in ("libmf6",):
                 self.excludefiles = [
-                    os.path.join(self.download_dir, "src", "mf6.f90")
+                    Path(self.download_dir) / "src" / "mf6.f90"
                 ]
         return
 
@@ -674,7 +675,7 @@ class Pymake:
 
         prog_dict = usgs_program_data.get_target(self.target)
         if self.srcdir is None:
-            self.srcdir = os.path.join(self.download_dir, prog_dict.srcdir)
+            self.srcdir = Path(self.download_dir) / prog_dict.srcdir
 
         # set include_subdirs for known targets
         self._set_include_subdirs()
@@ -821,10 +822,10 @@ class Pymake:
         -------
 
         """
-        if os.path.abspath(self.target) not in self.build_targets:
+        if Path(self.target).resolve() not in self.build_targets:
             if self.verbose:
                 print(f"adding {self.target} to build_targets list")
-            self.build_targets.append(os.path.abspath(self.target))
+            self.build_targets.append(Path(self.target).resolve())
 
         return
 
@@ -864,18 +865,18 @@ class Pymake:
                 ext = None
 
         if ext is not None:
-            filename, file_extension = os.path.splitext(target)
+            file_extension = Path(target).suffix
             if file_extension.lower() != ext:
                 target += ext
 
         # add double and debug to target name
         if modify_target:
             if self.double:
-                filename, file_extension = os.path.splitext(target)
+                filename = Path(target).stem
                 if "dbl" not in filename.lower():
-                    target = filename + "dbl" + file_extension
+                    target = filename + "dbl" + Path(target).suffix
             if self.debug:
-                filename, file_extension = os.path.splitext(target)
+                filename = Path(target).stem
                 if filename.lower()[-1] != "d":
-                    target = filename + "d" + file_extension
+                    target = filename + "d" + Path(target).suffix
         return target
