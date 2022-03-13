@@ -2,8 +2,8 @@
 appropriate linker flags for defined targets.
 """
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from ._compiler_language_files import (
     _get_c_files,

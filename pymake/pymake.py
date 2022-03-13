@@ -55,10 +55,10 @@ MODFLOW 6 was built.
 
 import argparse
 import os
-from pathlib import Path
 import shutil
 import sys
 import time
+from pathlib import Path
 
 from .config import __description__
 from .pymake_base import main

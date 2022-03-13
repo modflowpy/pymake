@@ -21,8 +21,8 @@ A table listing the available pymake targets is included below:
 import datetime
 import json
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from .download import _request_header
 

@@ -25,10 +25,10 @@ USGS applications are built if no list is passed to
 
 """
 import os
-from pathlib import Path
 import shutil
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from .pymake import Pymake
 from .pymake_base import get_temporary_directories

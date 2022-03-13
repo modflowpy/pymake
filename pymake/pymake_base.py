@@ -42,10 +42,10 @@ The script could be run from the command line using:
 import datetime
 import inspect
 import os
-from pathlib import Path
 import shutil
 import sys
 import traceback
+from pathlib import Path
 
 from .config import __version__
 from .utils._compiler_language_files import (

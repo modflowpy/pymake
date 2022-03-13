@@ -11,12 +11,12 @@
 
 """
 import os
-from pathlib import Path
 import shutil
 import sys
 import tarfile
 import time
 import timeit
+from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 import requests

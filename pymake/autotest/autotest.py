@@ -48,9 +48,9 @@ to a dedicated GitHub repository.
 
 """
 import os
-from pathlib import Path
 import shutil
 import textwrap
+from pathlib import Path
 
 ignore_ext = (
     ".hds",
