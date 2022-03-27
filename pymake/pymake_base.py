@@ -616,7 +616,7 @@ def _clean_temp_files(
     for f in os.listdir(dpth):
         fpth = Path(dpth) / f
         for ext in delext:
-            if fpth.endswith(ext):
+            if fpth.suffix == ext:
                 if verbose:
                     print(f"    removing...'{fpth}'")
                 os.remove(fpth)
@@ -988,7 +988,7 @@ def _pymake_compile(
             # object file name and location
             srcname, srcext = os.path.splitext(srcfile)
             srcname = srcname.split(os.path.sep)[-1]
-            objfile = Path(objdir_temp) / f"{srcname}.o"
+            objfile = str(Path(objdir_temp) / f"{srcname}.o")
             cmdlist.append("-o")
             cmdlist.append(objfile)
 
@@ -1008,9 +1008,9 @@ def _pymake_compile(
         # Build the link command and then link to create the executable
         ilink = len(cmdlists)
         if ilink > 0:
-            cmdlist = [lc, optlevel]
+            cmdlist = [str(lc), optlevel]
             cmdlist.append("-o")
-            cmdlist.append(target)
+            cmdlist.append(str(target))
             for objfile in objfiles:
                 cmdlist.append(objfile)
 
@@ -1462,8 +1462,8 @@ def _create_makefile(
 
     # get path to executable
     dpth = Path(target).parent
-    if len(dpth) > 0:
-        dpth = os.path.relpath(dpth, make_dir)
+    if len(str(dpth)) > 0:
+        dpth = os.path.relpath(str(dpth), make_dir)
     else:
         dpth = "."
 
@@ -1474,9 +1474,9 @@ def _create_makefile(
     )
     tpth = dpth.replace("\\", "/")
     line += f"BINDIR = {tpth}\n"
-    tpth = os.path.relpath(objdir_temp.replace("\\", "/"), make_dir)
+    tpth = os.path.relpath(str(objdir_temp).replace("\\", "/"), make_dir)
     line += f"OBJDIR = {tpth}\n"
-    tpth = os.path.relpath(moddir_temp.replace("\\", "/"), make_dir)
+    tpth = os.path.relpath(str(moddir_temp).replace("\\", "/"), make_dir)
     line += f"MODDIR = {tpth}\n"
     line += "INCSWITCH = -I $(OBJDIR)\n"
     line += "MODSWITCH = -J $(MODDIR)\n\n"

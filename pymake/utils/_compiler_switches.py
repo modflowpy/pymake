@@ -99,7 +99,7 @@ def _get_base_app_name(value):
         application name base name with out directory path and extension
 
     """
-    value = Path(value).suffix
+    value = Path(value).name
     if (
         value.endswith(".exe")
         or value.endswith(".dll")
