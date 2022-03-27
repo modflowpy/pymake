@@ -877,10 +877,11 @@ def _pymake_compile(
         if sharedobject:
             program_path, ext = Path(target).stem, Path(target).suffix
             if ext.lower() != ".dll":
-                target = program_path + ".dll"
+                target.suffix = ".dll"
         else:
-            if ext not in target:
-                target += ext
+            if ext not in target.suffix:
+                # target += ext
+                target.suffix = ext
 
         # delete the batch file if it exists
         batchfile = "compile.bat"
@@ -975,12 +976,12 @@ def _pymake_compile(
                     cmdlist.append(f"-I{sd}")
             # put object files and module files in objdir_temp and moddir_temp
             else:
-                cmdlist.append(f"-I{objdir_temp}")
+                cmdlist.append(f"-I{str(objdir_temp)}")
                 if fc in ["ifort", "mpiifort"]:
                     cmdlist.append("-module")
-                    cmdlist.append(moddir_temp + "/")
+                    cmdlist.append(str(moddir_temp) + "/")
                 else:
-                    cmdlist.append(f"-J{moddir_temp}")
+                    cmdlist.append(f"-J{str(moddir_temp)}")
 
             cmdlist.append("-c")
             cmdlist.append(srcfile)
@@ -1182,7 +1183,7 @@ def _create_win_batch(
     f.write(line)
     for srcfile in srcfiles:
         if srcfile.endswith(".c") or srcfile.endswith(".cpp"):
-            cmd = cc + " " + optlevel + " "
+            cmd = str(cc) + " " + optlevel + " "
             for switch in cflags:
                 cmd += switch + " "
             cmd += "/c" + " "
@@ -1198,15 +1199,15 @@ def _create_win_batch(
             cmd += "/Fo:" + obj + " "
             cmd += srcfile
         else:
-            cmd = fc + " " + optlevel + " "
+            cmd = str(fc) + " " + optlevel + " "
             for switch in fflags:
                 cmd += switch + " "
             # add preprocessor option, if necessary
             if _preprocess_file(srcfile):
                 cmd += "/fpp" + " "
             cmd += "/c" + " "
-            cmd += f"/module:{moddir_temp}\\ "
-            cmd += f"/object:{objdir_temp}\\ "
+            cmd += f"/module:{str(moddir_temp)}\\ "
+            cmd += f"/object:{str(objdir_temp)}\\ "
             cmd += srcfile
         f.write(f"echo {cmd}\n")
         f.write(cmd + "\n")
@@ -1216,8 +1217,8 @@ def _create_win_batch(
     f.write(line)
 
     # assemble the link command
-    cmd = lc + " " + optlevel
-    cmd += " " + "-o" + " " + target + " " + objdir_temp + "\\*.obj"
+    cmd = str(lc) + " " + optlevel
+    cmd += " " + "-o" + " " + str(target) + " " + str(objdir_temp) + "\\*.obj"
     for switch in lflags:
         cmd += " " + switch
     cmd += "\n"
