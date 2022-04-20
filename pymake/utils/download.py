@@ -205,6 +205,7 @@ def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
         if verbose:
             msg = f"open request attempt {idx + 1} of {max_requests}"
             print(msg)
+        req = None
         try:
             req = requests.get(
                 url, stream=True, verify=verify, timeout=timeout
@@ -216,7 +217,8 @@ def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
             else:
                 msg = "Cannot open request from:\n" + f"    {url}\n\n"
                 print(msg)
-                req.raise_for_status()
+                if req is not None:
+                    req.raise_for_status()
 
         # successful request
         break
