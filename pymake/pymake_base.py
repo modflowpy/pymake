@@ -962,7 +962,7 @@ def _pymake_compile(
                     cmdlist.append(switch)
                 # add preprocessor option, if necessary
                 if _preprocess_file(srcfile):
-                    if fc == "gfortran":
+                    if os.path.basename(fc) == "gfortran":
                         pp_tag = "-cpp"
                     else:
                         pp_tag = "-fpp"
