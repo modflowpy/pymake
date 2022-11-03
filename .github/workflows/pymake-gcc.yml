@@ -22,7 +22,8 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: uses: actions/checkout@v2.5.0
+        uses:
+          uses: actions/checkout@v2.5.0
 
       - name: Setup Graphviz
         if: runner.os == 'Linux'
@@ -137,18 +138,8 @@ jobs:
         run: |
           .github/common/install-python.sh
 
-      - name: Setup symbolic link to gfortran on Linux
-        if: runner.os == 'Linux'
-        run: |
-          sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
-          sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
-          sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
-
-      - name: Print GNU compiler versions
-        run: |
-          gfortran --version
-          gcc --version
-          g++ --version
+      - name: Install GNU Fortran
+        uses: modflowpy/install-gfortran-action@v1
 
       - name: Download examples for pytest runs
         run: |
