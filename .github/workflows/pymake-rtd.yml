@@ -6,7 +6,8 @@ on:
   push:
     branches: [ master ]
   pull_request:
-
+    branches:
+      - develop
 jobs:
 
   pymake_rtd:

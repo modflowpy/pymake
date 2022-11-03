@@ -6,7 +6,8 @@ on:
   push:
     branches: [ master ]
   pull_request:
-
+    branches:
+      - develop
 jobs:
 
   pymakeCI-os-gcc:
@@ -22,8 +23,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses:
-          uses: actions/checkout@v2.5.0
+        uses: actions/checkout@v2.5.0
 
       - name: Setup Graphviz
         if: runner.os == 'Linux'
