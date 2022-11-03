@@ -6,7 +6,8 @@ on:
   push:
     branches: [ master ]
   pull_request:
-
+    branches:
+      - develop
 jobs:
 
   pymakeCI-requests:
@@ -18,10 +19,10 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.5.0
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.9
 
@@ -38,6 +39,6 @@ jobs:
           coverage report
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.0.15
+        uses: codecov/codecov-action@v3.1.1
         with:
           file: ./coverage.xml
