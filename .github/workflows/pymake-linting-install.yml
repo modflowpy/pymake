@@ -17,10 +17,10 @@ jobs:
     if: github.repository_owner == 'modflowpy'
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.5.0
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.9
 
@@ -70,10 +70,10 @@ jobs:
 
       # check out repo
       - name: Checkout pymake repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.5.0
 
       - name: Setup Python
-        uses: actions/setup-python@v2.2.2
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.9
 
