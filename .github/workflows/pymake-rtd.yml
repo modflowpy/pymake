@@ -21,7 +21,7 @@ jobs:
 
       - name: Trigger RTDs build
         if: github.ref == 'refs/heads/master'
-        uses: dfm/rtds-action@v1.0.2
+        uses: dfm/rtds-action@v1.0.3
         with:
           webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
           webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
