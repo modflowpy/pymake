@@ -1050,7 +1050,7 @@ def compare_budget(
 
     """
     try:
-        import flopy
+        import flopy  # pylint: disable=import-error
     except:
         msg = "flopy not available - cannot use compare_budget"
         raise ValueError(msg)
@@ -1256,7 +1256,7 @@ def compare_swrbudget(
 
     """
     try:
-        import flopy
+        import flopy  # pylint: disable=import-error
     except:
         msg = "flopy not available - cannot use compare_swrbudget"
         raise ValueError(msg)
@@ -1476,7 +1476,7 @@ def compare_heads(
 
     """
     try:
-        import flopy
+        import flopy  # pylint: disable=import-error
     except:
         msg = "flopy not available - cannot use compare_heads"
         raise ValueError(msg)
@@ -1872,7 +1872,7 @@ def compare_concs(
 
     """
     try:
-        import flopy
+        import flopy  # pylint: disable=import-error
     except:
         msg = "flopy not available - cannot use compare_concs"
         raise ValueError(msg)
@@ -2097,7 +2097,7 @@ def compare_stages(
 
     """
     try:
-        import flopy
+        import flopy  # pylint: disable=import-error
     except:
         msg = "flopy not available - cannot use compare_stages"
         raise ValueError(msg)
