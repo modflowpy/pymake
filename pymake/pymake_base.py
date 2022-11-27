@@ -39,7 +39,6 @@ The script could be run from the command line using:
     python myscript.py ../src myapp -fc=ifort -cc=icc
 
 """
-import datetime
 import inspect
 import os
 import shutil
@@ -264,7 +263,8 @@ def main(
         # get ordered list of files to compile
         srcfiles = _get_ordered_srcfiles(srcfiles, networkx)
 
-        # set intelwin flag to True in compiling on windows with Intel compilers
+        # set intelwin flag to True in compiling on windows with
+        # Intel compilers
         intelwin = False
         if not meson:
             if _get_osname() == "win32":
