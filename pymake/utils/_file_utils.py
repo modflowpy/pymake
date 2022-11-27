@@ -65,6 +65,6 @@ def _get_extrafiles_common_path(external_files):
             if tag in common_path:
                 str_index = common_path.find(tag)
                 if str_index >= 0:
-                    common_path = common_path[0: str_index + len(tag)]
+                    common_path = common_path[0 : str_index + len(tag)]
                 break
     return common_path
