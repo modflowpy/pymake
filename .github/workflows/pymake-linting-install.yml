@@ -18,7 +18,7 @@ jobs:
     if: github.repository_owner == 'modflowpy'
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.5.0
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4.3.0
@@ -53,10 +53,10 @@ jobs:
           black --check --diff ./pymake
 
       - name: Run flake8
-        run: flake8 --count --show-source ./pymake
+        run: flake8 --count --show-source --exit-zero ./pymake
 
       - name: Run pylint
-        run: pylint --jobs=0 --errors-only ./pymake
+        run: pylint --jobs=2 --errors-only --exit-zero ./pymake
 
   pymake_setup:
     name: standard installation
@@ -71,7 +71,7 @@ jobs:
 
       # check out repo
       - name: Checkout pymake repo
-        uses: actions/checkout@v2.5.0
+        uses: actions/checkout@v3
 
       - name: Setup Python
         uses: actions/setup-python@v4.3.0

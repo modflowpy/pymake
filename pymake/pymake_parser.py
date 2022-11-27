@@ -152,7 +152,7 @@ def _get_arg_dict():
         "syslibs": {
             "tag": ("-sl", "--syslibs"),
             "help": """Linker system libraries. Linker libraries should be
-                         enclosed in quotes and start with a blank space or 
+                         enclosed in quotes and start with a blank space or
                          separated from the name (-sl or --syslibs) with a
                          equal sign (-sl='-libgcc'). (default is None)""",
             "default": None,
