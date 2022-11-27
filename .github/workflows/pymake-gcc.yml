@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.5.0
+        uses: actions/checkout@v3
 
       - name: Setup Graphviz on Linux
         if: runner.os == 'Linux'
@@ -71,7 +71,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.5.0
+        uses: actions/checkout@v3
 
       - name: Setup Graphviz
         uses: ts-graphviz/setup-graphviz@v1
@@ -127,7 +127,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.5.0
+        uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4.3.0
