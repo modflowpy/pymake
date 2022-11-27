@@ -51,7 +51,13 @@ def test_latest_assets():
     mfexes_repo_name = "MODFLOW-USGS/executables"
     assets = pymake.get_repo_assets(mfexes_repo_name)
     keys = assets.keys()
-    test_keys = ["mac.zip", "linux.zip", "win32.zip", "win64.zip"]
+    test_keys = [
+        "code.json",
+        "mac.zip",
+        "linux.zip",
+        "win32.zip",
+        "win64.zip",
+    ]
     for key in keys:
         print(f"evaluating the availability of...{key}")
         msg = f"unknown key ({key}) found in github repo assets"
