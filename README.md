@@ -21,13 +21,6 @@ By default, pymake sets the optimization level, Fortran flags, C/C++ flags, and
 linker flags that are consistent with those used to compile MODFLOW-based
 programs released by the USGS.
 
-pymake includes example scripts for building MODFLOW 6, MODFLOW-2005,
-MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7,
-GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, and SUTRA. Example scripts for
-creating the utility programs CRT, Triangle, and GRIDGEN are also included. The
-scripts download the distribution file from the USGS (and other organizations)
-and compile the source into a binary executable.
-
 Note that if gfortran is used to compile MODFLOW-based codes, the `openspec.f`
 and `FILESPEC.inc` (MT3DMS) files will automatically be changed to the
 following so that binary files are created properly using standard Fortran:
@@ -43,9 +36,8 @@ c -- end of include file
 
 ## Command Line Usage
 
-pymake can be used to compile MODFLOW 6 directly from the command line using
-the Intel Fortran compiler `ifort` from a subdirectory at the same level as
-the `src` subdirectory by specifying:
+pymake can be used to compile MODFLOW 6 from source files located on your computer directly from the command line using
+the Intel Fortran compiler `ifort` from a subdirectory at the same level as the `src` subdirectory by specifying:
 
 ```
 python -m pymake ../src/ ../bin/mf6 -mc --subdirs -fc ifort
@@ -57,8 +49,7 @@ To see help for running from command line, use the following statement.
 python -m pymake -h
 ```
 
-The help message identifies required positional arguments and optional
-arguments that can be provided to overide default values.
+The help message identifies required positional arguments and optional arguments that can be provided to overide default values.
 
 ```
 usage: __main__.py [-h] [-fc {ifort,mpiifort,gfortran,ftn,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e] [-dr] [-sd] [-ff FFLAGS] [-cf CFLAGS] [-sl {-lc,-lm}] [-mf] [-md] [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so]
@@ -160,42 +151,79 @@ python mymf6script.py -fc ifort -cc icc
 
 ## Automatic Download and Build
 
-The following scripts can be run directly from the command line to build
-MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000,
-MODPATH 6, MODPATH 7, MT3DMS, MT3D-USGS, and SEAWAT binaries on Linux, Mac, and
-Windows. The scripts will download the distribution file from the USGS
+After pymake is installed, MODFLOW and related programs can be downloaded and built using the command:
+
+```
+make-program
+```
+
+When pymake is installed, a `make-program` (or `make-program.exe` for Windows) program is installed, which is usually installed to the PATH (depending on the Python setup). From a console:
+
+```console
+$ make-program --help
+usage: make-program [-h]
+                    [--targets {mf6,zbud6,libmf6,mp7,mt3dms,mt3dusgs,vs2dt,triangle,gridgen,crt,gsflow,sutra,mf2000,mf2005,mfusg,zonbudusg,swtv4,mp6,mflgr,zonbud3,mfnwt,prms}]
+                    [--release_precision]
+                    [-fc {ifort,mpiifort,gfortran,ftn,none}]
+                    [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}]
+                    [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep]
+                    [--zip ZIP]
+
+Download and build USGS MODFLOW and related programs.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --targets {mf6,zbud6,libmf6,mp7,mt3dms,mt3dusgs,vs2dt,triangle,gridgen,crt,gsflow,sutra,mf2000,mf2005,mfusg,zonbudusg,swtv4,mp6,mflgr,zonbud3,mfnwt,prms}
+                        Program(s) to build. Options: mf6, zbud6, libmf6, mp7,
+                        mt3dms, mt3dusgs, vs2dt, triangle, gridgen, crt,
+                        gsflow, sutra, mf2000, mf2005, mfusg, zonbudusg,
+                        swtv4, mp6, mflgr, zonbud3, mfnwt, prms.
+  --release_precision   If release_precision is False, then the release
+                        precision version will be compiled along with a double
+                        precision version of the program for programs where
+                        the standard_switch and double_switch in
+                        usgsprograms.txt is True. default is True.
+  -fc {ifort,mpiifort,gfortran,ftn,none}
+                        Fortran compiler to use. (default is gfortran)
+  -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
+                        C/C++ compiler to use. (default is gcc)
+  -ff FFLAGS, --fflags FFLAGS
+                        Additional Fortran compiler flags. Fortran compiler
+                        flags should be enclosed in quotes and start with a
+                        blank space or separated from the name (-ff or
+                        --fflags) with a equal sign (-ff='-O3'). (default is
+                        None)
+  -cf CFLAGS, --cflags CFLAGS
+                        Additional C/C++ compiler flags. C/C++ compiler flags
+                        should be enclosed in quotes and start with a blank
+                        space or separated from the name (-cf or --cflags)
+                        with a equal sign (-cf='-O3'). (default is None)
+  -ad APPDIR, --appdir APPDIR
+                        Target path that overides path defined target path
+                        (default is None)
+  -v, --verbose         Verbose output to terminal. (default is False)
+  --keep                Keep existing executable. (default is False)
+  --zip ZIP             Zip built executable. (default is False)
+
+Examples:
+
+  Download and compile MODFLOW 6 in the current directory:
+    $ make-program --targets mf6
+
+  Download and compile triangle in ./temp subdirectory:
+    $ make-program --targets triangle --appdir temp
+```
+
+`make-program` can be used to build MODFLOW 6, MODFLOW-2005,
+MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7, GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, GSFLOW, PRMS, and SUTRA. Utility programs CRT, Triangle, and GRIDGEN can also be built. `make-program` will download the distribution file from the USGS
 (requires internet connection), unzip the file, and compile the source.  
-MT3DMS will be downloaded from the University of Alabama and Triangle will be
-downloaded from
-[netlib.org](http://www.netlib.org/voronoi/triangle.zip). The scripts use the
-`pymake.build_apps()` method which download and unzip the distribution files
-and set all of the pymake settings required to build the program. Available
-example scripts include:
-
-* `make_modflow6.py`
-* `make_mf2005.py`
-* `make_mfnwt.py`
-* `make_mfusg.py`
-* `make_mflgr.py`
-* `make_mf2000.py`
-* `make_modpath6.py`
-* `make_modpath7.py`
-* `make_prms.py`
-* `make_gsflow.py`
-* `make_vs2dt.py`
-* `make_mt3d.py`
-* `make_mt3dusgs.py`
-* `make_swtv4.py`
-* `make_crt.py`
-* `make_gridgen.py`
-* `make_triangle.py`
-
-Optional command line arguments can be used to customize the build (`-fc`,
+MT3DMS will be downloaded from the University of Alabama and Triangle will be downloaded from
+[netlib.org](http://www.netlib.org/voronoi/triangle.zip). `make-program` sets all of the pymake settings required to build the program. Optional command line arguments can be used to customize the build (`-fc`,
 `-cc`, `--fflags`, etc.). MODFLOW 6 could be built using intel compilers and
 an `O3` optimation level by specifying:
 
 ```
-python make_mf6.py -fc=ifort --fflags='-O3'
+make-program --targets mf6 -fc=ifort --fflags='-O3'
 ```
 
 ## Installation

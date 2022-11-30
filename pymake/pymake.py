@@ -61,7 +61,7 @@ import time
 
 from .config import __description__
 from .pymake_base import main
-from .pymake_parser import _get_arg_dict, _parser_setup
+from .pymake_parser import _get_standard_arg_dict, _parser_setup
 from .utils._compiler_switches import (
     _get_c_flags,
     _get_fortran_flags,
@@ -121,11 +121,15 @@ class Pymake:
         self.mesondir = None
 
         # set class variables with default values from arg_dict
-        for key, value in _get_arg_dict().items():
+        for key, value in _get_standard_arg_dict().items():
             setattr(self, key, value["default"])
 
-        # parse command line arguments if python is running script
-        if sys.argv[0].lower().endswith(".py"):
+        # parse command line arguments if python or make-program is
+        # running script
+        if (
+            sys.argv[0].lower().endswith(".py")
+            or "make-program" in sys.argv[0].lower()
+        ):
             self._arg_parser()
 
         # reset select variables using passed variables
@@ -177,7 +181,7 @@ class Pymake:
 
         """
         print("\nPymake settings\n" + 30 * "-")
-        for key, value in _get_arg_dict().items():
+        for key, value in _get_standard_arg_dict().items():
             print_value = getattr(self, key, value["default"])
             if isinstance(print_value, list):
                 print_value = ", ".join(print_value)
@@ -209,7 +213,7 @@ class Pymake:
         -------
 
         """
-        loc_dict = _get_arg_dict()
+        loc_dict = _get_standard_arg_dict()
         parser = argparse.ArgumentParser(
             description=__description__,
         )

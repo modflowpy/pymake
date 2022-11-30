@@ -17,7 +17,7 @@ import argparse
 from .config import __description__
 
 
-def _get_arg_dict():
+def _get_standard_arg_dict():
     """Get command line argument dictionary
 
     Returns
@@ -63,6 +63,7 @@ def _get_arg_dict():
                 "clang",
                 "clang++",
                 "icc",
+                "icx",
                 "icl",
                 "mpiicc",
                 "g++",
@@ -336,7 +337,7 @@ def parser():
                                      excludefiles command line switch.""",
     )
 
-    for _, value in _get_arg_dict().items():
+    for _, value in _get_standard_arg_dict().items():
         my_parser = _parser_setup(parser_obj, value)
     parser_args = my_parser.parse_args()
     return parser_args
