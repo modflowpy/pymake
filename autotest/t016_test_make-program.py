@@ -38,7 +38,7 @@ def clean_up():
     return
 
 
-@pytest.mark.regression
+@pytest.mark.base
 @pytest.mark.parametrize("target", targets)
 def test_make_program(target):
     cmd = ["make-program", "--targets", target, "--appdir", dstpth]
@@ -47,7 +47,6 @@ def test_make_program(target):
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up():
     clean_up()
     return

@@ -13,7 +13,7 @@ from pymake.pymake_parser import _get_standard_arg_dict, _parser_setup
 __all__ = ["main"]
 __license__ = "CC0"
 
-dict_keys = (
+DICT_KEYS = (
     "targets",
     "appdir",
     "verbose",
@@ -26,7 +26,7 @@ dict_keys = (
     "zip",
     "keep",
 )
-com_arg_keys = (
+COM_ARG_KEYS = (
     "fc",
     "cc",
     "fflags",
@@ -37,7 +37,6 @@ com_arg_keys = (
 
 
 def main():
-    """Command-line interface."""
     import argparse
 
     # Show meaningful examples at bottom of help
@@ -90,7 +89,7 @@ Examples:
 
     # add standard command line arguments to parser dictionary for make-program
     for key, value in _get_standard_arg_dict().items():
-        if key in dict_keys:
+        if key in DICT_KEYS:
             parser_dict[key] = value
 
     # setup parser for make-program
@@ -106,7 +105,7 @@ Examples:
     arg_key_pop = []
     com_arg_pop = []
     for key, arg in args.items():
-        if key in com_arg_keys:
+        if key in COM_ARG_KEYS:
             # com_arg_var[key] = arg
             arg_key_pop.append(key)
         else:
@@ -132,5 +131,4 @@ Examples:
 
 
 if __name__ == "__main__":
-    """Run command-line interface, if run as a script."""
     main()
