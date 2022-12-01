@@ -80,15 +80,16 @@ def meson_build(
     meson_test_path = os.path.join(mesondir, "meson.build")
     if os.path.isfile(meson_test_path):
         # setup meson
-        returncode = meson_setup(mesondir, fc=fc, cc=cc, appdir=appdir)
+        returncode = meson_setup(
+            mesondir, fc=fc, cc=cc, appdir=appdir, build_dir=build_dir
+        )
+        assert returncode == 0, "could not run meson setup"
+
         # build and install executable(s) using meson
-        if returncode == 0:
-            returncode = meson_install(mesondir)
-        else:
-            print(
-                "Could not run 'meson setup' using the meson build file "
-                + f"'{meson_test_path}'"
-            )
+        returncode = meson_install(mesondir, build_dir=build_dir)
+        assert (
+            returncode == 0
+        ), "Could not run 'meson install' using the meson build file '{meson_test_path}'"
 
         # return if setup and install were successful
         if returncode == 0:
@@ -243,7 +244,7 @@ def meson_install(
 
         # evaluate return code
         if returncode != 0:
-            print(f"meson setup failed on '{' '.join(command)}'")
+            print(f"meson install failed on '{command}'")
 
     return returncode
 
@@ -665,5 +666,3 @@ def _create_source_meson_build(source_path_dict, srcfiles):
             # remove assigned source files
             for temp in pop_list:
                 srcfiles_copy.remove(temp)
-
-    return

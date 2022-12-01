@@ -3,6 +3,7 @@ import os
 import shutil
 import sys
 import time
+from pathlib import Path
 
 import flopy
 import pytest
@@ -25,27 +26,10 @@ executables[3] += shared_ext
 # get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
-# set up paths
-dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
-if not os.path.exists(dstpth):
-    os.makedirs(dstpth, exist_ok=True)
-
-mf6pth = os.path.join(dstpth, prog_dict.dirname)
-mesondir = mf6pth
-
-
-def clean_up():
-    print("Removing temporary build directories")
-    dirs_temp = [dstpth]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
-    return
-
 
 @pytest.mark.base
 @pytest.mark.regression
-def test_build_with_existing_meson():
+def test_build_with_existing_meson(tmpdir):
     # set default compilers
     fc, cc = "gfortran", "gcc"
 
@@ -75,16 +59,20 @@ def test_build_with_existing_meson():
     # print fortran and c/c++ compilers
     print(f"fortran compiler={fc}\n" + f"c/c++ compiler={cc}\n")
 
+    mesondir = tmpdir / "mf6.3.0_linux"
+    builddir = Path(mesondir / "builddir")
+    builddir.mkdir(parents=True, exist_ok=True)
+
     pm = pymake.Pymake(verbose=True)
     pm.target = target
-    pm.appdir = os.path.join(mesondir, "bin")
+    pm.appdir = str(mesondir / "bin")
     pm.meson = True
     pm.makeclean = True
-    pm.mesondir = mesondir
+    pm.mesondir = str(mesondir)
     pm.verbose = True
 
     # download the modflow 6
-    pm.download_target(target, download_path=dstpth)
+    pm.download_target(target, download_path=str(tmpdir))
     assert pm.download, f"could not download {target} distribution"
 
     # make modflow 6 with existing meson.build file
@@ -93,18 +81,18 @@ def test_build_with_existing_meson():
         fc,
         cc,
         appdir=pm.appdir,
+        build_dir=str(builddir)
     )
     assert (
         returncode == 0
     ), "could not build modflow 6 applications using existing meson.build file"
 
+    assert len(list(mesondir.glob('*'))) > 0
+
     # check that all of the executables exist
     for executable in executables:
         exe_pth = os.path.join(pm.appdir, executable)
         assert os.path.isfile(exe_pth), f"{exe_pth} does not exist"
-
-    # clean up test files
-    clean_up()
 
 
 if __name__ == "__main__":
