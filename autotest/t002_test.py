@@ -152,6 +152,7 @@ def test_seawat(fn):
     run_seawat(fn)
 
 
+@pytest.mark.skipif(not shutil.which("graphviz"), reason="needs graphviz")
 @pytest.mark.regression
 def test_dependency_graphs():
     build_seawat_dependency_graphs()

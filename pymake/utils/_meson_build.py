@@ -83,13 +83,15 @@ def meson_build(
         returncode = meson_setup(
             mesondir, fc=fc, cc=cc, appdir=appdir, build_dir=build_dir
         )
-        assert returncode == 0, "could not run meson setup"
+        if returncode != 0:
+            raise RuntimeError("could not run meson setup")
 
         # build and install executable(s) using meson
         returncode = meson_install(mesondir, build_dir=build_dir)
-        assert (
-            returncode == 0
-        ), "Could not run 'meson install' using the meson build file '{meson_test_path}'"
+        if returncode != 0:
+            raise RuntimeError(
+                "Could not run 'meson install' using the meson build file '{meson_test_path}'"
+            )
 
         # return if setup and install were successful
         if returncode == 0:

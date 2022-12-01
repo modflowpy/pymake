@@ -1,6 +1,5 @@
 # Test the download_and_unzip functionality of pymake
 import os
-import shutil
 import sys
 
 import pytest
@@ -43,7 +42,6 @@ def test_latest_version():
     if version is not None:
         assert float(version) >= float(test_version), msg
         print(f"returned version...{version}")
-    return
 
 
 @pytest.mark.requests
@@ -96,7 +94,7 @@ def test_previous_assets():
 
 
 @pytest.mark.requests
-def test_mfexes_download_and_unzip_and_zip():
+def test_mfexes_download_and_unzip_and_zip(tmp_path):
     exclude_files = [
         "code.json",
         "prms_constants.f90",
@@ -104,9 +102,7 @@ def test_mfexes_download_and_unzip_and_zip():
         "prms_time.f90",
         "utils_prms.f90",
     ]
-    pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}"
-    )
+    pth = str(tmp_path)
     pymake.getmfexes(pth, verbose=True)
     for f in os.listdir(pth):
         fpth = os.path.join(pth, f)
@@ -116,7 +112,7 @@ def test_mfexes_download_and_unzip_and_zip():
 
     # zip up exe's using files
     zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
+        pth,
         "ziptest01.zip",
     )
     print(f"creating '{zip_pth}'")
@@ -128,7 +124,7 @@ def test_mfexes_download_and_unzip_and_zip():
 
     # zip up exe's using directories
     zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
+        pth,
         "ziptest02.zip",
     )
     print(f"creating '{zip_pth}'")
@@ -138,7 +134,7 @@ def test_mfexes_download_and_unzip_and_zip():
 
     # zip up exe's using directories and a pattern
     zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
+        pth,
         "ziptest03.zip",
     )
     print(f"creating '{zip_pth}'")
@@ -148,7 +144,7 @@ def test_mfexes_download_and_unzip_and_zip():
 
     # zip up exe's using files and directories
     zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
+        pth,
         "ziptest04.zip",
     )
     print(f"creating '{zip_pth}'")
@@ -158,29 +154,12 @@ def test_mfexes_download_and_unzip_and_zip():
         dir_pths=pth,
     )
     assert success, "could not create zipfile using files and directories"
-    os.remove(zip_pth)
-
-    # clean up exe's
-    for f in os.listdir(pth):
-        fpth = os.path.join(pth, f)
-        if not os.path.isdir(fpth):
-            print("Removing " + f)
-            os.remove(fpth)
-
-    # clean up directory
-    if os.path.isdir(pth):
-        print("Removing folder " + pth)
-        shutil.rmtree(pth)
-
-    return
 
 
 @pytest.mark.requests
-def test_nightly_download_and_unzip():
+def test_nightly_download_and_unzip(tmp_path):
     exclude_files = ["code.json"]
-    pth = os.path.join(
-        f"temp_nightly_{os.path.basename(__file__).replace('.py', '')}"
-    )
+    pth = str(tmp_path)
     pymake.getmfnightly(pth, verbose=True)
     for f in os.listdir(pth):
         fpth = os.path.join(pth, f)
@@ -188,11 +167,6 @@ def test_nightly_download_and_unzip():
         if not os.path.isdir(fpth) and f not in exclude_files:
             errmsg = f"{fpth} not executable"
             assert which(fpth) is not None, errmsg
-
-    # clean up directory
-    if os.path.isdir(pth):
-        print("\nRemoving folder " + pth)
-        shutil.rmtree(pth)
 
 
 if __name__ == "__main__":
