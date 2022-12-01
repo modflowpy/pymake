@@ -80,7 +80,7 @@ def build_apps(
     """
 
     start_time = datetime.now()
-    if targets is None:
+    if targets is None or targets == ":":
         targets = usgs_program_data.get_keys(current=True)
     else:
         if isinstance(targets, str):
@@ -140,11 +140,15 @@ def build_apps(
 
         # write system information
         if idt == 0:
-            if pmobj.verbose:
-                print(
-                    f"{target} will be built "
-                    + f'for the "{sys.platform}" operating system\n'
-                )
+            print(
+                "\n"
+                + 40 * "-"
+                + "\n"
+                + f"{target} (version "
+                + f"{usgs_program_data.get_version(target)}) "
+                + f'will be built for the "{sys.platform}" '
+                + "operating system.\n"
+            )
 
         # save initial compiler settings
         if idt == 0:

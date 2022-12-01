@@ -1,8 +1,8 @@
 # pymake
 
-Python package for compiling MODFLOW-based programs.
+Python package for building MODFLOW-based programs from source files.
 
-### Version 1.2.4
+### Version 1.2.6
 
 ![pymake continuous integration](https://github.com/modflowpy/pymake/workflows/pymake%20continuous%20integration/badge.svg)
 [![codecov](https://codecov.io/gh/modflowpy/pymake/branch/master/graph/badge.svg)](https://codecov.io/gh/modflowpy/pymake)
@@ -13,7 +13,7 @@ Python package for compiling MODFLOW-based programs.
 This is a python package for compiling MODFLOW-based and other Fortran, C, and
 C++ programs. The package determines the build order using a directed acyclic
 graph and then compiles the source files using GNU compilers (`gcc`, `g++`,
-`gfortran`), Clang compilers (`clang`, `clang++`), Intel compilers (`ifort`, 
+`gfortran`), Clang compilers (`clang`, `clang++`), Intel compilers (`ifort`,
 `icl`, `icc`, `mpiifort`), or the CRAY Fortran compiler (`ftn`).
 
 pymake can be run from the command line or it can be called from within python.
@@ -39,19 +39,20 @@ c -- end of include file
 pymake can be used to compile MODFLOW 6 from source files located on your computer directly from the command line using
 the Intel Fortran compiler `ifort` from a subdirectory at the same level as the `src` subdirectory by specifying:
 
-```
+```console
 python -m pymake ../src/ ../bin/mf6 -mc --subdirs -fc ifort
 ```
 
 To see help for running from command line, use the following statement.
 
-```
+```console
 python -m pymake -h
 ```
 
-The help message identifies required positional arguments and optional arguments that can be provided to overide default values.
+The help message identifies required positional arguments and optional arguments that can be provided to override
+default values.
 
-```
+```console
 usage: __main__.py [-h] [-fc {ifort,mpiifort,gfortran,ftn,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e] [-dr] [-sd] [-ff FFLAGS] [-cf CFLAGS] [-sl {-lc,-lm}] [-mf] [-md] [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so]
                    [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace] [--networkx] [--mb] [-mbd]
                    srcdir target
@@ -105,14 +106,12 @@ optional arguments:
 Note that the source directory should not contain any bad or duplicate source files as all source files in the source directory, the common source file directory (srcdir2), and the extra files (extrafiles) will be built and linked. Files can be excluded by using the excludefiles command line switch.
 ```
 
-Note that command line arguments for Fortran flags, C/C++ flags, and syslib
-libraries should be enclosed in quotes and start with a space prior to the
-first value (`-ff ' -O3'`) or use an equal sign separating the command line
-argument and the values (`-ff='-O3'`). The command line argument to use an
-`-O3` optimization level when compiling MODFLOW 6 with the `ifort` compiler
-would be:
+Note that command line arguments for Fortran flags, C/C++ flags, and syslib libraries should be enclosed in quotes and
+start with a space prior to the first value (`-ff ' -O3'`) or use an equal sign separating the command line argument and
+the values (`-ff='-O3'`). The command line argument to use an `-O3` optimization level when compiling MODFLOW 6 with
+the `ifort` compiler would be:
 
-```
+```console
 python -m pymake ../src/ ../bin/mf6 -mc --subdirs -fc ifort -ff='-O3'
 ```
 
@@ -133,115 +132,51 @@ pm.include_subdirs = True
 pm.build()
 ```
 
-It is suggested that optional variables required for successful compiling and
-linking be manually specified in the script to mininimize the potential for
-unsuccessful builds. For MODFLOW 6, subdirectories in the `src` subdirectory
-need to be included and '`pm.include_subdirs = True`' has been specified in the
-script. Custom optimization levels and compiler flags could be specified to get
-consistent builds.
+It is suggested that optional variables required for successful compiling and linking be manually specified in the
+script to mininimize the potential for unsuccessful builds. For MODFLOW 6, subdirectories in the `src` subdirectory need
+to be included and '`pm.include_subdirs = True`' has been specified in the script. Custom optimization levels and
+compiler flags could be specified to get consistent builds.
 
-Non-default values for the optional arguments can specified as command line
-arguments. For example, MODFLOW 6 could be compiled using Intel compilers
-instead of the default GNU compilers with the script listed above by
-specifying:
+Non-default values for the optional arguments can specified as command line arguments. For example, MODFLOW 6 could be
+compiled using Intel compilers instead of the default GNU compilers with the script listed above by specifying:
 
-```
+```console
 python mymf6script.py -fc ifort -cc icc
 ```
 
 ## Automatic Download and Build
 
-After pymake is installed, MODFLOW and related programs can be downloaded and built using the command:
-
-```
-make-program
-```
-
-When pymake is installed, a `make-program` (or `make-program.exe` for Windows) program is installed, which is usually installed to the PATH (depending on the Python setup). From a console:
+When pymake is installed, a `make-program` (or `make-program.exe` for Windows) program is installed. `make-program` can
+be used to build MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7,
+GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, GSFLOW, PRMS, and SUTRA. Utility programs CRT, Triangle, and GRIDGEN can also
+be built. `make-program` downloads the distribution file (requires an internet connection), unzips the file, sets the
+pymake settings required to build the program, and compiles the program from the source files. Optional pymake command
+line arguments can be used to customize the build (`-fc`, `-cc`, `--fflags`, etc.). For example, MODFLOW 6 could be
+built using intel compilers and an `O3` optimization level by specifying:
 
 ```console
-$ make-program --help
-usage: make-program [-h]
-                    [--targets {mf6,zbud6,libmf6,mp7,mt3dms,mt3dusgs,vs2dt,triangle,gridgen,crt,gsflow,sutra,mf2000,mf2005,mfusg,zonbudusg,swtv4,mp6,mflgr,zonbud3,mfnwt,prms}]
-                    [--release_precision]
-                    [-fc {ifort,mpiifort,gfortran,ftn,none}]
-                    [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}]
-                    [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep]
-                    [--zip ZIP]
-
-Download and build USGS MODFLOW and related programs.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --targets {mf6,zbud6,libmf6,mp7,mt3dms,mt3dusgs,vs2dt,triangle,gridgen,crt,gsflow,sutra,mf2000,mf2005,mfusg,zonbudusg,swtv4,mp6,mflgr,zonbud3,mfnwt,prms}
-                        Program(s) to build. Options: mf6, zbud6, libmf6, mp7,
-                        mt3dms, mt3dusgs, vs2dt, triangle, gridgen, crt,
-                        gsflow, sutra, mf2000, mf2005, mfusg, zonbudusg,
-                        swtv4, mp6, mflgr, zonbud3, mfnwt, prms.
-  --release_precision   If release_precision is False, then the release
-                        precision version will be compiled along with a double
-                        precision version of the program for programs where
-                        the standard_switch and double_switch in
-                        usgsprograms.txt is True. default is True.
-  -fc {ifort,mpiifort,gfortran,ftn,none}
-                        Fortran compiler to use. (default is gfortran)
-  -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
-                        C/C++ compiler to use. (default is gcc)
-  -ff FFLAGS, --fflags FFLAGS
-                        Additional Fortran compiler flags. Fortran compiler
-                        flags should be enclosed in quotes and start with a
-                        blank space or separated from the name (-ff or
-                        --fflags) with a equal sign (-ff='-O3'). (default is
-                        None)
-  -cf CFLAGS, --cflags CFLAGS
-                        Additional C/C++ compiler flags. C/C++ compiler flags
-                        should be enclosed in quotes and start with a blank
-                        space or separated from the name (-cf or --cflags)
-                        with a equal sign (-cf='-O3'). (default is None)
-  -ad APPDIR, --appdir APPDIR
-                        Target path that overides path defined target path
-                        (default is None)
-  -v, --verbose         Verbose output to terminal. (default is False)
-  --keep                Keep existing executable. (default is False)
-  --zip ZIP             Zip built executable. (default is False)
-
-Examples:
-
-  Download and compile MODFLOW 6 in the current directory:
-    $ make-program --targets mf6
-
-  Download and compile triangle in ./temp subdirectory:
-    $ make-program --targets triangle --appdir temp
+make-program mf6 -fc=ifort --fflags='-O3'
 ```
 
-`make-program` can be used to build MODFLOW 6, MODFLOW-2005,
-MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7, GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, GSFLOW, PRMS, and SUTRA. Utility programs CRT, Triangle, and GRIDGEN can also be built. `make-program` will download the distribution file from the USGS
-(requires internet connection), unzip the file, and compile the source.  
-MT3DMS will be downloaded from the University of Alabama and Triangle will be downloaded from
-[netlib.org](http://www.netlib.org/voronoi/triangle.zip). `make-program` sets all of the pymake settings required to build the program. Optional command line arguments can be used to customize the build (`-fc`,
-`-cc`, `--fflags`, etc.). MODFLOW 6 could be built using intel compilers and
-an `O3` optimation level by specifying:
-
-```
-make-program --targets mf6 -fc=ifort --fflags='-O3'
-```
+See [pymake Read the Docs](https://mfpymake.readthedocs.io/en/1.2.4/build_apps.html#building-applications) for more
+information.
 
 ## Installation
 
 To install pymake using pip type:
 
-```
+```console
 pip install mfpymake
 ```
 
 To install pymake directly from the git repository type:
 
-```
+```console
 pip install https://github.com/modflowpy/pymake/zipball/master
 ```
 
 To update your version of pymake with the latest from the git repository type:
 
-```
+```console
 pip install https://github.com/modflowpy/pymake/zipball/master --upgrade
 ```

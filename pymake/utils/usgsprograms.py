@@ -21,6 +21,7 @@ A table listing the available pymake targets is included below:
 import datetime
 import json
 import os
+import pathlib as pl
 import sys
 
 from .download import _request_header
@@ -390,6 +391,9 @@ class usgs_program_data:
                         ] = datetime_str
                         break
 
+        # make sure the directory exists
+        pl.Path(fpth).parent.mkdir(parents=True, exist_ok=True)
+
         # export file
         try:
             with open(fpth, "w") as f:
@@ -400,15 +404,13 @@ class usgs_program_data:
 
         # export code.json to --appdir directory, if the
         # command line argument was specified. Only done if not CI
-        # command line argument was specified. Only done if not CI
         appdir = "."
         for idx, argv in enumerate(sys.argv):
             if argv in ("--appdir", "-ad"):
                 appdir = sys.argv[idx + 1]
 
         # make appdir if it does not already exist
-        if not os.path.isdir(appdir):
-            os.makedirs(appdir)
+        pl.Path(appdir).parent.mkdir(parents=True, exist_ok=True)
 
         # write code.json
         if appdir != ".":
@@ -418,22 +420,21 @@ class usgs_program_data:
 
         # write code.md
         if prog_data is not None and write_markdown:
-            file_obj = open("code.md", "w")
-            line = "| Program | Version | UTC Date |"
-            file_obj.write(line + "\n")
-            line = "| ------- | ------- | ---- |"
-            file_obj.write(line + "\n")
-            for target, target_dict in prog_data.items():
-                keys = list(target_dict.keys())
-                line = f"| {target} | {target_dict['version']} |"
-                date_key = "url_download_asset_date"
-                if date_key in keys:
-                    line += f" {target_dict[date_key]} |"
-                else:
-                    line += " |"
-                line += "\n"
-                file_obj.write(line)
-            file_obj.close()
+            with open(pl.Path(fpth).parent / "code.md", "w") as file_obj:
+                line = "| Program | Version | UTC Date |"
+                file_obj.write(line + "\n")
+                line = "| ------- | ------- | ---- |"
+                file_obj.write(line + "\n")
+                for target, target_dict in prog_data.items():
+                    keys = list(target_dict.keys())
+                    line = f"| {target} | {target_dict['version']} |"
+                    date_key = "url_download_asset_date"
+                    if date_key in keys:
+                        line += f" {target_dict[date_key]} |"
+                    else:
+                        line += " |"
+                    line += "\n"
+                    file_obj.write(line)
 
         return
 

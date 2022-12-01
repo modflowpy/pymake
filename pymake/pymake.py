@@ -180,7 +180,7 @@ class Pymake:
         -------
 
         """
-        print("\nPymake settings\n" + 30 * "-")
+        print("\nPymake settings\n" + 40 * "-")
         for key, value in _get_standard_arg_dict().items():
             print_value = getattr(self, key, value["default"])
             if isinstance(print_value, list):

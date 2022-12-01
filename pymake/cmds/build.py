@@ -25,18 +25,19 @@ DICT_KEYS = (
     "verbose",
     "zip",
     "keep",
+    "dryrun",
 )
-COM_ARG_KEYS = (
-    "fc",
-    "cc",
-    "fflags",
-    "cflags",
-    "zip",
-    "keep",
-)
+COM_ARG_KEYS = ("fc", "cc", "fflags", "cflags", "zip", "keep", "dryrun")
 
 
-def main():
+def main() -> None:
+    """Command line interface
+
+    Returns
+    -------
+    None
+
+    """
     import argparse
 
     # Show meaningful examples at bottom of help
@@ -45,10 +46,13 @@ def main():
 Examples:
 
   Download and compile MODFLOW 6 in the current directory:
-    $ {prog} --targets mf6
+    $ {prog} mf6
 
-  Download and compile triangle in ./temp subdirectory:
-    $ {prog} --targets triangle --appdir temp
+  Download and compile triangle in the ./temp subdirectory:
+    $ {prog} triangle --appdir temp
+
+  Download and compile all programs in the ./temp subdirectory:
+    $ {prog} : --appdir temp
     """
 
     parser_obj = argparse.ArgumentParser(
@@ -56,9 +60,14 @@ Examples:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=examples,
     )
-    targets_help = "Program(s) to build. Options:\v  "
-    all_targets = usgs_program_data.get_keys(current=True)
-    targets_help += ", ".join(all_targets) + "."
+    all_targets = sorted(usgs_program_data.get_keys(current=True))
+    all_targets.append(":")
+    targets_help = (
+        "Program(s) to build. Options:\n  "
+        + ", ".join(all_targets)
+        + ". Specifying the target to be ':' will "
+        + "build all of the programs."
+    )
 
     release_precision_help = (
         "If release_precision is False, then the "
@@ -72,10 +81,10 @@ Examples:
     # command line arguments specific to make-program
     parser_dict = {
         "targets": {
-            "tag": ("--targets",),
+            "tag": ("targets",),
             "help": targets_help,
             "default": None,
-            "choices": all_targets,
+            "choices": None,
             "action": None,
         },
         "release_precision": {
@@ -114,6 +123,9 @@ Examples:
                     com_arg_pop.append(carg)
                     if arg in sys.argv:
                         com_arg_pop.append(arg)
+
+    # add --targets value to com_arg_pop
+    com_arg_pop.append(args["targets"])
 
     # delete arguments that are used by Pymake() class in build_apps
     for key in arg_key_pop:
