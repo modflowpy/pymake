@@ -14,10 +14,6 @@ dstpth = pl.Path(
 ).resolve()
 dstpth.mkdir(parents=True, exist_ok=True)
 
-extension = ""
-if sys.platform.lower() == "win32":
-    extension = ".exe"
-
 
 def run_cli_cmd(cmd: list) -> None:
     process = subprocess.Popen(
@@ -51,14 +47,14 @@ def clean_up() -> None:
 @pytest.mark.base
 @pytest.mark.parametrize("target", targets)
 def test_make_program(target: str) -> None:
-    cmd = [f"make-program{extension}", target, "--appdir", dstpth]
+    cmd = ["make-program", target, "--appdir", dstpth]
     run_cli_cmd(cmd)
 
 
 @pytest.mark.dependency(name="code_json")
 @pytest.mark.base
 def test_code_json() -> None:
-    cmd = [f"make-code-json{extension}", "-f", f"{dstpth}/code.json"]
+    cmd = ["make-code-json", "-f", f"{dstpth}/code.json"]
     run_cli_cmd(cmd)
 
 

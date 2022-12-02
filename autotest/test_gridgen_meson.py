@@ -130,7 +130,7 @@ def test_gridgen(cmd):
     assert run_gridgen(cmd), f"could not run {cmd}"
 
 
-@pytest.mark.dependency(name="test", depends=["build"])
+@pytest.mark.dependency(name="clean", depends=["build"])
 @pytest.mark.base
 def test_clean_up():
     clean_up()
