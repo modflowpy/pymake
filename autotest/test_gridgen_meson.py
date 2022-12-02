@@ -105,6 +105,7 @@ def run_gridgen(cmd):
     return success
 
 
+@pytest.mark.dependency(name="download")
 @pytest.mark.base
 @pytest.mark.regression
 def test_download():
@@ -117,18 +118,21 @@ def test_download():
     assert pm.download, f"could not download {target} distribution"
 
 
+@pytest.mark.dependency(name="build")
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
+@pytest.mark.dependency(name="test")
 @pytest.mark.regression
 @pytest.mark.parametrize("cmd", biscayne_cmds)
 def test_gridgen(cmd):
     assert run_gridgen(cmd), f"could not run {cmd}"
 
 
+@pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.base
 @pytest.mark.regression
 def test_clean_up():

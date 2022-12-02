@@ -186,12 +186,14 @@ def test_download():
     assert pm.download, f"could not download {target}"
 
 
+@pytest.mark.dependency(name="build")
 @pytest.mark.base
 @pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
+@pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.regression
 @pytest.mark.parametrize("fn", name_files)
 def test_mf2005(fn):
@@ -199,6 +201,7 @@ def test_mf2005(fn):
     return
 
 
+@pytest.mark.dependency(name="clean", depends=["build"])
 @pytest.mark.base
 @pytest.mark.regression
 def test_cleanup():

@@ -208,7 +208,7 @@ def meson_setup(
 
         # evaluate return code
         if returncode != 0:
-            print(f"meson install failed on '{' '.join(command)}'")
+            print(f"meson install failed on '{command}'")
 
     return returncode
 
@@ -243,7 +243,7 @@ def meson_install(
 
         # evaluate return code
         if returncode != 0:
-            print(f"meson setup failed on '{' '.join(command)}'")
+            print(f"meson setup failed on '{command}'")
 
     return returncode
 
