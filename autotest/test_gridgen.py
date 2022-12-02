@@ -109,7 +109,7 @@ def run_gridgen(cmd):
     return success
 
 
-@pytest.mark.dependency(name="download", depends=["build"])
+@pytest.mark.dependency(name="download")
 @pytest.mark.base
 def test_download():
     # Remove the existing target download directory if it exists
@@ -121,7 +121,7 @@ def test_download():
     assert pm.download, f"could not download {target} distribution"
 
 
-@pytest.mark.dependency(name="build")
+@pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.base
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"

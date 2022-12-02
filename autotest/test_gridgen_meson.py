@@ -117,7 +117,7 @@ def test_download():
     assert pm.download, f"could not download {target} distribution"
 
 
-@pytest.mark.dependency(name="build")
+@pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.base
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
