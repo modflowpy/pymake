@@ -129,8 +129,8 @@ def clean_up():
     return
 
 
+@pytest.mark.dependency(name="download")
 @pytest.mark.base
-@pytest.mark.regression
 def test_download():
     # Remove the existing target download directory if it exists
     if os.path.isdir(gsflowpth):
@@ -141,20 +141,21 @@ def test_download():
     assert pm.download, f"could not download {target} distribution"
 
 
+@pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
+@pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.regression
 @pytest.mark.parametrize("ex,cf", examples)
 def test_gsflow(ex, cf):
     assert run_gsflow(ex, cf), f"could not run {ex}-{cf}"
 
 
+@pytest.mark.dependency(name="clean", depends=["build"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up():
     clean_up()
     return

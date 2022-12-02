@@ -93,8 +93,8 @@ def run_mfusg(fn):
     return
 
 
+@pytest.mark.dependency(name="download")
 @pytest.mark.base
-@pytest.mark.regression
 def test_download():
     # Remove the existing mf2005 directory if it exists
     if os.path.isdir(mfusgpth):
@@ -105,21 +105,22 @@ def test_download():
     assert pm.download, f"could not download {target}"
 
 
+@pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
     return
 
 
+@pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.regression
 @pytest.mark.parametrize("fn", name_files)
 def test_mfusg(fn):
     run_mfusg(fn)
 
 
+@pytest.mark.dependency(name="clean", depends=["build"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up():
     clean_up()
 

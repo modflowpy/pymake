@@ -128,8 +128,8 @@ def build_seawat_dependency_graphs():
     return
 
 
+@pytest.mark.dependency(name="download")
 @pytest.mark.base
-@pytest.mark.regression
 def test_download():
     # Remove the existing seawat directory if it exists
     if os.path.isdir(swtpth):
@@ -140,25 +140,27 @@ def test_download():
     assert pm.download, f"could not download {target}"
 
 
+@pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
+@pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.regression
-@pytest.mark.parametrize("fn", name_files)
-def test_seawat(fn):
-    run_seawat(fn)
+@pytest.mark.parametrize("namefile", name_files)
+def test_seawat(namefile):
+    run_seawat(namefile)
 
 
+@pytest.mark.dependency(name="graph", depends=["build"])
 @pytest.mark.regression
 def test_dependency_graphs():
     build_seawat_dependency_graphs()
 
 
+@pytest.mark.dependency(name="clean", depends=["test"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up():
     clean_up()
 

@@ -1058,7 +1058,11 @@ def _pymake_compile(
             # evaluate return code
             returncode = proc.returncode
             if returncode != 0:
-                msg = f"compilation failed on '{' '.join(cmdlist)}'"
+                if intelwin:
+                    msg_text = cmdlist
+                else:
+                    msg_text = " ".join(cmdlist)
+                msg = f"compilation failed on '{msg_text}'"
                 print(msg)
                 break
 

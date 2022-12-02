@@ -44,7 +44,6 @@ def clean_up():
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_build_with_existing_meson():
     # set default compilers
     fc, cc = "gfortran", "gcc"

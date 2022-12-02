@@ -11,8 +11,8 @@ import pymake
 dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 
 
+@pytest.mark.dependency(name="makefile")
 @pytest.mark.base
-@pytest.mark.regression
 def test_pymake_makefile():
     os.makedirs(dstpth, exist_ok=True)
 
@@ -78,8 +78,8 @@ def test_pymake_makefile():
     return
 
 
+@pytest.mark.dependency(name="clean", depends=["makefile"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up():
     print("Removing test files and directories")
 

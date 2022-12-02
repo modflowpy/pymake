@@ -42,8 +42,8 @@ def clean_up(epth):
     os.remove(epth)
 
 
+@pytest.mark.dependency(name="build")
 @pytest.mark.base
-@pytest.mark.regression
 @pytest.mark.parametrize("target", targets)
 def test_compile(target):
     assert (
@@ -54,15 +54,15 @@ def test_compile(target):
     ), f"could not compile {target}"
 
 
+@pytest.mark.dependency(name="clean", depends=["build"])
 @pytest.mark.base
-@pytest.mark.regression
 @pytest.mark.parametrize("epth", exe_names)
 def test_clean_up(epth):
     clean_up(epth)
 
 
+@pytest.mark.dependency(name="finalize", depends=["build"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_finalize():
     if os.path.isdir(dstpth):
         shutil.rmtree(dstpth)

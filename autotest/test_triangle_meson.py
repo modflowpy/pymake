@@ -11,8 +11,8 @@ import pymake
 dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 
 
+@pytest.mark.dependency(name="meson")
 @pytest.mark.base
-@pytest.mark.regression
 def test_triangle_meson():
     os.makedirs(dstpth, exist_ok=True)
 
@@ -40,8 +40,8 @@ def test_triangle_meson():
     return
 
 
+@pytest.mark.dependency(name="clean", depends=["meson"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up():
     print("Removing test files and directories")
 

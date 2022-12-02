@@ -2,6 +2,7 @@ import os
 import pathlib as pl
 import shutil
 import subprocess
+import sys
 
 import pytest
 
@@ -12,6 +13,10 @@ dstpth = pl.Path(
     f"temp_{os.path.basename(__file__).replace('.py', '')}"
 ).resolve()
 dstpth.mkdir(parents=True, exist_ok=True)
+
+extension = ""
+if sys.platform.lower() == "win32":
+    extension = ".exe"
 
 
 def run_cli_cmd(cmd: list) -> None:
@@ -42,23 +47,23 @@ def clean_up() -> None:
     return
 
 
+@pytest.mark.dependency(name="make_program")
 @pytest.mark.base
-@pytest.mark.regression
 @pytest.mark.parametrize("target", targets)
 def test_make_program(target: str) -> None:
-    cmd = ["make-program", target, "--appdir", dstpth]
+    cmd = [f"make-program{extension}", target, "--appdir", dstpth]
     run_cli_cmd(cmd)
 
 
+@pytest.mark.dependency(name="code_json")
 @pytest.mark.base
-@pytest.mark.regression
 def test_code_json() -> None:
-    cmd = ["make-code-json", "-f", f"{dstpth}/code.json"]
+    cmd = [f"make-code-json{extension}", "-f", f"{dstpth}/code.json"]
     run_cli_cmd(cmd)
 
 
+@pytest.mark.dependency(name="clean", depends=["make_program", "code_json"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up() -> None:
     # clean_up()
     return

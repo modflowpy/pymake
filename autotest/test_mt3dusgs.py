@@ -161,8 +161,8 @@ def clean_up():
     return
 
 
+@pytest.mark.dependency(name="download_mt3dms")
 @pytest.mark.base
-@pytest.mark.regression
 def test_download_mt3dms():
     # Remove the existing target download directory if it exists
     if os.path.isdir(mtusgspth):
@@ -173,14 +173,14 @@ def test_download_mt3dms():
     assert pm.download, f"could not download {pm.target} distribution"
 
 
+@pytest.mark.dependency(name="build_mt3dms", depends=["download_mt3dms"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_compile_mt3dms():
     assert pm.build() == 0, f"could not compile {pm.target}"
 
 
+@pytest.mark.dependency(name="download_mt3dusgs")
 @pytest.mark.base
-@pytest.mark.regression
 def test_download():
     # Remove the existing target download directory if it exists
     if os.path.isdir(mtusgspth):
@@ -194,12 +194,15 @@ def test_download():
     assert pm.download, f"could not download {target} distribution"
 
 
+@pytest.mark.dependency(name="build_mt3dusgs", depends=["download_mt3dusgs"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
+@pytest.mark.dependency(
+    name="download_exes", depends=["build_mt3dms", "build_mt3dusgs"]
+)
 @pytest.mark.regression
 @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 def test_download_exes():
@@ -207,6 +210,9 @@ def test_download_exes():
     return
 
 
+@pytest.mark.dependency(
+    name="test", depends=["build_mt3dms", "build_mt3dusgs"]
+)
 @pytest.mark.regression
 @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 @pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
@@ -215,6 +221,9 @@ def test_mt3dusgs(ws):
     assert run_mt3dusgs(ws), f"could not run {ws}"
 
 
+@pytest.mark.dependency(
+    name="clean", depends=["build_mt3dms", "build_mt3dusgs"]
+)
 @pytest.mark.base
 @pytest.mark.regression
 def test_clean_up():
