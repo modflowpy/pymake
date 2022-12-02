@@ -59,7 +59,7 @@ def test_code_json() -> None:
 
 @pytest.mark.base
 @pytest.mark.regression
-def test_clean_up():
+def test_clean_up() -> None:
     # clean_up()
     return
 
