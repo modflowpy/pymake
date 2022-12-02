@@ -175,7 +175,7 @@ def cleanup():
 
 
 @pytest.mark.dependency(name="download")
-@pytest.mark.base
+@pytest.mark.todo
 def test_download():
     # Remove the existing target download directory if it exists
     if os.path.isdir(mfpth):
@@ -187,13 +187,13 @@ def test_download():
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.base
+@pytest.mark.todo
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.dependency(name="test", depends=["build"])
-@pytest.mark.regression
+@pytest.mark.todo
 @pytest.mark.parametrize("fn", name_files)
 def test_mf2005(fn):
     run_mf2005(fn)
@@ -201,7 +201,7 @@ def test_mf2005(fn):
 
 
 @pytest.mark.dependency(name="clean", depends=["build"])
-@pytest.mark.base
+@pytest.mark.todo
 def test_cleanup():
     cleanup()
 

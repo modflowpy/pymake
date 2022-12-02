@@ -51,14 +51,7 @@ def test_make_program(target: str) -> None:
     run_cli_cmd(cmd)
 
 
-@pytest.mark.dependency(name="code_json")
-@pytest.mark.base
-def test_code_json() -> None:
-    cmd = ["make-code-json", "-f", f"{dstpth}/code.json"]
-    run_cli_cmd(cmd)
-
-
-@pytest.mark.dependency(name="clean", depends=["make_program", "code_json"])
+@pytest.mark.dependency(name="clean", depends=["make_program"])
 @pytest.mark.base
 def test_clean_up() -> None:
     # clean_up()

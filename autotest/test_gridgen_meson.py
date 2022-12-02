@@ -106,7 +106,7 @@ def run_gridgen(cmd):
 
 
 @pytest.mark.dependency(name="download")
-@pytest.mark.base
+@pytest.mark.todo
 def test_download():
     # Remove the existing target download directory if it exists
     if os.path.isdir(dstpth):
@@ -118,20 +118,20 @@ def test_download():
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.base
+@pytest.mark.todo
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.dependency(name="test", depends=["build"])
-@pytest.mark.regression
+@pytest.mark.todo
 @pytest.mark.parametrize("cmd", biscayne_cmds)
 def test_gridgen(cmd):
     assert run_gridgen(cmd), f"could not run {cmd}"
 
 
 @pytest.mark.dependency(name="clean", depends=["build"])
-@pytest.mark.base
+@pytest.mark.todo
 def test_clean_up():
     clean_up()
 
