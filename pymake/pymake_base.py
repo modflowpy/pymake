@@ -60,6 +60,7 @@ from .utils._compiler_switches import (
     _get_optlevel,
     _get_os_macro,
     _get_osname,
+    _get_prepend,
 )
 from .utils._file_utils import _get_extra_exclude_files
 from .utils._meson_build import _meson_build
@@ -269,11 +270,19 @@ def main(
         if not meson:
             if _get_osname() == "win32" and "CI" not in os.environ:
                 if fc is not None:
-                    if fc in ["ifort", "mpiifort"]:
-                        intelwin = True
+                    if fc in (
+                        "ifort",
+                        "mpiifort",
+                    ):
+                        if shutil.which(fc) is None:
+                            intelwin = True
                 if cc is not None:
-                    if cc in ["cl", "icl"]:
-                        intelwin = True
+                    if cc in (
+                        "cl",
+                        "icl",
+                    ):
+                        if sharedobject.which(cc) is None:
+                            intelwin = True
 
         # update openspec files based on intelwin
         if not intelwin:
@@ -976,7 +985,7 @@ def _pymake_compile(
             else:
                 cmdlist.append(f"-I{objdir_temp}")
                 if fc in ["ifort", "mpiifort"]:
-                    cmdlist.append("-module")
+                    cmdlist.append(f"{_get_prepend(fc, _get_osname())}module")
                     cmdlist.append(moddir_temp + "/")
                 else:
                     cmdlist.append(f"-J{moddir_temp}")
