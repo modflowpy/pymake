@@ -130,6 +130,7 @@ def clean_up():
 
 
 @pytest.mark.dependency(name="download")
+@pytest.mark.skipif(pm.cc == "gcc", reason="do not run if using gcc")
 @pytest.mark.base
 def test_download():
     # Remove the existing target download directory if it exists
