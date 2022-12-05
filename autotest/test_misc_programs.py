@@ -19,10 +19,7 @@ if sys.platform.lower() == "win32":
 
 for idx, target in enumerate(targets):
     target_dict = pymake.usgs_program_data.get_target(target)
-    if target_dict.shared_object:
-        extension = shared_extension
-    else:
-        extension = app_extension
+    extension = app_extension
     targets[idx] = target + extension
 
 # set up paths

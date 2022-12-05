@@ -11,5 +11,5 @@ ifort --version
 icc --version
 
 # run pytest
-pytest -v -n=auto --dist=loadfile -m=base --durations=0 --cov=pymake --cov-report=xml autotest/
+pytest -v -n=auto --dist=loadfile -m="base" --durations=0 --cov=pymake --cov-report=xml autotest/
 

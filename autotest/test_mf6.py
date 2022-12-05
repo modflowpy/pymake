@@ -127,20 +127,20 @@ def clean_up():
     return
 
 
-def run_mf6(ws):
+def run_mf6(workspace):
     success = False
     exe_name = os.path.abspath(epth)
     if os.path.exists(exe_name):
         # run test models
-        print(f"running model...{os.path.basename(ws)}")
+        print(f"running model...{os.path.basename(workspace)}")
         success, buff = flopy.run_model(
-            exe_name, None, model_ws=ws, silent=False
+            exe_name, None, model_ws=workspace, silent=False
         )
     return success
 
 
+@pytest.mark.dependency(name="download")
 @pytest.mark.base
-@pytest.mark.regression
 def test_download():
     # Remove the existing mf6 directory if it exists
     if os.path.isdir(mf6pth):
@@ -151,28 +151,29 @@ def test_download():
     assert pm.download, f"could not download {target} distribution"
 
 
+@pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
+@pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.regression
 @pytest.mark.parametrize("ws", sim_dirs)
 def test_mf6(ws):
     assert run_mf6(ws), f"could not run {ws}"
 
 
+@pytest.mark.dependency(name="makefile", depends=["build"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_makefile():
     assert build_with_makefile(
         target
     ), f"could not compile {target} with makefile"
 
 
+@pytest.mark.dependency(name="shared", depends=["makefile"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_sharedobject():
     pm.target = sharedobject_target
     prog_dict = pymake.usgs_program_data.get_target(pm.target)
@@ -188,16 +189,18 @@ def test_sharedobject():
     assert pm.build() == 0, f"could not compile {pm.target}"
 
 
+@pytest.mark.dependency(name="shared_makefile", depends=["shared", "makefile"])
 @pytest.mark.base
-@pytest.mark.regression
 def test_sharedobject_makefile():
     assert build_with_makefile(
         sharedobject_target
     ), f"could not compile {sharedobject_target} with makefile"
 
 
+@pytest.mark.dependency(
+    name="clean", depends=["build", "makefile", "shared_makefile", "test"]
+)
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up():
     clean_up()
 
