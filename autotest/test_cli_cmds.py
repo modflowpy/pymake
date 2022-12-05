@@ -47,7 +47,7 @@ def clean_up() -> None:
 @pytest.mark.base
 @pytest.mark.parametrize("target", targets)
 def test_make_program(target: str) -> None:
-    cmd = ["make-program", target, "--appdir", dstpth]
+    cmd = ["make-program", target, "--appdir", str(dstpth)]
     run_cli_cmd(cmd)
 
 
