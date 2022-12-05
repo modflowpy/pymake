@@ -263,11 +263,11 @@ def main(
         # get ordered list of files to compile
         srcfiles = _get_ordered_srcfiles(srcfiles, networkx)
 
-        # set intelwin flag to True in compiling on windows with
-        # Intel compilers
+        # set intelwin flag to True if compiling on windows with
+        # Intel compilers and not running on CI
         intelwin = False
         if not meson:
-            if _get_osname() == "win32":
+            if _get_osname() == "win32" and "CI" not in os.environ:
                 if fc is not None:
                     if fc in ["ifort", "mpiifort"]:
                         intelwin = True

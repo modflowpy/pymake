@@ -137,7 +137,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
-          pytest -v -m="base or regression" --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -n=auto --dist=loadfile -m="base or regression" --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
