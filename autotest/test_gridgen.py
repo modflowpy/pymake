@@ -1,8 +1,8 @@
 import os
+import pathlib as pl
 import shutil
 import subprocess
 import sys
-import pathlib as pl
 
 import pytest
 
@@ -110,7 +110,6 @@ def run_gridgen(cmd):
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_download():
     # Remove the existing target download directory if it exists
     if dstpth.is_dir():
@@ -122,7 +121,6 @@ def test_download():
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
@@ -134,7 +132,6 @@ def test_gridgen(cmd):
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up():
     clean_up()
 

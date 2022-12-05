@@ -113,7 +113,7 @@ jobs:
         shell: cmd
         run: |
           call ".github/intel-scripts/ifortvars_windows.bat"
-          pytest -v -m="base" --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -n=auto --dist=loadfile -m="base" --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |

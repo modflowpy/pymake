@@ -198,7 +198,7 @@ def test_sharedobject_makefile():
 
 
 @pytest.mark.dependency(
-    name="clean", depends=["build", "makefile", "shared_makefile", "test"]
+    name="clean", depends=["build", "makefile", "shared_makefile"]
 )
 @pytest.mark.base
 def test_clean_up():

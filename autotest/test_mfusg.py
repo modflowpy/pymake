@@ -94,7 +94,6 @@ def run_mfusg(fn):
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_download():
     # Remove the existing mf2005 directory if it exists
     if os.path.isdir(mfusgpth):
@@ -106,7 +105,6 @@ def test_download():
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
     return
@@ -119,7 +117,6 @@ def test_mfusg(fn):
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up():
     clean_up()
 

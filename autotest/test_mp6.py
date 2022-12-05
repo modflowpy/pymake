@@ -87,7 +87,6 @@ def clean_up():
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_download():
     if os.path.isdir(mp6pth):
         shutil.rmtree(mp6pth)
@@ -97,7 +96,6 @@ def test_download():
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
@@ -109,7 +107,6 @@ def test_modpath6(fn):
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up():
     clean_up()
 

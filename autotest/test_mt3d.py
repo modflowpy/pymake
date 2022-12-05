@@ -162,7 +162,6 @@ def clean_up():
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_download_mt3dms():
     # Remove the existing target download directory if it exists
     if os.path.isdir(mtusgspth):
@@ -174,13 +173,11 @@ def test_download_mt3dms():
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_compile_mt3dms():
     assert pm.build() == 0, f"could not compile {pm.target}"
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_download():
     # Remove the existing target download directory if it exists
     if os.path.isdir(mtusgspth):
@@ -195,7 +192,6 @@ def test_download():
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
@@ -216,7 +212,6 @@ def test_mt3dusgs(ws):
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_clean_up():
     clean_up()
 
