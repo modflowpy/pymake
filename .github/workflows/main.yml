@@ -25,6 +25,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Setup Intel OneAPI Compilers
+        uses: modflowpy/install-intelfortran-action@v1
+
       - name: Setup Graphviz
         if: runner.os == 'Linux'
         uses: ts-graphviz/setup-graphviz@v1
@@ -37,9 +40,6 @@ jobs:
       - name: Install python packages
         run: |
           .github/common/install-python.sh
-
-      - name: Setup Intel OneAPI Compilers
-        uses: modflowpy/install-intelfortran-action@v1
 
       - name: Download examples for pytest runs
         run: |
