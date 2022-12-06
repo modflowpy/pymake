@@ -19,10 +19,7 @@ if sys.platform.lower() == "win32":
 
 for idx, target in enumerate(targets):
     target_dict = pymake.usgs_program_data.get_target(target)
-    if target_dict.shared_object:
-        extension = shared_extension
-    else:
-        extension = app_extension
+    extension = app_extension
     targets[idx] = target + extension
 
 # set up paths
@@ -46,7 +43,6 @@ def clean_up(epth):
 
 
 @pytest.mark.base
-@pytest.mark.regression
 @pytest.mark.parametrize("target", targets)
 def test_compile(target):
     assert (
@@ -58,14 +54,12 @@ def test_compile(target):
 
 
 @pytest.mark.base
-@pytest.mark.regression
 @pytest.mark.parametrize("epth", exe_names)
 def test_clean_up(epth):
     clean_up(epth)
 
 
 @pytest.mark.base
-@pytest.mark.regression
 def test_finalize():
     if os.path.isdir(dstpth):
         shutil.rmtree(dstpth)

@@ -47,7 +47,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadfile -n=auto -m regression --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --dist=loadfile -n=auto -m="base or regression" --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
@@ -103,7 +103,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadfile -n=auto -m base --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --dist=loadfile -n=auto -m="base" --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
         run: |
@@ -147,4 +147,4 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v --dist=loadfile -n=auto -m base --durations=0
+          pytest -v --dist=loadfile -n=auto -m="base" --durations=0

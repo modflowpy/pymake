@@ -2,7 +2,7 @@
 
 Python package for compiling MODFLOW-based programs.
 
-### Version 1.2.4
+### Version 1.2.6
 
 ![pymake continuous integration](https://github.com/modflowpy/pymake/workflows/pymake%20continuous%20integration/badge.svg)
 [![codecov](https://codecov.io/gh/modflowpy/pymake/branch/master/graph/badge.svg)](https://codecov.io/gh/modflowpy/pymake)
