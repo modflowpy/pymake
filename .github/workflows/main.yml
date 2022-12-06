@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu=latest, macos-latest, windows-2019]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     defaults:
       run:
         shell: bash
@@ -55,7 +55,7 @@ jobs:
         run: |
           pytest -v -n=auto --dist=loadfile -m="base" --durations=0 --cov=pymake --cov-report=xml autotest/
 
-      - name: activate intel and test on Windows
+      - name: test on Windows
         if: runner.os == 'Windows'
         shell: cmd
         run: |
