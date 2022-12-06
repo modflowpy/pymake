@@ -16,27 +16,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            os_script: ifortvars_linux.sh
-          - os: macos-latest
-            os_script: ifortvars_macos.sh
-          - os: windows-2019
-            os_script: ifortvars_windows.bat
+        os: [ubuntu=latest, macos-latest, windows-2019]
     defaults:
       run:
         shell: bash
     env:
-      WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18976/w_HPCKit_p_2022.3.1.19755_offline.exe
-      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18975/l_HPCKit_p_2022.3.1.16997_offline.sh
-      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18977/m_HPCKit_p_2022.3.1.15344_offline.dmg
-      WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler
-      LINUX_FORTRAN_COMPONENTS_WEB: intel.oneapi.lin.ifort-compiler
-      MACOS_FORTRAN_COMPONENTS: intel.oneapi.mac.ifort-compiler
-      WINDOWS_CPP_COMPONENTS: intel.oneapi.win.cpp-compiler
-      LINUX_CPP_COMPONENTS_WEB: intel.oneapi.lin.dpcpp-cpp-compiler-pro
-      MACOS_CPP_COMPONENTS: intel.oneapi.mac.cpp-compiler
-      FC: ifort
 
     steps:
       - name: Checkout repo
@@ -55,64 +39,27 @@ jobs:
         run: |
           .github/common/install-python.sh
 
+      - name: Setup Intel OneAPI Compilers
+        uses: modflowpy/install-intelfortran-action@v1
+
       - name: Download examples for pytest runs
         run: |
           .github/common/download-examples.sh
 
-      - name: cache install intel compilers on linux
+      - name: test on Linux
         if: runner.os == 'Linux'
-        id: cache-install-linux
-        uses: actions/cache@v2
-        with:
-          path: |
-            /opt/intel/oneapi/compiler
-          key: install-${{ env.LINUX_HPCKIT_URL }}-${{ env.LINUX_CPP_COMPONENTS_WEB }}-${{ env.LINUX_FORTRAN_COMPONENTS_WEB }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_linux.sh') }}
-
-      - name: install intel compilers on linux
-        if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
         run: |
-          .github/intel-scripts/install_linux.sh $LINUX_HPCKIT_URL $LINUX_CPP_COMPONENTS_WEB:$LINUX_FORTRAN_COMPONENTS_WEB
+          pytest -v -n=auto --dist=loadfile -m="base or regression" --durations=0 --cov=pymake --cov-report=xml autotest/
 
-      - name: cache install intel compilers on macos
+      - name: test on MacOS
         if: runner.os == 'macOS'
-        id: cache-install-macos
-        uses: actions/cache@v2
-        with:
-          path: /opt/intel/oneapi
-          key: install-${{ env.MACOS_HPCKIT_URL }}--${{ env.MACOS_CPP_COMPONENTS }}-${{ env.MACOS_FORTRAN_COMPONENTS }}
-
-      - name: install intel compilers on macos
-        if: runner.os == 'macOS' && steps.cache-install-macos.outputs.cache-hit != 'true'
         run: |
-          .github/intel-scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_CPP_COMPONENTS:$MACOS_FORTRAN_COMPONENTS
-
-      - name: cache install ifort on windows
-        if: runner.os == 'Windows'
-        id: cache-install-windows
-        uses: actions/cache@v2
-        with:
-          path: C:\Program Files (x86)\Intel\oneAPI\compiler
-          key: install-${{ env.WINDOWS_HPCKIT_URL }}-${{ env.WINDOWS_CPP_COMPONENTS }}-${{ env.WINDOWS_FORTRAN_COMPONENTS }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_windows.sh') }}
-
-      - name: install intel compilers on windows
-        if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
-        run: |
-          .github/intel-scripts/install_windows.bat $WINDOWS_HPCKIT_URL $WINDOWS_CPP_COMPONENTS:$WINDOWS_FORTRAN_COMPONENTS
-
-      - name: activate intel and test on linux and macOS
-        if: runner.os == 'Linux' || runner.os == 'macOS'
-        env:
-          CC: icc
-        run: |
-          .github/intel-scripts/${{ matrix.os_script }}
+          pytest -v -n=auto --dist=loadfile -m="base" --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: activate intel and test on Windows
         if: runner.os == 'Windows'
-        env:
-          CC: icl
         shell: cmd
         run: |
-          call ".github/intel-scripts/ifortvars_windows.bat"
           pytest -v -m="base" --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Print coverage report before upload
@@ -123,13 +70,3 @@ jobs:
         uses: codecov/codecov-action@v3.1.1
         with:
           file: ./coverage.xml
-
-      - name: exclude unused files from cache on windows
-        if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
-        run: |
-          .github/intel-scripts/cache_exclude_windows.sh
-
-      - name: exclude unused files from cache on linux
-        if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
-        run: |
-          .github/intel-scripts/cache_exclude_linux.sh
