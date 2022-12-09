@@ -15,15 +15,13 @@ __license__ = "CC0"
 
 
 def main() -> None:
-    """pymake Command line interface
+    """mfpymake command line interface
 
     Returns
     -------
     None
 
     """
-    import argparse
-
     # Show meaningful examples at bottom of help
     prog = Path(sys.argv[0]).stem
     examples = (

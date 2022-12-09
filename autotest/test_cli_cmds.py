@@ -50,7 +50,13 @@ def clean_up() -> None:
 @pytest.mark.base
 @pytest.mark.parametrize("target", targets)
 def test_make_program(target: str) -> None:
-    cmd = ["make-program", target, "--appdir", str(dstpth)]
+    cmd = [
+        "make-program",
+        target,
+        "--appdir",
+        str(dstpth),
+        "--verbose",
+    ]
     run_cli_cmd(cmd)
 
 
@@ -72,9 +78,15 @@ def test_mfpymake() -> None:
         str(src_file.parent),
         "hello",
         "-mc",
+        "--verbose",
         "--appdir",
         str(dstpth),
+        "-fc",
     ]
+    if os.environ.get("FC") is None:
+        cmd.append("gfortran")
+    else:
+        cmd.append(os.environ.get("FC"))
     run_cli_cmd(cmd)
     cmd = [dstpth / "hello"]
     run_cli_cmd(cmd)
