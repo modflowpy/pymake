@@ -6,9 +6,11 @@ import subprocess
 import sys
 
 import pytest
+from flaky import flaky
 
 import pymake
 
+RERUNS = 3
 dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 
 
@@ -80,6 +82,7 @@ def run_cli_cmd(cmd: list) -> None:
 
 
 @pytest.mark.dependency("latest_version")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_latest_version():
     version = pymake.repo_latest_version()
@@ -96,6 +99,7 @@ def test_latest_version():
 
 
 @pytest.mark.dependency("latest_assets")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_latest_assets():
     mfexes_repo_name = "MODFLOW-USGS/executables"
@@ -116,6 +120,7 @@ def test_latest_assets():
 
 
 @pytest.mark.dependency("previous_assets")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_previous_assets():
     # hack for failure of OSX on github actions
@@ -147,6 +152,7 @@ def test_previous_assets():
 
 
 @pytest.mark.dependency("mfexes")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_mfexes_download_and_unzip_and_zip():
     exclude_files = [
@@ -228,6 +234,7 @@ def test_mfexes_download_and_unzip_and_zip():
 
 
 @pytest.mark.dependency("nightly_download")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_nightly_download_and_unzip():
     exclude_files = ["code.json"]
@@ -249,6 +256,7 @@ def test_nightly_download_and_unzip():
 
 
 @pytest.mark.dependency("usgsprograms")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_usgsprograms():
     print("test_usgsprograms()")
@@ -263,6 +271,7 @@ def test_usgsprograms():
 
 
 @pytest.mark.dependency("target_key_error")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_target_key_error():
     print("test_target_key_error()")
@@ -271,6 +280,7 @@ def test_target_key_error():
 
 
 @pytest.mark.dependency("target_keys")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_target_keys():
     print("test_target_keys()")
@@ -288,6 +298,7 @@ def test_target_keys():
 
 
 @pytest.mark.dependency("export_json")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_usgsprograms_export_json():
     # export code.json and return json file path
@@ -318,6 +329,7 @@ def test_usgsprograms_export_json():
 
 
 @pytest.mark.dependency("load_json_error")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_usgsprograms_load_json_error():
     print("test_usgsprograms_load_json_error()")
@@ -335,6 +347,7 @@ def test_usgsprograms_load_json_error():
 
 
 @pytest.mark.dependency("load_json")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_usgsprograms_load_json():
     print("test_usgsprograms_load_json()")
@@ -350,6 +363,7 @@ def test_usgsprograms_load_json():
 
 
 @pytest.mark.dependency("list_json_error")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_usgsprograms_list_json_error():
     print("test_usgsprograms_list_json_error()")
@@ -363,6 +377,7 @@ def test_usgsprograms_list_json_error():
 
 
 @pytest.mark.dependency("list_json")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_usgsprograms_list_json():
     print("test_usgsprograms_list_json()")
@@ -375,6 +390,7 @@ def test_usgsprograms_list_json():
 
 
 @pytest.mark.dependency("shared")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_shared():
     print("test_shared()")
@@ -383,6 +399,7 @@ def test_shared():
 
 
 @pytest.mark.dependency("not_shared")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_not_shared():
     print("test_not_shared()")
@@ -391,6 +408,7 @@ def test_not_shared():
 
 
 @pytest.mark.dependency(name="code_json")
+@flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_code_json() -> None:
     cmd = ["make-code-json", "-f", f"{dstpth}/code.json"]

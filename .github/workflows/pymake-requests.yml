@@ -34,6 +34,11 @@ jobs:
         run: |
           pytest -v -m requests --durations=0 --cov=pymake --cov-report=xml autotest/
 
+      - name: Run scheduled tests
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          pytest -v -m="schedule" --durations=0 --cov=pymake --cov-report=xml autotest/
+
       - name: Print coverage report before upload
         run: |
           coverage report

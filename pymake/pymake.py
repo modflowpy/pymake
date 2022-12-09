@@ -125,7 +125,10 @@ class Pymake:
             setattr(self, key, value["default"])
 
         # parse command line arguments if python is running script
-        if sys.argv[0].lower().endswith(".py"):
+        if (
+            sys.argv[0].lower().endswith(".py")
+            or "make-program" in sys.argv[0].lower()
+        ):
             self._arg_parser()
 
         # reset select variables using passed variables

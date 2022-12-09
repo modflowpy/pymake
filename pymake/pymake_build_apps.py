@@ -80,6 +80,13 @@ def build_apps(
     """
 
     start_time = datetime.now()
+
+    # intercept all string (":") from make-program
+    if isinstance(targets, str):
+        if targets == ":":
+            targets = None
+
+    # set targets
     if targets is None:
         targets = usgs_program_data.get_keys(current=True)
     else:
