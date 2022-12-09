@@ -26,13 +26,12 @@ def main() -> None:
     prog = Path(sys.argv[0]).stem
     examples = (
         "Examples:\n\n"
-        + "Compile MODFLOW 6 from the root "
-        + "directory containing the the source files in subdirectories "
-        + "in the src/ subdirectory:\n"
+        + "Compile MODFLOW 6 from the root directory containing the \n"
+        + "source files in subdirectories in the src/ subdirectory:\n\n"
         + f"$ {prog} src/ mf6 --subdirs\n\n"
-        + "Compile MODFLOW 6 in the bin subdirectory using the Intel Fortran "
-        + "compiler from the root directory containing the source files"
-        + "in subdirectories in the the src/ subdirectory:\n"
+        + "Compile MODFLOW 6 in the bin subdirectory using the Intel \n"
+        + "Fortran compiler from the root directory containing the source \n"
+        + "files in subdirectories in the the src/ subdirectory:\n\n"
         + f"$ {prog} src/ mf6 --subdirs -fc ifort --appdir bin\n"
     )
 

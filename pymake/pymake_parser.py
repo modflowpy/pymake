@@ -325,11 +325,11 @@ def parser(examples=None):
 
     """
     epilog = (
-        "Note that the source directory should not contain any bad "
-        + "or duplicate source files as all source files in the source "
-        + "directory, the common source file directory (srcdir2), and "
-        + "the extra files (extrafiles) will be built and linked. "
-        + "Files can be excluded by using the excludefiles command "
+        "Note that the source directory should not contain any bad \n"
+        + "or duplicate source files as all source files in the source \n"
+        + "directory, the common source file directory (srcdir2), and \n"
+        + "the extra files (extrafiles) will be built and linked. \n"
+        + "Files can be excluded by using the excludefiles command \n"
         + "line switch.\n\n"
     )
     if examples is not None:

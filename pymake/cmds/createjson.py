@@ -73,7 +73,7 @@ Examples:
             "choices": None,
             "action": "store_true",
         },
-        "upadte": {
+        "update": {
             "tag": (
                 "-u",
                 "--update",
