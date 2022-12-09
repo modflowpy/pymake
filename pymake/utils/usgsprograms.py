@@ -341,12 +341,11 @@ class usgs_program_data:
         print(
             f'writing a json file ("{fpth}") '
             + f"of {sel} USGS programs\n"
-            + f'in the "{program_data_file}" database.'
+            + f'in the "{program_data_file}" database.\n'
         )
         if prog_data is not None:
             for idx, key in enumerate(prog_data.keys()):
                 print(f"    {idx + 1:>2d}: {key}")
-        print("\n")
 
         # get usgs program data
         udata = usgs_program_data.get_program_dict()
@@ -399,7 +398,6 @@ class usgs_program_data:
             raise IOError(msg)
 
         # export code.json to --appdir directory, if the
-        # command line argument was specified. Only done if not CI
         # command line argument was specified. Only done if not CI
         appdir = "."
         for idx, argv in enumerate(sys.argv):

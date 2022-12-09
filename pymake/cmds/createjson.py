@@ -91,7 +91,7 @@ Examples:
             "tag": ("--write_markdown",),
             "help": "If True, write markdown file that includes the "
             + "target name, version, and the last-modified date of "
-            + "the download asset (url). Default is False.",
+            + "the download asset (url). Default is True.",
             "default": True,
             "choices": None,
             "action": "store_true",
