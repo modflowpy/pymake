@@ -41,6 +41,7 @@ The script could be run from the command line using:
 """
 import inspect
 import os
+import pathlib as pl
 import shutil
 import sys
 import traceback
@@ -189,7 +190,8 @@ def main(
     if srcdir is not None and target is not None:
 
         objdir_temp, moddir_temp, srcdir_temp = get_temporary_directories(
-            appdir=appdir
+            appdir=appdir,
+            target=pl.Path(target).stem,
         )
         if inplace:
             srcdir_temp = srcdir
@@ -513,13 +515,16 @@ def _pymake_initialize(
     return srcfiles
 
 
-def get_temporary_directories(appdir=None):
+def get_temporary_directories(appdir=None, target=None):
     """Get paths to temporary object, module, and source files
 
     Parameters
     ----------
     appdir : str
         path for executable
+    target : str
+        target name to be appended to the temporary directories.
+        Default is None
 
     Returns
     -------
@@ -535,10 +540,12 @@ def get_temporary_directories(appdir=None):
         base_pth = "."
     else:
         base_pth = appdir
+    if target is None:
+        target = "temp"
     return (
-        os.path.join(base_pth, "obj_temp"),
-        os.path.join(base_pth, "mod_temp"),
-        os.path.join(base_pth, "src_temp"),
+        os.path.join(base_pth, f"obj_{target}"),
+        os.path.join(base_pth, f"mod_{target}"),
+        os.path.join(base_pth, f"src_{target}"),
     )
 
 
@@ -813,7 +820,8 @@ def _pymake_compile(
 
     # get temporary object and module directories
     objdir_temp, moddir_temp, _ = get_temporary_directories(
-        os.path.dirname(target)
+        os.path.dirname(target),
+        target=pl.Path(target).stem,
     )
 
     # set optimization levels
