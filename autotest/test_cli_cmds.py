@@ -60,6 +60,20 @@ def test_make_program(target: str) -> None:
     run_cli_cmd(cmd)
 
 
+@pytest.mark.dependency(name="make_program_all")
+@pytest.mark.schedule
+def test_make_program_all() -> None:
+    cmd = [
+        "make-program",
+        ":",
+        "--appdir",
+        str(dstpth / "all"),
+        "--verbose",
+        "--dryrun",
+    ]
+    run_cli_cmd(cmd)
+
+
 @pytest.mark.dependency(name="mfpymake")
 @pytest.mark.base
 def test_mfpymake() -> None:
