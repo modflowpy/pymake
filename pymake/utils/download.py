@@ -11,6 +11,7 @@
 
 """
 import os
+import pathlib as pl
 import shutil
 import sys
 import tarfile
@@ -132,7 +133,7 @@ class pymakeZipFile(ZipFile):
         if dir_pths is None:
             dir_pths = []
         else:
-            if isinstance(dir_pths, str):
+            if isinstance(dir_pths, (str, pl.Path)):
                 dir_pths = [dir_pths]
 
         # convert find to a list if a str (a tuple is allowed)

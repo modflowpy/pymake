@@ -3,6 +3,4 @@ exclude docs/*
 exclude autotest/*
 include pyproject.toml
 include pymake/utils/usgsprograms.txt
-include examples/*.bat
-include examples/*.py
 

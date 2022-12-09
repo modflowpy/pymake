@@ -17,7 +17,7 @@ import argparse
 from .config import __description__
 
 
-def _get_arg_dict():
+def _get_standard_arg_dict():
     """Get command line argument dictionary
 
     Returns
@@ -311,11 +311,12 @@ def _parser_setup(parser_obj, value, reset_default=False):
     return parser_obj
 
 
-def parser():
+def parser(examples=None):
     """Construct the parser and return argument values.
 
     Parameters
     ----------
+    examples : str
 
     Returns
     -------
@@ -323,20 +324,24 @@ def parser():
         Namespace with command line arguments
 
     """
+    epilog = (
+        "Note that the source directory should not contain any bad \n"
+        + "or duplicate source files as all source files in the source \n"
+        + "directory, the common source file directory (srcdir2), and \n"
+        + "the extra files (extrafiles) will be built and linked. \n"
+        + "Files can be excluded by using the excludefiles command \n"
+        + "line switch.\n\n"
+    )
+    if examples is not None:
+        epilog += examples
     description = __description__
     parser_obj = argparse.ArgumentParser(
         description=description,
-        epilog="""Note that the source directory
-                                     should not contain any bad or duplicate
-                                     source files as all source files in the
-                                     source directory, the common source file
-                                     directory (srcdir2), and the extra files
-                                     (extrafiles) will be built and linked.
-                                     Files can be excluded by using the
-                                     excludefiles command line switch.""",
+        epilog=epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    for _, value in _get_arg_dict().items():
+    for _, value in _get_standard_arg_dict().items():
         my_parser = _parser_setup(parser_obj, value)
     parser_args = my_parser.parse_args()
     return parser_args

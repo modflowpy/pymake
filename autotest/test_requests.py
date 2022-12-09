@@ -1,16 +1,15 @@
 # Test the download_and_unzip functionality of pymake
 import json
 import os
-import pathlib as pl
 import shutil
+import subprocess
 import sys
 
 import pytest
 
 import pymake
 
-dstpth = pl.Path(f"temp_{os.path.basename(__file__).replace('.py', '')}")
-dstpth.mkdir(parents=True, exist_ok=True)
+dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 
 
 def which(program):
@@ -61,6 +60,26 @@ def export_code_json():
     return fpth
 
 
+def run_cli_cmd(cmd: list) -> None:
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=os.getcwd()
+    )
+    stdout, stderr = process.communicate()
+
+    if stdout:
+        stdout = stdout.decode()
+        print(stdout)
+    if stderr:
+        stderr = stderr.decode()
+        print(stderr)
+
+    assert (
+        process.returncode == 0
+    ), f"'{' '.join(cmd)}' failed\n\tstatus code {process.returncode}\n"
+    return
+
+
+@pytest.mark.dependency("latest_version")
 @pytest.mark.requests
 def test_latest_version():
     version = pymake.repo_latest_version()
@@ -76,6 +95,7 @@ def test_latest_version():
     return
 
 
+@pytest.mark.dependency("latest_assets")
 @pytest.mark.requests
 def test_latest_assets():
     mfexes_repo_name = "MODFLOW-USGS/executables"
@@ -95,6 +115,7 @@ def test_latest_assets():
     return
 
 
+@pytest.mark.dependency("previous_assets")
 @pytest.mark.requests
 def test_previous_assets():
     # hack for failure of OSX on github actions
@@ -125,6 +146,7 @@ def test_previous_assets():
         print(f"available assets: {', '.join(assets.keys())}")
 
 
+@pytest.mark.dependency("mfexes")
 @pytest.mark.requests
 def test_mfexes_download_and_unzip_and_zip():
     exclude_files = [
@@ -205,6 +227,7 @@ def test_mfexes_download_and_unzip_and_zip():
     return
 
 
+@pytest.mark.dependency("nightly_download")
 @pytest.mark.requests
 def test_nightly_download_and_unzip():
     exclude_files = ["code.json"]
@@ -225,6 +248,7 @@ def test_nightly_download_and_unzip():
         shutil.rmtree(pth)
 
 
+@pytest.mark.dependency("usgsprograms")
 @pytest.mark.requests
 def test_usgsprograms():
     print("test_usgsprograms()")
@@ -238,6 +262,7 @@ def test_usgsprograms():
     assert all_keys == get_keys, msg
 
 
+@pytest.mark.dependency("target_key_error")
 @pytest.mark.requests
 def test_target_key_error():
     print("test_target_key_error()")
@@ -245,6 +270,7 @@ def test_target_key_error():
         pymake.usgs_program_data.get_target("error")
 
 
+@pytest.mark.dependency("target_keys")
 @pytest.mark.requests
 def test_target_keys():
     print("test_target_keys()")
@@ -261,6 +287,7 @@ def test_target_keys():
         assert target_dict == test_dict, msg
 
 
+@pytest.mark.dependency("export_json")
 @pytest.mark.requests
 def test_usgsprograms_export_json():
     # export code.json and return json file path
@@ -290,6 +317,7 @@ def test_usgsprograms_export_json():
         assert value == temp_dict, msg
 
 
+@pytest.mark.dependency("load_json_error")
 @pytest.mark.requests
 def test_usgsprograms_load_json_error():
     print("test_usgsprograms_load_json_error()")
@@ -306,6 +334,7 @@ def test_usgsprograms_load_json_error():
         pymake.usgs_program_data.load_json(fpth=fpth)
 
 
+@pytest.mark.dependency("load_json")
 @pytest.mark.requests
 def test_usgsprograms_load_json():
     print("test_usgsprograms_load_json()")
@@ -320,6 +349,7 @@ def test_usgsprograms_load_json():
     assert json_dict is not None, msg
 
 
+@pytest.mark.dependency("list_json_error")
 @pytest.mark.requests
 def test_usgsprograms_list_json_error():
     print("test_usgsprograms_list_json_error()")
@@ -332,6 +362,7 @@ def test_usgsprograms_list_json_error():
         pymake.usgs_program_data.list_json(fpth=fpth)
 
 
+@pytest.mark.dependency("list_json")
 @pytest.mark.requests
 def test_usgsprograms_list_json():
     print("test_usgsprograms_list_json()")
@@ -343,6 +374,7 @@ def test_usgsprograms_list_json():
     pymake.usgs_program_data.list_json(fpth=fpth)
 
 
+@pytest.mark.dependency("shared")
 @pytest.mark.requests
 def test_shared():
     print("test_shared()")
@@ -350,6 +382,7 @@ def test_shared():
     assert target_dict.shared_object, "libmf6 is a shared object"
 
 
+@pytest.mark.dependency("not_shared")
 @pytest.mark.requests
 def test_not_shared():
     print("test_not_shared()")
@@ -357,8 +390,11 @@ def test_not_shared():
     assert not target_dict.shared_object, "mf6 is not a shared object"
 
 
+@pytest.mark.dependency(name="code_json")
 @pytest.mark.requests
-def test_clean_up():
+def test_code_json() -> None:
+    cmd = ["make-code-json", "-f", f"{dstpth}/code.json"]
+    run_cli_cmd(cmd)
     shutil.rmtree(dstpth)
 
 
@@ -378,4 +414,3 @@ if __name__ == "__main__":
     test_usgsprograms_list_json()
     test_shared()
     test_not_shared()
-    test_clean_up()
