@@ -406,8 +406,8 @@ class usgs_program_data:
 
         # export file
         try:
-            with open(file_name, "w") as f:
-                json.dump(prog_data, f, indent=4)
+            with open(file_name, "w") as file_obj:
+                json.dump(prog_data, file_obj, indent=4, sort_keys=True)
         except:
             msg = f'could not export json file "{file_name}"'
             raise IOError(msg)
@@ -415,17 +415,20 @@ class usgs_program_data:
         # write code.json
         if str(appdir) != ".":
             dst = appdir / file_name
-            with open(dst, "w") as f:
-                json.dump(prog_data, f, indent=4)
+            with open(dst, "w") as file_obj:
+                json.dump(prog_data, file_obj, indent=4, sort_keys=True)
 
         # write code.md
         if prog_data is not None and write_markdown:
+            sorted_prog_data = {
+                key: prog_data[key] for key in sorted(list(prog_data.keys()))
+            }
             with open("code.md", "w") as file_obj:
                 line = "| Program | Version | UTC Date |"
                 file_obj.write(line + "\n")
                 line = "| ------- | ------- | ---- |"
                 file_obj.write(line + "\n")
-                for target, target_dict in prog_data.items():
+                for target, target_dict in sorted_prog_data.items():
                     keys = list(target_dict.keys())
                     line = f"| {target} | {target_dict['version']} |"
                     date_key = "url_download_asset_date"
