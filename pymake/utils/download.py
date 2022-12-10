@@ -15,8 +15,8 @@ import pathlib as pl
 import shutil
 import sys
 import tarfile
-import time
 import timeit
+from http.client import responses
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 import requests
@@ -202,32 +202,38 @@ def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
         request object for url
 
     """
+    if verbose:
+        print(f"request url '{url}'")
+
     for idx in range(max_requests):
         if verbose:
-            msg = f"open request attempt {idx + 1} of {max_requests}"
-            print(msg)
+            print(f"  request attempt {idx + 1} of {max_requests}")
         req = None
         try:
             req = requests.get(
-                url, stream=True, verify=verify, timeout=timeout
+                url,
+                stream=True,
+                verify=verify,
+                timeout=timeout,
             )
+            if verbose:
+                print(f"    status: {responses[req.status_code]}")
         except:
-            if idx < max_requests - 1:
-                time.sleep(13)
-                continue
-            else:
-                msg = "Cannot open request from:\n" + f"    {url}\n\n"
-                print(msg)
-                if req is not None:
-                    req.raise_for_status()
+            continue
 
-        # successful request
-        break
+        if req.status_code == 200:
+            break
+
+    # final test for success
+    if req is None:
+        raise ConnectionError(f"Could not get data from: {url}")
+    else:
+        req.raise_for_status()
 
     return req
 
 
-def _request_header(url, max_requests=10, verbose=False):
+def _request_header(url, max_requests=10, timeout=1, verbose=False):
     """Get the headers from a url
 
     Parameters
@@ -236,6 +242,8 @@ def _request_header(url, max_requests=10, verbose=False):
         url address for the zip file
     max_requests : int
         number of url download request attempts (default is 10)
+    timeout : int
+        url request time out length (default is 1 seconds)
     verbose : bool
         boolean indicating if output will be printed to the terminal
         (default is False)
@@ -246,23 +254,32 @@ def _request_header(url, max_requests=10, verbose=False):
         request header object for url
 
     """
+    if verbose:
+        print(f"request url: '{url}'")
+
     for idx in range(max_requests):
         if verbose:
-            msg = f"open request attempt {idx + 1} of {max_requests}"
-            print(msg)
+            print(f"  request attempt {idx + 1} of {max_requests}")
+        header = None
+        try:
+            header = requests.head(
+                url,
+                allow_redirects=True,
+                timeout=timeout,
+            )
+            if verbose:
+                print(f"    status: {responses[header.status_code]}")
+        except:
+            continue
 
-        header = requests.head(url, allow_redirects=True)
-        if header.status_code != 200:
-            if idx < max_requests - 1:
-                time.sleep(13)
-                continue
-            else:
-                msg = "Cannot open request from:\n" + f"    {url}\n\n"
-                print(msg)
-                header.raise_for_status()
+        if header.status_code == 200:
+            break
 
-        # successful header request
-        break
+    # final test for success
+    if header is None:
+        raise ConnectionError(f"Could not get header from: {url}")
+    else:
+        header.raise_for_status()
 
     return header
 

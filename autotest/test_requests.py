@@ -42,12 +42,12 @@ def initialize_working_dir():
     os.makedirs(dstpth, exist_ok=True)
 
 
-def export_code_json():
+def export_code_json(file_name="code.json"):
     # make sure the test directory exists
     initialize_working_dir()
 
     # make the json file
-    fpth = os.path.join(dstpth, "code.test.json")
+    fpth = os.path.join(dstpth, file_name)
     pymake.usgs_program_data.export_json(
         fpth=fpth,
         current=True,
@@ -302,7 +302,7 @@ def test_target_keys():
 @pytest.mark.requests
 def test_usgsprograms_export_json():
     # export code.json and return json file path
-    fpth = export_code_json()
+    fpth = export_code_json(file_name="code.export.json")
 
     # test the json export
     with open(fpth, "r") as f:
@@ -353,7 +353,7 @@ def test_usgsprograms_load_json():
     print("test_usgsprograms_load_json()")
 
     # export code.json and return json file path
-    fpth = export_code_json()
+    fpth = export_code_json(file_name="code.load.json")
 
     json_dict = pymake.usgs_program_data.load_json(fpth)
 
@@ -383,7 +383,7 @@ def test_usgsprograms_list_json():
     print("test_usgsprograms_list_json()")
 
     # export code.json and return json file path
-    fpth = export_code_json()
+    fpth = export_code_json(file_name="code.list.json")
 
     # list the contents of the json file
     pymake.usgs_program_data.list_json(fpth=fpth)

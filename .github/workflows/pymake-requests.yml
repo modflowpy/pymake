@@ -32,7 +32,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -v -m requests --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -n=auto -m requests --durations=0 --cov=pymake --cov-report=xml autotest/
 
       - name: Run scheduled tests
         if: ${{ github.event_name == 'schedule' }}

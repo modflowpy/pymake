@@ -62,18 +62,14 @@ target/
 
 # files in the autotest directory
 autotest/temp*/
+autotest/*.json
+autotest/code.md
 mod_temp/
 obj_temp/
 src_temp/
 *.exe
 Dependencies
 
-# files in the examples directory
-examples/win32/
-examples/win64/
-examples/mac/
-examples/linux/
-examples/temp/
-
+# files in the doc directory
 docs/source/
 
