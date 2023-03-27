@@ -5,31 +5,6 @@ acyclic graph and then compiles the source files using GNU compilers
 (:code:`ifort`, :code:`icc`)."""
 
 
-# autotest
-from .autotest.autotest import (
-    compare,
-    compare_budget,
-    compare_concs,
-    compare_heads,
-    compare_stages,
-    compare_swrbudget,
-    get_entries_from_namefile,
-    get_input_files,
-    get_mf6_blockdata,
-    get_mf6_comparison,
-    get_mf6_files,
-    get_mf6_ftypes,
-    get_mf6_mshape,
-    get_mf6_nper,
-    get_namefiles,
-    get_sim_name,
-    setup,
-    setup_comparison,
-    setup_mf6,
-    setup_mf6_comparison,
-    teardown,
-)
-
 # pymake
 from .config import (
     __author__,
@@ -77,26 +52,4 @@ __all__ = [
     # plot
     "make_plots",
     "to_pydot",
-    # autotest
-    "setup",
-    "setup_comparison",
-    "teardown",
-    "get_namefiles",
-    "get_entries_from_namefile",
-    "get_sim_name",
-    "get_input_files",
-    "compare_budget",
-    "compare_swrbudget",
-    "compare_heads",
-    "compare_concs",
-    "compare_stages",
-    "compare",
-    "setup_mf6",
-    "setup_mf6_comparison",
-    "get_mf6_comparison",
-    "get_mf6_files",
-    "get_mf6_blockdata",
-    "get_mf6_ftypes",
-    "get_mf6_mshape",
-    "get_mf6_nper",
 ]
