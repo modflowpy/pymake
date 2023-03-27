@@ -3,10 +3,10 @@ releases.
 
 """
 import os
+import pathlib as pl
 import shutil
 import sys
 import types
-import pathlib as pl
 
 from .usgsprograms import usgs_program_data
 
