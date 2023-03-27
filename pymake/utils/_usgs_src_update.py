@@ -6,6 +6,7 @@ import os
 import shutil
 import sys
 import types
+import pathlib as pl
 
 from .usgsprograms import usgs_program_data
 
@@ -404,6 +405,61 @@ def _update_mf2005_files(srcdir, fc, cc, arch, double):
 
     # update pcg7.f
     _update_pcg(srcdir)
+
+
+def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
+    """Update GSI version of MODFLOW-USG source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
+    tags = {
+        "FMTARG = 'BINARY'": "FMTARG = 'UNFORMATTED'\n        ACCARG = 'STREAM'",
+        ",SHARED,ACCESS='SEQUENTIAL'": ",ACCESS='SEQUENTIAL'",
+        "FORM=FMTARG,SHARED,": "FORM=FMTARG,",
+    }
+
+    fpth = pl.Path(srcdir) / "glo2basu1.f"
+    if fpth.exists():
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, "w")
+        for idx, line in enumerate(lines):
+            for key, value in tags.items():
+                if key in line:
+                    line = line.replace(key, value)
+            f.write(line)
+        f.close()
+
+    tag = "DEALLOCATE(ITHFLG)"
+    tag2 = "DEALLOCATE(LAYTYP)"
+    fpth = pl.Path(srcdir) / "gwf2bcf-lpf-u1.f"
+    if fpth.exists():
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, "w")
+        for idx, line in enumerate(lines):
+            if tag in line:
+                line = line.replace(tag, f"!{tag}")
+                if tag2 in line:
+                    line = line.replace(tag2, f"{tag}\n        {tag2}")
+            f.write(line)
+        f.close()
 
 
 def _update_mfnwt_files(srcdir, fc, cc, arch, double):

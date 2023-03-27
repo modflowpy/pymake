@@ -9,8 +9,10 @@ import pymake
 
 # define program data
 target = "mfusg"
+target_gsi = "mfusg_gsi"
 if sys.platform.lower() == "win32":
     target += ".exe"
+    target_gsi += ".exe"
 
 # get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
@@ -25,6 +27,7 @@ expth = os.path.join(mfusgpth, "test")
 
 srcpth = os.path.join(mfusgpth, prog_dict.srcdir)
 epth = os.path.abspath(os.path.join(dstpth, target))
+epth_gsi = os.path.abspath(os.path.join(dstpth, target_gsi))
 
 name_files = [
     "01A_nestedgrid_nognc/flow.nam",
@@ -42,6 +45,10 @@ for idx, namefile in enumerate(name_files):
 pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
+
+pm_gsi = pymake.Pymake(verbose=True)
+pm_gsi.target = target_gsi
+pm_gsi.appdir = dstpth
 
 
 def edit_namefile(namefile):
@@ -64,12 +71,17 @@ def edit_namefile(namefile):
 def clean_up():
     print("Removing test files and directories")
 
-    # finalize pymake object
+    # finalize pymake objects
     pm.finalize()
+    pm_gsi.finalize()
 
     if os.path.isfile(epth):
         print("Removing " + target)
         os.remove(epth)
+
+    if os.path.isfile(epth_gsi):
+        print("Removing " + target_gsi)
+        os.remove(epth_gsi)
 
     dirs_temp = [dstpth]
     for d in dirs_temp:
@@ -79,15 +91,15 @@ def clean_up():
     return
 
 
-def run_mfusg(fn):
+def run_mfusg(fn, exe):
     # edit namefile
     edit_namefile(fn)
     # run test models
     print(f"running model...{os.path.basename(fn)}")
     success, buff = flopy.run_model(
-        epth, os.path.basename(fn), model_ws=os.path.dirname(fn), silent=False
+        exe, os.path.basename(fn), model_ws=os.path.dirname(fn), silent=False
     )
-    errmsg = f"could not run {fn}"
+    errmsg = f"could not run {fn} with {exe}"
     assert success, errmsg
 
     return
@@ -103,17 +115,23 @@ def test_download():
     pm.download_target(target, download_path=dstpth)
     assert pm.download, f"could not download {target}"
 
+    # download the gsi version of modflow-usg
+    pm_gsi.download_target(target_gsi, download_path=dstpth)
+    assert pm_gsi.download, f"could not download {target_gsi}"
+
 
 @pytest.mark.base
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
+    assert pm_gsi.build() == 0, f"could not compile {target_gsi}"
     return
 
 
 @pytest.mark.regression
 @pytest.mark.parametrize("fn", name_files)
 def test_mfusg(fn):
-    run_mfusg(fn)
+    run_mfusg(fn, epth)
+    run_mfusg(fn, epth_gsi)
 
 
 @pytest.mark.base
