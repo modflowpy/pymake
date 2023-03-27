@@ -188,7 +188,6 @@ def main(
             )
 
     if srcdir is not None and target is not None:
-
         objdir_temp, moddir_temp, srcdir_temp = get_temporary_directories(
             appdir=appdir,
             target=pl.Path(target).stem,

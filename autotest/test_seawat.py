@@ -109,7 +109,6 @@ def build_seawat_dependency_graphs():
 
     if build_graphs:
         if os.path.exists(epth):
-
             # build dependencies output directory
             if not os.path.exists(deppth):
                 os.makedirs(deppth, exist_ok=True)
