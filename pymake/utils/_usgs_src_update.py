@@ -3,10 +3,10 @@ releases.
 
 """
 import os
+import pathlib as pl
 import shutil
 import sys
 import types
-import pathlib as pl
 
 from .usgsprograms import usgs_program_data
 
@@ -460,6 +460,14 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
                     line = line.replace(tag2, f"{tag}\n        {tag2}")
             f.write(line)
         f.close()
+
+    # rename "utl7u1 RD.f" to "utl7u1_RD.f"
+    fpth = pl.Path(srcdir) / "utl7u1 RD.f"
+    if fpth.exists():
+        fpth_rename = pl.Path(srcdir) / "utl7u1_RD.f"
+        if fpth_rename.exists():
+            os.remove(fpth_rename)
+        os.rename(fpth, fpth_rename)
 
 
 def _update_mfnwt_files(srcdir, fc, cc, arch, double):

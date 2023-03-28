@@ -61,80 +61,27 @@ pm.fflags = "-O3"
 pm.cflags = "-O3"
 
 
-def run_mf2005(namefile, regression=True):
+def run_mf2005(namefile):
     """
     Run the simulation.
 
     """
     if namefile is not None:
-        # Set root as the directory name where namefile is located
-        testname = pymake.get_sim_name(namefile, rootpth=expth)[0]
-
         # Set nam as namefile name without path
         nam = os.path.basename(namefile)
 
-        # Setup
-        testpth = os.path.join(dstpth, testname)
-        pymake.setup(namefile, testpth)
-
         # run test models
         exe_name = os.path.abspath(epth)
-        msg = f"running model...{testname}" + f" using {exe_name}"
+        msg = f"running model...{nam}" + f" using {exe_name}"
         print(msg)
         if os.path.exists(exe_name):
             success, buff = flopy.run_model(
-                exe_name, nam, model_ws=testpth, silent=True
+                exe_name, nam, model_ws=expth, silent=True
             )
         else:
             success = False
 
         assert success, f"base model {nam} " + "did not run."
-
-        # If it is a regression run, then setup and run the model with the
-        # release target and the reference target
-        success_reg = True
-        if regression:
-            testname_reg = os.path.basename(mfpth)
-            testpth_reg = os.path.join(testpth, testname_reg)
-            pymake.setup(namefile, testpth_reg)
-            # exe_name = os.path.abspath(target_previous)
-            msg = (
-                "running regression model...{}".format(testname_reg)
-                + f" using {exe_name}"
-            )
-            print(msg)
-
-            if os.path.exists(exe_name):
-                success_reg, buff = flopy.run_model(
-                    exe_name, nam, model_ws=testpth_reg, silent=False
-                )
-            else:
-                success_reg = False
-
-            assert success_reg, f"regression model {nam} " + "did not run."
-
-        # compare results
-        if success and success_reg:
-            fpth = os.path.split(os.path.join(testpth, nam))[0]
-            outfile1 = os.path.join(fpth, "bud.cmp")
-            fpth = os.path.split(os.path.join(testpth, nam))[0]
-            outfile2 = os.path.join(fpth, "hds.cmp")
-            success_reg = pymake.compare(
-                os.path.join(testpth, nam),
-                os.path.join(testpth_reg, nam),
-                precision="single",
-                max_cumpd=0.01,
-                max_incpd=0.01,
-                htol=0.001,
-                outfile1=outfile1,
-                outfile2=outfile2,
-            )
-        # Clean things up
-        if success_reg:
-            pymake.teardown(testpth)
-        else:
-            success = False
-            errmsg = f"could not run...{os.path.basename(nam)}"
     else:
         success = False
         errmsg = f"{target} does not exist"
@@ -186,7 +133,6 @@ def test_compile():
 
 
 @pytest.mark.regression
-@pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 @pytest.mark.parametrize("fn", name_files)
 def test_mf2005(fn):
     run_mf2005(fn)
