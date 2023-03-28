@@ -461,6 +461,14 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
             f.write(line)
         f.close()
 
+    # rename "utl7u1 RD.f" to "utl7u1_RD.f"
+    fpth = pl.Path(srcdir) / "utl7u1 RD.f"
+    if fpth.exists():
+        fpth_rename = pl.Path(srcdir) / "utl7u1_RD.f"
+        if fpth_rename.exists():
+            os.remove(fpth_rename)
+        os.rename(fpth, fpth_rename)
+
 
 def _update_mfnwt_files(srcdir, fc, cc, arch, double):
     """Update MODFLOW-NWT source files
