@@ -22,3 +22,6 @@ mfnwt1.1.4 ,  1.1.4  ,  False  , https://water.usgs.gov/water-resources/software
 mfnwt      ,  1.3.0  ,  True   , https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.3.0.zip              , MODFLOW-NWT         , src                 ,    True           , True         , False
 mfusg_gsi  ,  2.1.1  ,  True   , https://www.gsienv.com/wp-content/uploads/2023/04/USG-Transport-V_2.1.1.zip                    , .                   , USGT-v2-1-1-source  ,    True           , True         , False
 gsflow     ,  2.3.0  ,  True   , https://water.usgs.gov/water-resources/software/gsflow/gsflow_2.3.0.zip                        , gsflow_2.3.0        , src                 ,    True           , False        , False
+mf6dev     ,  6.4.2+ ,  False  , https://github.com/MODFLOW-USGS/modflow6/archive/refs/heads/develop.zip                        , modflow6-develop    , src                 ,    True           , False        , False
+zbud6dev   ,  6.4.2+ ,  False  , https://github.com/MODFLOW-USGS/modflow6/archive/refs/heads/develop.zip                        , modflow6-develop    , utils/zonebudget/src,    True           , False        , False
+libmf6dev  ,  6.4.2+ ,  False  , https://github.com/MODFLOW-USGS/modflow6/archive/refs/heads/develop.zip                        , modflow6-develop    , srcbmi              ,    True           , False        , True

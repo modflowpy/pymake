@@ -44,8 +44,9 @@ def build_apps(
     meson=False,
     mesondir=".",
     clean=True,
+    mb=None,
 ):
-    """Build all of the current targets or a subset of targets.
+    """Build all current targets or a subset of targets.
 
     Parameters
     ----------
@@ -71,6 +72,10 @@ def build_apps(
         Main meson.build file path
     clean : bool
         boolean determining of final download should be removed
+    mb : bool
+        parser variable from cli that represents the boolean indicating that
+        the executable should be built using the meson build system.
+        (default is None)
 
     Returns
     -------
@@ -85,6 +90,12 @@ def build_apps(
     if isinstance(targets, str):
         if targets == ":":
             targets = None
+
+    if mb is not None:
+        if meson:
+            raise ValueError(f"PROGRAM ERROR: meson={meson} and mb={mb}")
+        else:
+            meson = mb
 
     # set targets
     if targets is None:
@@ -214,7 +225,7 @@ def build_apps(
             pmobj.inplace = True
 
         # set target and srcdir
-        pmobj.target = target
+        pmobj.target = target.replace("dev", "")
         pmobj.srcdir = os.path.join(
             download_dir, code_dict[target].dirname, code_dict[target].srcdir
         )

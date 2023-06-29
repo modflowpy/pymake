@@ -16,12 +16,7 @@ from ._compiler_switches import (
     _get_osname,
     _get_prepend,
 )
-from ._file_utils import _get_extra_exclude_files, _get_extrafiles_common_path
-from ._Popen_wrapper import (
-    _process_Popen_command,
-    _process_Popen_communicate,
-    _process_Popen_initialize,
-)
+from ._file_utils import _get_extrafiles_common_path
 
 
 @contextmanager
@@ -197,6 +192,7 @@ def meson_setup(
             os.path.abspath(appdir), os.path.abspath(mesondir)
         )
         command_list.append(f"--libdir={libdir}")
+        command_list.append(f"--bindir={libdir}")
 
         if os.path.isdir(build_dir):
             command_list.append("--wipe")

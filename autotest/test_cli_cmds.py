@@ -2,13 +2,16 @@ import os
 import pathlib as pl
 import shutil
 import subprocess
-import sys
 
 import pytest
+from flaky import flaky
+
+RERUNS = 3
 
 targets = (
     "triangle",
     "crt",
+    "mf6dev",
 )
 
 # set up paths
@@ -48,6 +51,7 @@ def clean_up() -> None:
 
 @pytest.mark.dependency(name="make_program")
 @pytest.mark.base
+@flaky(max_runs=RERUNS)
 @pytest.mark.parametrize("target", targets)
 def test_make_program(target: str) -> None:
     cmd = [
@@ -56,11 +60,13 @@ def test_make_program(target: str) -> None:
         "--appdir",
         str(dstpth),
         "--verbose",
+        "--meson-build",
     ]
     run_cli_cmd(cmd)
 
 
 @pytest.mark.dependency(name="make_program_all")
+@flaky(max_runs=RERUNS)
 @pytest.mark.schedule
 def test_make_program_all() -> None:
     cmd = [

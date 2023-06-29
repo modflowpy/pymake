@@ -26,8 +26,17 @@ DICT_KEYS = (
     "zip",
     "keep",
     "dryrun",
+    "meson",
 )
-COM_ARG_KEYS = ("fc", "cc", "fflags", "cflags", "zip", "keep", "dryrun")
+COM_ARG_KEYS = (
+    "fc",
+    "cc",
+    "fflags",
+    "cflags",
+    "zip",
+    "keep",
+    "dryrun",
+)
 
 
 def main() -> None:
@@ -110,12 +119,10 @@ Examples:
     args = vars(parser_args)
 
     # filter parser arguments into args and command line arguments
-    # com_arg_var = {}
     arg_key_pop = []
     com_arg_pop = []
     for key, arg in args.items():
         if key in COM_ARG_KEYS:
-            # com_arg_var[key] = arg
             arg_key_pop.append(key)
         else:
             for carg in sys.argv:
