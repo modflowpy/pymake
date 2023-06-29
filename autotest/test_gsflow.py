@@ -1,7 +1,7 @@
 import os
+import pathlib as pl
 import shutil
 import sys
-import pathlib as pl
 
 import flopy
 import pytest

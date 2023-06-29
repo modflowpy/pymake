@@ -12,7 +12,6 @@ __status__ = "Production"
 
 import os
 import re
-import re
 
 
 class Node(object):
