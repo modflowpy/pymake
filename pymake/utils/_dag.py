@@ -11,6 +11,8 @@ __email__ = "langevin@usgs.gov"
 __status__ = "Production"
 
 import os
+import re
+import re
 
 
 class Node(object):
@@ -149,9 +151,15 @@ def _get_f_nodelist(srcfiles):
             linelist = line.strip().split()
             if len(linelist) == 0:
                 continue
-            if linelist[0].upper() in ["MODULE", "SUBMODULE"]:
+            if linelist[0].upper() in ("MODULE",):
                 modulename = linelist[1].upper()
                 module_dict[modulename] = srcfile
+            if "SUBMODULE" in line.upper():
+                modulename = re.findall(r"\((.+)\)", line)
+                if len(modulename) > 0:
+                    modulename = modulename[0].strip()
+                    if modulename not in modulelist:
+                        modulelist.append(modulename)
             if linelist[0].upper() == "USE":
                 modulename = linelist[1].split(",")[0].upper()
                 if modulename not in modulelist:
