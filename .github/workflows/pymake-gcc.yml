@@ -51,13 +51,14 @@ jobs:
           pytest -v --dist=loadfile -n=auto -m="base or regression" --durations=0 --cov=pymake --cov-report=xml
 
       - name: Print coverage report before upload
+        working-directory: ./autotest
         run: |
           coverage report
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:
-          file: ./coverage.xml
+          file: ./autotest/coverage.xml
 
   pymakeCI-gcc-prev:
     name: pymake CI GCC 9 and 8
@@ -108,13 +109,14 @@ jobs:
           pytest -v --dist=loadfile -n=auto -m="base" --durations=0 --cov=pymake --cov-report=xml
 
       - name: Print coverage report before upload
+        working-directory: ./autotest
         run: |
           coverage report
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:
-          file: ./coverage.xml
+          file: ./autotest/coverage.xml
 
   pymakeCI-python-prev:
     name: pymake CI with previous python versions

@@ -42,10 +42,11 @@ jobs:
           pytest -v -m="schedule" --durations=0 --cov=pymake --cov-report=xml
 
       - name: Print coverage report before upload
+        working-directory: ./autotest
         run: |
           coverage report
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:
-          file: ./coverage.xml
+          file: ./autotest/coverage.xml
