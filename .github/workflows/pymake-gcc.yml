@@ -46,8 +46,9 @@ jobs:
           .github/common/download-examples.sh
 
       - name: Run pytest
+        working-directory: ./autotest
         run: |
-          pytest -v --dist=loadfile -n=auto -m="base or regression" --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --dist=loadfile -n=auto -m="base or regression" --durations=0 --cov=pymake --cov-report=xml
 
       - name: Print coverage report before upload
         run: |
@@ -102,8 +103,9 @@ jobs:
           .github/common/download-examples.sh
 
       - name: Run pytest
+        working-directory: ./autotest
         run: |
-          pytest -v --dist=loadfile -n=auto -m="base" --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v --dist=loadfile -n=auto -m="base" --durations=0 --cov=pymake --cov-report=xml
 
       - name: Print coverage report before upload
         run: |

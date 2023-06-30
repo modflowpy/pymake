@@ -31,13 +31,15 @@ jobs:
           .github/common/install-python.sh
 
       - name: Run pytest
+        working-directory: ./autotest
         run: |
-          pytest -v -n=auto -m requests --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -n=auto -m requests --durations=0 --cov=pymake --cov-report=xml
 
       - name: Run scheduled tests
         if: ${{ github.event_name == 'schedule' }}
+        working-directory: ./autotest
         run: |
-          pytest -v -m="schedule" --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -m="schedule" --durations=0 --cov=pymake --cov-report=xml
 
       - name: Print coverage report before upload
         run: |
