@@ -38,7 +38,7 @@ def run_cli_cmd(cmd: list) -> None:
 @pytest.mark.parametrize("target", targets)
 def test_make_program(function_tmpdir, target: str) -> None:
     os.chdir(function_tmpdir)
-    cmd = ["make-program", target, "--appdir", ".", "--verbose", "--mg"]
+    cmd = ["make-program", target, "--appdir", ".", "--verbose", "--mb"]
     run_cli_cmd(cmd)
 
 

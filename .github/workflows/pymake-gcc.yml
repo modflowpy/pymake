@@ -150,5 +150,6 @@ jobs:
           .github/common/download-examples.sh
 
       - name: Run pytest
+        working-directory: ./autotest
         run: |
           pytest -v --dist=loadfile -n=auto -m="base" --durations=0
