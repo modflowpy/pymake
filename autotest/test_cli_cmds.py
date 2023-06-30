@@ -2,6 +2,7 @@ import os
 import pathlib as pl
 import shutil
 import subprocess
+import sys
 
 import pytest
 from flaky import flaky
@@ -60,8 +61,9 @@ def test_make_program(target: str) -> None:
         "--appdir",
         str(dstpth),
         "--verbose",
-        "--meson-build",
     ]
+    if sys.platform != "win32":
+        cmd.append("--meson-build")
     run_cli_cmd(cmd)
 
 
