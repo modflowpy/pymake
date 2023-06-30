@@ -60,7 +60,7 @@ def test_make_program_all(function_tmpdir) -> None:
 
 @pytest.mark.dependency(name="mfpymake")
 @pytest.mark.base
-def test_mfpymake(function_tmpdir) -> None:
+def test_mfpymake_hello(function_tmpdir) -> None:
     src = (
         "program hello\n"
         + "  ! This is a comment line; it is ignored by the compiler\n"
@@ -86,5 +86,5 @@ def test_mfpymake(function_tmpdir) -> None:
     else:
         cmd.append(os.environ.get("FC"))
     run_cli_cmd(cmd)
-    cmd = [str(function_tmpdir) / "hello"]
+    cmd = [str(function_tmpdir / "hello")]
     run_cli_cmd(cmd)
