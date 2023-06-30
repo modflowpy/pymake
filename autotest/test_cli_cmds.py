@@ -61,9 +61,10 @@ def test_make_program(target: str) -> None:
         "--appdir",
         str(dstpth),
         "--verbose",
+        "--meson-build",
     ]
-    if sys.platform != "win32":
-        cmd.append("--meson-build")
+    if sys.platform == "win32" and target == "triangle":
+        cmd.remove("--meson-build")
     run_cli_cmd(cmd)
 
 
