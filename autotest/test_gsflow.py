@@ -127,7 +127,7 @@ def run_gsflow(example, control_file, normal_message):
             normal_msg=normal_message,
         )
         if not success:
-            errmsg = f"could not run {control_file}"
+            print(f"could not run {control_file}")
     return success
 
 

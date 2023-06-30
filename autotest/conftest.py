@@ -1,8 +1,6 @@
 import re
 from importlib import metadata
 from pathlib import Path
-from platform import system
-from typing import List, Optional
 
 import matplotlib.pyplot as plt
 import pytest

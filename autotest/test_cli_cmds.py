@@ -1,6 +1,4 @@
 import os
-import pathlib as pl
-import shutil
 import subprocess
 
 import pytest
