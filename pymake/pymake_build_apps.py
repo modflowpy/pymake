@@ -87,11 +87,13 @@ def build_apps(
         if targets == ":":
             targets = None
 
-    mb = kwargs.pop("mb", None)
-    if mb is not None:
+    meson_build = kwargs.pop("mb", None)
+    if meson_build is not None:
         if meson:
-            raise ValueError(f"PROGRAM ERROR: meson={meson} and mb={mb}")
-        meson = mb
+            raise ValueError(
+                f"PROGRAM ERROR: meson={meson} and mb={meson_build}"
+            )
+        meson = meson_build
 
     # set targets
     if targets is None:

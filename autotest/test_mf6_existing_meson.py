@@ -1,10 +1,7 @@
-import contextlib
 import os
 import shutil
 import sys
-import time
 
-import flopy
 import pytest
 
 import pymake
@@ -25,26 +22,12 @@ executables[3] += shared_ext
 # get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
 
-# set up paths
-dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
-if not os.path.exists(dstpth):
-    os.makedirs(dstpth, exist_ok=True)
-
-mf6pth = os.path.join(dstpth, prog_dict.dirname)
-mesondir = mf6pth
-
-
-def clean_up():
-    print("Removing temporary build directories")
-    dirs_temp = [dstpth]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
-    return
-
 
 @pytest.mark.base
-def test_build_with_existing_meson():
+def test_build_with_existing_meson(function_tmpdir):
+    mf6pth = function_tmpdir / prog_dict.dirname
+    mesondir = mf6pth
+
     # set default compilers
     fc, cc = "gfortran", "gcc"
 
@@ -83,7 +66,7 @@ def test_build_with_existing_meson():
     pm.verbose = True
 
     # download the modflow 6
-    pm.download_target(target, download_path=dstpth)
+    pm.download_target(target, download_path=function_tmpdir)
     assert pm.download, f"could not download {target} distribution"
 
     # make modflow 6 with existing meson.build file
@@ -97,14 +80,7 @@ def test_build_with_existing_meson():
         returncode == 0
     ), "could not build modflow 6 applications using existing meson.build file"
 
-    # check that all of the executables exist
+    # check that the executables exist
     for executable in executables:
         exe_pth = os.path.join(pm.appdir, executable)
         assert os.path.isfile(exe_pth), f"{exe_pth} does not exist"
-
-    # clean up test files
-    clean_up()
-
-
-if __name__ == "__main__":
-    test_build_with_existing_meson()

@@ -154,7 +154,7 @@ def test_previous_assets():
 @pytest.mark.dependency("mfexes")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_mfexes_download_and_unzip_and_zip():
+def test_mfexes_download_and_unzip_and_zip(function_tmpdir):
     exclude_files = [
         "code.json",
         "prms_constants.f90",
@@ -162,9 +162,7 @@ def test_mfexes_download_and_unzip_and_zip():
         "prms_time.f90",
         "utils_prms.f90",
     ]
-    pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}"
-    )
+    pth = str(function_tmpdir)
     pymake.getmfexes(pth, verbose=True)
     for f in os.listdir(pth):
         fpth = os.path.join(pth, f)
@@ -173,10 +171,7 @@ def test_mfexes_download_and_unzip_and_zip():
             assert which(fpth) is not None, errmsg
 
     # zip up exe's using files
-    zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
-        "ziptest01.zip",
-    )
+    zip_pth = function_tmpdir / "ziptest01.zip"
     print(f"creating '{zip_pth}'")
     success = pymake.zip_all(
         zip_pth, file_pths=[os.path.join(pth, e) for e in os.listdir(pth)]
@@ -185,30 +180,21 @@ def test_mfexes_download_and_unzip_and_zip():
     os.remove(zip_pth)
 
     # zip up exe's using directories
-    zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
-        "ziptest02.zip",
-    )
+    zip_pth = function_tmpdir / "ziptest02.zip"
     print(f"creating '{zip_pth}'")
     success = pymake.zip_all(zip_pth, dir_pths=pth)
     assert success, "could not create zipfile using directories"
     os.remove(zip_pth)
 
     # zip up exe's using directories and a pattern
-    zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
-        "ziptest03.zip",
-    )
+    zip_pth = function_tmpdir / "ziptest03.zip"
     print(f"creating '{zip_pth}'")
     success = pymake.zip_all(zip_pth, dir_pths=pth, patterns="mf")
     assert success, "could not create zipfile using directories and a pattern"
     os.remove(zip_pth)
 
     # zip up exe's using files and directories
-    zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
-        "ziptest04.zip",
-    )
+    zip_pth = function_tmpdir / "ziptest04.zip"
     print(f"creating '{zip_pth}'")
     success = pymake.zip_all(
         zip_pth,
@@ -236,11 +222,9 @@ def test_mfexes_download_and_unzip_and_zip():
 @pytest.mark.dependency("nightly_download")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_nightly_download_and_unzip():
+def test_nightly_download_and_unzip(function_tmpdir):
     exclude_files = ["code.json"]
-    pth = os.path.join(
-        f"temp_nightly_{os.path.basename(__file__).replace('.py', '')}"
-    )
+    pth = str(function_tmpdir)
     pymake.getmfnightly(pth, verbose=True)
     for f in os.listdir(pth):
         fpth = os.path.join(pth, f)
@@ -300,7 +284,9 @@ def test_target_keys():
 @pytest.mark.dependency("export_json")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_usgsprograms_export_json():
+def test_usgsprograms_export_json(function_tmpdir):
+    os.chdir(function_tmpdir)
+
     # export code.json and return json file path
     fpth = export_code_json(file_name="code.export.json")
 
@@ -331,12 +317,8 @@ def test_usgsprograms_export_json():
 @pytest.mark.dependency("load_json_error")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_usgsprograms_load_json_error():
-    print("test_usgsprograms_load_json_error()")
-
-    initialize_working_dir()
-
-    fpth = os.path.join(dstpth, "code.test.error.json")
+def test_usgsprograms_load_json_error(function_tmpdir):
+    fpth = function_tmpdir / "code.test.error.json"
     my_dict = {"mf2005": {"bad": 12, "key": True}}
     pymake.usgs_program_data.export_json(
         fpth=fpth, prog_data=my_dict, update=False
@@ -349,8 +331,8 @@ def test_usgsprograms_load_json_error():
 @pytest.mark.dependency("load_json")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_usgsprograms_load_json():
-    print("test_usgsprograms_load_json()")
+def test_usgsprograms_load_json(function_tmpdir):
+    os.chdir(function_tmpdir)
 
     # export code.json and return json file path
     fpth = export_code_json(file_name="code.load.json")
@@ -365,13 +347,10 @@ def test_usgsprograms_load_json():
 @pytest.mark.dependency("list_json_error")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_usgsprograms_list_json_error():
-    print("test_usgsprograms_list_json_error()")
+def test_usgsprograms_list_json_error(function_tmpdir):
+    os.chdir(function_tmpdir)
 
-    # make sure the example directory exists
-    initialize_working_dir()
-
-    fpth = os.path.join(dstpth, "does.not.exist.json")
+    fpth = function_tmpdir / "does.not.exist.json"
     with pytest.raises(IOError):
         pymake.usgs_program_data.list_json(fpth=fpth)
 
@@ -379,8 +358,8 @@ def test_usgsprograms_list_json_error():
 @pytest.mark.dependency("list_json")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_usgsprograms_list_json():
-    print("test_usgsprograms_list_json()")
+def test_usgsprograms_list_json(function_tmpdir):
+    os.chdir(function_tmpdir)
 
     # export code.json and return json file path
     fpth = export_code_json(file_name="code.list.json")
@@ -410,25 +389,9 @@ def test_not_shared():
 @pytest.mark.dependency(name="code_json")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_code_json() -> None:
+def test_code_json(function_tmpdir) -> None:
+    os.chdir(function_tmpdir)
+
     cmd = ["make-code-json", "-f", f"{dstpth}/code.json"]
     run_cli_cmd(cmd)
     shutil.rmtree(dstpth)
-
-
-if __name__ == "__main__":
-    # test_previous_assets()
-    test_latest_version()
-    # test_latest_assets()
-    # test_nightly_download_and_unzip()
-    # test_download_and_unzip_and_zip()
-    test_usgsprograms()
-    test_target_key_error()
-    test_target_keys()
-    test_usgsprograms_export_json()
-    test_usgsprograms_load_json_error()
-    test_usgsprograms_load_json()
-    test_usgsprograms_list_json_error()
-    test_usgsprograms_list_json()
-    test_shared()
-    test_not_shared()
