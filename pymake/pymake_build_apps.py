@@ -44,7 +44,7 @@ def build_apps(
     meson=False,
     mesondir=".",
     clean=True,
-    mb=None,
+    **kwargs,
 ):
     """Build all current targets or a subset of targets.
 
@@ -61,7 +61,7 @@ def build_apps(
         target path
     release_precision : bool
         boolean indicating if only the release precision version should be
-        build. If release_precision is False, then the release precision
+        built. If release_precision is False, then the release precision
         version will be compiled along with a double precision version of
         the program for programs where the standard_switch and double_switch
         in usgsprograms.txt is True. default is True.
@@ -72,10 +72,6 @@ def build_apps(
         Main meson.build file path
     clean : bool
         boolean determining of final download should be removed
-    mb : bool
-        parser variable from cli that represents the boolean indicating that
-        the executable should be built using the meson build system.
-        (default is None)
 
     Returns
     -------
@@ -91,11 +87,11 @@ def build_apps(
         if targets == ":":
             targets = None
 
+    mb = kwargs.pop("mb", None)
     if mb is not None:
         if meson:
             raise ValueError(f"PROGRAM ERROR: meson={meson} and mb={mb}")
-        else:
-            meson = mb
+        meson = mb
 
     # set targets
     if targets is None:

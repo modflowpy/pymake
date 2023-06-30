@@ -42,6 +42,11 @@ name_files = [
 for idx, namefile in enumerate(name_files):
     name_files[idx] = os.path.join(expth, namefile)
 
+run_parameters = []
+for ep in (epth, epth_gsi):
+    for nf in name_files:
+        run_parameters.append((ep, nf))
+
 pm = pymake.Pymake(verbose=True)
 pm.target = target
 pm.appdir = dstpth
@@ -49,6 +54,11 @@ pm.appdir = dstpth
 pm_gsi = pymake.Pymake(verbose=True)
 pm_gsi.target = target_gsi
 pm_gsi.appdir = dstpth
+
+usg_versions = (
+    (0, pm),
+    (1, pm_gsi),
+)
 
 
 def edit_namefile(namefile):
@@ -106,32 +116,29 @@ def run_mfusg(fn, exe):
 
 
 @pytest.mark.base
-def test_download():
-    # Remove the existing mf2005 directory if it exists
-    if os.path.isdir(mfusgpth):
-        shutil.rmtree(mfusgpth)
+@pytest.mark.parametrize("idx,pmobj", usg_versions)
+def test_download(idx, pmobj):
+    # Remove the existing mfusg directory if it exists
+    if idx == 0:
+        if os.path.isdir(mfusgpth):
+            shutil.rmtree(mfusgpth)
 
     # download the modflow-usg release
-    pm.download_target(target, download_path=dstpth)
-    assert pm.download, f"could not download {target}"
-
-    # download the gsi version of modflow-usg
-    pm_gsi.download_target(target_gsi, download_path=dstpth)
-    assert pm_gsi.download, f"could not download {target_gsi}"
+    pmobj.download_target(pmobj.target, download_path=dstpth)
+    assert pmobj.download, f"could not download {pmobj.target}"
 
 
 @pytest.mark.base
-def test_compile():
-    assert pm.build() == 0, f"could not compile {target}"
-    assert pm_gsi.build() == 0, f"could not compile {target_gsi}"
+@pytest.mark.parametrize("idx,pmobj", usg_versions)
+def test_compile(idx, pmobj):
+    assert pmobj.build() == 0, f"could not compile {pmobj.target}"
     return
 
 
 @pytest.mark.regression
-@pytest.mark.parametrize("fn", name_files)
-def test_mfusg(fn):
-    run_mfusg(fn, epth)
-    run_mfusg(fn, epth_gsi)
+@pytest.mark.parametrize("usg_path,fn", run_parameters)
+def test_mfusg(usg_path, fn):
+    run_mfusg(fn, usg_path)
 
 
 @pytest.mark.base
@@ -140,13 +147,13 @@ def test_clean_up():
 
 
 if __name__ == "__main__":
-    test_download()
-
-    test_compile()
+    for idx, pmobj in usg_versions:
+        test_download(idx, pmobj)
+        test_compile(idx, pmobj)
 
     # run models
-    for namefile in name_files:
-        run_mfusg(namefile)
+    for usg_exe, namefile in run_parameters:
+        run_mfusg(usg_exe, namefile)
 
     # clean up
     test_clean_up()

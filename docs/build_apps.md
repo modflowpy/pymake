@@ -8,19 +8,20 @@ and options can be determined by executing:
 $ make-program --help
 usage: make-program [-h] [--release_precision]
                     [-fc {ifort,mpiifort,gfortran,ftn,none}]
-                    [-cc {gcc,clang,clang++,icc,icx,icl,mpiicc,g++,cl,none}]
-                    [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep]
-                    [--zip ZIP]
+                    [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dr]
+                    [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep]
+                    [--zip ZIP] [--mb]
                     targets
 
 Download and build USGS MODFLOW and related programs.
 
 positional arguments:
   targets               Program(s) to build. Options: crt, gridgen, gsflow,
-                        libmf6, mf2000, mf2005, mf6, mflgr, mfnwt, mfusg, mp6,
-                        mp7, mt3dms, mt3dusgs, prms, sutra, swtv4, triangle,
-                        vs2dt, zbud6, zonbud3, zonbudusg, :. Specifying the
-                        target to be ':' will build all of the programs.
+                        libmf6, mf2000, mf2005, mf6, mflgr, mfnwt, mfusg,
+                        mfusg_gsi, mp6, mp7, mt3dms, mt3dusgs, sutra, swtv4,
+                        triangle, vs2dt, zbud6, zonbud3, zonbudusg, :.
+                        Specifying the target to be ':' will build all of the
+                        programs.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -31,7 +32,7 @@ optional arguments:
                         usgsprograms.txt is True. default is True.
   -fc {ifort,mpiifort,gfortran,ftn,none}
                         Fortran compiler to use. (default is gfortran)
-  -cc {gcc,clang,clang++,icc,icx,icl,mpiicc,g++,cl,none}
+  -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
                         C/C++ compiler to use. (default is gcc)
   -dr, --dryrun         Do not actually compile. Files will be deleted, if
                         --makeclean is used. Does not work yet for ifort.
@@ -53,6 +54,7 @@ optional arguments:
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)
   --zip ZIP             Zip built executable. (default is False)
+  --mb, --meson-build   Use meson to build executable. (default is False)
 
 Examples:
 
@@ -67,7 +69,7 @@ Examples:
 ```
 
 `make-program` can be used to build MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000,
-MODPATH 6, MODPATH 7, GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, GSFLOW, PRMS, and SUTRA. Utility programs CRT, Triangle,
+MODPATH 6, MODPATH 7, GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, GSFLOW, and SUTRA. Utility programs CRT, Triangle,
 and GRIDGEN can also be built. `make-program` downloads the distribution file from the USGS (requires internet
 connection), unzips the distribution file, sets the pymake settings required to build the program, and compiles the
 source files to build the program. MT3DMS will be downloaded from the University of Alabama and Triangle will be
