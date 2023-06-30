@@ -11,7 +11,6 @@ from flaky import flaky
 import pymake
 
 RERUNS = 3
-dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 
 
 def which(program):
@@ -37,17 +36,9 @@ def which(program):
     return None
 
 
-def initialize_working_dir():
-    # make sure the test directory exists
-    os.makedirs(dstpth, exist_ok=True)
-
-
-def export_code_json(file_name="code.json"):
-    # make sure the test directory exists
-    initialize_working_dir()
-
+def export_code_json(function_tmpdir, file_name="code.json"):
     # make the json file
-    fpth = os.path.join(dstpth, file_name)
+    fpth = function_tmpdir / file_name
     pymake.usgs_program_data.export_json(
         fpth=fpth,
         current=True,
@@ -288,7 +279,7 @@ def test_usgsprograms_export_json(function_tmpdir):
     os.chdir(function_tmpdir)
 
     # export code.json and return json file path
-    fpth = export_code_json(file_name="code.export.json")
+    fpth = export_code_json(function_tmpdir, file_name="code.export.json")
 
     # test the json export
     with open(fpth, "r") as f:
@@ -335,7 +326,7 @@ def test_usgsprograms_load_json(function_tmpdir):
     os.chdir(function_tmpdir)
 
     # export code.json and return json file path
-    fpth = export_code_json(file_name="code.load.json")
+    fpth = export_code_json(function_tmpdir, file_name="code.load.json")
 
     json_dict = pymake.usgs_program_data.load_json(fpth)
 
@@ -362,7 +353,7 @@ def test_usgsprograms_list_json(function_tmpdir):
     os.chdir(function_tmpdir)
 
     # export code.json and return json file path
-    fpth = export_code_json(file_name="code.list.json")
+    fpth = export_code_json(function_tmpdir, file_name="code.list.json")
 
     # list the contents of the json file
     pymake.usgs_program_data.list_json(fpth=fpth)
@@ -392,6 +383,5 @@ def test_not_shared():
 def test_code_json(function_tmpdir) -> None:
     os.chdir(function_tmpdir)
 
-    cmd = ["make-code-json", "-f", f"{dstpth}/code.json"]
+    cmd = ["make-code-json", "-f", f"{function_tmpdir / 'code.json'}"]
     run_cli_cmd(cmd)
-    shutil.rmtree(dstpth)

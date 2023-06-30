@@ -5,8 +5,11 @@ import subprocess
 import sys
 
 import pytest
+from flaky import flaky
 
 import pymake
+
+RERUNS = 3
 
 # use the line below to set fortran compiler using environmental variables
 # if sys.platform.lower() == "win32":
@@ -110,6 +113,7 @@ def run_gridgen(cmd):
 
 
 @pytest.mark.base
+@flaky(max_runs=RERUNS)
 def test_download():
     # Remove the existing target download directory if it exists
     if dstpth.is_dir():

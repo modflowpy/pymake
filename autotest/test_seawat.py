@@ -4,8 +4,11 @@ import sys
 
 import flopy
 import pytest
+from flaky import flaky
 
 import pymake
+
+RERUNS = 3
 
 # determine if running on a continuous integration server
 is_CI = "CI" in os.environ
@@ -128,6 +131,7 @@ def build_seawat_dependency_graphs():
 
 
 @pytest.mark.base
+@flaky(max_runs=RERUNS)
 def test_download():
     # Remove the existing seawat directory if it exists
     if os.path.isdir(swtpth):

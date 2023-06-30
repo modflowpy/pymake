@@ -4,8 +4,11 @@ import sys
 
 import flopy
 import pytest
+from flaky import flaky
 
 import pymake
+
+RERUNS = 3
 
 # define program data
 target = "mfusg"
@@ -116,6 +119,7 @@ def run_mfusg(fn, exe):
 
 
 @pytest.mark.base
+@flaky(max_runs=RERUNS)
 @pytest.mark.parametrize("idx,pmobj", usg_versions)
 def test_download(idx, pmobj):
     # Remove the existing mfusg directory if it exists

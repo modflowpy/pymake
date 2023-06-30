@@ -2,8 +2,11 @@ import os
 import shutil
 
 import pytest
+from flaky import flaky
 
 import pymake
+
+RERUNS = 3
 
 # define program data
 target = "mflgr"
@@ -60,6 +63,7 @@ def clean_up():
 
 
 @pytest.mark.base
+@flaky(max_runs=RERUNS)
 def test_compile():
     assert compile_code() == 0, f"could not compile {target}"
 

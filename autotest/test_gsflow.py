@@ -5,8 +5,11 @@ import sys
 
 import flopy
 import pytest
+from flaky import flaky
 
 import pymake
+
+RERUNS = 3
 
 # use the line below to set fortran compiler using environmental variables
 # os.environ["FC"] = "ifort"
@@ -164,6 +167,7 @@ def clean_up():
 
 @pytest.mark.base
 @pytest.mark.regression
+@flaky(max_runs=RERUNS)
 def test_download():
     # Remove the existing target download directory if it exists
     if os.path.isdir(gsflowpth):

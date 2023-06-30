@@ -3,11 +3,15 @@ import sys
 
 import flopy
 import pytest
+from flaky import flaky
 
 import pymake
 
+RERUNS = 3
+
 
 @pytest.mark.base
+@flaky(max_runs=RERUNS)
 def test_pymake_makefile(function_tmpdir):
     target = "triangle"
     pm = pymake.Pymake(verbose=True)

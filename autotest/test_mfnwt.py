@@ -5,8 +5,11 @@ import sys
 import time
 
 import pytest
+from flaky import flaky
 
 import pymake
+
+RERUNS = 3
 
 # define program data
 target = "mfnwt"
@@ -112,6 +115,7 @@ def clean_up():
 
 
 @pytest.mark.base
+@flaky(max_runs=RERUNS)
 def test_download():
     # Remove the existing mf2005 directory if it exists
     if os.path.isdir(mfnwtpth):

@@ -4,8 +4,11 @@ import sys
 
 import flopy
 import pytest
+from flaky import flaky
 
 import pymake
+
+RERUNS = 3
 
 # define program data
 target = "mp6"
@@ -87,6 +90,7 @@ def clean_up():
 
 
 @pytest.mark.base
+@flaky(max_runs=RERUNS)
 def test_download():
     if os.path.isdir(mp6pth):
         shutil.rmtree(mp6pth)
