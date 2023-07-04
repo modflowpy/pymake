@@ -41,15 +41,11 @@ jobs:
         run: |
           .github/common/install-python.sh
 
-      - name: Download examples for pytest runs
-        working-directory: ./autotest
-        run: |
-          pytest -v -n=auto -m="base or regression" --durations=0 ci_setup.py
-
-      - name: test on Linux
+      - name: Download examples for pytest runs and test on Linux
         if: runner.os == 'Linux'
         working-directory: ./autotest
         run: |
+          pytest -v -n=auto -m="regression" --durations=0 ci_setup.py
           pytest -v -n=auto -m="base or regression" --durations=0 --cov=pymake --cov-report=xml
 
       - name: test on MacOS

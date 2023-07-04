@@ -100,11 +100,6 @@ jobs:
           gcc --version
           g++ --version
 
-      - name: Download examples for pytest runs
-        working-directory: ./autotest
-        run: |
-          pytest -v -n=auto -m="base" --durations=0 ci_setup.py
-
       - name: Run pytest
         working-directory: ./autotest
         run: |
@@ -146,10 +141,6 @@ jobs:
 
       - name: Install GNU Fortran
         uses: modflowpy/install-gfortran-action@v1
-
-      - name: Download examples for pytest runs
-        run: |
-          .github/common/download-examples.sh
 
       - name: Run pytest
         working-directory: ./autotest
