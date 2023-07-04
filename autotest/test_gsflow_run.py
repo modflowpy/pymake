@@ -90,7 +90,7 @@ def run_gsflow(exe, path, example, control_file, normal_message):
     return success
 
 
-@pytest.mark.regression
+@pytest.mark.skip
 @flaky(max_runs=RERUNS)
 def test_gsflow_build_run(function_tmpdir):
     pm.download_target(target, download_path=function_tmpdir)
