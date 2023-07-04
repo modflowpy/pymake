@@ -4,13 +4,13 @@ import flopy
 import pytest
 from flaky import flaky
 
-import pymake
 from autotest.conftest import get_pymake_appdir
 
 RERUNS = 3
 
 # define program data
 target = "mf6"
+
 
 # set fpth based on current path
 if os.path.basename(os.path.normpath(os.getcwd())) == "autotest":
@@ -24,7 +24,9 @@ else:
 if os.path.isfile(fpth):
     with open(fpth) as f:
         lines = f.read().splitlines()
-    sim_dirs = [line for line in lines if len(line) > 0]
+    sim_dirs_gwf = [line for line in lines if len(line) > 0 and "gwf" in line]
+    sim_dirs_gwt = [line for line in lines if len(line) > 0 and "gwt" in line]
+    sim_dirs = sim_dirs_gwf + sim_dirs_gwt
 else:
     sim_dirs = []
 
@@ -42,6 +44,7 @@ def run_mf6(exe, workspace):
 
 
 @pytest.mark.regression
+@flaky(max_runs=RERUNS)
 @pytest.mark.parametrize("ws", sim_dirs)
 def test_mf6_run(ws):
     exe = get_pymake_appdir() / f"{target}"

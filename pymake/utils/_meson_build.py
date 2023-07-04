@@ -528,7 +528,7 @@ def _create_main_meson_build(
         line += "\tmeson_version: '>= 1.1.0',\n"
         line += "\tdefault_options: [\n\t\t'b_vscrt=static_from_buildtype',\n"
         line += f"\t\t'optimization={optlevel_int}',\n"
-        line += f"\t\t'debug="
+        line += "\t\t'debug="
         if debug:
             line += "true',\n"
         else:

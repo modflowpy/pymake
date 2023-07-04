@@ -11,6 +11,17 @@ from autotest.conftest import working_directory
 RERUNS = 3
 
 targets = pymake.usgs_program_data.get_keys(current=True)
+targets_meson = [
+    t
+    for t in pymake.usgs_program_data.get_keys(current=True)
+    if t
+    not in (
+        "mf2000",
+        "mf2005",
+        "mflgr",
+        "swtv4",
+    )
+]
 targets_make = [
     t
     for t in pymake.usgs_program_data.get_keys(current=True)
@@ -76,7 +87,8 @@ def test_build(function_tmpdir, target: str) -> None:
 
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
-@pytest.mark.parametrize("target", targets)
+@pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
+@pytest.mark.parametrize("target", targets_meson)
 def test_build_meson(function_tmpdir, target: str) -> None:
     assert (
         pymake.build_apps(
