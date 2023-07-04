@@ -45,6 +45,7 @@ def run_mf6(exe, workspace):
 
 @pytest.mark.regression
 @flaky(max_runs=RERUNS)
+@pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
 @pytest.mark.parametrize("ws", sim_dirs)
 def test_mf6_run(ws):
     exe = get_pymake_appdir() / f"{target}"
