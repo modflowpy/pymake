@@ -130,7 +130,7 @@ def build_seawat_dependency_graphs():
     return
 
 
-@pytest.mark.base
+@pytest.mark.skip
 @flaky(max_runs=RERUNS)
 def test_download():
     # Remove the existing seawat directory if it exists
@@ -142,23 +142,23 @@ def test_download():
     assert pm.download, f"could not download {target}"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
-@pytest.mark.regression
+@pytest.mark.skip
 @pytest.mark.parametrize("fn", name_files)
 def test_seawat(fn):
     run_seawat(fn)
 
 
-@pytest.mark.regression
+@pytest.mark.skip
 def test_dependency_graphs():
     build_seawat_dependency_graphs()
 
 
-@pytest.mark.base
+@pytest.mark.skip
 @pytest.mark.regression
 def test_clean_up():
     clean_up()

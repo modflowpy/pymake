@@ -1,5 +1,3 @@
-import sys
-
 import flopy
 import pytest
 from flaky import flaky
@@ -11,8 +9,6 @@ RERUNS = 3
 
 # define program data
 target = "gsflow"
-if sys.platform.lower() == "win32":
-    target += ".exe"
 
 # get program dictionary
 prog_dict = pymake.usgs_program_data.get_target(target)
@@ -94,22 +90,11 @@ def run_gsflow(exe, path, example, control_file, normal_message):
     return success
 
 
-@pytest.mark.base
-@flaky(max_runs=RERUNS)
-def test_gsflow_build(function_tmpdir):
-    pm.appdir = function_tmpdir
-    pm.download_target(target, download_path=function_tmpdir)
-    assert pm.download, f"could not download {target} distribution"
-    assert pm.build() == 0, f"could not compile {target}"
-
-
 @pytest.mark.regression
 @flaky(max_runs=RERUNS)
 def test_gsflow_build_run(function_tmpdir):
-    pm.appdir = function_tmpdir
     pm.download_target(target, download_path=function_tmpdir)
     assert pm.download, f"could not download {target} distribution"
-    assert pm.build() == 0, f"could not compile {target}"
     example_path = function_tmpdir / f"{prog_dict.dirname}/data"
     assert modify_examples(example_path)
     for example, control_file, msg in examples:

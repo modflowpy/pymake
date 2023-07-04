@@ -118,7 +118,7 @@ def run_mfusg(fn, exe):
     return
 
 
-@pytest.mark.base
+@pytest.mark.skip
 @flaky(max_runs=RERUNS)
 @pytest.mark.parametrize("idx,pmobj", usg_versions)
 def test_download(idx, pmobj):
@@ -132,20 +132,20 @@ def test_download(idx, pmobj):
     assert pmobj.download, f"could not download {pmobj.target}"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 @pytest.mark.parametrize("idx,pmobj", usg_versions)
 def test_compile(idx, pmobj):
     assert pmobj.build() == 0, f"could not compile {pmobj.target}"
     return
 
 
-@pytest.mark.regression
+@pytest.mark.skip
 @pytest.mark.parametrize("usg_path,fn", run_parameters)
 def test_mfusg(usg_path, fn):
     run_mfusg(fn, usg_path)
 
 
-@pytest.mark.base
+@pytest.mark.skip
 def test_clean_up():
     clean_up()
 

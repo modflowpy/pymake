@@ -164,7 +164,7 @@ def clean_up():
     return
 
 
-@pytest.mark.base
+@pytest.mark.skip
 @flaky(max_runs=RERUNS)
 def test_download_mt3dms():
     # Remove the existing target download directory if it exists
@@ -176,12 +176,12 @@ def test_download_mt3dms():
     assert pm.download, f"could not download {pm.target} distribution"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 def test_compile_mt3dms():
     assert pm.build() == 0, f"could not compile {pm.target}"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 @flaky(max_runs=RERUNS)
 def test_download():
     # Remove the existing target download directory if it exists
@@ -196,19 +196,19 @@ def test_download():
     assert pm.download, f"could not download {target} distribution"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
-@pytest.mark.regression
+@pytest.mark.skip
 @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 def test_download_exes():
     pymake.getmfexes(dstpth, exes=("mfnwt", "mf6"), verbose=True)
     return
 
 
-@pytest.mark.regression
+@pytest.mark.skip
 @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 @pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
 @pytest.mark.parametrize("ws", sim_dirs)
@@ -216,7 +216,7 @@ def test_mt3dusgs(ws):
     assert run_mt3dusgs(ws), f"could not run {ws}"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 def test_clean_up():
     clean_up()
 

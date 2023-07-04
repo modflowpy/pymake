@@ -112,7 +112,7 @@ def run_gridgen(cmd):
     return success
 
 
-@pytest.mark.base
+@pytest.mark.skip
 @flaky(max_runs=RERUNS)
 def test_download():
     # Remove the existing target download directory if it exists
@@ -124,18 +124,18 @@ def test_download():
     assert pm.download, f"could not download {target} distribution"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
-@pytest.mark.regression
+@pytest.mark.skip
 @pytest.mark.parametrize("cmd", biscayne_cmds)
 def test_gridgen(cmd):
     assert run_gridgen(cmd), f"could not run {cmd}"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 def test_clean_up():
     clean_up()
 

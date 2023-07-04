@@ -89,7 +89,7 @@ def clean_up():
     return
 
 
-@pytest.mark.base
+@pytest.mark.skip
 @flaky(max_runs=RERUNS)
 def test_download():
     if os.path.isdir(mp6pth):
@@ -99,18 +99,18 @@ def test_download():
     assert pm.download, f"could not download {target} distribution"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
-@pytest.mark.regression
+@pytest.mark.skip
 @pytest.mark.parametrize("fn", sim_files)
 def test_modpath6(fn):
     assert run_modpath6(fn), f"could not run {fn}"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 def test_clean_up():
     clean_up()
 

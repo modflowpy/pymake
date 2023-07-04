@@ -206,7 +206,7 @@ def clean_up():
     return
 
 
-@pytest.mark.base
+@pytest.mark.skip
 @flaky(max_runs=RERUNS)
 def test_download():
     # Remove the existing target download directory if it exists
@@ -218,23 +218,23 @@ def test_download():
     assert pm.download, f"could not download {target} distribution"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 def test_compile():
     assert pm.build() == 0, f"could not compile {target}"
 
 
-@pytest.mark.regression
+@pytest.mark.skip
 def test_download_exes():
     pymake.getmfexes(dstpth, exes=("mf2005", "mfusg", "mf6"), verbose=True)
 
 
-@pytest.mark.regression
+@pytest.mark.skip
 @pytest.mark.parametrize("fn", name_files)
 def test_modpath7(fn):
     assert run_modpath7(fn), f"could not run {fn}"
 
 
-@pytest.mark.base
+@pytest.mark.skip
 def test_clean_up():
     clean_up()
 

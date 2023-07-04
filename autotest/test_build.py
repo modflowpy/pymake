@@ -1,4 +1,3 @@
-import contextlib
 import os
 import sys
 import time
@@ -7,30 +6,28 @@ import pytest
 from flaky import flaky
 
 import pymake
+from autotest.conftest import working_directory
 
 RERUNS = 3
 
 targets = pymake.usgs_program_data.get_keys(current=True)
-targets_make = pymake.usgs_program_data.get_keys(current=True)
-for target in targets_make:
-    if target in ("triangle", "libmf6", "gridgen", "mf2000", "mflgr", "swtv4"):
-        targets_make.remove(target)
-
-
-@contextlib.contextmanager
-def working_directory(path):
-    """Changes working directory and returns to previous on exit."""
-    prev_cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(prev_cwd)
+targets_make = [
+    t
+    for t in pymake.usgs_program_data.get_keys(current=True)
+    if t
+    not in (
+        "triangle",
+        "libmf6",
+        "gridgen",
+        "mf2000",
+        "mflgr",
+        "swtv4",
+    )
+]
 
 
 def build_with_makefile(target, path, fc):
     success = True
-    errmsg = ""
     with working_directory(path):
         if os.path.isfile("makefile"):
             # wait to delete on windows

@@ -42,20 +42,21 @@ jobs:
           .github/common/install-python.sh
 
       - name: Download examples for pytest runs
+        working-directory: ./autotest
         run: |
-          .github/common/download-examples.sh
+          pytest -v -n=auto -m="base or regression" --durations=0 ci_setup.py
 
       - name: test on Linux
         if: runner.os == 'Linux'
         working-directory: ./autotest
         run: |
-          pytest -v -n=auto --dist=loadfile -m="base or regression" --durations=0 --cov=pymake --cov-report=xml
+          pytest -v -n=auto -m="base or regression" --durations=0 --cov=pymake --cov-report=xml
 
       - name: test on MacOS
         if: runner.os == 'macOS'
         working-directory: ./autotest
         run: |
-          pytest -v -n=auto --dist=loadfile -m="base" --durations=0 --cov=pymake --cov-report=xml
+          pytest -v -n=auto -m="base" --durations=0 --cov=pymake --cov-report=xml
 
       - name: test on Windows
         if: runner.os == 'Windows'

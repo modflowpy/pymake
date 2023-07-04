@@ -1,7 +1,13 @@
 import os
 import shutil
 
+import pytest
+from flaky import flaky
+
 import pymake
+from autotest.conftest import get_pymake_appdir
+
+RERUNS = 3
 
 temp_pth = "temp"
 if not os.path.exists(temp_pth):
@@ -9,6 +15,8 @@ if not os.path.exists(temp_pth):
 mf6_exdir = os.path.join(temp_pth, "mf6examples")
 if os.path.isdir(mf6_exdir):
     shutil.rmtree(mf6_exdir)
+
+targets = ["mf6"]
 
 
 def download_mf6_examples(verbose=False):
@@ -84,6 +92,25 @@ def examples_list(verbose=False):
     return
 
 
-if __name__ == "__main__":
+@flaky(max_runs=RERUNS)
+@pytest.mark.regression
+def test_initialize():
     mf6pth = download_mf6_examples(verbose=True)
     examples_list(verbose=True)
+
+
+@flaky(max_runs=RERUNS)
+@pytest.mark.regression
+@pytest.mark.parametrize("target", targets)
+def test_build_apps(function_tmpdir, target):
+    assert (
+        pymake.build_apps(
+            target,
+            verbose=True,
+            clean=True,
+            workingdir=function_tmpdir,
+            meson=True,
+            appdir=get_pymake_appdir(),
+        )
+        == 0
+    ), f"could not compile {target}"

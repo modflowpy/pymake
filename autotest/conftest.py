@@ -1,10 +1,10 @@
+import contextlib
+import os
 import re
 from importlib import metadata
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import pytest
-from modflow_devtools.misc import is_in_ci
 
 # import modflow-devtools fixtures
 
@@ -15,6 +15,21 @@ pytest_plugins = ["modflow_devtools.fixtures"]
 
 
 # misc utilities
+@contextlib.contextmanager
+def working_directory(path):
+    """Changes working directory and returns to previous on exit."""
+    prev_cwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)
+
+
+def get_pymake_appdir():
+    appdir = Path.home() / ".pymake"
+    appdir.mkdir(parents=True, exist_ok=True)
+    return appdir
 
 
 def get_project_root_path() -> Path:
