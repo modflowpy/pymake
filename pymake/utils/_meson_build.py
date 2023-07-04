@@ -204,7 +204,7 @@ def meson_setup(
 
         # evaluate return code
         if returncode != 0:
-            print(f"meson install failed on '{' '.join(command)}'")
+            print(f"meson setup failed on '{command}'")
 
     return returncode
 
@@ -239,7 +239,7 @@ def meson_install(
 
         # evaluate return code
         if returncode != 0:
-            print(f"meson setup failed on '{' '.join(command)}'")
+            print(f"meson install failed on '{command}'")
 
     return returncode
 
@@ -525,9 +525,14 @@ def _create_main_meson_build(
         line = f"project(\n\t'{target}',\n"
         for language in languages:
             line += f"\t'{language}',\n"
-        line += "\tmeson_version: '>= 0.59.0',\n"
+        line += "\tmeson_version: '>= 1.1.0',\n"
         line += "\tdefault_options: [\n\t\t'b_vscrt=static_from_buildtype',\n"
-        line += f"\t\t'optimization={optlevel_int}'\n"
+        line += f"\t\t'optimization={optlevel_int}',\n"
+        line += f"\t\t'debug="
+        if debug:
+            line += "true',\n"
+        else:
+            line += "false',\n"
         line += "\t])\n\n"
         f.write(line)
 

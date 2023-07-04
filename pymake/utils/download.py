@@ -321,17 +321,15 @@ def download_and_unzip(
 
     """
 
-    # create download directory
-    if not os.path.exists(pth):
-        if verbose:
-            print(f"Creating the directory:\n    {pth}")
-        os.makedirs(pth)
+    if not isinstance(pth, pl.Path):
+        pth = pl.Path(pth)
+    pth.mkdir(parents=True, exist_ok=True)
 
     if verbose:
         print(f"Attempting to download the file:\n    {url}")
 
     # define the filename
-    file_name = os.path.join(pth, url.split("/")[-1])
+    file_name = pth / f"{url.split('/')[-1]}"
 
     # download the file
     success = False
@@ -437,9 +435,7 @@ def download_and_unzip(
         raise ConnectionError(msg)
 
     # Unzip the file, and delete zip file if successful.
-    if "zip" in os.path.basename(file_name) or "exe" in os.path.basename(
-        file_name
-    ):
+    if file_name.suffix in (".zip", ".exe"):
         z = pymakeZipFile(file_name)
         try:
             # write a message

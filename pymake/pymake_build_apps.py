@@ -44,6 +44,7 @@ def build_apps(
     meson=False,
     mesondir=".",
     clean=True,
+    workingdir=None,
     **kwargs,
 ):
     """Build all current targets or a subset of targets.
@@ -72,6 +73,9 @@ def build_apps(
         Main meson.build file path
     clean : bool
         boolean determining of final download should be removed
+    workingdir : str
+        Working directory. If None, working directory is the current
+        directory. (default is None)
 
     Returns
     -------
@@ -81,6 +85,10 @@ def build_apps(
     """
 
     start_time = datetime.now()
+
+    if workingdir is not None:
+        current_dir = os.getcwd()
+        os.chdir(workingdir)
 
     # intercept all string (":") from make-program
     if isinstance(targets, str):
@@ -283,5 +291,8 @@ def build_apps(
     # execute final Pymake object operations
     if clean:
         pmobj.finalize()
+
+    if workingdir is not None:
+        os.chdir(current_dir)
 
     return pmobj.returncode
