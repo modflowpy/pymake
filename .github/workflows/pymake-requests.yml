@@ -2,7 +2,7 @@ name: pymake requests
 
 on:
   schedule:
-    - cron: '0 3 * * 3' # run at 3 AM UTC every Wednesday
+    - cron: '0 7 * * *' # run at 7 AM UTC every day
   push:
     branches: [ master ]
   pull_request:
@@ -31,19 +31,22 @@ jobs:
           .github/common/install-python.sh
 
       - name: Run pytest
+        working-directory: ./autotest
         run: |
-          pytest -v -n=auto -m requests --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -n=auto -m requests --durations=0 --cov=pymake --cov-report=xml
 
       - name: Run scheduled tests
         if: ${{ github.event_name == 'schedule' }}
+        working-directory: ./autotest
         run: |
-          pytest -v -m="schedule" --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -m="schedule" --durations=0 --cov=pymake --cov-report=xml
 
       - name: Print coverage report before upload
+        working-directory: ./autotest
         run: |
           coverage report
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:
-          file: ./coverage.xml
+          file: ./autotest/coverage.xml
