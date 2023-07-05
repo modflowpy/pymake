@@ -2,7 +2,7 @@ name: pymake continuous integration
 
 on:
   schedule:
-    - cron: '0 3 * * 3' # run at 3 AM UTC every Wednesday
+    - cron: '0 7 * * *' # run at 7 AM UTC every day
   push:
     branches: [ master ]
   pull_request:

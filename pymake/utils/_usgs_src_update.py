@@ -7,6 +7,7 @@ import pathlib as pl
 import shutil
 import sys
 import types
+from typing import Union
 
 from .usgsprograms import usgs_program_data
 
@@ -65,8 +66,7 @@ def _build_replace(targets):
 
     # remove exe extension from targets
     for idx, target in enumerate(targets):
-        if ".exe" in target.lower():
-            targets[idx] = target[:-4]
+        targets[idx] = pl.Path(target).with_suffix("").name
 
     # get a dictionary of update functions
     funcs = _get_function_names(sys.modules[__name__], select_name="_update_")
@@ -432,9 +432,28 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
         "FMTARG = 'BINARY'": "FMTARG = 'UNFORMATTED'\n        ACCARG = 'STREAM'",
         ",SHARED,ACCESS='SEQUENTIAL'": ",ACCESS='SEQUENTIAL'",
         "FORM=FMTARG,SHARED,": "FORM=FMTARG,",
+        ",BUFFERED='YES',": ",",
+        ", BUFFERED='NO')": ")",
+        ",SHARE = 'DENYNONE'": ",",
+        ", SHARE = 'DENYNONE',": ",",
+        "FORM='FORMATTED',ACCESS='SEQUENTIAL',": "FORM='FORMATTED',ACCESS='SEQUENTIAL'",
     }
 
     fpth = pl.Path(srcdir) / "glo2basu1.f"
+    if fpth.exists():
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, "w")
+        for idx, line in enumerate(lines):
+            for key, value in tags.items():
+                if key in line:
+                    line = line.replace(key, value)
+            f.write(line)
+        f.close()
+
+    tags = {",share='DENYNONE',": ","}
+
+    fpth = pl.Path(srcdir) / "UpdtSt.for"
     if fpth.exists():
         with open(fpth) as f:
             lines = f.readlines()
@@ -829,7 +848,116 @@ def _update_vs2dt_files(srcdir, fc, cc, arch, double):
     return
 
 
+def _update_mf6_files(
+    srcdir: Union[str, os.PathLike],
+    fc: str,
+    cc: str,
+    arch: str,
+    double: bool,
+) -> None:
+    """
+    Update MODFLOW 6 source files to remove files with external dependencies.
+    This was required for releases >= 6.4.2
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
+    _update_mf6_external_dependencies(srcdir)
+    return
+
+
+def _update_libmf6_files(
+    srcdir: Union[str, os.PathLike],
+    fc: str,
+    cc: str,
+    arch: str,
+    double: bool,
+) -> None:
+    """
+    Update MODFLOW 6 shared object source files to remove files with external
+    dependencies. This was required for releases >= 6.4.2
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
+    _update_mf6_external_dependencies(srcdir, target="libmf6")
+    return
+
+
 # common source file replacement functions
+def _update_mf6_external_dependencies(
+    srcdir: Union[str, os.PathLike],
+    target: str = "mf6",
+) -> None:
+    """
+    Remove MODFLOW 6 files with external library dependencies (PETSc, MPI).
+
+
+    Parameters
+    ----------
+    srcdir : os.PathLike
+        path to directory with source files
+    target: str
+        target to create (Default is mf6)
+
+    Returns
+    -------
+    None
+
+    """
+    if not isinstance(srcdir, pl.Path):
+        srcdir = pl.Path(srcdir)
+    if target == "libmf6":
+        srcdir = srcdir.parent / "src"
+    parallel_files = (
+        "Utilities/Vector/PetscVector.F90",
+        "Utilities/Matrix/PetscMatrix.F90",
+        "Solution/PETSc/PetscSolver.F90",
+        "Solution/PETSc/PetscConvergence.F90",
+        "Distributed/MpiMessageBuilder.f90",
+        "Distributed/MpiRouter.f90",
+        "Distributed/MpiRunControl.F90",
+        "Distributed/MpiWorld.f90",
+        "Solution/ParallelSolution.f90",
+    )
+    for file in parallel_files:
+        path = srcdir / file
+        if path.is_file():
+            print(f'Removing..."{path}"')
+            os.remove(path)
+    return
+
+
 def _update_utl7(srcdir):
     """Update utl7.f source file
 

@@ -1,8 +1,6 @@
-import contextlib
 import os
 import shutil
 import sys
-import time
 
 import flopy
 import pytest
