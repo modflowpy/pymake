@@ -4,6 +4,9 @@ import shutil
 import subprocess
 
 import pytest
+from flaky import flaky
+
+RERUNS = 3
 
 targets = (
     "triangle",
@@ -47,6 +50,7 @@ def clean_up() -> None:
 
 @pytest.mark.dependency(name="make_program")
 @pytest.mark.base
+@flaky(max_runs=RERUNS)
 @pytest.mark.parametrize("target", targets)
 def test_make_program(target: str) -> None:
     cmd = [
