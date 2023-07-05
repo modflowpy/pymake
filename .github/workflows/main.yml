@@ -47,25 +47,29 @@ jobs:
 
       - name: test on Linux
         if: runner.os == 'Linux'
+        working-directory: ./autotest
         run: |
-          pytest -v -n=auto --dist=loadfile -m="base or regression" --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -n=auto --dist=loadfile -m="base or regression" --durations=0 --cov=pymake --cov-report=xml
 
       - name: test on MacOS
         if: runner.os == 'macOS'
+        working-directory: ./autotest
         run: |
-          pytest -v -n=auto --dist=loadfile -m="base" --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -n=auto --dist=loadfile -m="base" --durations=0 --cov=pymake --cov-report=xml
 
       - name: test on Windows
         if: runner.os == 'Windows'
+        working-directory: ./autotest
         shell: cmd
         run: |
-          pytest -v -m="base" --durations=0 --cov=pymake --cov-report=xml autotest/
+          pytest -v -m="base" --durations=0 --cov=pymake --cov-report=xml
 
       - name: Print coverage report before upload
+        working-directory: ./autotest
         run: |
           coverage report
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:
-          file: ./coverage.xml
+          file: ./autotest/coverage.xml

@@ -107,9 +107,9 @@ def test_latest_assets():
     keys = assets.keys()
     test_keys = [
         "code.json",
+        "code.md",
         "mac.zip",
         "linux.zip",
-        "win32.zip",
         "win64.zip",
     ]
     for key in keys:
