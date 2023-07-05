@@ -104,6 +104,7 @@ def test_build_meson(function_tmpdir, target: str) -> None:
 
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
+@pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
 @pytest.mark.parametrize("target", targets_make)
 def test_build_makefile(function_tmpdir, target: str) -> None:
     pm = pymake.Pymake(verbose=True)
