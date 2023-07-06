@@ -9,8 +9,6 @@ import sys
 import types
 from typing import Union
 
-from .usgsprograms import usgs_program_data
-
 
 def _get_function_names(module, select_name=None):
     """Get a dictionary of functions available in a user-specified source file.
@@ -111,15 +109,9 @@ def _update_triangle_files(srcdir, fc, cc, arch, double):
     -------
 
     """
-    # move the downloaded files
-    rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))
-    prog_dict = usgs_program_data().get_target("triangle")
-    dirname = prog_dict.dirname
-    dstpth = os.path.join(rootdir, dirname)
-
     # modify long to long long on windows
     if "win32" in sys.platform.lower() and cc in ("icl", "cl"):
-        src = os.path.join(rootdir, "triangle.c")
+        src = os.path.join(srcdir, "triangle.c")
         with open(src, "r") as f:
             lines = f.readlines()
             for idx, line in enumerate(lines):
@@ -129,28 +121,6 @@ def _update_triangle_files(srcdir, fc, cc, arch, double):
         with open(src, "w") as f:
             for line in lines:
                 f.write(line)
-
-    # make destination directory
-    if not os.path.exists(dstpth):
-        os.makedirs(dstpth, exist_ok=True)
-
-    # make src directory
-    if not os.path.exists(srcdir):
-        os.makedirs(srcdir)
-
-    # move the source files
-    src = os.path.join(rootdir, "triangle.c")
-    dst = os.path.join(srcdir, "triangle.c")
-    shutil.move(src, dst)
-    src = os.path.join(rootdir, "triangle.h")
-    dst = os.path.join(srcdir, "triangle.h")
-    shutil.move(src, dst)
-
-    # remove remaining downloaded files
-    for file in os.listdir(rootdir):
-        src = os.path.join(rootdir, file)
-        if os.path.isfile(src):
-            os.remove(src)
     return
 
 
@@ -175,66 +145,6 @@ def _update_mt3dms_files(srcdir, fc, cc, arch, double):
     -------
 
     """
-    # move the downloaded files
-    rootdir = os.path.join(*(srcdir.split(os.path.sep)[:1]))
-    prog_dict = usgs_program_data().get_target("mt3dms")
-    dirname = prog_dict.dirname
-    dstpth = os.path.join(rootdir, dirname)
-
-    # Clean up unneeded files
-    for f in ["ReadMe_MT3DMS.pdf", "upgrade.pdf"]:
-        fpth = os.path.join(rootdir, f)
-        if os.path.isfile(fpth):
-            print(f'Removing..."{f}"')
-            os.remove(fpth)
-
-    # remove some unneeded folders
-    dir_list = ["bin", "doc", "examples", "utility"]
-    for d in dir_list:
-        dname = os.path.join(rootdir, d)
-        if os.path.isdir(dname):
-            print(f'Removing..."{dname}"')
-            shutil.rmtree(dname)
-
-    # make destination directory
-    if not os.path.exists(dstpth):
-        os.makedirs(dstpth, exist_ok=True)
-
-    # move the files
-    for src_dir, _, files in os.walk(rootdir):
-        # skip target directory (dirname)
-        if dirname in src_dir:
-            continue
-        if src_dir is rootdir:
-            continue
-        else:
-            dst_dir = src_dir.replace(rootdir + os.path.sep, "")
-            dst_dir = os.path.join(dstpth, dst_dir)
-        if not os.path.exists(dst_dir):
-            os.mkdir(dst_dir)
-        for file_ in files:
-            src_file = os.path.join(src_dir, file_)
-            dst_file = os.path.join(dst_dir, file_)
-            if os.path.exists(dst_file):
-                os.remove(dst_file)
-            print(f"{src_file} -> {dst_dir}")
-            # shutil.copy(src_file, dst_dir)
-            shutil.move(src_file, dst_file)
-
-    # remove the original source directory
-    dname = os.path.join(rootdir, "src")
-    if os.path.isdir(dname):
-        print(f'Removing..."{dname}"')
-        shutil.rmtree(dname)
-
-    # remove some unneeded files
-    file_list = ["automake.fig", "mt3dms5b.exe"]
-    for f in file_list:
-        dname = os.path.join(srcdir, f)
-        if os.path.isfile(dname):
-            print(f'Removing..."{dname}"')
-            os.remove(dname)
-
     # Replace the getcl command with getarg
     f1 = open(os.path.join(srcdir, "mt3dms5.for"), "r")
     f2 = open(os.path.join(srcdir, "mt3dms5.for.tmp"), "w")
