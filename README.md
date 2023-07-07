@@ -2,19 +2,20 @@
 
 Python package for building MODFLOW-based programs from source files.
 
-### Version 1.2.8
+### Version 1.2.9.dev0
 
-![pymake continuous integration](https://github.com/modflowpy/pymake/workflows/pymake%20continuous%20integration/badge.svg)
+[![PyPI Version](https://img.shields.io/pypi/v/mfpymake.png)](https://pypi.python.org/pypi/mfpymake)
+[![Anaconda Version](https://anaconda.org/conda-forge/mfpymake/badges/version.svg)](https://anaconda.org/conda-forge/mfpymake)  
+[![pymake continuous integration](https://github.com/modflowpy/pymake/workflows/pymake%20continuous%20integration/badge.svg)](https://github.com/modflowpy/pymake/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/modflowpy/pymake/branch/master/graph/badge.svg)](https://codecov.io/gh/modflowpy/pymake)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/fe4275a3cfb84acf9c84aba7b4ae2086)](https://www.codacy.com/gh/modflowpy/pymake/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/pymake&amp;utm_campaign=Badge_Grade)
-[![Documentation Status](https://readthedocs.org/projects/mfpymake/badge/?version=latest)](https://mfpymake.readthedocs.io/en/latest/?badge=latest)
-[![PyPI Version](https://img.shields.io/pypi/v/mfpymake.png)](https://pypi.python.org/pypi/mfpymake)
+[![Documentation Status](https://readthedocs.org/projects/mfpymake/badge/?version=latest)](https://mfpymake.readthedocs.io/en/latest/?badge=latest)  
 
 This is a python package for compiling MODFLOW-based and other Fortran, C, and
 C++ programs. The package determines the build order using a directed acyclic
 graph and then compiles the source files using GNU compilers (`gcc`, `g++`,
-`gfortran`), Clang compilers (`clang`, `clang++`), Intel compilers (`ifort`,
-`icl`, `icc`, `mpiifort`), or the CRAY Fortran compiler (`ftn`).
+`gfortran`), Clang compilers (`clang`, `clang++`), or the Intel compilers (`ifort`,
+`icl`, `icc`, `mpiifort`).
 
 pymake can be run from the command line or it can be called from within python.
 By default, pymake sets the optimization level, Fortran flags, C/C++ flags, and
@@ -231,6 +232,12 @@ To install pymake using pip type:
 
 ```
 pip install mfpymake
+```
+
+To install pymake using conda type:
+
+```
+conda install -c conda-forge mfpymake
 ```
 
 To install pymake directly from the git repository type:

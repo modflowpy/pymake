@@ -28,7 +28,8 @@ jobs:
 
       - name: Install python packages
         run: |
-          .github/common/install-python.sh
+          pip install --upgrade pip
+          pip install ".[test]"
 
       - name: Run pytest
         working-directory: ./autotest

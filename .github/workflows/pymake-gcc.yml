@@ -36,7 +36,8 @@ jobs:
 
       - name: Install python packages
         run: |
-          .github/common/install-python.sh
+          pip install --upgrade pip
+          pip install ".[test]"
 
       - name: Install GNU Fortran
         uses: modflowpy/install-gfortran-action@v1
@@ -85,7 +86,8 @@ jobs:
 
       - name: Install python packages
         run: |
-          .github/common/install-python.sh
+          pip install --upgrade pip
+          pip install ".[test]"
 
       - name: Setup symbolic link to gfortran on Linux
         run: |
@@ -140,7 +142,8 @@ jobs:
 
       - name: Install python packages
         run: |
-          .github/common/install-python.sh
+          pip install --upgrade pip
+          pip install ".[test]"
 
       - name: Install GNU Fortran
         uses: modflowpy/install-gfortran-action@v1
@@ -150,5 +153,6 @@ jobs:
           .github/common/download-examples.sh
 
       - name: Run pytest
+        working-directory: ./autotest
         run: |
           pytest -v --dist=loadfile -n=auto -m="base" --durations=0

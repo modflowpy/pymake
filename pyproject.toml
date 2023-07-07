@@ -1,14 +1,98 @@
 [build-system]
 # Minimum requirements for the build system to execute
 requires = [
-    "setuptools>=45",
+    "setuptools>=61",
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "mfpymake"
+description = "pymake is a Python package to compile MODFLOW-based models."
+authors = [
+    { name = "mfpymake Team", email = "modflow@usgs.gov" },
+]
+maintainers = [
+    { name = "Joseph D. Hughes", email = "jdhughes@usgs.gov" },
+]
+keywords = ["MODFLOW", "groundwater", "hydrogeology"]
+license = { text = "CC0" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Hydrology",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "requests",
+    "networkx >= 2.6.3",
+    "meson",
+    "ninja",
+    "pydotplus",
+]
+dynamic = ["version", "readme"]
+[project.optional-dependencies]
+lint = [
+    "black",
+    "cffconvert",
+    "flake8",
+    "isort",
+    "pylint",
+]
+test = [
+    "mfpymake[lint]",
+    "coverage",
+    "flaky",
+    "filelock",
+    "pytest",
+    "pytest-benchmark",
+    "pytest-cases",
+    "pytest-cov",
+    "pytest-dotenv",
+    "pytest-virtualenv",
+    "pytest-xdist",
+    "appdirs",
+    "matplotlib",
+    "modflow-devtools",
+    "flopy",
+]
+[project.scripts]
+mfpymake = "pymake.cmds.mfpymakecli:main"
+make-program = "pymake.cmds.build:main"
+make-code-json = "pymake.cmds.createjson:main"
+
+
+[project.urls]
+Documentation = "https://mfpymake.readthedocs.io"
+"Release Notes" = "https://github.com/modflowpy/flopy/blob/develop/docs/version_changes.md"
+"Bug Tracker" = "https://github.com/modflowpy/pymake/issues"
+"Source Code" = "https://github.com/modflowpy/pymake"
+
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools.dynamic]
+version = { attr = "pymake.config.__version__" }
+readme = { file = ["README.md"], content-type = "text/markdown" }
+
+[tool.setuptools.packages.find]
+include = ["pymake", "pymake.*"]
+
+[tool.setuptools.package-data]
+"pymake.utils" = ["usgsprograms.txt"]
+
 [tool.black]
 line-length = 79
-target_version = ["py37"]
+target_version = ["py38"]
 
 [tool.flynt]
 line-length = 79
