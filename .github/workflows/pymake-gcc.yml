@@ -36,7 +36,8 @@ jobs:
 
       - name: Install python packages
         run: |
-          .github/common/install-python.sh
+          pip install --upgrade pip
+          pip install ".[test]"
 
       - name: Install GNU Fortran
         uses: modflowpy/install-gfortran-action@v1
