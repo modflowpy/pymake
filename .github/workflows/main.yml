@@ -39,7 +39,7 @@ jobs:
 
       - name: Install python packages
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install ".[test]"
 
       - name: Download examples for pytest runs

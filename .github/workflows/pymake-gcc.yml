@@ -36,7 +36,7 @@ jobs:
 
       - name: Install python packages
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install ".[test]"
 
       - name: Install GNU Fortran
@@ -86,7 +86,7 @@ jobs:
 
       - name: Install python packages
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install ".[test]"
 
       - name: Setup symbolic link to gfortran on Linux
@@ -142,7 +142,7 @@ jobs:
 
       - name: Install python packages
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install ".[test]"
 
       - name: Install GNU Fortran
