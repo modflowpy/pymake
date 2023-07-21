@@ -1,88 +1,46 @@
 import os
 import pathlib as pl
-import shutil
 import subprocess
-import sys
+from platform import system
 
 import pytest
 
 import pymake
 
-# use the line below to set fortran compiler using environmental variables
-# if sys.platform.lower() == "win32":
-#     os.environ["CC"] = "icl"
-# else:
-#     os.environ["CC"] = "icc"
 
-# define program data
-target = "gridgen"
-if sys.platform.lower() == "win32":
-    target += ".exe"
-
-# get program dictionary
-prog_dict = pymake.usgs_program_data.get_target(target)
-
-# set up paths
-dstpth = pl.Path(f"temp_{os.path.basename(__file__).replace('.py', '')}")
-dstpth.mkdir(parents=True, exist_ok=True)
-
-ver = prog_dict.version
-pth = dstpth / prog_dict.dirname
-expth = pth / "examples/biscayne"
-exe_name = dstpth / target
-
-pm = pymake.Pymake(verbose=True)
-pm.target = target
-pm.appdir = str(dstpth)
-env_var = os.environ.get("CC")
-if env_var is not None:
-    pm.cc = env_var
-else:
-    pm.cc = "g++"
-pm.fc = None
-pm.inplace = True
-pm.makeclean = True
-
-biscayne_cmds = [
-    "buildqtg action01_buildqtg.dfn",
-    "grid02qtg-to-usgdata action02_writeusgdata.dfn",
-    "grid01mfg-to-polyshapefile action03_shapefile.dfn",
-    "grid02qtg-to-polyshapefile action03_shapefile.dfn",
-    "grid01mfg-to-pointshapefile action03_shapefile.dfn",
-    "grid02qtg-to-pointshapefile action03_shapefile.dfn",
-    "canal_grid02qtg_lay1_intersect action04_intersect.dfn",
-    "chd_grid02qtg_lay1_intersect action04_intersect.dfn",
-    "grid01mfg-to-vtkfile action05_vtkfile.dfn",
-    "grid02qtg-to-vtkfile action05_vtkfile.dfn",
-    "grid02qtg-to-vtkfilesv action05_vtkfile.dfn",
-]
+@pytest.fixture(scope="module")
+def target(module_tmpdir) -> pl.Path:
+    name = "gridgen"
+    ext = ".exe" if system() == "Windows" else ""
+    return module_tmpdir / f"{name}{ext}"
 
 
-def clean_up():
-    print("Removing test files and directories")
+@pytest.fixture(scope="module")
+def prog_data(target) -> dict:
+    return pymake.usgs_program_data.get_target(target.name)
 
-    # finalize pymake object
+
+@pytest.fixture(scope="module")
+def workspace(module_tmpdir, prog_data) -> pl.Path:
+    return module_tmpdir / prog_data.dirname
+
+
+@pytest.fixture(scope="module")
+def pm(module_tmpdir, target) -> pymake.Pymake:
+    pm = pymake.Pymake(verbose=True)
+    pm.target = str(target)
+    pm.appdir = str(module_tmpdir)
+    pm.cc = os.environ.get("CXX", "g++")
+    pm.fc = os.environ.get("FC", "gfortran")
+    pm.inplace = True
+    pm.makeclean = True
+    yield pm
     pm.finalize()
 
-    if os.path.isfile(exe_name):
-        print(f"Removing {target}")
-        os.remove(exe_name)
 
-    print(f"Removing folder {pth}")
-    if pth.is_dir():
-        shutil.rmtree(pth)
-
-    dirs_temp = [dstpth]
-    for d in dirs_temp:
-        if d.is_dir():
-            shutil.rmtree(d)
-
-    return
-
-
-def run_command(cmdlist, cwd):
+def run_command(args, cwd):
     p = subprocess.Popen(
-        cmdlist,
+        args,
         shell=False,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -94,51 +52,44 @@ def run_command(cmdlist, cwd):
     return retval
 
 
-def run_gridgen(cmd):
-    success = False
-    prog = os.path.abspath(exe_name)
-    if os.path.exists(prog):
-        testpth = os.path.abspath(expth)
-
-        cmdlist = [prog] + cmd.split()
-        print(f"running {' '.join(cmdlist)}")
-        retcode = run_command(cmdlist, testpth)
-        if retcode == 0:
-            success = True
-
-    return success
+def run_gridgen(cmd, ws, exe):
+    args = [str(exe)] + cmd.split()
+    print(f"running {' '.join(args)}")
+    return run_command(args, ws) == 0
 
 
+@pytest.mark.dependency(name="download")
 @pytest.mark.base
-def test_download():
-    # Remove the existing target download directory if it exists
-    if dstpth.is_dir():
-        shutil.rmtree(dstpth)
-
-    # download the target
-    pm.download_target(target, download_path=dstpth)
+def test_download(pm, module_tmpdir, target):
+    pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target} distribution"
 
 
+@pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.base
-def test_compile():
+def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
 
+@pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.regression
-@pytest.mark.parametrize("cmd", biscayne_cmds)
-def test_gridgen(cmd):
-    assert run_gridgen(cmd), f"could not run {cmd}"
-
-
-@pytest.mark.base
-def test_clean_up():
-    clean_up()
-
-
-if __name__ == "__main__":
-    test_download()
-    test_compile()
-    # for cmd in biscayne_cmds:
-    #     run_gridgen(cmd)
-    test_clean_up()
+@pytest.mark.parametrize(
+    "cmd",
+    [
+        "buildqtg action01_buildqtg.dfn",
+        "grid02qtg-to-usgdata action02_writeusgdata.dfn",
+        "grid01mfg-to-polyshapefile action03_shapefile.dfn",
+        "grid02qtg-to-polyshapefile action03_shapefile.dfn",
+        "grid01mfg-to-pointshapefile action03_shapefile.dfn",
+        "grid02qtg-to-pointshapefile action03_shapefile.dfn",
+        "canal_grid02qtg_lay1_intersect action04_intersect.dfn",
+        "chd_grid02qtg_lay1_intersect action04_intersect.dfn",
+        "grid01mfg-to-vtkfile action05_vtkfile.dfn",
+        "grid02qtg-to-vtkfile action05_vtkfile.dfn",
+        "grid02qtg-to-vtkfilesv action05_vtkfile.dfn",
+    ],
+)
+def test_gridgen(cmd, workspace, target):
+    assert run_gridgen(
+        cmd, workspace / "examples" / "biscayne", target
+    ), f"could not run {cmd}"

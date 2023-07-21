@@ -1,157 +1,92 @@
-import os
-import shutil
 import sys
+from pathlib import Path
 
 import flopy
 import pytest
 
 import pymake
 
-# use the line below to set fortran compiler using environmental variables
-# os.environ["FC"] = "ifort"
-# os.environ["CC"] = "icc"
+
+@pytest.fixture(scope="module")
+def target(module_tmpdir) -> Path:
+    target = "mf2005"
+    if sys.platform.lower() == "win32":
+        target += ".exe"
+    return module_tmpdir / target
 
 
-# define program data
-target = "mf2005"
-if sys.platform.lower() == "win32":
-    target += ".exe"
-
-# get program dictionary
-prog_dict = pymake.usgs_program_data.get_target(target)
-
-# set up paths
-dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
-if not os.path.exists(dstpth):
-    os.makedirs(dstpth, exist_ok=True)
-
-mfver = prog_dict.version
-mfpth = os.path.join(dstpth, prog_dict.dirname)
-expth = os.path.join(mfpth, "test-run")
-epth = os.path.join(dstpth, target)
-name_files = [
-    "l1b2k_bath.nam",
-    "test1tr.nam",
-    "mnw1.nam",
-    "testsfr2.nam",
-    "bcf2ss.nam",
-    "restest.nam",
-    "etsdrt.nam",
-    "str.nam",
-    "tr2k_s3.nam",
-    "fhb.nam",
-    "twri.nam",
-    "ibs2k.nam",
-    "swtex4.nam",
-    "twrihfb.nam",
-    "l1a2k.nam",
-    "tc2hufv4.nam",
-    "twrip.nam",
-    "l1b2k.nam",
-    "test1ss.nam",
-]
-# add path to name_files
-for idx, namefile in enumerate(name_files):
-    name_files[idx] = os.path.join(expth, namefile)
-
-pm = pymake.Pymake(verbose=True)
-pm.target = target
-pm.appdir = dstpth
-pm.fflags = "-O3"
-pm.cflags = "-O3"
+@pytest.fixture(scope="module")
+def prog_data(target) -> dict:
+    return pymake.usgs_program_data.get_target(target.name)
 
 
-def run_mf2005(namefile):
-    """
-    Run the simulation.
-
-    """
-    if namefile is not None:
-        # Set nam as namefile name without path
-        nam = os.path.basename(namefile)
-
-        # run test models
-        exe_name = os.path.abspath(epth)
-        msg = f"running model...{nam}" + f" using {exe_name}"
-        print(msg)
-        if os.path.exists(exe_name):
-            success, buff = flopy.run_model(
-                exe_name, nam, model_ws=expth, silent=True
-            )
-        else:
-            success = False
-
-        assert success, f"base model {nam} " + "did not run."
-    else:
-        success = False
-        errmsg = f"{target} does not exist"
-
-    assert success, errmsg
-
-    return
+@pytest.fixture(scope="module")
+def workspace(module_tmpdir, prog_data) -> Path:
+    return module_tmpdir / prog_data.dirname
 
 
-def cleanup():
-    print("Removing test files and directories")
-
-    # clean up makefile
-    print("Removing makefile")
-    files = ["makefile", "makedefaults"]
-    for fpth in files:
-        if os.path.isfile(fpth):
-            os.remove(fpth)
-
-    # finalize pymake object
+@pytest.fixture(scope="module")
+def pm(module_tmpdir, target) -> pymake.Pymake:
+    pm = pymake.Pymake(verbose=True)
+    pm.target = str(target)
+    pm.appdir = str(module_tmpdir)
+    pm.fflags = "-O3"
+    pm.cflags = "-O3"
+    yield pm
     pm.finalize()
 
-    if os.path.isfile(epth):
-        print("Removing " + target)
-        os.remove(epth)
 
-    dirs_temp = [dstpth]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
-
-    return
+def run_mf2005(namefile, ws, exe):
+    print(f"running model {namefile} using {exe}")
+    success, _ = flopy.run_model(exe, namefile, model_ws=ws, silent=False)
+    return success
 
 
+@pytest.mark.dependency(name="download")
 @pytest.mark.base
-def test_download():
-    # Remove the existing target download directory if it exists
-    if os.path.isdir(mfpth):
-        shutil.rmtree(mfpth)
-
-    # download the target
-    pm.download_target(target, download_path=dstpth)
+def test_download(pm, module_tmpdir, target):
+    pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target}"
 
 
+@pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.base
-def test_compile():
+def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
 
+@pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.regression
-@pytest.mark.parametrize("fn", name_files)
-def test_mf2005(fn):
-    run_mf2005(fn)
-    return
+@pytest.mark.parametrize(
+    "namefile",
+    [
+        "l1b2k_bath.nam",
+        "test1tr.nam",
+        "mnw1.nam",
+        "testsfr2.nam",
+        "bcf2ss.nam",
+        "restest.nam",
+        "etsdrt.nam",
+        "str.nam",
+        "tr2k_s3.nam",
+        "fhb.nam",
+        "twri.nam",
+        "ibs2k.nam",
+        "swtex4.nam",
+        "twrihfb.nam",
+        "l1a2k.nam",
+        "tc2hufv4.nam",
+        "twrip.nam",
+        "l1b2k.nam",
+        "test1ss.nam",
+    ],
+)
+def test_mf2005(namefile, workspace, target):
+    example_ws = workspace / "test-run"
+    if not (example_ws / namefile).is_file():
+        pytest.skip(f"{namefile} does not exist")
 
-
-@pytest.mark.base
-def test_cleanup():
-    cleanup()
-
-    return
-
-
-if __name__ == "__main__":
-    test_download()
-
-    test_compile()
-
-    for namefile in name_files:
-        run_mf2005(namefile)
-
-    test_cleanup()
+    success, _ = flopy.run_model(
+        target, namefile, model_ws=example_ws, silent=False
+    )
+    assert success, f"could not run {namefile} with {target}"

@@ -1,38 +1,14 @@
-import contextlib
 import os
-import shutil
 import sys
 import time
+from platform import system
+from pathlib import Path
 
 import flopy
 import pytest
+from modflow_devtools.misc import set_dir
 
 import pymake
-
-# define program data
-target = "mf6"
-if sys.platform.lower() == "win32":
-    target += ".exe"
-
-sharedobject_target = "libmf6"
-if sys.platform.lower() == "win32":
-    sharedobject_target += ".dll"
-elif sys.platform.lower() == "darwin":
-    sharedobject_target += ".dylib"
-else:
-    sharedobject_target += ".so"
-
-# get program dictionary
-prog_dict = pymake.usgs_program_data.get_target(target)
-
-# set up paths
-dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
-if not os.path.exists(dstpth):
-    os.makedirs(dstpth, exist_ok=True)
-
-mf6ver = prog_dict.version
-mf6pth = os.path.join(dstpth, prog_dict.dirname)
-epth = os.path.join(dstpth, target)
 
 # set fpth based on current path
 if os.path.basename(os.path.normpath(os.getcwd())) == "autotest":
@@ -50,41 +26,66 @@ if os.path.isfile(fpth):
 else:
     sim_dirs = []
 
-pm = pymake.Pymake(verbose=True)
-pm.target = target
-pm.appdir = dstpth
-pm.makefile = True
-pm.makeclean = True
-pm.makefiledir = dstpth
-pm.inplace = True
-pm.networkx = True
+
+@pytest.fixture(scope="module")
+def target(module_tmpdir) -> Path:
+    name = "mf6"
+    ext = ".exe" if system() == "Windows" else ""
+    return module_tmpdir / f"{name}{ext}"
 
 
-@contextlib.contextmanager
-def working_directory(path):
-    """Changes working directory and returns to previous on exit."""
-    prev_cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(prev_cwd)
+@pytest.fixture(scope="module")
+def target_so(module_tmpdir) -> Path:
+    sharedobject_target = "libmf6"
+    if sys.platform.lower() == "win32":
+        sharedobject_target += ".dll"
+    elif sys.platform.lower() == "darwin":
+        sharedobject_target += ".dylib"
+    else:
+        sharedobject_target += ".so"
+    return module_tmpdir / sharedobject_target
 
 
-def build_with_makefile(makefile_target):
+@pytest.fixture(scope="module")
+def prog_data(target) -> dict:
+    return pymake.usgs_program_data.get_target(target.name)
+
+
+@pytest.fixture(scope="module")
+def workspace(module_tmpdir, prog_data) -> Path:
+    return module_tmpdir / prog_data.dirname
+
+
+@pytest.fixture(scope="module")
+def pm(module_tmpdir, target) -> pymake.Pymake:
+    pm = pymake.Pymake(verbose=True)
+    pm.target = str(target)
+    pm.appdir = module_tmpdir
+    pm.makefile = True
+    pm.makeclean = True
+    pm.makefiledir = module_tmpdir
+    pm.inplace = True
+    pm.networkx = True
+    pm.verbose = True
+    yield pm
+    pm.finalize()
+
+
+def build_with_makefile(pm, workspace, exe):
+    exe_path = Path(exe)
     success = False
-    with working_directory(dstpth):
+    with set_dir(workspace):
         if os.path.isfile("makefile"):
             # wait to delete on windows
             if sys.platform.lower() == "win32":
                 time.sleep(6)
 
             # clean prior to make
-            print(f"clean {makefile_target} with makefile")
+            print(f"clean {exe} with makefile")
             os.system("make clean")
 
             # build MODFLOW 6 with makefile
-            print(f"build {makefile_target} with makefile")
+            print(f"build {exe} with makefile")
             return_code = os.system("make")
 
             # test if running on Windows with ifort, if True the makefile
@@ -96,121 +97,63 @@ def build_with_makefile(makefile_target):
                     success = False
             # verify that target was made
             else:
-                success = os.path.isfile(makefile_target)
+                success = exe_path.is_file()
 
-    return success
-
-
-def clean_up():
-    # clean up makefile
-    print("Removing makefile")
-    files = [
-        os.path.join(dstpth, file_name)
-        for file_name in ("makefile", "makedefaults")
-    ]
-    for fpth in files:
-        if os.path.isfile(fpth):
-            os.remove(fpth)
-
-    # finalize pymake object
-    pm.finalize()
-
-    if os.path.isfile(epth):
-        print("Removing " + target)
-        os.remove(epth)
-
-    print("Removing temporary build directories")
-    dirs_temp = [dstpth]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
-    return
-
-
-def run_mf6(workspace):
-    success = False
-    exe_name = os.path.abspath(epth)
-    if os.path.exists(exe_name):
-        # run test models
-        print(f"running model...{os.path.basename(workspace)}")
-        success, buff = flopy.run_model(
-            exe_name, None, model_ws=workspace, silent=False
-        )
     return success
 
 
 @pytest.mark.dependency(name="download")
 @pytest.mark.base
-def test_download():
-    # Remove the existing mf6 directory if it exists
-    if os.path.isdir(mf6pth):
-        shutil.rmtree(mf6pth)
-
-    # download the modflow 6 release
-    pm.download_target(target, download_path=dstpth)
+def test_download(pm, module_tmpdir, target):
+    pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.base
-def test_compile():
+def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.regression
 @pytest.mark.parametrize("ws", sim_dirs)
-def test_mf6(ws):
-    assert run_mf6(ws), f"could not run {ws}"
+def test_mf6(ws, target):
+    success, _ = flopy.run_model(target, None, model_ws=ws, silent=False)
+    assert success, f"could not run {ws}"
 
 
 @pytest.mark.dependency(name="makefile", depends=["build"])
 @pytest.mark.base
-def test_makefile():
+def test_makefile(pm, module_tmpdir, target):
     assert build_with_makefile(
-        target
+        pm, module_tmpdir, target
     ), f"could not compile {target} with makefile"
 
 
 @pytest.mark.dependency(name="shared", depends=["makefile"])
 @pytest.mark.base
-def test_sharedobject():
-    pm.target = sharedobject_target
-    prog_dict = pymake.usgs_program_data.get_target(pm.target)
-    pm.appdir = dstpth
-    pm.srcdir = os.path.join(mf6pth, prog_dict.srcdir)
-    pm.srcdir2 = os.path.join(mf6pth, "src")
+def test_sharedobject(pm, module_tmpdir, workspace, target_so, prog_data):
+    # reconfigure pymake object
+    pm.target = str(target_so)
+    pm.appdir = module_tmpdir
+    pm.srcdir = workspace / prog_data.srcdir
+    pm.srcdir2 = workspace / "src"
     pm.excludefiles = [os.path.join(pm.srcdir2, "mf6.f90")]
     pm.makefile = True
     pm.makeclean = True
     pm.sharedobject = True
     pm.inplace = True
     pm.dryrun = False
+
+    # build the target
     assert pm.build() == 0, f"could not compile {pm.target}"
+    assert target_so.is_file()
 
 
 @pytest.mark.dependency(name="shared_makefile", depends=["shared", "makefile"])
 @pytest.mark.base
-def test_sharedobject_makefile():
+def test_sharedobject_makefile(pm, module_tmpdir, target_so):
     assert build_with_makefile(
-        sharedobject_target
-    ), f"could not compile {sharedobject_target} with makefile"
-
-
-@pytest.mark.dependency(
-    name="clean", depends=["build", "makefile", "shared_makefile"]
-)
-@pytest.mark.base
-def test_clean_up():
-    clean_up()
-
-
-if __name__ == "__main__":
-    test_download()
-    test_compile()
-    for ws in sim_dirs:
-        run_mf6(ws)
-    test_makefile()
-    test_sharedobject()
-    test_sharedobject_makefile()
-    test_clean_up()
+        pm, module_tmpdir, target_so
+    ), f"could not compile {target_so} with makefile"

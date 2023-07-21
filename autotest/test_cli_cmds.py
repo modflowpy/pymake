@@ -1,6 +1,4 @@
 import os
-import pathlib as pl
-import shutil
 import subprocess
 
 import pytest
@@ -12,12 +10,6 @@ targets = (
     "triangle",
     "crt",
 )
-
-# set up paths
-dstpth = pl.Path(
-    f"temp_{os.path.basename(__file__).replace('.py', '')}"
-).resolve()
-dstpth.mkdir(parents=True, exist_ok=True)
 
 
 def run_cli_cmd(cmd: list) -> None:
@@ -39,25 +31,16 @@ def run_cli_cmd(cmd: list) -> None:
     return
 
 
-def clean_up() -> None:
-    print("Removing temporary build directories")
-    dirs_temp = [dstpth]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
-    return
-
-
+@flaky(max_runs=RERUNS)
 @pytest.mark.dependency(name="make_program")
 @pytest.mark.base
-@flaky(max_runs=RERUNS)
 @pytest.mark.parametrize("target", targets)
-def test_make_program(target: str) -> None:
+def test_make_program(module_tmpdir, target: str) -> None:
     cmd = [
         "make-program",
         target,
         "--appdir",
-        str(dstpth),
+        str(module_tmpdir),
         "--verbose",
     ]
     run_cli_cmd(cmd)
@@ -65,12 +48,12 @@ def test_make_program(target: str) -> None:
 
 @pytest.mark.dependency(name="make_program_all")
 @pytest.mark.schedule
-def test_make_program_all() -> None:
+def test_make_program_all(module_tmpdir) -> None:
     cmd = [
         "make-program",
         ":",
         "--appdir",
-        str(dstpth / "all"),
+        str(module_tmpdir / "all"),
         "--verbose",
         "--dryrun",
     ]
@@ -79,14 +62,14 @@ def test_make_program_all() -> None:
 
 @pytest.mark.dependency(name="mfpymake")
 @pytest.mark.base
-def test_mfpymake() -> None:
+def test_mfpymake(module_tmpdir) -> None:
     src = (
         "program hello\n"
         + "  ! This is a comment line; it is ignored by the compiler\n"
         + "  print *, 'Hello, World!'\n"
         + "end program hello\n"
     )
-    src_file = dstpth / "mfpymake_src/hello.f90"
+    src_file = module_tmpdir / "mfpymake_src" / "hello.f90"
     src_file.parent.mkdir(parents=True, exist_ok=True)
     with open(src_file, "w") as f:
         f.write(src)
@@ -97,7 +80,7 @@ def test_mfpymake() -> None:
         "-mc",
         "--verbose",
         "--appdir",
-        str(dstpth),
+        str(module_tmpdir),
         "-fc",
     ]
     if os.environ.get("FC") is None:
@@ -105,18 +88,5 @@ def test_mfpymake() -> None:
     else:
         cmd.append(os.environ.get("FC"))
     run_cli_cmd(cmd)
-    cmd = [dstpth / "hello"]
+    cmd = [module_tmpdir / "hello"]
     run_cli_cmd(cmd)
-
-
-@pytest.mark.dependency(name="clean", depends=["make_program"])
-@pytest.mark.base
-def test_clean_up() -> None:
-    clean_up()
-    return
-
-
-if __name__ == "__main__":
-    for target in targets:
-        test_make_program(target)
-    test_clean_up()

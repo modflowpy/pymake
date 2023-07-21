@@ -1,48 +1,55 @@
 import os
-import shutil
 import sys
+from pathlib import Path
+from typing import List
 
-import flopy
 import pytest
 
 import pymake
 
-target = "mf6"
-ext = ""
-shared_ext = ".so"
-executables = [target, "zbud6", "mf5to6", "libmf6"]
-if sys.platform.lower() == "win32":
-    ext = ".exe"
-    shared_ext = ".dll"
-elif sys.platform.lower() == "darwin":
-    shared_ext = ".dylib"
-for idx, executable in enumerate(executables[:3]):
-    executables[idx] += ext
-executables[3] += shared_ext
 
-# get program dictionary
-prog_dict = pymake.usgs_program_data.get_target(target)
-
-# set up paths
-dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
-if not os.path.exists(dstpth):
-    os.makedirs(dstpth, exist_ok=True)
-
-mf6pth = os.path.join(dstpth, prog_dict.dirname)
-mesondir = mf6pth
+@pytest.fixture(scope="module")
+def targets() -> List[Path]:
+    target = "mf6"
+    ext = ""
+    shared_ext = ".so"
+    executables = [target, "zbud6", "mf5to6", "libmf6"]
+    if sys.platform.lower() == "win32":
+        ext = ".exe"
+        shared_ext = ".dll"
+    elif sys.platform.lower() == "darwin":
+        shared_ext = ".dylib"
+    for idx, _ in enumerate(executables[:3]):
+        executables[idx] += ext
+    executables[3] += shared_ext
+    return executables
 
 
-def clean_up():
-    print("Removing temporary build directories")
-    dirs_temp = [dstpth]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
-    return
+@pytest.fixture(scope="module")
+def prog_data(targets) -> dict:
+    return pymake.usgs_program_data.get_target(targets[0])
+
+
+@pytest.fixture(scope="module")
+def workspace(module_tmpdir, prog_data) -> Path:
+    return module_tmpdir / prog_data.dirname
+
+
+@pytest.fixture(scope="module")
+def pm(workspace, targets) -> pymake.Pymake:
+    pm = pymake.Pymake(verbose=True)
+    pm.target = str(targets[0])
+    pm.appdir = str(workspace / "bin")
+    pm.meson = True
+    pm.makeclean = True
+    pm.mesondir = str(workspace)
+    pm.verbose = True
+    yield pm
+    pm.finalize()
 
 
 @pytest.mark.base
-def test_build_with_existing_meson():
+def test_build_with_existing_meson(pm, module_tmpdir, workspace, targets):
     # set default compilers
     fc, cc = "gfortran", "gcc"
 
@@ -72,21 +79,13 @@ def test_build_with_existing_meson():
     # print fortran and c/c++ compilers
     print(f"fortran compiler={fc}\n" + f"c/c++ compiler={cc}\n")
 
-    pm = pymake.Pymake(verbose=True)
-    pm.target = target
-    pm.appdir = os.path.join(mesondir, "bin")
-    pm.meson = True
-    pm.makeclean = True
-    pm.mesondir = mesondir
-    pm.verbose = True
-
-    # download the modflow 6
-    pm.download_target(target, download_path=dstpth)
-    assert pm.download, f"could not download {target} distribution"
+    # download modflow 6
+    pm.download_target(targets[0], download_path=module_tmpdir)
+    assert pm.download, f"could not download {targets[0]} distribution"
 
     # make modflow 6 with existing meson.build file
     returncode = pymake.meson_build(
-        mesondir,
+        workspace,
         fc,
         cc,
         appdir=pm.appdir,
@@ -96,13 +95,6 @@ def test_build_with_existing_meson():
     ), "could not build modflow 6 applications using existing meson.build file"
 
     # check that all of the executables exist
-    for executable in executables:
+    for executable in targets:
         exe_pth = os.path.join(pm.appdir, executable)
         assert os.path.isfile(exe_pth), f"{exe_pth} does not exist"
-
-    # clean up test files
-    clean_up()
-
-
-if __name__ == "__main__":
-    test_build_with_existing_meson()
