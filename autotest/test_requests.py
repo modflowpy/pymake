@@ -1,7 +1,6 @@
 # Test the download_and_unzip functionality of pymake
 import json
 import os
-import shutil
 import subprocess
 import sys
 
@@ -11,7 +10,6 @@ from flaky import flaky
 import pymake
 
 RERUNS = 3
-dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
 
 
 def which(program):
@@ -37,17 +35,9 @@ def which(program):
     return None
 
 
-def initialize_working_dir():
-    # make sure the test directory exists
-    os.makedirs(dstpth, exist_ok=True)
-
-
-def export_code_json(file_name="code.json"):
-    # make sure the test directory exists
-    initialize_working_dir()
-
+def export_code_json(ws, file_name="code.json"):
     # make the json file
-    fpth = os.path.join(dstpth, file_name)
+    fpth = os.path.join(ws, file_name)
     pymake.usgs_program_data.export_json(
         fpth=fpth,
         current=True,
@@ -78,7 +68,6 @@ def run_cli_cmd(cmd: list) -> None:
     assert (
         process.returncode == 0
     ), f"'{' '.join(cmd)}' failed\n\tstatus code {process.returncode}\n"
-    return
 
 
 @pytest.mark.dependency("latest_version")
@@ -95,7 +84,6 @@ def test_latest_version():
     if version is not None:
         assert float(version) >= float(test_version), msg
         print(f"returned version...{version}")
-    return
 
 
 @pytest.mark.dependency("latest_assets")
@@ -116,7 +104,6 @@ def test_latest_assets():
         print(f"evaluating the availability of...{key}")
         msg = f"unknown key ({key}) found in github repo assets"
         assert key in test_keys, msg
-    return
 
 
 @pytest.mark.dependency("previous_assets")
@@ -154,7 +141,7 @@ def test_previous_assets():
 @pytest.mark.dependency("mfexes")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_mfexes_download_and_unzip_and_zip():
+def test_mfexes_download_and_unzip_and_zip(function_tmpdir):
     exclude_files = [
         "code.json",
         "prms_constants.f90",
@@ -162,110 +149,74 @@ def test_mfexes_download_and_unzip_and_zip():
         "prms_time.f90",
         "utils_prms.f90",
     ]
-    pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}"
-    )
-    pymake.getmfexes(pth, verbose=True)
-    for f in os.listdir(pth):
-        fpth = os.path.join(pth, f)
+    pymake.getmfexes(function_tmpdir, verbose=True)
+    for f in os.listdir(function_tmpdir):
+        fpth = os.path.join(function_tmpdir, f)
         if not os.path.isdir(fpth) and f not in exclude_files:
             errmsg = f"{fpth} not executable"
             assert which(fpth) is not None, errmsg
 
     # zip up exe's using files
-    zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
-        "ziptest01.zip",
-    )
+    zip_pth = function_tmpdir / "ziptest01.zip"
     print(f"creating '{zip_pth}'")
     success = pymake.zip_all(
-        zip_pth, file_pths=[os.path.join(pth, e) for e in os.listdir(pth)]
+        str(zip_pth),
+        file_pths=[
+            os.path.join(function_tmpdir, e)
+            for e in os.listdir(function_tmpdir)
+        ],
     )
     assert success, "could not create zipfile using file names"
-    os.remove(zip_pth)
 
     # zip up exe's using directories
-    zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
-        "ziptest02.zip",
-    )
+    zip_pth = function_tmpdir / "ziptest02.zip"
     print(f"creating '{zip_pth}'")
-    success = pymake.zip_all(zip_pth, dir_pths=pth)
+    success = pymake.zip_all(str(zip_pth), dir_pths=function_tmpdir)
     assert success, "could not create zipfile using directories"
-    os.remove(zip_pth)
 
     # zip up exe's using directories and a pattern
-    zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
-        "ziptest03.zip",
-    )
-    print(f"creating '{zip_pth}'")
-    success = pymake.zip_all(zip_pth, dir_pths=pth, patterns="mf")
-    assert success, "could not create zipfile using directories and a pattern"
-    os.remove(zip_pth)
-
-    # zip up exe's using files and directories
-    zip_pth = os.path.join(
-        f"temp_mfexes_{os.path.basename(__file__).replace('.py', '')}",
-        "ziptest04.zip",
-    )
+    zip_pth = function_tmpdir / "ziptest03.zip"
     print(f"creating '{zip_pth}'")
     success = pymake.zip_all(
-        zip_pth,
-        file_pths=[os.path.join(pth, e) for e in os.listdir(pth)],
-        dir_pths=pth,
+        str(zip_pth), dir_pths=function_tmpdir, patterns="mf"
+    )
+    assert success, "could not create zipfile using directories and a pattern"
+
+    # zip up exe's using files and directories
+    zip_pth = function_tmpdir / "ziptest04.zip"
+    print(f"creating '{zip_pth}'")
+    success = pymake.zip_all(
+        str(zip_pth),
+        file_pths=[
+            os.path.join(function_tmpdir, e)
+            for e in os.listdir(function_tmpdir)
+        ],
+        dir_pths=function_tmpdir,
     )
     assert success, "could not create zipfile using files and directories"
-    os.remove(zip_pth)
-
-    # clean up exe's
-    for f in os.listdir(pth):
-        fpth = os.path.join(pth, f)
-        if not os.path.isdir(fpth):
-            print("Removing " + f)
-            os.remove(fpth)
-
-    # clean up directory
-    if os.path.isdir(pth):
-        print("Removing folder " + pth)
-        shutil.rmtree(pth)
-
-    return
 
 
 @pytest.mark.dependency("nightly_download")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_nightly_download_and_unzip():
+def test_nightly_download_and_unzip(module_tmpdir):
     exclude_files = ["code.json"]
-    pth = os.path.join(
-        f"temp_nightly_{os.path.basename(__file__).replace('.py', '')}"
-    )
-    pymake.getmfnightly(pth, verbose=True)
-    for f in os.listdir(pth):
-        fpth = os.path.join(pth, f)
+    pymake.getmfnightly(module_tmpdir, verbose=True)
+    for f in os.listdir(module_tmpdir):
+        fpth = os.path.join(module_tmpdir, f)
         print(f"downloaded: {fpth}")
         if not os.path.isdir(fpth) and f not in exclude_files:
             errmsg = f"{fpth} not executable"
             assert which(fpth) is not None, errmsg
-
-    # clean up directory
-    if os.path.isdir(pth):
-        print("\nRemoving folder " + pth)
-        shutil.rmtree(pth)
 
 
 @pytest.mark.dependency("usgsprograms")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_usgsprograms():
-    print("test_usgsprograms()")
     upd = pymake.usgs_program_data().get_program_dict()
-
     all_keys = list(upd.keys())
-
     get_keys = pymake.usgs_program_data.get_keys()
-
     msg = "the keys from program_dict are not equal to .get_keys()"
     assert all_keys == get_keys, msg
 
@@ -274,7 +225,6 @@ def test_usgsprograms():
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_target_key_error():
-    print("test_target_key_error()")
     with pytest.raises(KeyError):
         pymake.usgs_program_data.get_target("error")
 
@@ -283,13 +233,11 @@ def test_target_key_error():
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_target_keys():
-    print("test_target_keys()")
     prog_dict = pymake.usgs_program_data().get_program_dict()
     targets = pymake.usgs_program_data.get_keys()
     for target in targets:
         target_dict = pymake.usgs_program_data.get_target(target)
         test_dict = prog_dict[target]
-
         msg = (
             f"dictionary from {target} "
             + "does not match dictionary from .get_target()"
@@ -300,9 +248,9 @@ def test_target_keys():
 @pytest.mark.dependency("export_json")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_usgsprograms_export_json():
+def test_usgsprograms_export_json(module_tmpdir):
     # export code.json and return json file path
-    fpth = export_code_json(file_name="code.export.json")
+    fpth = export_code_json(module_tmpdir, file_name="code.export.json")
 
     # test the json export
     with open(fpth, "r") as f:
@@ -331,12 +279,8 @@ def test_usgsprograms_export_json():
 @pytest.mark.dependency("load_json_error")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_usgsprograms_load_json_error():
-    print("test_usgsprograms_load_json_error()")
-
-    initialize_working_dir()
-
-    fpth = os.path.join(dstpth, "code.test.error.json")
+def test_usgsprograms_load_json_error(module_tmpdir):
+    fpth = os.path.join(module_tmpdir, "code.test.error.json")
     my_dict = {"mf2005": {"bad": 12, "key": True}}
     pymake.usgs_program_data.export_json(
         fpth=fpth, prog_data=my_dict, update=False
@@ -349,11 +293,9 @@ def test_usgsprograms_load_json_error():
 @pytest.mark.dependency("load_json")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_usgsprograms_load_json():
-    print("test_usgsprograms_load_json()")
-
+def test_usgsprograms_load_json(module_tmpdir):
     # export code.json and return json file path
-    fpth = export_code_json(file_name="code.load.json")
+    fpth = export_code_json(module_tmpdir, file_name="code.load.json")
 
     json_dict = pymake.usgs_program_data.load_json(fpth)
 
@@ -365,13 +307,8 @@ def test_usgsprograms_load_json():
 @pytest.mark.dependency("list_json_error")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_usgsprograms_list_json_error():
-    print("test_usgsprograms_list_json_error()")
-
-    # make sure the example directory exists
-    initialize_working_dir()
-
-    fpth = os.path.join(dstpth, "does.not.exist.json")
+def test_usgsprograms_list_json_error(module_tmpdir):
+    fpth = os.path.join(module_tmpdir, "does.not.exist.json")
     with pytest.raises(IOError):
         pymake.usgs_program_data.list_json(fpth=fpth)
 
@@ -379,13 +316,8 @@ def test_usgsprograms_list_json_error():
 @pytest.mark.dependency("list_json")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_usgsprograms_list_json():
-    print("test_usgsprograms_list_json()")
-
-    # export code.json and return json file path
-    fpth = export_code_json(file_name="code.list.json")
-
-    # list the contents of the json file
+def test_usgsprograms_list_json(module_tmpdir):
+    fpth = export_code_json(module_tmpdir, file_name="code.list.json")
     pymake.usgs_program_data.list_json(fpth=fpth)
 
 
@@ -393,7 +325,6 @@ def test_usgsprograms_list_json():
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_shared():
-    print("test_shared()")
     target_dict = pymake.usgs_program_data.get_target("libmf6")
     assert target_dict.shared_object, "libmf6 is a shared object"
 
@@ -402,7 +333,6 @@ def test_shared():
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
 def test_not_shared():
-    print("test_not_shared()")
     target_dict = pymake.usgs_program_data.get_target("mf6")
     assert not target_dict.shared_object, "mf6 is not a shared object"
 
@@ -410,25 +340,6 @@ def test_not_shared():
 @pytest.mark.dependency(name="code_json")
 @flaky(max_runs=RERUNS)
 @pytest.mark.requests
-def test_code_json() -> None:
-    cmd = ["make-code-json", "-f", f"{dstpth}/code.json"]
+def test_code_json(module_tmpdir) -> None:
+    cmd = ["make-code-json", "-f", f"{module_tmpdir}/code.json"]
     run_cli_cmd(cmd)
-    shutil.rmtree(dstpth)
-
-
-if __name__ == "__main__":
-    # test_previous_assets()
-    test_latest_version()
-    # test_latest_assets()
-    # test_nightly_download_and_unzip()
-    # test_download_and_unzip_and_zip()
-    test_usgsprograms()
-    test_target_key_error()
-    test_target_keys()
-    test_usgsprograms_export_json()
-    test_usgsprograms_load_json_error()
-    test_usgsprograms_load_json()
-    test_usgsprograms_list_json_error()
-    test_usgsprograms_list_json()
-    test_shared()
-    test_not_shared()

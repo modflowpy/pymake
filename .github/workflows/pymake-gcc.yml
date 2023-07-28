@@ -4,7 +4,8 @@ on:
   schedule:
     - cron: '0 7 * * *' # run at 7 AM UTC every day
   push:
-    branches: [ master ]
+    branches: 
+      - master
   pull_request:
     branches:
       - master
@@ -39,8 +40,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install ".[test]"
 
-      - name: Install GNU Fortran
-        uses: modflowpy/install-gfortran-action@v1
+      - name: Setup GNU Fortran
+        uses: awvwgk/setup-fortran@main
+        with:
+          compiler: gcc
+          version: 11
 
       - name: Download examples for pytest runs
         run: |
@@ -49,7 +53,7 @@ jobs:
       - name: Run pytest
         working-directory: ./autotest
         run: |
-          pytest -v --dist=loadfile -n=auto -m="base or regression" --durations=0 --cov=pymake --cov-report=xml
+          pytest -v --dist=loadfile -n=auto -m="base or regression" --durations=0 --cov=pymake --cov-report=xml --basetemp=pytest_temp
 
       - name: Print coverage report before upload
         working-directory: ./autotest

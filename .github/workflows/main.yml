@@ -4,7 +4,8 @@ on:
   schedule:
     - cron: '0 7 * * *' # run at 7 AM UTC every day
   push:
-    branches: [ master ]
+    branches: 
+      - master
   pull_request:
     branches:
       - master
@@ -25,8 +26,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Intel OneAPI Compilers
-        uses: modflowpy/install-intelfortran-action@v1
+      - name: Setup Intel Fortran Classic
+        uses: awvwgk/setup-fortran@main
+        with:
+          compiler: intel-classic
+          version: 2021.7.0
+      
+      - name: Set SETVARS_COMPLETED (temporary)
+        run: echo "SETVARS_COMPLETED=1" >> $GITHUB_ENV
+
+      - name: Set CXX (temporary)
+        if: runner.os == 'Windows'
+        run: echo "CXX=icl" >> $GITHUB_ENV
 
       - name: Setup Graphviz
         if: runner.os == 'Linux'
@@ -63,7 +74,7 @@ jobs:
         working-directory: ./autotest
         shell: cmd
         run: |
-          pytest -v -m="base" --durations=0 --cov=pymake --cov-report=xml
+          pytest -v -m="base" --durations=0 --cov=pymake --cov-report=xml --basetemp=pytest_temp
 
       - name: Print coverage report before upload
         working-directory: ./autotest

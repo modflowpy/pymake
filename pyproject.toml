@@ -55,6 +55,7 @@ test = [
     "pytest-benchmark",
     "pytest-cases",
     "pytest-cov",
+    "pytest-dependency",
     "pytest-dotenv",
     "pytest-virtualenv",
     "pytest-xdist",

@@ -1,58 +1,40 @@
 import os
-import shutil
 import sys
+from platform import system
+from pathlib import Path
 
 import flopy
 import pytest
+from modflow_devtools.misc import is_in_ci
 
 import pymake
 
-# determine if running on a continuous integration server
-is_CI = "CI" in os.environ
 
-# define program data
-target = "swtv4"
-if sys.platform.lower() == "win32":
-    target += ".exe"
+@pytest.fixture(scope="module")
+def target(module_tmpdir) -> Path:
+    name = "swtv4"
+    ext = ".exe" if system() == "Windows" else ""
+    return module_tmpdir / f"{name}{ext}"
 
-# get program dictionary
-prog_dict = pymake.usgs_program_data.get_target(target)
 
-# set up paths
-dstpth = os.path.join(f"temp_{os.path.basename(__file__).replace('.py', '')}")
-if not os.path.exists(dstpth):
-    os.makedirs(dstpth, exist_ok=True)
+@pytest.fixture(scope="module")
+def prog_data(target) -> dict:
+    return pymake.usgs_program_data.get_target(target.name)
 
-swtpth = os.path.join(dstpth, prog_dict.dirname)
-expth = os.path.join(swtpth, "examples")
-deppth = os.path.join(swtpth, "dependencies")
 
-srcpth = os.path.join(swtpth, prog_dict.srcdir)
-epth = os.path.abspath(os.path.join(dstpth, target))
+@pytest.fixture(scope="module")
+def workspace(module_tmpdir, prog_data) -> Path:
+    return module_tmpdir / prog_data.dirname
 
-name_files = sorted(
-    [
-        "4_hydrocoin/seawat.nam",
-        "5_saltlake/seawat.nam",
-        "2_henry/1_classic_case1/seawat.nam",
-        "2_henry/4_VDF_uncpl_Trans/seawat.nam",
-        "2_henry/5_VDF_DualD_Trans/seawat.nam",
-        "2_henry/6_age_simulation/henry_mod.nam",
-        "2_henry/2_classic_case2/seawat.nam",
-        "2_henry/3_VDF_no_Trans/seawat.nam",
-        "1_box/case1/seawat.nam",
-        "1_box/case2/seawat.nam",
-        "3_elder/seawat.nam",
-    ]
-)
-# add path to name_files
-for idx, namefile in enumerate(name_files):
-    name_files[idx] = os.path.join(expth, namefile)
 
-pm = pymake.Pymake(verbose=True)
-pm.target = target
-pm.appdir = dstpth
-pm.double = True
+@pytest.fixture(scope="module")
+def pm(module_tmpdir, target) -> pymake.Pymake:
+    pm = pymake.Pymake(verbose=True)
+    pm.target = str(target)
+    pm.appdir = str(module_tmpdir)
+    pm.double = True
+    yield pm
+    # pm.finalize()
 
 
 def edit_namefile(namefile):
@@ -69,101 +51,79 @@ def edit_namefile(namefile):
     f.close()
 
 
-def clean_up():
-    print("Removing test files and directories")
-
-    # finalize pymake object
-    pm.finalize()
-
-    if os.path.isfile(epth):
-        print("Removing " + target)
-        os.remove(epth)
-
-    dirs_temp = [dstpth]
-    for d in dirs_temp:
-        if os.path.isdir(d):
-            shutil.rmtree(d)
-
-    return
-
-
-def run_seawat(fn):
-    # edit the name files
-    edit_namefile(fn)
-
-    # run the models
-    success, buff = flopy.run_model(
-        epth, os.path.basename(fn), model_ws=os.path.dirname(fn), silent=False
-    )
-    errmsg = f"could not run...{os.path.basename(fn)}"
-    assert success, errmsg
-    return
-
-
-def build_seawat_dependency_graphs():
+def build_seawat_dependency_graphs(src_path, dep_path):
     success = True
     build_graphs = True
-    if is_CI:
+    if is_in_ci():
         if "linux" not in sys.platform.lower():
             build_graphs = False
 
     if build_graphs:
-        if os.path.exists(epth):
-            # build dependencies output directory
-            if not os.path.exists(deppth):
-                os.makedirs(deppth, exist_ok=True)
+        # build dependencies output directory
+        if not os.path.exists(dep_path):
+            os.makedirs(dep_path, exist_ok=True)
 
-            # build dependency graphs
-            print("building dependency graphs")
-            pymake.make_plots(srcpth, deppth, verbose=True)
+        # build dependency graphs
+        print("building dependency graphs")
+        # todo support pathlike, not just str?
+        pymake.make_plots(str(src_path), dep_path, verbose=True)
 
-            # test that the dependency figure for the SEAWAT main exists
-            findf = os.path.join(deppth, "swt_v4.f.png")
-            success = os.path.isfile(findf)
-            assert success, f"could not find {findf}"
+        # test that the dependency figure for the SEAWAT main exists
+        findf = dep_path / "swt_v4.f.png"
+        assert findf.is_file(), f"could not find {findf}"
 
     assert success, "could not build dependency graphs"
 
-    return
 
-
+@pytest.mark.dependency(name="download")
 @pytest.mark.base
-def test_download():
-    # Remove the existing seawat directory if it exists
-    if os.path.isdir(swtpth):
-        shutil.rmtree(swtpth)
-
-    # download the target
-    pm.download_target(target, download_path=dstpth)
+def test_download(pm, module_tmpdir, target):
+    pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target}"
 
 
+@pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.base
-def test_compile():
+def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
 
+@pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.regression
-@pytest.mark.parametrize("fn", name_files)
-def test_seawat(fn):
-    run_seawat(fn)
+@pytest.mark.parametrize(
+    "namefile",
+    sorted(
+        [
+            "4_hydrocoin/seawat.nam",
+            "5_saltlake/seawat.nam",
+            "2_henry/1_classic_case1/seawat.nam",
+            "2_henry/4_VDF_uncpl_Trans/seawat.nam",
+            "2_henry/5_VDF_DualD_Trans/seawat.nam",
+            "2_henry/6_age_simulation/henry_mod.nam",
+            "2_henry/2_classic_case2/seawat.nam",
+            "2_henry/3_VDF_no_Trans/seawat.nam",
+            "1_box/case1/seawat.nam",
+            "1_box/case2/seawat.nam",
+            "3_elder/seawat.nam",
+        ]
+    ),
+)
+def test_seawat(namefile, workspace, target):
+    namefile_path = workspace / "examples" / namefile
+    edit_namefile(namefile_path)
+
+    success, _ = flopy.run_model(
+        target,
+        os.path.basename(namefile_path),
+        model_ws=os.path.dirname(namefile_path),
+        silent=False,
+    )
+    assert success, f"could not run...{os.path.basename(namefile_path)}"
 
 
+@pytest.mark.dependency(name="graph", depends=["test"])
 @pytest.mark.regression
-def test_dependency_graphs():
-    build_seawat_dependency_graphs()
-
-
-@pytest.mark.base
-@pytest.mark.regression
-def test_clean_up():
-    clean_up()
-
-
-if __name__ == "__main__":
-    test_download()
-    test_compile()
-    for fn in name_files:
-        run_seawat(fn)
-    test_dependency_graphs()
-    test_clean_up()
+def test_dependency_graphs(workspace, prog_data):
+    src_path = workspace / prog_data.srcdir
+    dep_path = workspace / "dependencies"
+    build_seawat_dependency_graphs(src_path, dep_path)
