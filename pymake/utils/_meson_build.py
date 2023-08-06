@@ -16,12 +16,7 @@ from ._compiler_switches import (
     _get_osname,
     _get_prepend,
 )
-from ._file_utils import _get_extra_exclude_files, _get_extrafiles_common_path
-from ._Popen_wrapper import (
-    _process_Popen_command,
-    _process_Popen_communicate,
-    _process_Popen_initialize,
-)
+from ._file_utils import _get_extrafiles_common_path
 
 
 @contextmanager
@@ -197,6 +192,7 @@ def meson_setup(
             os.path.abspath(appdir), os.path.abspath(mesondir)
         )
         command_list.append(f"--libdir={libdir}")
+        command_list.append(f"--bindir={libdir}")
 
         if os.path.isdir(build_dir):
             command_list.append("--wipe")
@@ -208,7 +204,7 @@ def meson_setup(
 
         # evaluate return code
         if returncode != 0:
-            print(f"meson install failed on '{' '.join(command)}'")
+            print(f"meson setup failed on '{command}'")
 
     return returncode
 
@@ -243,7 +239,7 @@ def meson_install(
 
         # evaluate return code
         if returncode != 0:
-            print(f"meson setup failed on '{' '.join(command)}'")
+            print(f"meson install failed on '{command}'")
 
     return returncode
 
@@ -529,9 +525,14 @@ def _create_main_meson_build(
         line = f"project(\n\t'{target}',\n"
         for language in languages:
             line += f"\t'{language}',\n"
-        line += "\tmeson_version: '>= 0.59.0',\n"
+        line += "\tmeson_version: '>= 1.1.0',\n"
         line += "\tdefault_options: [\n\t\t'b_vscrt=static_from_buildtype',\n"
-        line += f"\t\t'optimization={optlevel_int}'\n"
+        line += f"\t\t'optimization={optlevel_int}',\n"
+        line += "\t\t'debug="
+        if debug:
+            line += "true',\n"
+        else:
+            line += "false',\n"
         line += "\t])\n\n"
         f.write(line)
 
