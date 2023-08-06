@@ -17,6 +17,7 @@ from ._compiler_switches import (
     _get_prepend,
 )
 from ._file_utils import _get_extrafiles_common_path
+from .usgsprograms import usgs_program_data
 
 
 @contextmanager
@@ -35,6 +36,7 @@ def _set_directory(path: Path):
     """
     origin = Path().absolute()
     try:
+        Path(path).mkdir(exist_ok=True, parents=True)
         os.chdir(path)
         yield
     finally:
@@ -72,8 +74,8 @@ def meson_build(
         return code
 
     """
-    meson_test_path = os.path.join(mesondir, "meson.build")
-    if os.path.isfile(meson_test_path):
+    meson_test_path = Path(mesondir) / "meson.build"
+    if meson_test_path.is_file():
         # setup meson
         returncode = meson_setup(mesondir, fc=fc, cc=cc, appdir=appdir)
         # build and install executable(s) using meson
@@ -433,6 +435,12 @@ def _create_main_meson_build(
     appdir = os.path.relpath(os.path.dirname(target), mesondir)
     target = os.path.splitext((os.path.basename(target)))[0]
 
+    # get target version number
+    try:
+        target_version = usgs_program_data.get_version(target)
+    except:
+        target_version = None
+
     # get main program file from list of source files
     mainfile = _get_main(srcfiles)
 
@@ -520,11 +528,13 @@ def _create_main_meson_build(
     )
     optlevel_int = int(optlevel.replace("-O", "").replace("/O", ""))
 
-    main_meson_file = os.path.join(mesondir, "meson.build")
+    main_meson_file = Path(mesondir) / "meson.build"
     with open(main_meson_file, "w") as f:
         line = f"project(\n\t'{target}',\n"
         for language in languages:
             line += f"\t'{language}',\n"
+        if target_version is not None:
+            line += f"\tversion: '{target_version}',\n"
         line += "\tmeson_version: '>= 1.1.0',\n"
         line += "\tdefault_options: [\n\t\t'b_vscrt=static_from_buildtype',\n"
         line += f"\t\t'optimization={optlevel_int}',\n"

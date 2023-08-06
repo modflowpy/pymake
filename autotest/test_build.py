@@ -4,9 +4,9 @@ import time
 
 import pytest
 from flaky import flaky
+from modflow_devtools.misc import set_dir
 
 import pymake
-from autotest.conftest import working_directory
 
 RERUNS = 3
 
@@ -20,7 +20,7 @@ targets_make = [
 
 def build_with_makefile(target, path, fc):
     success = True
-    with working_directory(path):
+    with set_dir(path):
         if os.path.isfile("makefile"):
             # wait to delete on windows
             if sys.platform.lower() == "win32":
@@ -55,7 +55,7 @@ def build_with_makefile(target, path, fc):
 @flaky(max_runs=RERUNS)
 @pytest.mark.parametrize("target", targets)
 def test_build(function_tmpdir, target: str) -> None:
-    with working_directory(function_tmpdir):
+    with set_dir(function_tmpdir):
         assert (
             pymake.build_apps(
                 target,
@@ -68,10 +68,10 @@ def test_build(function_tmpdir, target: str) -> None:
 
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
-#@pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
+# @pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
 @pytest.mark.parametrize("target", targets)
 def test_meson_build(function_tmpdir, target: str) -> None:
-    with working_directory(function_tmpdir):
+    with set_dir(function_tmpdir):
         assert (
             pymake.build_apps(
                 target,
