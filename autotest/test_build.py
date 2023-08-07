@@ -96,7 +96,7 @@ def test_makefile_build(function_tmpdir, target: str) -> None:
     pm.dryrun = True
     pm.makeclean = False
 
-    with working_directory(function_tmpdir):
+    with set_dir(function_tmpdir):
         pm.download_target(target)
         assert pm.download, f"could not download {target} distribution"
         assert pm.build() == 0, f"could not compile {target}"
