@@ -46,6 +46,11 @@ jobs:
           compiler: gcc
           version: 11
 
+      - name: Set CXX (temporary)
+        if: runner.os == 'Windows'
+        run: |
+          echo "CXX=g++" >> $GITHUB_ENV
+
       - name: Download examples for pytest runs
         run: |
           .github/common/download-examples.sh

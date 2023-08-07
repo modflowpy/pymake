@@ -1,13 +1,12 @@
 import os
 import shutil
-from platform import system
 from pathlib import Path
+from platform import system
 
 import flopy
 import pytest
 
 import pymake
-
 
 ext = ".exe" if system() == "Windows" else ""
 

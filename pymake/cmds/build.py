@@ -28,7 +28,15 @@ DICT_KEYS = (
     "dryrun",
     "meson",
 )
-COM_ARG_KEYS = ("fc", "cc", "fflags", "cflags", "zip", "keep", "dryrun",)
+COM_ARG_KEYS = (
+    "fc",
+    "cc",
+    "fflags",
+    "cflags",
+    "zip",
+    "keep",
+    "dryrun",
+)
 
 
 def main() -> None:

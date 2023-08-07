@@ -492,7 +492,12 @@ def _create_main_meson_build(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        preprocess = _preprocess_file(srcfiles, meson=True)
+        if _get_osname() == "win32" and fc in ("ifort",):
+            meson_ext_flag = False
+        else:
+            meson_ext_flag = True
+        preprocess = _preprocess_file(srcfiles, meson=meson_ext_flag)
+        print(f"preprocessing: {preprocess}")
         if preprocess:
             if fc == "gfortran":
                 fflags_meson.append("-cpp")
@@ -545,6 +550,8 @@ def _create_main_meson_build(
             line += "true',\n"
         else:
             line += "false',\n"
+        if target in ("mf6", "libmf6", "zbud6"):
+            line += "\t\t'fortran_std=f2008'\n"
         line += "\t])\n\n"
         f.write(line)
 
@@ -629,10 +636,17 @@ def _create_main_meson_build(
                 f.write(line)
 
         # add build command
-        line = (
-            f"executable('{target}', sources{include_text}"
-            + f", install: true, install_dir: '{appdir}')\n\n"
-        )
+        if sharedobject:
+            line = (
+                f"library('{target}', sources{include_text}"
+                + ", install: true, name_prefix: '', "
+                + f"install_dir: '{appdir}')\n\n"
+            )
+        else:
+            line = (
+                f"executable('{target}', sources{include_text}"
+                + f", install: true, install_dir: '{appdir}')\n\n"
+            )
         f.write(line)
 
     return main_meson_file, fc_meson, cc_meson

@@ -1,6 +1,6 @@
 import os
-from platform import system
 from pathlib import Path
+from platform import system
 
 import flopy
 import pytest
