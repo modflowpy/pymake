@@ -529,6 +529,8 @@ def _create_main_meson_build(
     optlevel_int = int(optlevel.replace("-O", "").replace("/O", ""))
 
     main_meson_file = Path(mesondir) / "meson.build"
+    if verbose:
+        print(f"Creating main meson.build file {main_meson_file}")
     with open(main_meson_file, "w") as f:
         line = f"project(\n\t'{target}',\n"
         for language in languages:
@@ -609,7 +611,7 @@ def _create_main_meson_build(
 
         # get list of include directories
         include_text = ""
-        if "cpp" in languages:
+        if "cpp" in languages or "c" in languages:
             include_dirs = []
             for key, value in source_path_dict.items():
                 for root, dirs, files in os.walk(value):

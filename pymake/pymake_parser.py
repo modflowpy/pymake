@@ -167,7 +167,7 @@ def _get_standard_arg_dict():
             "action": "store_true",
         },
         "makefiledir": {
-            "tag": ("-md", "--makefile-dir"),
+            "tag": ("-md", "--makefiledir"),
             "help": "GNU make makefile directory. (default is '.')",
             "default": ".",
             "choices": None,
@@ -256,14 +256,14 @@ def _get_standard_arg_dict():
             "action": "store_true",
         },
         "meson": {
-            "tag": ("--mb", "--meson-build"),
+            "tag": ("--meson",),
             "help": """Use meson to build executable. (default is False)""",
             "default": False,
             "choices": None,
             "action": "store_true",
         },
         "mesondir": {
-            "tag": ("-mbd", "--mesonbuild-dir"),
+            "tag": ("--mesondir",),
             "help": "meson directory. (default is '.')",
             "default": ".",
             "choices": None,
