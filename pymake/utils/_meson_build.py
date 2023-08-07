@@ -434,6 +434,7 @@ def _create_main_meson_build(
     """
     appdir = os.path.relpath(os.path.dirname(target), mesondir)
     target = os.path.splitext((os.path.basename(target)))[0]
+    osname = _get_osname()
 
     # get target version number
     try:
@@ -492,12 +493,11 @@ def _create_main_meson_build(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        if _get_osname() == "win32" and fc in ("ifort",):
+        if osname == "win32" and fc in ("ifort",):
             meson_ext_flag = False
         else:
             meson_ext_flag = True
         preprocess = _preprocess_file(srcfiles, meson=meson_ext_flag)
-        print(f"preprocessing: {preprocess}")
         if preprocess:
             if fc == "gfortran":
                 fflags_meson.append("-cpp")
