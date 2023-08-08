@@ -364,20 +364,6 @@ def _get_fortran_flags(
                 ]
                 if double:
                     flags += ["r8", "autodouble"]
-        elif fc in ("ftn",):
-            if osname in ("win32", "darwin"):
-                raise ValueError(f"ftn compiler not supported on {osname}")
-            else:
-                if sharedobject:
-                    flags.append("f PIC")
-                else:
-                    if "f PIC" in flags:
-                        flags.remove("f PIC")
-                if debug:
-                    flags += ["g"]
-                flags += ["h noheap_allocate"]
-                if double:
-                    flags += ["s default64"]
 
         # process passed fortran flags - check for flags with a space between
         # the flag and a setting
@@ -659,7 +645,6 @@ def _get_linker_flags(
             if fc in (
                 "ifort",
                 "mpiifort",
-                "ftn",
             ):
                 gnu_compiler = False
         else:
