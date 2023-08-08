@@ -63,8 +63,8 @@ def main() -> None:
             verbose=args.verbose,
             inplace=args.inplace,
             networkx=args.networkx,
-            meson=args.mb,
-            mesondir=args.mesonbuild_dir,
+            meson=args.meson,
+            mesondir=args.mesondir,
         )
     except (EOFError, KeyboardInterrupt):
         sys.exit(f" cancelling '{sys.argv[0]}'")

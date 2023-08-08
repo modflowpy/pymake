@@ -15,17 +15,6 @@ pytest_plugins = ["modflow_devtools.fixtures"]
 
 
 # misc utilities
-@contextlib.contextmanager
-def working_directory(path):
-    """Changes working directory and returns to previous on exit."""
-    prev_cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(prev_cwd)
-
-
 def get_pymake_appdir():
     appdir = Path.home() / ".pymake"
     appdir.mkdir(parents=True, exist_ok=True)

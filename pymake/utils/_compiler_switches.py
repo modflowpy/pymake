@@ -308,6 +308,23 @@ def _get_fortran_flags(
                     flags.append("ffpe-summary=overflow")
                 if _check_gnu_switch_available("-ffpe-trap"):
                     flags.append("ffpe-trap=overflow,zero,invalid")
+                if target in ("mf6", "libmf6", "zbud6"):
+                    if _check_gnu_switch_available("-fall-intrinsics"):
+                        flags.append("fall-intrinsics")
+                    if _check_gnu_switch_available("-pedantic"):
+                        flags.append("pedantic")
+                    if _check_gnu_switch_available("-Wcharacter-truncation"):
+                        flags.append("Wcharacter-truncation")
+                    if _check_gnu_switch_available(
+                        "-Wno-unused-dummy-argument"
+                    ):
+                        flags.append("Wno-unused-dummy-argument")
+                    if _check_gnu_switch_available("-Wno-intrinsic-shadow"):
+                        flags.append("Wno-intrinsic-shadow")
+                    if _check_gnu_switch_available("-Wno-maybe-uninitialized"):
+                        flags.append("Wno-maybe-uninitialized")
+                    if _check_gnu_switch_available("-Wno-uninitialized"):
+                        flags.append("Wno-uninitialized")
             if double:
                 flags += ["fdefault-real-8", "fdefault-double-8"]
             # define the OS macro for gfortran
@@ -316,7 +333,15 @@ def _get_fortran_flags(
                 flags.append(os_macro)
         elif fc in ["ifort", "mpiifort"]:
             if osname == "win32":
-                flags += ["heap-arrays:0", "fpe:0", "traceback", "nologo"]
+                flags += [
+                    "heap-arrays:0",
+                    "fpe:0",
+                    "traceback",
+                    "nologo",
+                    "Qdiag-disable:7416",
+                    "Qdiag-disable:7025",
+                    "Qdiag-disable:5268",
+                ]
                 if debug:
                     flags += ["debug:full", "Zi"]
                 if double:
@@ -329,7 +354,14 @@ def _get_fortran_flags(
                         flags.remove("fPIC")
                 if debug:
                     flags += ["g"]
-                flags += ["no-heap-arrays", "fpe0", "traceback"]
+                flags += [
+                    "no-heap-arrays",
+                    "fpe0",
+                    "traceback",
+                    "Qdiag-disable:7416",
+                    "Qdiag-disable:7025",
+                    "Qdiag-disable:5268",
+                ]
                 if double:
                     flags += ["r8", "autodouble"]
         elif fc in ("ftn",):

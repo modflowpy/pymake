@@ -16,12 +16,8 @@ from ._compiler_switches import (
     _get_osname,
     _get_prepend,
 )
-from ._file_utils import _get_extra_exclude_files, _get_extrafiles_common_path
-from ._Popen_wrapper import (
-    _process_Popen_command,
-    _process_Popen_communicate,
-    _process_Popen_initialize,
-)
+from ._file_utils import _get_extrafiles_common_path
+from .usgsprograms import usgs_program_data
 
 
 @contextmanager
@@ -40,6 +36,7 @@ def _set_directory(path: Path):
     """
     origin = Path().absolute()
     try:
+        Path(path).mkdir(exist_ok=True, parents=True)
         os.chdir(path)
         yield
     finally:
@@ -77,8 +74,8 @@ def meson_build(
         return code
 
     """
-    meson_test_path = os.path.join(mesondir, "meson.build")
-    if os.path.isfile(meson_test_path):
+    meson_test_path = Path(mesondir) / "meson.build"
+    if meson_test_path.is_file():
         # setup meson
         returncode = meson_setup(mesondir, fc=fc, cc=cc, appdir=appdir)
         # build and install executable(s) using meson
@@ -197,6 +194,7 @@ def meson_setup(
             os.path.abspath(appdir), os.path.abspath(mesondir)
         )
         command_list.append(f"--libdir={libdir}")
+        command_list.append(f"--bindir={libdir}")
 
         if os.path.isdir(build_dir):
             command_list.append("--wipe")
@@ -208,7 +206,7 @@ def meson_setup(
 
         # evaluate return code
         if returncode != 0:
-            print(f"meson install failed on '{' '.join(command)}'")
+            print(f"meson setup failed on '{command}'")
 
     return returncode
 
@@ -243,7 +241,7 @@ def meson_install(
 
         # evaluate return code
         if returncode != 0:
-            print(f"meson setup failed on '{' '.join(command)}'")
+            print(f"meson install failed on '{command}'")
 
     return returncode
 
@@ -436,6 +434,13 @@ def _create_main_meson_build(
     """
     appdir = os.path.relpath(os.path.dirname(target), mesondir)
     target = os.path.splitext((os.path.basename(target)))[0]
+    osname = _get_osname()
+
+    # get target version number
+    try:
+        target_version = usgs_program_data.get_version(target)
+    except:
+        target_version = None
 
     # get main program file from list of source files
     mainfile = _get_main(srcfiles)
@@ -488,7 +493,11 @@ def _create_main_meson_build(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        preprocess = _preprocess_file(srcfiles, meson=True)
+        if osname == "win32" and fc in ("ifort",):
+            meson_ext_flag = False
+        else:
+            meson_ext_flag = True
+        preprocess = _preprocess_file(srcfiles, meson=meson_ext_flag)
         if preprocess:
             if fc == "gfortran":
                 fflags_meson.append("-cpp")
@@ -524,14 +533,25 @@ def _create_main_meson_build(
     )
     optlevel_int = int(optlevel.replace("-O", "").replace("/O", ""))
 
-    main_meson_file = os.path.join(mesondir, "meson.build")
+    main_meson_file = Path(mesondir) / "meson.build"
+    if verbose:
+        print(f"Creating main meson.build file {main_meson_file}")
     with open(main_meson_file, "w") as f:
         line = f"project(\n\t'{target}',\n"
         for language in languages:
             line += f"\t'{language}',\n"
-        line += "\tmeson_version: '>= 0.59.0',\n"
+        if target_version is not None:
+            line += f"\tversion: '{target_version}',\n"
+        line += "\tmeson_version: '>= 1.1.0',\n"
         line += "\tdefault_options: [\n\t\t'b_vscrt=static_from_buildtype',\n"
-        line += f"\t\t'optimization={optlevel_int}'\n"
+        line += f"\t\t'optimization={optlevel_int}',\n"
+        line += "\t\t'debug="
+        if debug:
+            line += "true',\n"
+        else:
+            line += "false',\n"
+        if target in ("mf6", "libmf6", "zbud6"):
+            line += "\t\t'fortran_std=f2008'\n"
         line += "\t])\n\n"
         f.write(line)
 
@@ -598,7 +618,7 @@ def _create_main_meson_build(
 
         # get list of include directories
         include_text = ""
-        if "cpp" in languages:
+        if "cpp" in languages or "c" in languages:
             include_dirs = []
             for key, value in source_path_dict.items():
                 for root, dirs, files in os.walk(value):
@@ -616,10 +636,17 @@ def _create_main_meson_build(
                 f.write(line)
 
         # add build command
-        line = (
-            f"executable('{target}', sources{include_text}"
-            + f", install: true, install_dir: '{appdir}')\n\n"
-        )
+        if sharedobject:
+            line = (
+                f"library('{target}', sources{include_text}"
+                + ", install: true, name_prefix: '', "
+                + f"install_dir: '{appdir}')\n\n"
+            )
+        else:
+            line = (
+                f"executable('{target}', sources{include_text}"
+                + f", install: true, install_dir: '{appdir}')\n\n"
+            )
         f.write(line)
 
     return main_meson_file, fc_meson, cc_meson

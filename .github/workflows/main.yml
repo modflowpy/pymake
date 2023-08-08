@@ -37,7 +37,8 @@ jobs:
 
       - name: Set CXX (temporary)
         if: runner.os == 'Windows'
-        run: echo "CXX=icl" >> $GITHUB_ENV
+        run: |
+          echo "CXX=icl" >> $GITHUB_ENV
 
       - name: Setup Graphviz
         if: runner.os == 'Linux'

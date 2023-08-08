@@ -1,14 +1,21 @@
 import os
+import pathlib as pl
 import subprocess
 
 import pytest
 from flaky import flaky
+from modflow_devtools.misc import set_dir
 
 RERUNS = 3
 
 targets = (
     "triangle",
     "crt",
+)
+
+meson_parm = (
+    True,
+    False,
 )
 
 
@@ -35,12 +42,12 @@ def run_cli_cmd(cmd: list) -> None:
 @pytest.mark.dependency(name="make_program")
 @pytest.mark.base
 @pytest.mark.parametrize("target", targets)
-def test_make_program(module_tmpdir, target: str) -> None:
+def test_make_program(function_tmpdir, target: str) -> None:
     cmd = [
         "make-program",
         target,
         "--appdir",
-        str(module_tmpdir),
+        str(function_tmpdir),
         "--verbose",
     ]
     run_cli_cmd(cmd)
@@ -60,33 +67,36 @@ def test_make_program_all(module_tmpdir) -> None:
     run_cli_cmd(cmd)
 
 
+@flaky(max_runs=RERUNS)
 @pytest.mark.dependency(name="mfpymake")
 @pytest.mark.base
-def test_mfpymake(module_tmpdir) -> None:
-    src = (
-        "program hello\n"
-        + "  ! This is a comment line; it is ignored by the compiler\n"
-        + "  print *, 'Hello, World!'\n"
-        + "end program hello\n"
-    )
-    src_file = module_tmpdir / "mfpymake_src" / "hello.f90"
-    src_file.parent.mkdir(parents=True, exist_ok=True)
-    with open(src_file, "w") as f:
-        f.write(src)
-    cmd = [
-        "mfpymake",
-        str(src_file.parent),
-        "hello",
-        "-mc",
-        "--verbose",
-        "--appdir",
-        str(module_tmpdir),
-        "-fc",
-    ]
-    if os.environ.get("FC") is None:
-        cmd.append("gfortran")
-    else:
-        cmd.append(os.environ.get("FC"))
-    run_cli_cmd(cmd)
-    cmd = [module_tmpdir / "hello"]
-    run_cli_cmd(cmd)
+@pytest.mark.parametrize("meson", meson_parm)
+def test_mfpymake(function_tmpdir, meson: bool) -> None:
+    with set_dir(function_tmpdir):
+        src = (
+            "program hello\n"
+            + "  ! This is a comment line; it is ignored by the compiler\n"
+            + "  print *, 'Hello, World!'\n"
+            + "end program hello\n"
+        )
+        src_file = pl.Path("src/hello.f90")
+        src_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(src_file, "w") as f:
+            f.write(src)
+        cmd = [
+            "mfpymake",
+            str(src_file.parent),
+            "hello",
+            # "-mc",
+            "--verbose",
+            "-fc",
+        ]
+        if os.environ.get("FC") is None:
+            cmd.append("gfortran")
+        else:
+            cmd.append(os.environ.get("FC"))
+        if meson:
+            cmd.append("--meson")
+        run_cli_cmd(cmd)
+        cmd = [function_tmpdir / "hello"]
+        run_cli_cmd(cmd)

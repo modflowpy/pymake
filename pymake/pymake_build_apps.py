@@ -197,7 +197,7 @@ def build_apps(
 
         # set double precision flag and whether the executable name
         # can be modified
-        if target in ["swtv4"]:
+        if target in ("swtv4",):
             update_target_name = False
         else:
             update_target_name = True
@@ -214,7 +214,7 @@ def build_apps(
             pmobj.inplace = True
 
         # set target and srcdir
-        pmobj.target = target
+        pmobj.target = target.replace("dev", "")
         pmobj.srcdir = os.path.join(
             download_dir, code_dict[target].dirname, code_dict[target].srcdir
         )

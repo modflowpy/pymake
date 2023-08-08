@@ -184,7 +184,7 @@ def main(
             inplace = True
             print(
                 f"Using meson to build {os.path.basename(target)}, "
-                + "ressetting inplace to True"
+                + "resetting inplace to True"
             )
 
     if srcdir is not None and target is not None:
