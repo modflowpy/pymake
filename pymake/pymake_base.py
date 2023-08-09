@@ -1621,22 +1621,6 @@ def _create_makefile(
         line += f"\t\tFFLAGS ?= {' '.join(tfflags)}\n"
         line += "\t\tMODSWITCH = -module $(MODDIR)\n"
         line += "\tendif\n"
-        line += "\tifeq ($(FC), $(filter $(FC), ftn))\n"
-        tfflags = _get_fortran_flags(
-            target,
-            "ftn",
-            [],
-            debug,
-            double,
-            osname="linux",
-            sharedobject=sharedobject,
-            verbose=verbose,
-        )
-        for idx, flag in enumerate(tfflags):
-            if "-D__" in flag:
-                tfflags[idx] = "$(OS_macro)"
-        line += f"\t\tFFLAGS ?= {' '.join(tfflags)}\n"
-        line += "\tendif\n"
         line += "endif\n\n"
         f.write(line)
 
@@ -1812,20 +1796,6 @@ def _create_makefile(
             target,
             "ifort",
             "icc",
-            [],
-            srcfiles,
-            osname="linux",
-            sharedobject=sharedobject,
-            verbose=verbose,
-        )
-        line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
-        line += "\tendif\n"
-        # ftn compiler
-        line += "\tifeq ($(FC), $(filter $(FC), ftn))\n"
-        _, tsyslibs = _get_linker_flags(
-            target,
-            "ftn",
-            "clang",
             [],
             srcfiles,
             osname="linux",

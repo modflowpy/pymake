@@ -49,7 +49,6 @@ def _get_standard_arg_dict():
                 "ifort",
                 "mpiifort",
                 "gfortran",
-                "ftn",
                 "none",
             ],
             "action": None,

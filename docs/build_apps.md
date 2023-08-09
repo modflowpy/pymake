@@ -6,19 +6,20 @@ and options can be determined by executing:
 
 ```console
 $ make-program --help
+
 usage: make-program [-h] [--release_precision]
-                    [-fc {ifort,mpiifort,gfortran,ftn,none}]
-                    [-cc {gcc,clang,clang++,icc,icx,icl,mpiicc,g++,cl,none}]
-                    [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep]
-                    [--zip ZIP]
+                    [-fc {ifort,mpiifort,gfortran,none}]
+                    [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dr]
+                    [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep]
+                    [--zip ZIP] [--meson]
                     targets
 
 Download and build USGS MODFLOW and related programs.
 
 positional arguments:
-  targets               Program(s) to build. Options: crt, gridgen, gsflow,
-                        libmf6, mf2000, mf2005, mf6, mflgr, mfnwt, mfusg, mp6,
-                        mp7, mt3dms, mt3dusgs, prms, sutra, swtv4, triangle,
+  targets               Program(s) to build. Options: crt, gridgen, libmf6,
+                        mf2000, mf2005, mf6, mflgr, mfnwt, mfusg, mfusg_gsi,
+                        mp6, mp7, mt3dms, mt3dusgs, sutra, swtv4, triangle,
                         vs2dt, zbud6, zonbud3, zonbudusg, :. Specifying the
                         target to be ':' will build all of the programs.
 
@@ -29,9 +30,9 @@ optional arguments:
                         precision version of the program for programs where
                         the standard_switch and double_switch in
                         usgsprograms.txt is True. default is True.
-  -fc {ifort,mpiifort,gfortran,ftn,none}
+  -fc {ifort,mpiifort,gfortran,none}
                         Fortran compiler to use. (default is gfortran)
-  -cc {gcc,clang,clang++,icc,icx,icl,mpiicc,g++,cl,none}
+  -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
                         C/C++ compiler to use. (default is gcc)
   -dr, --dryrun         Do not actually compile. Files will be deleted, if
                         --makeclean is used. Does not work yet for ifort.
@@ -53,6 +54,7 @@ optional arguments:
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)
   --zip ZIP             Zip built executable. (default is False)
+  --meson               Use meson to build executable. (default is False)
 
 Examples:
 
@@ -64,6 +66,7 @@ Examples:
 
   Download and compile all programs in the ./temp subdirectory:
     $ make-program : --appdir temp
+
 ```
 
 `make-program` can be used to build MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000,
