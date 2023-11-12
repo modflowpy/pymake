@@ -57,7 +57,6 @@ test = [
     "pytest-cov",
     "pytest-dependency",
     "pytest-dotenv",
-    "pytest-virtualenv",
     "pytest-xdist",
     "appdirs",
     "matplotlib",
