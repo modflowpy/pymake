@@ -57,8 +57,9 @@ docs/_build/
 # PyBuilder
 target/
 
-# PyCharm
+# IDEs
 .idea/
+.vscode/
 
 # files in the autotest directory
 autotest/temp*/
@@ -73,3 +74,5 @@ Dependencies
 # files in the doc directory
 docs/source/
 
+# local python environments
+venv/
