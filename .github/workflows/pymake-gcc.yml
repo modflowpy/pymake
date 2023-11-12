@@ -19,17 +19,17 @@ jobs:
       matrix:
         include:
           # test latest gcc and python
-          - {os: ubuntu-latest, gcc: 13, python: "3.11"}
-          - {os: windows-latest, gcc: 12, python: "3.11"}
-          - {os: macos-latest, gcc: 13, python: "3.11"}
+          - {os: ubuntu-latest, gcc: 13, python: "3.12"}
+          - {os: windows-latest, gcc: 13, python: "3.12"}
+          - {os: macos-latest, gcc: 13, python: "3.12"}
           # test latest gcc and previous python
           - {os: ubuntu-latest, gcc: 13, python: "3.11"}
           - {os: ubuntu-latest, gcc: 13, python: "3.10"}
           - {os: ubuntu-latest, gcc: 13, python: 3.9}
           - {os: ubuntu-latest, gcc: 13, python: 3.8}
           # test latest python and previous gcc
-          - {os: ubuntu-latest, gcc: 12, python: "3.11"}
-          - {os: ubuntu-latest, gcc: 11, python: "3.11"}
+          - {os: ubuntu-latest, gcc: 12, python: "3.12"}
+          - {os: ubuntu-latest, gcc: 11, python: "3.12"}
     defaults:
       run:
         shell: bash
@@ -53,7 +53,7 @@ jobs:
           pip install ".[test]"
 
       - name: Setup GNU Fortran
-        uses: awvwgk/setup-fortran@v1
+        uses: fortran-lang/setup-fortran@v1
         with:
           compiler: gcc
           version: ${{ matrix.gcc }}
