@@ -4,8 +4,6 @@ on:
   schedule:
     - cron: '0 3 * * 3' # run at 3 AM UTC every Wednesday
   push:
-    branches: 
-      - master
   pull_request:
     branches:
       - master
@@ -24,7 +22,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Setup Graphviz
         uses: ts-graphviz/setup-graphviz@v1
@@ -76,7 +74,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Upgrade pip and install build and twine
         run: |

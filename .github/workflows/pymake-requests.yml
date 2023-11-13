@@ -4,8 +4,6 @@ on:
   schedule:
     - cron: '0 7 * * *' # run at 7 AM UTC every day
   push:
-    branches: 
-      - master
   pull_request:
     branches:
       - master
@@ -25,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install python packages
         run: |
