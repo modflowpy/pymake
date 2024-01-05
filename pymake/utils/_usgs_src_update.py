@@ -390,6 +390,32 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
             f.write(line)
         f.close()
 
+    tag = "FORM = 'BINARY',"
+    tag2 = "FORM = FORMC,"
+    fpth = pl.Path(srcdir) / "gwt2dptu1.f"
+    if fpth.exists():
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, "w")
+        for idx, line in enumerate(lines):
+            if tag in line:
+                line = line.replace(tag, tag2)
+            f.write(line)
+        f.close()
+
+    tag = "FORM = 'BINARY',"
+    tag2 = "FORM = FORM,"
+    fpth = pl.Path(srcdir) / "glo2btnu1.f"
+    if fpth.exists():
+        with open(fpth) as f:
+            lines = f.readlines()
+        f = open(fpth, "w")
+        for idx, line in enumerate(lines):
+            if tag in line:
+                line = line.replace(tag, tag2)
+            f.write(line)
+        f.close()
+
     # rename "utl7u1 RD.f" to "utl7u1_RD.f"
     fpth = pl.Path(srcdir) / "utl7u1 RD.f"
     if fpth.exists():
