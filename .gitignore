@@ -76,3 +76,6 @@ docs/source/
 
 # local python environments
 venv/
+
+# mac files
+**/.DS_Store

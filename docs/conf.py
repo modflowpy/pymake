@@ -36,7 +36,7 @@ author = "Joseph D. Hughes"
 # The version.
 version = __version__
 release = __version__
-language = None
+language = "en"
 
 
 # -- General configuration ---------------------------------------------------
@@ -59,7 +59,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "nbsphinx",
     "nbsphinx_link",
-    "recommonmark",
+    "myst_parser",
 ]
 
 
@@ -106,7 +106,7 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_rtd_theme"
+html_theme = "pydata_sphinx_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -129,7 +129,7 @@ html_context = {
 }
 
 html_css_files = [
-    "css/custom.css",
+    "custom.css",
 ]
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
