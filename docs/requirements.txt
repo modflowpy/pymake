@@ -9,3 +9,4 @@ nbsphinx_link
 Ipython
 ipykernel
 pydata-sphinx-theme
+myst_parser
