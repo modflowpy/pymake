@@ -32,7 +32,7 @@ jobs:
 
       - name: Setup Graphviz
         if: runner.os == 'Linux'
-        uses: ts-graphviz/setup-graphviz@v1
+        uses: ts-graphviz/setup-graphviz@v2
 
       - name: Set up Python
         uses: actions/setup-python@v5
