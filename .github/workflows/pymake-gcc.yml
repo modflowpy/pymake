@@ -38,7 +38,7 @@ jobs:
 
       - name: Setup Graphviz on Linux
         if: runner.os == 'Linux'
-        uses: ts-graphviz/setup-graphviz@v1
+        uses: ts-graphviz/setup-graphviz@v2
 
       - name: Setup Python
         uses: actions/setup-python@v5
