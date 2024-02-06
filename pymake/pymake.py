@@ -52,7 +52,6 @@ MODFLOW 6 was built.
 
 """
 
-
 import argparse
 import os
 import shutil

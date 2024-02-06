@@ -24,6 +24,7 @@ USGS applications are built if no list is passed to
 :code:`pymake.build_apps()`.
 
 """
+
 import os
 import shutil
 import sys

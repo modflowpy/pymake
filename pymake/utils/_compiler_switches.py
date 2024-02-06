@@ -1,6 +1,7 @@
 """Private functions for setting c/c++ and fortran compiler flags and
 appropriate linker flags for defined targets.
 """
+
 import os
 import sys
 

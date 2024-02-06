@@ -54,7 +54,6 @@ test = [
     "filelock",
     "pytest",
     "pytest-benchmark",
-    "pytest-cases",
     "pytest-cov",
     "pytest-dependency",
     "pytest-dotenv",

@@ -39,6 +39,7 @@ The script could be run from the command line using:
     python myscript.py ../src myapp -fc=ifort -cc=icc
 
 """
+
 import inspect
 import os
 import pathlib as pl
