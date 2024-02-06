@@ -10,6 +10,7 @@
 4. compress all files in a list, files in a list of directories
 
 """
+
 import os
 import pathlib as pl
 import shutil

@@ -3,6 +3,7 @@ used to determine the order of dependencies in source code and determine
 compiling order.  Topological sort pseudocode based on:
 https://en.wikipedia.org/wiki/Topological_sorting
 """
+
 __author__ = "Christian D. Langevin"
 __date__ = "March 20, 2014"
 __version__ = "1.0.0"
