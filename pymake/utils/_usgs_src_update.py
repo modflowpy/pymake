@@ -881,6 +881,7 @@ def _update_mf6_external_dependencies(
         "Utilities/Matrix/PetscMatrix.F90",
         "Solution/PETSc/PetscSolver.F90",
         "Solution/PETSc/PetscConvergence.F90",
+        "Solution/PETSc//PetscImsPreconditioner.F90",
         "Distributed/MpiMessageBuilder.f90",
         "Distributed/MpiRouter.f90",
         "Distributed/MpiRunControl.F90",

@@ -12,14 +12,11 @@ import pymake
 
 # set fpth based on current path
 if os.path.basename(os.path.normpath(os.getcwd())) == "autotest":
-    fpth = os.path.abspath(
-        os.path.join("temp", "mf6examples", "mf6examples.txt")
-    )
+    fpth = Path("temp")
 else:
-    fpth = os.path.abspath(
-        os.path.join("autotest", "temp", "mf6examples", "mf6examples.txt")
-    )
-if os.path.isfile(fpth):
+    fpth = Path("autotest/temp")
+fpth = (fpth / "mf6examples/mf6examples.txt").resolve()
+if fpth.is_file():
     with open(fpth) as f:
         lines = f.read().splitlines()
     sim_dirs = [line for line in lines if len(line) > 0]
