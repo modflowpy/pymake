@@ -1,6 +1,6 @@
 __author__ = "Joseph D. Hughes"
-__date__ = "July 5, 2023"
-__version__ = "1.2.9.dev0"
+__date__ = "February 11, 2024"
+__version__ = "1.2.9"
 __maintainer__ = "Joseph D. Hughes"
 __email__ = "jdhughes@usgs.gov"
 __status__ = "Production"
