@@ -165,6 +165,6 @@ def modify_gsflow_sagehen(temp_pth):
 
 
 if __name__ == "__main__":
-    # mf6pth = download_mf6_examples(verbose=True)
-    # examples_list(verbose=True)
+    mf6pth = download_mf6_examples(verbose=True)
+    examples_list(verbose=True)
     gsflowpth = download_gsflow_examples(verbose=True)

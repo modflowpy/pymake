@@ -271,15 +271,21 @@ def main(
         if not meson:
             if _get_osname() == "win32":
                 if fc is not None:
-                    if fc in ["ifort", "mpiifort"]:
+                    if fc in (
+                        "ifort",
+                        "mpiifort",
+                    ):
                         intelwin = True
                 if cc is not None:
-                    if cc in ["cl", "icl"]:
+                    if cc in (
+                        "cl",
+                        "icl",
+                    ):
                         intelwin = True
 
         # update openspec files based on intelwin
         if not intelwin:
-            _create_openspec(srcfiles, verbose)
+            _create_openspec(intelwin, srcfiles, verbose)
 
         # compile the executable
         if meson:
@@ -666,13 +672,20 @@ def _clean_temp_files(
     return
 
 
-def _create_openspec(srcfiles, verbose):
+def _create_openspec(intelwin, srcfiles, verbose):
     """Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
     STREAM ACCESS. This is specific to MODFLOW and MT3D based targets. Source
     directories are scanned and files defining file access are replaced.
 
     Parameters
     ----------
+    intelwin : bool
+        boolean indicating if source files are being built on Windows using
+        intel compilers.
+    srcfiles : list
+        list of source files to be compiled
+    verbose: bool
+        boolean indicating if output will be printed to the terminal
 
     Returns
     -------
@@ -697,11 +710,18 @@ def _create_openspec(srcfiles, verbose):
                 if verbose:
                     print(f'replacing..."{fpth}"')
                 f = open(fpth, "w")
+                if intelwin:
+                    data_access = "SEQUENTIAL"
+                    data_form = "BINARY"
+                else:
+                    data_access = "STREAM"
+                    data_form = "UNFORMATTED"
+
                 line = (
                     "c -- created by pymake_base.py\n"
                     + "      CHARACTER*20 ACCESS,FORM,ACTION(2)\n"
-                    + "      DATA ACCESS/'STREAM'/\n"
-                    + "      DATA FORM/'UNFORMATTED'/\n"
+                    + f"      DATA ACCESS/'{data_access}'/\n"
+                    + f"      DATA FORM/'{data_form}'/\n"
                     + "      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/\n"
                     + "c -- end of include file\n"
                 )
