@@ -727,7 +727,6 @@ def _create_openspec(intelwin, srcfiles, verbose):
                 )
                 f.write(line)
                 f.close()
-    return
 
 
 def _check_out_of_date(srcfile, objfile):
