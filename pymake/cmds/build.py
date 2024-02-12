@@ -60,6 +60,9 @@ Examples:
   Download and compile triangle in the ./temp subdirectory:
     $ {prog} triangle --appdir temp
 
+  Download and compile double precision versions of mf2005 and mfusg 
+    $ {prog} mf2005,mfusg --precision double
+
   Download and compile all programs in the ./temp subdirectory:
     $ {prog} : --appdir temp
     """
@@ -75,16 +78,16 @@ Examples:
         "Program(s) to build. Options:\n  "
         + ", ".join(all_targets)
         + ". Specifying the target to be ':' will "
-        + "build all of the programs."
+        + "build all of the programs. Multiple targets can be specified "
+        + "by separating individual targets by a comma (i.e., mf6,zbud6)."
     )
 
-    release_precision_help = (
-        "If release_precision is False, then the "
-        + "release precision version will be compiled "
-        + "along with a double precision version of "
-        + "the program for programs where the standard_"
-        + "switch and double_switch in "
-        + "usgsprograms.txt is True. default is True."
+    precision_help = (
+        "If precision is 'default', then the default precision version of "
+        + "the program will be compiled (this could be a single or double "
+        + "precision version). If precision is 'double', a double precision "
+        + "version will be compiled using compiler switches. default is "
+        + "`default`."
     )
 
     # command line arguments specific to make-program
@@ -96,12 +99,15 @@ Examples:
             "choices": None,
             "action": None,
         },
-        "release_precision": {
-            "tag": ("--release_precision",),
-            "help": release_precision_help,
-            "default": False,
-            "choices": None,
-            "action": "store_true",
+        "precision": {
+            "tag": ("--precision",),
+            "help": precision_help,
+            "default": "default",
+            "choices": [
+                "default",
+                "double",
+            ],
+            "action": None,
         },
     }
 

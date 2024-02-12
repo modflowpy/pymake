@@ -41,7 +41,7 @@ def build_apps(
     download_dir=None,
     appdir=None,
     verbose=None,
-    release_precision=True,
+    precision="default",
     meson=False,
     mesondir=".",
     clean=True,
@@ -59,12 +59,12 @@ def build_apps(
         download directory path
     appdir : str
         target path
-    release_precision : bool
-        boolean indicating if only the release precision version should be
-        build. If release_precision is False, then the release precision
-        version will be compiled along with a double precision version of
-        the program for programs where the standard_switch and double_switch
-        in usgsprograms.txt is True. default is True.
+    precision : str
+        string indicating if the default precision version should be built.
+        If precision is 'default', then the default precision version of
+        the program will be compiled (this could be a single or double
+        precision version). If precision is 'double', a double precision
+        version will be compiled using compiler switches. default is `default`.
     meson : bool
         boolean indicating that the executable should be built using the
         meson build system. (default is False)
@@ -92,7 +92,7 @@ def build_apps(
         targets = usgs_program_data.get_keys(current=True)
     else:
         if isinstance(targets, str):
-            targets = [targets]
+            targets = targets.split(",")
 
     code_dict = {}
 
@@ -221,16 +221,24 @@ def build_apps(
         )
 
         # determine if single, double, or both should be built
-        precision = usgs_program_data.get_precision(target)
+        prog_precision = usgs_program_data.get_precision(target)
 
         # just build the first precision in precision list if
         # standard_precision is True
-        if release_precision:
-            precision = precision[0:1]
+        if precision != "default":
+            prog_precision = [precision]
 
-        for double in precision:
+        for precision_str in prog_precision:
             # set double flag
-            pmobj.double = double
+            if precision_str == "default":
+                pmobj.double = False
+            elif precision_str == "double":
+                pmobj.double = True
+            else:
+                ValueError(
+                    f"precision ({precision_str}) must be "
+                    + "'single' or 'double'."
+                )
 
             # determine if the target should be built
             build_target = pmobj.set_build_target_bool(

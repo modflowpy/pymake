@@ -7,7 +7,7 @@ and options can be determined by executing:
 ```console
 $ make-program --help
 
-usage: make-program [-h] [--release_precision]
+usage: make-program [-h] [--precision {default,double}]
                     [-fc {ifort,mpiifort,gfortran,none}]
                     [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dr]
                     [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep]
@@ -17,19 +17,23 @@ usage: make-program [-h] [--release_precision]
 Download and build USGS MODFLOW and related programs.
 
 positional arguments:
-  targets               Program(s) to build. Options: crt, gridgen, libmf6,
-                        mf2000, mf2005, mf6, mflgr, mfnwt, mfusg, mfusg_gsi,
-                        mp6, mp7, mt3dms, mt3dusgs, sutra, swtv4, triangle,
-                        vs2dt, zbud6, zonbud3, zonbudusg, :. Specifying the
-                        target to be ':' will build all of the programs.
+  targets               Program(s) to build. Options: crt, gridgen, gsflow,
+                        libmf6, mf2000, mf2005, mf6, mflgr, mfnwt, mfusg,
+                        mfusg_gsi, mp6, mp7, mt3dms, mt3dusgs, sutra, swtv4,
+                        triangle, vs2dt, zbud6, zonbud3, zonbudusg, :.
+                        Specifying the target to be ':' will build all of the
+                        programs. Multiple targets can be specified by
+                        separating individual targets by a comma (i.e.,
+                        mf6,zbud6).
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  --release_precision   If release_precision is False, then the release
-                        precision version will be compiled along with a double
-                        precision version of the program for programs where
-                        the standard_switch and double_switch in
-                        usgsprograms.txt is True. default is True.
+  --precision {default,double}
+                        If precision is 'default', then the default precision
+                        version of the program will be compiled (this could be
+                        a single or double precision version). If precision is
+                        'double', a double precision version will be compiled
+                        using compiler switches. default is `default`.
   -fc {ifort,mpiifort,gfortran,none}
                         Fortran compiler to use. (default is gfortran)
   -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
@@ -63,6 +67,9 @@ Examples:
 
   Download and compile triangle in the ./temp subdirectory:
     $ make-program triangle --appdir temp
+
+  Download and compile double precision versions of mf2005 and mfusg 
+    $ make-program mf2005,mfusg --precision double
 
   Download and compile all programs in the ./temp subdirectory:
     $ make-program : --appdir temp
