@@ -887,6 +887,8 @@ def _update_mf6_external_dependencies(
         "Distributed/MpiRunControl.F90",
         "Distributed/MpiWorld.f90",
         "Solution/ParallelSolution.f90",
+        "Distributed/MpiUnitCache.f90",
+        "Distributed/MpiMessageCache.f90",
     )
     for file in parallel_files:
         path = srcdir / file
