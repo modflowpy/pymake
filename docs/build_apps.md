@@ -7,11 +7,10 @@ and options can be determined by executing:
 ```console
 $ make-program --help
 
-usage: make-program [-h] [--precision {default,double}]
-                    [-fc {ifort,mpiifort,gfortran,none}]
-                    [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dr]
-                    [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep]
-                    [--zip ZIP] [--meson]
+usage: make-program [-h] [-fc {ifort,mpiifort,gfortran,none}]
+                    [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}]
+                    [-dbl] [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v]
+                    [--keep] [--zip ZIP] [--meson]
                     targets
 
 Download and build USGS MODFLOW and related programs.
@@ -28,16 +27,11 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  --precision {default,double}
-                        If precision is 'default', then the default precision
-                        version of the program will be compiled (this could be
-                        a single or double precision version). If precision is
-                        'double', a double precision version will be compiled
-                        using compiler switches. default is `default`.
   -fc {ifort,mpiifort,gfortran,none}
                         Fortran compiler to use. (default is gfortran)
   -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
                         C/C++ compiler to use. (default is gcc)
+  -dbl, --double        Force double precision. (default is False)
   -dr, --dryrun         Do not actually compile. Files will be deleted, if
                         --makeclean is used. Does not work yet for ifort.
                         (default is False)
@@ -69,7 +63,7 @@ Examples:
     $ make-program triangle --appdir temp
 
   Download and compile double precision versions of mf2005 and mfusg 
-    $ make-program mf2005,mfusg --precision double
+    $ make-program mf2005,mfusg --double
 
   Download and compile all programs in the ./temp subdirectory:
     $ make-program : --appdir temp

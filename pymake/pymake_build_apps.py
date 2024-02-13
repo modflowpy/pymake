@@ -41,7 +41,7 @@ def build_apps(
     download_dir=None,
     appdir=None,
     verbose=None,
-    precision="default",
+    double=False,
     meson=False,
     mesondir=".",
     clean=True,
@@ -59,12 +59,8 @@ def build_apps(
         download directory path
     appdir : str
         target path
-    precision : str
-        string indicating if the default precision version should be built.
-        If precision is 'default', then the default precision version of
-        the program will be compiled (this could be a single or double
-        precision version). If precision is 'double', a double precision
-        version will be compiled using compiler switches. default is `default`.
+    double : bool
+        force double precision. (default is False)
     meson : bool
         boolean indicating that the executable should be built using the
         meson build system. (default is False)
@@ -224,21 +220,16 @@ def build_apps(
         prog_precision = usgs_program_data.get_precision(target)
 
         # just build the first precision in precision list if
-        # standard_precision is True
-        if precision != "default":
-            prog_precision = [precision]
+        # reset prog_precision if double
+        if double:
+            prog_precision = ["double"]
 
         for precision_str in prog_precision:
             # set double flag
-            if precision_str == "default":
-                pmobj.double = False
-            elif precision_str == "double":
+            if precision_str == "double":
                 pmobj.double = True
             else:
-                ValueError(
-                    f"precision ({precision_str}) must be "
-                    + "'single' or 'double'."
-                )
+                pmobj.double = False
 
             # determine if the target should be built
             build_target = pmobj.set_build_target_bool(

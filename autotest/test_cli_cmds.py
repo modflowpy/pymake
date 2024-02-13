@@ -52,6 +52,7 @@ def test_make_program(function_tmpdir, target: str) -> None:
     ]
     run_cli_cmd(cmd)
 
+
 @flaky(max_runs=RERUNS)
 @pytest.mark.dependency(name="make_program")
 @pytest.mark.base
@@ -61,8 +62,7 @@ def test_make_program_double(function_tmpdir) -> None:
         "mf2005,mfusg",
         "--appdir",
         str(function_tmpdir),
-        "--precision",
-        "double",
+        "--double",
         "--verbose",
     ]
     run_cli_cmd(cmd)

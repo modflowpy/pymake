@@ -22,6 +22,7 @@ DICT_KEYS = (
     "cc",
     "fflags",
     "cflags",
+    "double",
     "verbose",
     "zip",
     "keep",
@@ -61,7 +62,7 @@ Examples:
     $ {prog} triangle --appdir temp
 
   Download and compile double precision versions of mf2005 and mfusg 
-    $ {prog} mf2005,mfusg --precision double
+    $ {prog} mf2005,mfusg --double
 
   Download and compile all programs in the ./temp subdirectory:
     $ {prog} : --appdir temp
@@ -82,14 +83,6 @@ Examples:
         + "by separating individual targets by a comma (i.e., mf6,zbud6)."
     )
 
-    precision_help = (
-        "If precision is 'default', then the default precision version of "
-        + "the program will be compiled (this could be a single or double "
-        + "precision version). If precision is 'double', a double precision "
-        + "version will be compiled using compiler switches. default is "
-        + "`default`."
-    )
-
     # command line arguments specific to make-program
     parser_dict = {
         "targets": {
@@ -97,16 +90,6 @@ Examples:
             "help": targets_help,
             "default": None,
             "choices": None,
-            "action": None,
-        },
-        "precision": {
-            "tag": ("--precision",),
-            "help": precision_help,
-            "default": "default",
-            "choices": [
-                "default",
-                "double",
-            ],
             "action": None,
         },
     }
