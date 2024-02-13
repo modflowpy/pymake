@@ -35,6 +35,7 @@ COM_ARG_KEYS = (
     "fflags",
     "cflags",
     "zip",
+    "double",
     "keep",
     "dryrun",
 )

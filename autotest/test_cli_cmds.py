@@ -20,7 +20,7 @@ meson_parm = (
 
 
 def run_cli_cmd(cmd: list) -> None:
-    process = subprocess.Popen(
+        process = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=os.getcwd()
     )
     stdout, stderr = process.communicate()
