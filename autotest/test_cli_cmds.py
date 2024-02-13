@@ -59,11 +59,11 @@ def test_make_program(function_tmpdir, target: str) -> None:
 def test_make_program_double(function_tmpdir) -> None:
     cmd = [
         "make-program",
-        "mf2005,mfusg",
-        "--appdir",
-        str(function_tmpdir),
+        "mf2005",
         "--double",
         "--verbose",
+        "--appdir",
+        str(function_tmpdir),
     ]
     run_cli_cmd(cmd)
 

@@ -17,7 +17,6 @@ DICT_KEYS = (
     "targets",
     "appdir",
     "verbose",
-    "release_precision",
     "fc",
     "cc",
     "fflags",
@@ -29,15 +28,21 @@ DICT_KEYS = (
     "dryrun",
     "meson",
 )
+
+# command arguments (sys.argv) to pop from ARGS
 COM_ARG_KEYS = (
     "fc",
     "cc",
     "fflags",
     "cflags",
+    "double",
     "zip",
     "keep",
     "dryrun",
 )
+
+# ARGS to keep and pass to build_apps()
+KEEP_ARG_KEYS = ("double",)
 
 
 def main() -> None:
@@ -127,7 +132,8 @@ Examples:
 
     # delete arguments that are used by Pymake() class in build_apps
     for key in arg_key_pop:
-        del args[key]
+        if key not in KEEP_ARG_KEYS:
+            del args[key]
 
     # remove args from command line arguments
     for key in com_arg_pop:

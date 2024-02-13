@@ -52,7 +52,7 @@ def build_apps(
     ----------
     targets : str or list of str
         targets to build. If targets is None, all current targets will
-        be build. Default is None
+        be built. Default is None
     pymake_object : Pymake()
         Pymake object created outside of build_apps
     download_dir : str
