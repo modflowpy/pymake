@@ -10,6 +10,8 @@ import sys
 import types
 from typing import Union
 
+from ..utils.usgsprograms import usgs_program_data
+
 
 def _get_function_names(module, select_name=None):
     """Get a dictionary of functions available in a user-specified source file.
@@ -63,9 +65,13 @@ def _build_replace(targets):
     if isinstance(targets, str):
         targets = [targets]
 
-    # remove exe extension from targets
+    # remove exe extension from targets, as well as
+    # d (debug) and dbl (double precision) suffixes
     for idx, target in enumerate(targets):
-        targets[idx] = pl.Path(target).with_suffix("").name
+        tgt = pl.Path(target).with_suffix("").name.replace("dbl", "")
+        if tgt.endswith("d") and tgt[:-1] in usgs_program_data.get_keys():
+            tgt = tgt[:-1]
+        targets[idx] = tgt
 
     # get a dictionary of update functions
     funcs = _get_function_names(sys.modules[__name__], select_name="_update_")
