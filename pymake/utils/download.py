@@ -173,21 +173,14 @@ class pymakeZipFile(ZipFile):
         else:
             mode = "w"
 
-        # write the zipfile
         success = True
         if len(file_pths) > 0:
-            zf = ZipFile(path, mode=mode, compression=ZIP_DEFLATED)
-
-            # write files to zip file
-            for file_pth in file_pths:
-                arcname = os.path.basename(file_pth)
-                zf.write(file_pth, arcname=arcname)
-
-            # close the zip file
-            zf.close()
+            with ZipFile(path, mode=mode, compression=ZIP_DEFLATED) as zf:
+                for file_pth in file_pths:
+                    arcname = os.path.basename(file_pth)
+                    zf.write(file_pth, arcname=arcname)
         else:
-            msg = "No files to add to the zip file"
-            print(msg)
+            print("No files to add to the zip file")
             success = False
 
         return success
