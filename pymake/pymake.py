@@ -54,6 +54,7 @@ MODFLOW 6 was built.
 
 import argparse
 import os
+import pathlib as pl
 import shutil
 import sys
 import time
@@ -256,29 +257,41 @@ class Pymake:
                     targets.append(target)
 
             # add code.json
-            if "code.json" not in targets:
-                targets.append("code.json")
+            if pl.Path("code.json").exists():
+                if "code.json" not in targets:
+                    targets.append("code.json")
 
             # delete the zip file if it exists
             if os.path.exists(zip_pth):
-                if self.verbose:
-                    msg = f"Deleting existing zipfile '{zip_pth}'"
-                    print(msg)
-                os.remove(zip_pth)
+                if self.keep:
+                    if self.verbose:
+                        print(
+                            "Appending files to existing "
+                            + f"zipfile '{zip_pth}'"
+                        )
+                else:
+                    if self.verbose:
+                        print(f"Deleting existing zipfile '{zip_pth}'")
+                    os.remove(zip_pth)
 
             # print a message describing the zip process
             if self.verbose:
-                msg = (
+                print(
                     f"Compressing files in '{appdir}' "
                     + f"directory to zip file '{zip_pth}'"
                 )
-                print(msg)
                 for idx, target in enumerate(targets):
-                    msg = f" {idx + 1:>3d}. adding " + f"'{target}' to zipfile"
-                    print(msg)
+                    print(
+                        f" {idx + 1:>3d}. adding " + f"'{target}' to zipfile"
+                    )
 
             # compress the compiled executables
-            if not zip_all(zip_pth, dir_pths=appdir, patterns=targets):
+            if not zip_all(
+                zip_pth,
+                dir_pths=appdir,
+                patterns=targets,
+                append=self.keep,
+            ):
                 self.returncode = 1
 
         return
