@@ -7,33 +7,31 @@ and options can be determined by executing:
 ```console
 $ make-program --help
 
-usage: make-program [-h] [--release_precision]
-                    [-fc {ifort,mpiifort,gfortran,none}]
-                    [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dr]
-                    [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep]
-                    [--zip ZIP] [--meson]
+usage: make-program [-h] [-fc {ifort,mpiifort,gfortran,none}]
+                    [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}]
+                    [-dbl] [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v]
+                    [--keep] [--zip ZIP] [--meson]
                     targets
 
 Download and build USGS MODFLOW and related programs.
 
 positional arguments:
-  targets               Program(s) to build. Options: crt, gridgen, libmf6,
-                        mf2000, mf2005, mf6, mflgr, mfnwt, mfusg, mfusg_gsi,
-                        mp6, mp7, mt3dms, mt3dusgs, sutra, swtv4, triangle,
-                        vs2dt, zbud6, zonbud3, zonbudusg, :. Specifying the
-                        target to be ':' will build all of the programs.
+  targets               Program(s) to build. Options: crt, gridgen, gsflow,
+                        libmf6, mf2000, mf2005, mf6, mflgr, mfnwt, mfusg,
+                        mfusg_gsi, mp6, mp7, mt3dms, mt3dusgs, sutra, swtv4,
+                        triangle, vs2dt, zbud6, zonbud3, zonbudusg, :.
+                        Specifying the target to be ':' will build all of the
+                        programs. Multiple targets can be specified by
+                        separating individual targets by a comma (i.e.,
+                        mf6,zbud6).
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  --release_precision   If release_precision is False, then the release
-                        precision version will be compiled along with a double
-                        precision version of the program for programs where
-                        the standard_switch and double_switch in
-                        usgsprograms.txt is True. default is True.
   -fc {ifort,mpiifort,gfortran,none}
                         Fortran compiler to use. (default is gfortran)
   -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
                         C/C++ compiler to use. (default is gcc)
+  -dbl, --double        Force double precision. (default is False)
   -dr, --dryrun         Do not actually compile. Files will be deleted, if
                         --makeclean is used. Does not work yet for ifort.
                         (default is False)
@@ -63,6 +61,9 @@ Examples:
 
   Download and compile triangle in the ./temp subdirectory:
     $ make-program triangle --appdir temp
+
+  Download and compile double precision versions of mf2005 and mfusg 
+    $ make-program mf2005,mfusg --double
 
   Download and compile all programs in the ./temp subdirectory:
     $ make-program : --appdir temp

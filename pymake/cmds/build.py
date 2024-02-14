@@ -17,26 +17,32 @@ DICT_KEYS = (
     "targets",
     "appdir",
     "verbose",
-    "release_precision",
     "fc",
     "cc",
     "fflags",
     "cflags",
+    "double",
     "verbose",
     "zip",
     "keep",
     "dryrun",
     "meson",
 )
+
+# command arguments (sys.argv) to pop from ARGS
 COM_ARG_KEYS = (
     "fc",
     "cc",
     "fflags",
     "cflags",
+    "double",
     "zip",
     "keep",
     "dryrun",
 )
+
+# ARGS to keep and pass to build_apps()
+KEEP_ARG_KEYS = ("double",)
 
 
 def main() -> None:
@@ -60,6 +66,9 @@ Examples:
   Download and compile triangle in the ./temp subdirectory:
     $ {prog} triangle --appdir temp
 
+  Download and compile double precision versions of mf2005 and mfusg 
+    $ {prog} mf2005,mfusg --double
+
   Download and compile all programs in the ./temp subdirectory:
     $ {prog} : --appdir temp
     """
@@ -75,16 +84,8 @@ Examples:
         "Program(s) to build. Options:\n  "
         + ", ".join(all_targets)
         + ". Specifying the target to be ':' will "
-        + "build all of the programs."
-    )
-
-    release_precision_help = (
-        "If release_precision is False, then the "
-        + "release precision version will be compiled "
-        + "along with a double precision version of "
-        + "the program for programs where the standard_"
-        + "switch and double_switch in "
-        + "usgsprograms.txt is True. default is True."
+        + "build all of the programs. Multiple targets can be specified "
+        + "by separating individual targets by a comma (i.e., mf6,zbud6)."
     )
 
     # command line arguments specific to make-program
@@ -95,13 +96,6 @@ Examples:
             "default": None,
             "choices": None,
             "action": None,
-        },
-        "release_precision": {
-            "tag": ("--release_precision",),
-            "help": release_precision_help,
-            "default": False,
-            "choices": None,
-            "action": "store_true",
         },
     }
 
@@ -138,7 +132,8 @@ Examples:
 
     # delete arguments that are used by Pymake() class in build_apps
     for key in arg_key_pop:
-        del args[key]
+        if key not in KEEP_ARG_KEYS:
+            del args[key]
 
     # remove args from command line arguments
     for key in com_arg_pop:

@@ -248,9 +248,9 @@ class usgs_program_data:
         target = usgs_program_data().get_target(key)
         precision = []
         if target.standard_switch:
-            precision.append(False)
+            precision.append("default")
         if target.double_switch:
-            precision.append(True)
+            precision.append("double")
         return precision
 
     @staticmethod
