@@ -279,8 +279,8 @@ class Pymake:
                         for target in targets:
                             if target in available_file_paths:
                                 pop_list.append(target)
-                            for target in pop_list:
-                                targets.remove(target)
+                        for target in pop_list:
+                            targets.remove(target)
                 else:
                     if self.verbose:
                         print(
