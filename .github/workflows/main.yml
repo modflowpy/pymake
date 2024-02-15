@@ -5,13 +5,15 @@ on:
     - cron: '0 7 * * *' # run at 7 AM UTC every day
   push:
     paths-ignore:
-      - '**.md'
+      - 'README.md'
+      - 'docs/*.md'
   pull_request:
     branches:
       - master
       - develop
     paths-ignore:
-      - '**.md'
+      - 'README.md'
+      - 'docs/*.md'
 jobs:
 
   pymakeCI-os-intel:
