@@ -58,6 +58,7 @@ import pathlib as pl
 import shutil
 import sys
 import time
+from zipfile import ZipFile
 
 from .config import __description__
 from .pymake_base import main
@@ -267,18 +268,32 @@ class Pymake:
                     if self.verbose:
                         print(
                             "Appending files to existing "
-                            + f"zipfile '{zip_pth}'"
+                            + f"zipfile '{pl.Path(zip_pth).resolve()}'"
                         )
+                    with ZipFile(
+                        zip_pth,
+                        mode="r",
+                    ) as zf:
+                        available_file_paths = zf.namelist()
+                        pop_list = []
+                        for target in targets:
+                            if target in available_file_paths:
+                                pop_list.append(target)
+                        for target in pop_list:
+                            targets.remove(target)
                 else:
                     if self.verbose:
-                        print(f"Deleting existing zipfile '{zip_pth}'")
+                        print(
+                            "Deleting existing zipfile "
+                            + f"'{pl.Path(zip_pth).resolve()}'"
+                        )
                     os.remove(zip_pth)
 
             # print a message describing the zip process
             if self.verbose:
                 print(
                     f"Compressing files in '{appdir}' "
-                    + f"directory to zip file '{zip_pth}'"
+                    + f"directory to zip file '{pl.Path(zip_pth).resolve()}'"
                 )
                 for idx, target in enumerate(targets):
                     print(
