@@ -339,9 +339,6 @@ def _get_fortran_flags(
                     "fpe:0",
                     "traceback",
                     "nologo",
-                    "Qdiag-disable:7416",
-                    "Qdiag-disable:7025",
-                    "Qdiag-disable:5268",
                 ]
                 if debug:
                     flags += ["debug:full", "Zi"]
