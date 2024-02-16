@@ -51,7 +51,7 @@ options:
                         (default is None)
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)
-  --zip ZIP             Zip built executable. (default is False)
+  --zip ZIP             Zip built executable. (default is None)
   --meson               Use meson to build executable. (default is False)
 
 Examples:

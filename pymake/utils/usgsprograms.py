@@ -25,7 +25,7 @@ import os
 import pathlib as pl
 import sys
 
-from .download import _request_header
+from .download import _request_header, zip_all
 
 
 class dotdict(dict):
@@ -302,6 +302,8 @@ class usgs_program_data:
         current=False,
         update=True,
         write_markdown=False,
+        partial_json=False,
+        zip_path=None,
         verbose=False,
     ):
         """Export USGS program data as a json file.
@@ -326,6 +328,11 @@ class usgs_program_data:
             If True, write markdown file that includes the target name,
             version, and the last-modified date of the download asset (url).
             Default is False.
+        partial_json : bool
+            Create a partial code.json based on targets in the parent path
+            for the code.json file. Default is False.
+        zip_path : str
+            Zip code.json into zip_path. (default is None)
         verbose : bool
             boolean for verbose output to terminal
 
@@ -405,7 +412,36 @@ class usgs_program_data:
                         ] = datetime_str
                         break
 
-        # export file
+        if partial_json:
+            # find targets in appdir
+            found_targets = []
+            for appdir_file in pl.Path(appdir).iterdir():
+                temp_target = appdir_file.stem
+                if temp_target.endswith("dbl"):
+                    temp_target = temp_target.replace("dbl", "")
+                if temp_target in prog_data.keys():
+                    if temp_target not in found_targets:
+                        found_targets.append(temp_target)
+
+            # determine which targets to remove
+            pop_list = []
+            for target in prog_data.keys():
+                if target not in found_targets:
+                    pop_list.append(target)
+
+            # remove unused targets
+            for target in pop_list:
+                del prog_data[target]
+
+        # update double_switch based on executables in appdir
+        for appdir_file in pl.Path(appdir).iterdir():
+            temp_target = appdir_file.stem
+            if temp_target.endswith("dbl"):
+                temp_target = temp_target.replace("dbl", "")
+                if temp_target in prog_data.keys():
+                    prog_data[temp_target]["double_switch"] = True
+
+        # export program data to a json file
         try:
             with open(file_name, "w") as file_obj:
                 json.dump(prog_data, file_obj, indent=4, sort_keys=True)
@@ -439,6 +475,20 @@ class usgs_program_data:
                         line += " |"
                     line += "\n"
                     file_obj.write(line)
+
+        # zip code.json
+        if prog_data is not None and zip_path is not None:
+            if verbose:
+                print(
+                    "Compressing code.json to "
+                    + f"zipfile '{pl.Path(zip_path).resolve()}'"
+                )
+            zip_all(
+                zip_path,
+                dir_pths=appdir,
+                patterns=["code.json"],
+                append=True,
+            )
 
         return
 
