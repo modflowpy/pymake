@@ -135,7 +135,7 @@ Examples:
 
     # clean up zip argument in args
     args["zip_path"] = args["zip"]
-    del(args["zip"])
+    del args["zip"]
 
     # run build_apps
     try:

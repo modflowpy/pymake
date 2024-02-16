@@ -480,7 +480,7 @@ class usgs_program_data:
         if prog_data is not None and zip_path is not None:
             if verbose:
                 print(
-                    "Appending code.json to existing "
+                    "Compressing code.json to "
                     + f"zipfile '{pl.Path(zip_path).resolve()}'"
                 )
             zip_all(
