@@ -303,7 +303,7 @@ class usgs_program_data:
         update=True,
         write_markdown=False,
         partial_json=False,
-        zip=None,
+        zip_path=None,
         verbose=False,
     ):
         """Export USGS program data as a json file.
@@ -329,10 +329,10 @@ class usgs_program_data:
             version, and the last-modified date of the download asset (url).
             Default is False.
         partial_json : bool
-            Create a partial code.json based on targets present in the Path
-            defined for the code.json file ('fpth'). Default is False.
-        zip : str
-            Zip code.json. (default is None)
+            Create a partial code.json based on targets in the parent path
+            for the code.json file. Default is False.
+        zip_path : str
+            Zip code.json into zip_path. (default is None)
         verbose : bool
             boolean for verbose output to terminal
 
@@ -477,9 +477,14 @@ class usgs_program_data:
                     file_obj.write(line)
 
         # zip code.json
-        if prog_data is not None and zip is not None:
+        if prog_data is not None and zip_path is not None:
+            if verbose:
+                print(
+                    "Appending code.json to existing "
+                    + f"zipfile '{pl.Path(zip_path).resolve()}'"
+                )
             zip_all(
-                zip,
+                zip_path,
                 dir_pths=appdir,
                 patterns=["code.json"],
                 append=True,

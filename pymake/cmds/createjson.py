@@ -98,8 +98,8 @@ Examples:
         },
         "partial_json": {
             "tag": ("--partial_json",),
-            "help": "Create a partial code.json based on targets present "
-            + "in the Path defined for the code.json file ('fpth'). "
+            "help": "Create a partial code.json based on targets in the "
+            + "parent path for the code.json file (FPTH). "
             + "Default is False.",
             "default": False,
             "choices": None,
@@ -107,10 +107,11 @@ Examples:
         },
         "zip": {
             "tag": ("--zip",),
-            "help": "Zip code.json. (default is None)",
+            "help": "Zip code.json into ZIP. (default is None)",
             "default": None,
             "choices": None,
             "action": None,
+            "type": (str, Path),
         },
         "verbose": {
             "tag": (
@@ -131,6 +132,10 @@ Examples:
 
     # define args
     args = vars(parser_args)
+
+    # clean up zip argument in args
+    args["zip_path"] = args["zip"]
+    del(args["zip"])
 
     # run build_apps
     try:
