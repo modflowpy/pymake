@@ -277,8 +277,10 @@ class Pymake:
                         available_file_paths = zf.namelist()
                         pop_list = []
                         for target in targets:
-                            if target in available_file_paths:
-                                pop_list.append(target)
+                            for temp_path in available_file_paths:
+                                if target == temp_path:
+                                    pop_list.append(target)
+                                    break
                         for target in pop_list:
                             targets.remove(target)
                 else:
