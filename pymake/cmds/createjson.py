@@ -55,6 +55,14 @@ Examples:
             "choices": None,
             "action": None,
         },
+        "appdir": {
+            "tag": ("-ad", "--appdir"),
+            "help": "code.json path that overides FPTH defined path, "
+            + "Default is None.",
+            "default": None,
+            "choices": None,
+            "action": None,
+        },
         "prog_data": {
             "tag": ("--prog_data",),
             "help": "User-specified program database. If prog_data is None, "
