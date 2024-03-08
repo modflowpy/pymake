@@ -58,7 +58,7 @@ jobs:
           pip install ".[test]"
 
       - name: Setup GNU Fortran
-        uses: wpbonelli/setup-fortran@link-mac-gcc
+        uses: fortran-lang/setup-fortran@main
         with:
           compiler: gcc
           version: ${{ matrix.gcc }}
