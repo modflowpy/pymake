@@ -65,6 +65,10 @@ jobs:
 
       - name: Download examples for pytest runs
         run: .github/common/download-examples.sh
+      
+      - name: Install make
+        if: runner.os == 'Windows'
+        run: choco install make
 
       - name: Run pytest
         working-directory: ./autotest
