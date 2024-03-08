@@ -70,6 +70,10 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install make
 
+      - name: Debug with tmate
+        if: runner.os == 'macOS'
+        uses: mxschmitt/action-tmate@v3
+
       - name: Run pytest
         working-directory: ./autotest
         run: |
