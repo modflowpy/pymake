@@ -58,7 +58,7 @@ jobs:
           pip install ".[test]"
 
       - name: Setup GNU Fortran
-        uses: fortran-lang/setup-fortran@v1
+        uses: wpbonelli/setup-fortran@link-mac-gcc
         with:
           compiler: gcc
           version: ${{ matrix.gcc }}
@@ -69,10 +69,6 @@ jobs:
       - name: Install make
         if: runner.os == 'Windows'
         run: choco install make
-
-      - name: Debug with tmate
-        if: runner.os == 'macOS'
-        uses: mxschmitt/action-tmate@v3
 
       - name: Run pytest
         working-directory: ./autotest
