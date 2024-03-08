@@ -52,7 +52,7 @@ test = [
     "coverage",
     "flaky",
     "filelock",
-    "pytest",
+    "pytest!=8.1.0",
     "pytest-benchmark",
     "pytest-cov",
     "pytest-dependency",

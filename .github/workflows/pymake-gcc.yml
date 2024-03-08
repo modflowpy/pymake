@@ -58,13 +58,17 @@ jobs:
           pip install ".[test]"
 
       - name: Setup GNU Fortran
-        uses: fortran-lang/setup-fortran@v1
+        uses: fortran-lang/setup-fortran@main
         with:
           compiler: gcc
           version: ${{ matrix.gcc }}
 
       - name: Download examples for pytest runs
         run: .github/common/download-examples.sh
+      
+      - name: Install make
+        if: runner.os == 'Windows'
+        run: choco install make
 
       - name: Run pytest
         working-directory: ./autotest
