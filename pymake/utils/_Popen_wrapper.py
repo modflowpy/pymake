@@ -1,6 +1,4 @@
-"""Private functions for running pymake commands using Popen
-
-"""
+"""Private functions for running pymake commands using Popen"""
 
 import sys
 from subprocess import PIPE, STDOUT, Popen

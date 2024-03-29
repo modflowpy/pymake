@@ -1,5 +1,4 @@
-"""Private functions for processing c/c++ and fortran files
-"""
+"""Private functions for processing c/c++ and fortran files"""
 
 import os
 
