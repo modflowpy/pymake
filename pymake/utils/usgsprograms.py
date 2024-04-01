@@ -416,9 +416,9 @@ class usgs_program_data:
                             tzinfo=datetime.timezone.utc
                         )
                         datetime_str = datetime_obj_utc.strftime("%m/%d/%Y")
-                        prog_data[target][
-                            "url_download_asset_date"
-                        ] = datetime_str
+                        prog_data[target]["url_download_asset_date"] = (
+                            datetime_str
+                        )
                         break
 
         if partial_json:

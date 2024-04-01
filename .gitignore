@@ -79,3 +79,6 @@ venv/
 
 # mac files
 **/.DS_Store
+
+# environment files
+**.env
