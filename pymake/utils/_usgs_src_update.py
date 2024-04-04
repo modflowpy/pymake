@@ -346,14 +346,14 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
 
     """
     tags = {
-        "FMTARG = 'BINARY'": "FMTARG = 'UNFORMATTED'\n        ACCARG = 'STREAM'",
+        "FMTARG = 'BINARY'": "FMTARG = 'UNFORMATTED'\n        ACCARG = 'STREAM'",  # noqa: E501
         ",SHARED,ACCESS='SEQUENTIAL'": ",ACCESS='SEQUENTIAL'",
         "FORM=FMTARG,SHARED,": "FORM=FMTARG,",
         ",BUFFERED='YES',": ",",
         ", BUFFERED='NO')": ")",
         ",SHARE = 'DENYNONE'": ",",
         ", SHARE = 'DENYNONE',": ",",
-        "FORM='FORMATTED',ACCESS='SEQUENTIAL',": "FORM='FORMATTED',ACCESS='SEQUENTIAL'",
+        "FORM='FORMATTED',ACCESS='SEQUENTIAL',": "FORM='FORMATTED',ACCESS='SEQUENTIAL'",  # noqa: E501
     }
 
     fpth = pl.Path(srcdir) / "glo2basu1.f"
