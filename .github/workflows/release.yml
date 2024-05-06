@@ -42,7 +42,7 @@ jobs:
         run: make-code-json
 
       - name: Upload code.md
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: code.md
           path: code.md
