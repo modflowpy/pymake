@@ -1,6 +1,6 @@
-import os
 import pathlib as pl
 import subprocess
+from os import environ
 from platform import system
 
 import pytest
@@ -30,8 +30,10 @@ def pm(module_tmpdir, target) -> pymake.Pymake:
     pm = pymake.Pymake(verbose=True)
     pm.target = str(target)
     pm.appdir = str(module_tmpdir)
-    pm.cc = os.environ.get("CXX", "g++")
-    pm.fc = os.environ.get("FC", "gfortran")
+    pm.cc = environ.get("CXX", "g++")
+    pm.fc = environ.get("FC", "gfortran")
+    if system() == "Darwin":
+        pm.syslibs = "-Wl,-ld_classic"
     pm.inplace = True
     pm.makeclean = True
     yield pm
