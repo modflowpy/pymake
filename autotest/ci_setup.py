@@ -2,8 +2,9 @@ import os
 import pathlib as pl
 import shutil
 
-import pymake
 from modflow_devtools.misc import get_model_paths
+
+import pymake
 
 temp_pth = pl.Path("temp")
 if not temp_pth.exists():
