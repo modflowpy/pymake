@@ -781,25 +781,6 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
         if target == "mp7":
             if fc == "gfortran":
                 fflags.append("-ffree-line-length-512")
-        elif target in ("gsflow", "prms"):
-            if fc == "ifort":
-                if osname == "win32":
-                    fflags += [
-                        "-fp:source",
-                        "-names:lowercase",
-                        "-assume:underscore",
-                    ]
-                else:
-                    pass
-            elif fc == "gfortran":
-                fflags += ["-O1", "-fno-second-underscore"]
-                opt = "-fallow-argument-mismatch"
-                if _check_gnu_switch_available(
-                    opt, compiler=fc, verbose=verbose
-                ):
-                    fflags += [
-                        opt,
-                    ]
         elif target in (
             "mf2000",
             "mt3dms",
@@ -899,17 +880,6 @@ def _set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
                     cflags += ["-lm"]
             else:
                 cflags += ["-DNO_TIMER"]
-        elif target in (
-            "gsflow",
-            "prms",
-        ):
-            if cc in ["icc", "icpl", "icl"]:
-                if osname == "win32":
-                    cflags += ["-D_CRT_SECURE_NO_WARNINGS"]
-                else:
-                    cflags += ["-D_UF"]
-            elif cc == "gcc":
-                cflags += ["-O1"]
 
         # add additional cflags from the command line
         if argv:
@@ -1013,10 +983,6 @@ def _set_syslibs(
                 lcc = True
             if lfc and lcc:
                 syslibs += ["-lm"]
-    elif target in ("gsflow", "prms"):
-        if "win32" not in osname:
-            if "ifort" in fc:
-                syslibs += ["-nofor_main"]
 
     # add additional syslibs from the command line
     if argv:

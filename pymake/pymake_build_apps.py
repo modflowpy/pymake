@@ -205,11 +205,6 @@ def build_apps(
         download_verify = True
         timeout = 30
 
-        # reset meson
-        if target in ("prms",):
-            pmobj.meson = True
-            pmobj.inplace = True
-
         # set target and srcdir
         pmobj.target = target.replace("dev", "")
         pmobj.srcdir = os.path.join(
