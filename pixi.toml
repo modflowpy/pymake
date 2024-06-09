@@ -31,7 +31,8 @@ ruff = "*"
 postinstall = "pip install --no-build-isolation --no-deps --disable-pip-version-check -e ."
 
 # format
-check-format = "ruff format ."
+check-format = "ruff check ."
+fix-format = "ruff check . --fix"
 
 # build
 test = "meson test --verbose --no-rebuild -C"

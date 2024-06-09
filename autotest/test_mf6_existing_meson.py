@@ -3,9 +3,9 @@ import sys
 from pathlib import Path
 from platform import system
 from typing import List
-from modflow_devtools.ostags import get_binary_suffixes
 
 import pytest
+from modflow_devtools.ostags import get_binary_suffixes
 
 import pymake
 
