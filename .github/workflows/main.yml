@@ -22,7 +22,7 @@ jobs:
     env:
       FC: intel-classic
       FC_V: "2021.7"
-   strategy:
+    strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-2019]

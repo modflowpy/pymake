@@ -13,6 +13,7 @@ mf6_exdir = temp_pth / "mf6examples"
 if mf6_exdir.is_dir():
     shutil.rmtree(mf6_exdir)
 
+
 def download_mf6_examples(verbose=False):
     """Download mf6 examples and return location of folder"""
 
