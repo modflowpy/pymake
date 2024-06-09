@@ -622,6 +622,7 @@ class Pymake:
         if extrafiles is None:
             if self._get_base_target() in ("zbud6",):
                 extrafiles = [
+                    "../../../src/Utilities/CharString.f90",
                     "../../../src/Utilities/ArrayHandlers.f90",
                     "../../../src/Utilities/ArrayReaders.f90",
                     "../../../src/Utilities/BlockParser.f90",

@@ -2,6 +2,8 @@ import os
 import pathlib as pl
 import shutil
 
+from modflow_devtools.misc import get_model_paths
+
 import pymake
 
 temp_pth = pl.Path("temp")
@@ -54,27 +56,8 @@ def examples_list(verbose=False):
         "sagehen",
         "ex-gwt-keating",
     )
-    src_folders = []
 
-    for dirName, subdirList, fileList in os.walk(mf6_exdir):
-        useModel = True
-        for exclude in exclude_models:
-            if exclude in dirName:
-                useModel = False
-                break
-        if useModel:
-            for exclude in exclude_examples:
-                if exclude in dirName:
-                    useModel = False
-                    break
-        if useModel:
-            for file_name in fileList:
-                if file_name.lower() == "mfsim.nam":
-                    if verbose:
-                        print(f"Found directory: {dirName}")
-                    src_folders.append(dirName)
-    src_folders = sorted(src_folders)
-
+    src_folders = get_model_paths(mf6_exdir)
     fpth = os.path.join(mf6_exdir, "mf6examples.txt")
     f = open(fpth, "w")
     for idx, folder in enumerate(src_folders):
