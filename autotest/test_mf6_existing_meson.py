@@ -1,7 +1,9 @@
 import os
 import sys
 from pathlib import Path
+from platform import system
 from typing import List
+from modflow_devtools.ostags import get_binary_suffixes
 
 import pytest
 
@@ -11,14 +13,8 @@ import pymake
 @pytest.fixture(scope="module")
 def targets() -> List[Path]:
     target = "mf6"
-    ext = ""
-    shared_ext = ".so"
+    ext, shared_ext = get_binary_suffixes()
     executables = [target, "zbud6", "mf5to6", "libmf6"]
-    if sys.platform.lower() == "win32":
-        ext = ".exe"
-        shared_ext = ".dll"
-    elif sys.platform.lower() == "darwin":
-        shared_ext = ".dylib"
     for idx, _ in enumerate(executables[:3]):
         executables[idx] += ext
     executables[3] += shared_ext
@@ -40,6 +36,9 @@ def pm(workspace, targets) -> pymake.Pymake:
     pm = pymake.Pymake(verbose=True)
     pm.target = str(targets[0])
     pm.appdir = str(workspace / "bin")
+    pm.fc = os.environ.get("FC", "gfortran")
+    if system() == "Darwin" and pm.fc == "gfortran":
+        pm.syslibs = "-Wl,-ld_classic"
     pm.meson = True
     pm.makeclean = True
     pm.mesondir = str(workspace)

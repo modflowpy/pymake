@@ -85,4 +85,4 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
-          file: ./autotest/coverage.xml
+          file: coverage.xml
