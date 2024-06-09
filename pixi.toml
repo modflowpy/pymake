@@ -1,0 +1,43 @@
+[project]
+name = "pymake"
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "linux-aarch64", "osx-arm64", "osx-64"]
+version = "1.2.10.dev0"
+
+[dependencies]
+appdirs = "*"
+codespell = "*"
+filelock = "*"
+flaky = "*"
+flopy = "*"
+matplotlib = "*"
+meson = "1.3.0"
+modflow-devtools = "*"
+networkx = "*"
+ninja = "*"
+numpy = "*"
+pip = "*"
+pydotplus = "*"
+pytest = "!=8.1.0"
+pytest-benchmark = "*"
+pytest-dotenv = "*"
+pytest-order = "*"
+pytest-xdist = "*"
+python = "3.9.*"
+requests = "*"
+ruff = "*"
+
+[tasks]
+postinstall = "pip install --no-build-isolation --no-deps --disable-pip-version-check -e ."
+
+# format
+check-format = "ruff check ."
+
+# build
+test = "meson test --verbose --no-rebuild -C"
+
+# test
+download-examples = {cmd = "python ci_setup.py", cwd = "autotest"}
+autotest = { cmd = "pytest -v -n auto --dist=loadfile -m='base or regression' --durations 0 --keep-failed .failed", cwd = "autotest" }
+autotest-base = { cmd = "pytest -v -n auto --dist=loadfile -m='base' --durations 0 --keep-failed .failed", cwd = "autotest" }
+autotest-Windows = { cmd = "pytest -v -m='base' --durations 0 --keep-failed .failed", cwd = "autotest" }
