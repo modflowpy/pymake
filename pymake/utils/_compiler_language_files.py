@@ -1,7 +1,6 @@
 """Private functions for processing c/c++ and fortran files"""
 
 import os
-import pathlib as pl
 
 from ._dag import _order_c_source_files, _order_f_source_files
 
@@ -296,9 +295,7 @@ def _get_srcfiles(srcdir, include_subdir):
             or file.lower().endswith(".c")
             or file.lower().endswith(".cpp")
         ):
-            # srcfiles.append(os.path.relpath(file, os.getcwd()))
-            file_rel = pl.Path(file).relative_to(os.getcwd())
-            srcfiles.append(str(file_rel))
+            srcfiles.append(os.path.relpath(file, os.getcwd()))
     return sorted(srcfiles)
 
 
