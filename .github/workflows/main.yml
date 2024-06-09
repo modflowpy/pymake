@@ -50,10 +50,9 @@ jobs:
           pixi-version: v0.19.1
           manifest-path: "pixi.toml"
 
-      - name: Custom pixi install
+      - name: pixi post-install
         working-directory: pymake
         run: |
-          pixi run install
           pixi run postinstall
 
       - name: Download examples for pytest runs
