@@ -32,8 +32,6 @@ def pm(module_tmpdir, target) -> pymake.Pymake:
     pm.appdir = str(module_tmpdir)
     pm.cc = environ.get("CXX", "g++")
     pm.fc = None
-    # if system() == "Darwin" and pm.cc == "g++":
-    #     pm.syslibs = "-Wl,-ld_classic"
     pm.inplace = True
     pm.makeclean = True
     yield pm

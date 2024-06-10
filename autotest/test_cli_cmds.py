@@ -116,8 +116,6 @@ def test_mfpymake(function_tmpdir, meson: bool) -> None:
             fc = os.environ.get("FC")
             cmd.append(fc)
 
-        # if system() == "Darwin" and fc == "gfortran":
-        #     set_env(**{"LDFLAGS": "-Wl,-ld_classic"})
         linker_update_environment(fc=fc)
 
         if meson:
