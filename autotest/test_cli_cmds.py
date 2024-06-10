@@ -2,6 +2,7 @@ import os
 import pathlib as pl
 import subprocess
 from platform import system
+from pymake import linker_update_environment
 
 import pytest
 from flaky import flaky
@@ -113,8 +114,11 @@ def test_mfpymake(function_tmpdir, meson: bool) -> None:
         else:
             fc = os.environ.get("FC")
             cmd.append(fc)
-        if system() == "Darwin" and fc == "gfortran":
-            set_env(**{"LDFLAGS": "-Wl,-ld_classic"})
+
+        # if system() == "Darwin" and fc == "gfortran":
+        #     set_env(**{"LDFLAGS": "-Wl,-ld_classic"})
+        linker_update_environment(fc=fc)
+
         if meson:
             cmd.append("--meson")
         run_cli_cmd(cmd)

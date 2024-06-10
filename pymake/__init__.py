@@ -30,6 +30,7 @@ from .utils.download import (
     repo_latest_version,
     zip_all,
 )
+from .utils._compiler_switches import linker_update_environment
 
 # utilities
 from .utils.usgsprograms import usgs_program_data

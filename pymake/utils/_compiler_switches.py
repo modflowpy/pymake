@@ -1,5 +1,5 @@
-"""Private functions for setting c/c++ and fortran compiler flags and
-appropriate linker flags for defined targets.
+"""Public and private functions for setting c/c++ and fortran compiler
+flags and appropriate linker flags for defined targets.
 """
 
 import os
@@ -16,6 +16,28 @@ from ._Popen_wrapper import (
     _process_Popen_communicate,
     _process_Popen_initialize,
 )
+
+
+def linker_update_environment(cc="gcc", fc="gfortran", verbose=False):
+    """Add additional LDFLAGS to the environment based on OS and compilers.
+
+    Parameters
+    ----------
+    fc : str
+        fortran compiler
+    cc : str
+        c or cpp compiler
+    verbose : bool
+        boolean for verbose output to terminal
+
+    Returns
+    -------
+    None
+    """
+    syslibs = _darwin_syslibs(cc, fc, verbose=verbose)
+    if syslibs is not None:
+        environ = os.environ
+        environ.update({"LDFLAGS": syslibs})
 
 
 def _check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
@@ -971,7 +993,7 @@ def _set_syslibs(
     # set default syslibs
     if default_syslibs:
         syslibs.append("-lc")
-        
+
     darwin_options = _darwin_syslibs(cc, fc, verbose)
     if darwin_options is not None:
         syslibs.append(darwin_options)
@@ -1060,8 +1082,11 @@ def _darwin_syslibs(cc, fc, verbose=False):
     """
     linker_str = None
     if _get_osname() == "darwin":
-        if cc in ("gcc", "g++",) or fc in ("gfortran",):
-            cmd = ["pkgutil",  "--pkg-info=com.apple.pkg.CLTools_Executables"]
+        if cc in (
+            "gcc",
+            "g++",
+        ) or fc in ("gfortran",):
+            cmd = ["pkgutil", "--pkg-info=com.apple.pkg.CLTools_Executables"]
             out_lines = check_output(cmd).decode("utf-8").splitlines()
             version = None
             tag = "version: "

@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from platform import system
 from typing import List
+from pymake import linker_update_environment
 
 import pytest
 from modflow_devtools.ostags import get_binary_suffixes
@@ -81,6 +82,8 @@ def test_build_with_existing_meson(pm, module_tmpdir, workspace, targets):
     # download modflow 6
     pm.download_target(targets[0], download_path=module_tmpdir)
     assert pm.download, f"could not download {targets[0]} distribution"
+
+    linker_update_environment(cc=cc, fc=fc)
 
     # make modflow 6 with existing meson.build file
     returncode = pymake.meson_build(
