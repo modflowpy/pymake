@@ -37,8 +37,8 @@ def pm(workspace, targets) -> pymake.Pymake:
     pm.target = str(targets[0])
     pm.appdir = str(workspace / "bin")
     pm.fc = os.environ.get("FC", "gfortran")
-    if system() == "Darwin" and pm.fc == "gfortran":
-        pm.syslibs = "-Wl,-ld_classic"
+    # if system() == "Darwin" and pm.fc == "gfortran":
+    #     pm.syslibs = "-Wl,-ld_classic"
     pm.meson = True
     pm.makeclean = True
     pm.mesondir = str(workspace)

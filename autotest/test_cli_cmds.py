@@ -1,11 +1,11 @@
 import os
 import pathlib as pl
 import subprocess
+from platform import system
 
 import pytest
 from flaky import flaky
 from modflow_devtools.misc import set_dir, set_env
-from platform import system
 
 RERUNS = 3
 

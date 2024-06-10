@@ -70,8 +70,8 @@ def test_build(function_tmpdir, target: str) -> None:
         pm.target = target
         pm.inplace = True
         fc = os.environ.get("FC", "gfortran")
-        if system() == "Darwin" and fc == "gfortran":
-            pm.syslibs = "-Wl,-ld_classic"
+        # if system() == "Darwin" and fc == "gfortran":
+        #     pm.syslibs = "-Wl,-ld_classic"
         assert (
             pymake.build_apps(
                 target,
@@ -116,8 +116,8 @@ def test_makefile_build(function_tmpdir, target: str) -> None:
     pm.dryrun = True
     pm.makeclean = False
     fc = os.environ.get("FC", "gfortran")
-    if system() == "Darwin" and fc == "gfortran":
-        pm.syslibs = "-Wl,-ld_classic"
+    # if system() == "Darwin" and fc == "gfortran":
+    #     pm.syslibs = "-Wl,-ld_classic"
 
     with set_dir(function_tmpdir):
         pm.download_target(target)

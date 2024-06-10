@@ -4,6 +4,7 @@ appropriate linker flags for defined targets.
 
 import os
 import sys
+from subprocess import check_output
 
 from ._compiler_language_files import (
     _get_c_files,
@@ -970,6 +971,10 @@ def _set_syslibs(
     # set default syslibs
     if default_syslibs:
         syslibs.append("-lc")
+        
+    darwin_options = _darwin_syslibs(cc, fc, verbose)
+    if darwin_options is not None:
+        syslibs.append(darwin_options)
 
     # add additional syslibs for select programs
     if target == "triangle":
@@ -1033,3 +1038,43 @@ def _get_os_macro(osname=None):
     else:
         os_macro = None
     return os_macro
+
+
+def _darwin_syslibs(cc, fc, verbose=False):
+    """Get additional syslibs for Darwin systems using gcc
+       tool chain and command line tools greater than 14
+
+    Parameters
+    ----------
+    cc : str
+        c compiler
+    fc : str
+        fortran compiler
+    verbose : bool
+        boolean for verbose output to terminal
+
+    Returns
+    -------
+    linker_str : str
+        additiona; linker flags for darwin systems. Default is None
+    """
+    linker_str = None
+    if _get_osname() == "darwin":
+        if cc in ("gcc", "g++",) or fc in ("gfortran",):
+            cmd = ["pkgutil",  "--pkg-info=com.apple.pkg.CLTools_Executables"]
+            out_lines = check_output(cmd).decode("utf-8").splitlines()
+            version = None
+            tag = "version: "
+            for line in out_lines:
+                if line.startswith(tag):
+                    version = line.replace(tag, "")
+                    break
+            if version is not None:
+                major = int(version.split(".")[0])
+            if major > 14:
+                linker_str = "-Wl,-ld_classic"
+            if verbose:
+                print(f"C/C++ compiler: {cc} \nFortran compiler: {fc}")
+                print(f"Command line tools version: {version}")
+                print(f"Command line tools major version number: {major}")
+    return linker_str
