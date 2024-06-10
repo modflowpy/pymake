@@ -3,12 +3,12 @@ import sys
 from pathlib import Path
 from platform import system
 from typing import List
-from pymake import linker_update_environment
 
 import pytest
 from modflow_devtools.ostags import get_binary_suffixes
 
 import pymake
+from pymake import linker_update_environment
 
 
 @pytest.fixture(scope="module")

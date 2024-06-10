@@ -21,6 +21,7 @@ from .pymake import Pymake
 from .pymake_base import get_temporary_directories, main
 from .pymake_build_apps import build_apps
 from .pymake_parser import parser
+from .utils._compiler_switches import linker_update_environment
 from .utils._meson_build import meson_build, meson_install, meson_setup
 from .utils.download import (
     download_and_unzip,
@@ -30,7 +31,6 @@ from .utils.download import (
     repo_latest_version,
     zip_all,
 )
-from .utils._compiler_switches import linker_update_environment
 
 # utilities
 from .utils.usgsprograms import usgs_program_data

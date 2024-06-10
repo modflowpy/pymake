@@ -2,11 +2,12 @@ import os
 import pathlib as pl
 import subprocess
 from platform import system
-from pymake import linker_update_environment
 
 import pytest
 from flaky import flaky
 from modflow_devtools.misc import set_dir, set_env
+
+from pymake import linker_update_environment
 
 RERUNS = 3
 
