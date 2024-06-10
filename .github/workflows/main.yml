@@ -76,9 +76,8 @@ jobs:
           pixi run autotest-Windows
 
       - name: Print coverage report before upload
-        working-directory: ./autotest
         run: |
-          coverage report
+          pixi run coverage-report
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

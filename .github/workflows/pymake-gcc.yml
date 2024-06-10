@@ -76,8 +76,8 @@ jobs:
           pixi run "$pixi_task"
 
       - name: Print coverage report before upload
-        working-directory: ./autotest
-        run: coverage report
+        run: |
+          pixi run coverage-report
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
