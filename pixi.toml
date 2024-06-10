@@ -7,6 +7,7 @@ version = "1.2.10.dev0"
 [dependencies]
 appdirs = "*"
 codespell = "*"
+coverage = "*"
 filelock = "*"
 flaky = "*"
 flopy = "*"
@@ -20,6 +21,7 @@ pip = "*"
 pydotplus = "*"
 pytest = "!=8.1.0"
 pytest-benchmark = "*"
+pytest-cov = "*"
 pytest-dotenv = "*"
 pytest-order = "*"
 pytest-xdist = "*"
@@ -39,6 +41,6 @@ test = "meson test --verbose --no-rebuild -C"
 
 # test
 download-examples = {cmd = "python ci_setup.py", cwd = "autotest"}
-autotest = { cmd = "pytest -v -n auto --dist=loadfile -m='base or regression' --durations 0 --keep-failed .failed", cwd = "autotest" }
-autotest-base = { cmd = "pytest -v -n auto --dist=loadfile -m='base' --durations 0 --keep-failed .failed", cwd = "autotest" }
-autotest-Windows = { cmd = "pytest -v -m='base' --durations 0 --keep-failed .failed", cwd = "autotest" }
+autotest = { cmd = "pytest -v -n auto --dist=loadfile -m='base or regression' --durations 0 --cov=pymake --cov-report=xml --basetemp=pytest_temp --keep-failed .failed", cwd = "autotest" }
+autotest-base = { cmd = "pytest -v -n auto --dist=loadfile -m='base' --durations 0 --cov=pymake --cov-report=xml --basetemp=pytest_temp --keep-failed .failed", cwd = "autotest" }
+autotest-Windows = { cmd = "pytest -v -m='base' --durations 0 --cov=pymake --cov-report=xml --basetemp=pytest_temp --keep-failed .failed", cwd = "autotest" }
