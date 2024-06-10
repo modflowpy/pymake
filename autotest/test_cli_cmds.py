@@ -4,7 +4,8 @@ import subprocess
 
 import pytest
 from flaky import flaky
-from modflow_devtools.misc import set_dir
+from modflow_devtools.misc import set_dir, set_env
+from platform import system
 
 RERUNS = 3
 
@@ -106,10 +107,14 @@ def test_mfpymake(function_tmpdir, meson: bool) -> None:
             "--verbose",
             "-fc",
         ]
+        fc = "gfortran"
         if os.environ.get("FC") is None:
-            cmd.append("gfortran")
+            cmd.append(fc)
         else:
-            cmd.append(os.environ.get("FC"))
+            fc = os.environ.get("FC")
+            cmd.append(fc)
+        if system() == "Darwin" and fc == "gfortran":
+            set_env(**{"LDFLAGS": "-Wl,-ld_classic"})
         if meson:
             cmd.append("--meson")
         run_cli_cmd(cmd)

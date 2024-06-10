@@ -31,7 +31,7 @@ def pm(module_tmpdir, target) -> pymake.Pymake:
     pm.target = str(target)
     pm.appdir = str(module_tmpdir)
     pm.cc = environ.get("CXX", "g++")
-    pm.fc = environ.get("FC", "gfortran")
+    pm.fc = None
     if system() == "Darwin" and pm.cc == "g++":
         pm.syslibs = "-Wl,-ld_classic"
     pm.inplace = True
