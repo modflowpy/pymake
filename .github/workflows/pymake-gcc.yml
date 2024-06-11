@@ -67,13 +67,16 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install make
 
-      - name: Run pytest
+      - name: Run pytest on Linux and MacOS
+        if: runner.os != 'Windows'
         run: |
-          pixi_task="autotest-base"
-          if [[ ${{ matrix.os }} == "windows-latest" ]]; then
-            pixi_task="autotest-Windows"
-          fi
-          pixi run "$pixi_task"
+          pixi run autotest-base
+
+      - name: test on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          pixi run autotest-Windows
 
       - name: Print coverage report before upload
         run: |
