@@ -69,8 +69,7 @@ def test_build(function_tmpdir, target: str) -> None:
         pm = pymake.Pymake(verbose=True)
         pm.target = target
         pm.inplace = True
-        if system() == "Darwin":
-            pm.syslibs = "-Wl,-ld_classic"
+        fc = os.environ.get("FC", "gfortran")
         assert (
             pymake.build_apps(
                 target,
@@ -87,8 +86,9 @@ def test_build(function_tmpdir, target: str) -> None:
 @pytest.mark.parametrize("target", targets_meson)
 def test_meson_build(function_tmpdir, target: str) -> None:
     kwargs = {}
-    if system() == "Darwin":
-        kwargs["LDFLAGS"] = "-Wl,-ld_classic"
+    cc = os.environ.get("CC", "gcc")
+    fc = os.environ.get("FC", "gfortran")
+    pymake.linker_update_environment(cc=cc, fc=fc)
     with set_dir(function_tmpdir), set_env(**kwargs):
         assert (
             pymake.build_apps(
@@ -113,8 +113,6 @@ def test_makefile_build(function_tmpdir, target: str) -> None:
     pm.inplace = True
     pm.dryrun = True
     pm.makeclean = False
-    if system() == "Darwin":
-        pm.syslibs = "-Wl,-ld_classic"
 
     with set_dir(function_tmpdir):
         pm.download_target(target)

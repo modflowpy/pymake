@@ -1,24 +1,21 @@
 import os
 import sys
 from pathlib import Path
+from platform import system
 from typing import List
 
 import pytest
+from modflow_devtools.ostags import get_binary_suffixes
 
 import pymake
+from pymake import linker_update_environment
 
 
 @pytest.fixture(scope="module")
 def targets() -> List[Path]:
     target = "mf6"
-    ext = ""
-    shared_ext = ".so"
+    ext, shared_ext = get_binary_suffixes()
     executables = [target, "zbud6", "mf5to6", "libmf6"]
-    if sys.platform.lower() == "win32":
-        ext = ".exe"
-        shared_ext = ".dll"
-    elif sys.platform.lower() == "darwin":
-        shared_ext = ".dylib"
     for idx, _ in enumerate(executables[:3]):
         executables[idx] += ext
     executables[3] += shared_ext
@@ -40,6 +37,7 @@ def pm(workspace, targets) -> pymake.Pymake:
     pm = pymake.Pymake(verbose=True)
     pm.target = str(targets[0])
     pm.appdir = str(workspace / "bin")
+    pm.fc = os.environ.get("FC", "gfortran")
     pm.meson = True
     pm.makeclean = True
     pm.mesondir = str(workspace)
@@ -82,6 +80,8 @@ def test_build_with_existing_meson(pm, module_tmpdir, workspace, targets):
     # download modflow 6
     pm.download_target(targets[0], download_path=module_tmpdir)
     assert pm.download, f"could not download {targets[0]} distribution"
+
+    linker_update_environment(cc=cc, fc=fc)
 
     # make modflow 6 with existing meson.build file
     returncode = pymake.meson_build(

@@ -1,10 +1,13 @@
 import os
 import pathlib as pl
 import subprocess
+from platform import system
 
 import pytest
 from flaky import flaky
-from modflow_devtools.misc import set_dir
+from modflow_devtools.misc import set_dir, set_env
+
+from pymake import linker_update_environment
 
 RERUNS = 3
 
@@ -106,10 +109,15 @@ def test_mfpymake(function_tmpdir, meson: bool) -> None:
             "--verbose",
             "-fc",
         ]
+        fc = "gfortran"
         if os.environ.get("FC") is None:
-            cmd.append("gfortran")
+            cmd.append(fc)
         else:
-            cmd.append(os.environ.get("FC"))
+            fc = os.environ.get("FC")
+            cmd.append(fc)
+
+        linker_update_environment(fc=fc)
+
         if meson:
             cmd.append("--meson")
         run_cli_cmd(cmd)
