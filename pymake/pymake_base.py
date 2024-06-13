@@ -96,9 +96,9 @@ def main(
     sharedobject=False,
     appdir=None,
     verbose=False,
-    inplace=False,
+    inplace=True,
     networkx=False,
-    meson=False,
+    meson=True,
     mesondir=".",
 ):
     """Main pymake function.
@@ -160,7 +160,7 @@ def main(
         boolean indicating that the source files in srcdir, srcdir2, and
         defined in extrafiles will be used directly. If inplace is False,
         source files will be copied to a directory named srcdir_temp.
-        (default is False)
+        (default is True)
     networkx : bool
         boolean indicating that the NetworkX python package will be used to
         create the Directed Acyclic Graph (DAG) used to determine the order

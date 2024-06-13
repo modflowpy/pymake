@@ -1,35 +1,26 @@
 import os
 import sys
 from pathlib import Path
+from platform import system
 
 import flopy
 import pytest
+from modflow_devtools.misc import set_dir
 
 import pymake
 
-
-@pytest.fixture(scope="module")
-def target(module_tmpdir) -> Path:
-    return module_tmpdir / "mt3dusgs"
+APPS = ["mt3dms", "mt3dusgs"]
+EXT = ".exe" if system() == "Windows" else ""
 
 
 @pytest.fixture(scope="module")
-def prog_data(target) -> dict:
-    return pymake.usgs_program_data.get_target(target.name)
+def prog_data() -> dict:
+    return pymake.usgs_program_data.get_target("mt3dusgs")
 
 
 @pytest.fixture(scope="module")
 def workspace(module_tmpdir, prog_data) -> Path:
-    return module_tmpdir / prog_data.dirname
-
-
-@pytest.fixture(scope="module")
-def pm(module_tmpdir) -> pymake.Pymake:
-    pm = pymake.Pymake(verbose=True)
-    pm.appdir = str(module_tmpdir)
-    pm.makeclean = True
-    yield pm
-    pm.finalize()
+    return module_tmpdir / f"temp/{prog_data.dirname}"
 
 
 def run_mt3dusgs(workspace, mt3dms_exe, mfnwt_exe, mf6_exe):
@@ -87,42 +78,44 @@ def run_mt3dusgs(workspace, mt3dms_exe, mfnwt_exe, mf6_exe):
     return success
 
 
-@pytest.mark.dependency(name="download_mt3dms")
-@pytest.mark.base
-def test_download_mt3dms(pm, module_tmpdir):
-    pm.target = "mt3dms"
-    pm.download_target(pm.target, download_path=module_tmpdir)
-    assert pm.download, f"could not download {pm.target} distribution"
-
-
-@pytest.mark.dependency(name="build_mt3dms", depends=["download_mt3dms"])
-@pytest.mark.base
-def test_compile_mt3dms(pm):
-    assert pm.build() == 0, f"could not compile {pm.target}"
-
-
-@pytest.mark.dependency(name="download")
-@pytest.mark.base
-def test_download(pm, module_tmpdir, target):
-    pm.reset(str(target))
-    pm.download_target(target, download_path=module_tmpdir)
-    assert pm.download, f"could not download {target} distribution"
-
-
-@pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.base
-def test_compile(pm, target):
-    assert pm.build() == 0, f"could not compile {target}"
-
-
+@pytest.mark.dependency(name="build")
 @pytest.mark.regression
-@pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
+@pytest.mark.parametrize(
+    "target",
+    APPS,
+)
+def test_compile(module_tmpdir, target):
+    target_path = module_tmpdir / f"{target}{EXT}"
+    cc = os.environ.get("CC", "gcc")
+    fc = os.environ.get("FC", "gfortran")
+    pymake.linker_update_environment(cc=cc, fc=fc)
+    with set_dir(module_tmpdir):
+        assert (
+            pymake.build_apps(
+                target,
+                verbose=True,
+                clean=False,
+                meson=True,
+            )
+            == 0
+        ), f"could not compile {target}"
+
+
+@pytest.mark.dependency(
+    name="download_exes",
+    depends=[
+        "build",
+    ],
+)
+@pytest.mark.regression
+# @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 def test_download_exes(module_tmpdir):
     pymake.getmfexes(module_tmpdir, exes=("mfnwt", "mf6"), verbose=True)
 
 
+@pytest.mark.dependency(name="test", depends=["build", "download_exes"])
 @pytest.mark.regression
-@pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
+# @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 @pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
 @pytest.mark.parametrize(
     "ws",
@@ -144,7 +137,8 @@ def test_download_exes(module_tmpdir):
         "p01SpatialStresses(mf6)",
     ],
 )
-def test_mt3dusgs(module_tmpdir, workspace, ws, target):
+def test_mt3dusgs(module_tmpdir, workspace, ws):
+    target = module_tmpdir / f"{APPS[1]}{EXT}"
     mfnwt_exe = module_tmpdir / "mfnwt"
     if pymake.usgs_program_data().get_version(mfnwt_exe) == "1.2.0":
         exclude = [

@@ -256,8 +256,8 @@ def _get_standard_arg_dict():
         },
         "meson": {
             "tag": ("--meson",),
-            "help": """Use meson to build executable. (default is False)""",
-            "default": False,
+            "help": """Use meson to build executable. (default is True)""",
+            "default": True,
             "choices": None,
             "action": "store_true",
         },

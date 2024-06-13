@@ -19,12 +19,13 @@ targets_make = [
 ]
 test_ostag = get_ostag()
 test_fc_env = os.environ.get("FC")
-if "win" in test_ostag:
-    meson_exclude = ("mt3dms", "vs2dt", "triangle", "gridgen", "sutra")
-elif "win" not in test_ostag and test_fc_env in ("ifort",):
-    meson_exclude = ("mf2000", "mf2005", "swtv4", "mflgr", "sutra")
-else:
-    meson_exclude = ("sutra",)
+meson_exclude = tuple()
+# if "win" in test_ostag:
+#     meson_exclude = ("mt3dms", "vs2dt", "triangle", "gridgen")
+# elif "win" not in test_ostag and test_fc_env in ("ifort",):
+#     meson_exclude = ("mf2000", "mf2005", "swtv4", "mflgr")
+# else:
+#     meson_exclude = tuple()
 targets_meson = [t for t in targets if t not in meson_exclude]
 
 
@@ -59,26 +60,6 @@ def build_with_makefile(target, path, fc):
             errmsg = "makefile does not exist"
 
     return success, errmsg
-
-
-@pytest.mark.base
-@flaky(max_runs=RERUNS)
-@pytest.mark.parametrize("target", targets)
-def test_build(function_tmpdir, target: str) -> None:
-    with set_dir(function_tmpdir):
-        pm = pymake.Pymake(verbose=True)
-        pm.target = target
-        pm.inplace = True
-        fc = os.environ.get("FC", "gfortran")
-        assert (
-            pymake.build_apps(
-                target,
-                pm,
-                verbose=True,
-                clean=False,
-            )
-            == 0
-        ), f"could not compile {target}"
 
 
 @pytest.mark.base
@@ -121,3 +102,24 @@ def test_makefile_build(function_tmpdir, target: str) -> None:
 
     success, errmsg = build_with_makefile(target, function_tmpdir, pm.fc)
     assert success, errmsg
+
+
+@pytest.mark.base
+@flaky(max_runs=RERUNS)
+@pytest.mark.parametrize("target", targets)
+def test_build(function_tmpdir, target: str) -> None:
+    with set_dir(function_tmpdir):
+        pm = pymake.Pymake(verbose=True)
+        pm.target = target
+        pm.inplace = True
+        fc = os.environ.get("FC", "gfortran")
+        assert (
+            pymake.build_apps(
+                target,
+                pm,
+                verbose=True,
+                clean=False,
+                meson=False,
+            )
+            == 0
+        ), f"could not compile {target}"

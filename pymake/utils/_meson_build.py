@@ -544,22 +544,19 @@ def _create_main_meson_build(
             line += f"\tversion: '{target_version}',\n"
         line += "\tmeson_version: '>= 1.1.0',\n"
         line += "\tdefault_options: [\n\t\t'b_vscrt=static_from_buildtype',\n"
-        line += f"\t\t'optimization={optlevel_int}',\n"
-        line += "\t\t'debug="
+        line += "\t\t'buildtype="
         if debug:
-            line += "true',\n"
+            line += "debug',\n"
         else:
-            line += "false',\n"
-        if target in ("mf6", "libmf6", "zbud6"):
-            line += "\t\t'fortran_std=f2008'\n"
+            line += "release',\n"
+        if fc is not None:
+            if target in ("mf6", "libmf6", "zbud6"):
+                line += "\t\t'fortran_std=f2008'\n"
         line += "\t])\n\n"
         f.write(line)
 
-        line = "if get_option('optimization') >= '2'\n"
-        line += "\tprofile = 'release'\n"
-        line += "else\n"
-        line += "\tprofile = 'develop'\n"
-        line += "endif\n\n"
+        line = "build_type = get_option('buildtype')\n"
+        line += "message('The build type is:', build_type)\n\n"
         f.write(line)
 
         line = ""
