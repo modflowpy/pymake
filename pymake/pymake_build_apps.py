@@ -127,7 +127,8 @@ def build_apps(
             shutil.rmtree(pth)
 
     # set object to clean after each build
-    pmobj.makeclean = True
+    if not pmobj.meson:
+        pmobj.makeclean = True
 
     # reset variables based on passed args
     if download_dir is not None:

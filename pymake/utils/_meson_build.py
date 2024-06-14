@@ -1,4 +1,5 @@
 import os
+import shutil
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -197,7 +198,8 @@ def meson_setup(
         command_list.append(f"--bindir={libdir}")
 
         if os.path.isdir(build_dir):
-            command_list.append("--wipe")
+            shutil.rmtree(build_dir)
+            # command_list.append("--wipe")
 
         command = " ".join(command_list)
         print(f"\n{command}\n")
