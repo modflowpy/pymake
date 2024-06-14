@@ -88,6 +88,14 @@ jobs:
         run: |
           pixi run build-all
 
+      - name: Upload failed test output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-${{ runner.os }}-intel
+          path: pymake/autotest/.failed
+  
+
       - name: Print coverage report before upload
         run: |
           pixi run coverage-report
