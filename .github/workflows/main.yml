@@ -93,7 +93,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: failed-${{ runner.os }}-intel
-          path: pymake/autotest/.failed
+          path: ./autotest/.failed
   
 
       - name: Print coverage report before upload
