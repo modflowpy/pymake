@@ -6,8 +6,6 @@ from pathlib import Path
 
 import pytest
 
-# import modflow-devtools fixtures
-
 pytest_plugins = ["modflow_devtools.fixtures"]
 
 

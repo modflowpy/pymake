@@ -83,6 +83,11 @@ jobs:
         run: |
           pixi run autotest-Windows
 
+      - name: Scheduled job test
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          pixi run build-all
+
       - name: Print coverage report before upload
         run: |
           pixi run coverage-report
