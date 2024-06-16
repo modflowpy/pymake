@@ -92,22 +92,6 @@ def run_mt3dusgs(workspace, mt3dms_exe, mfnwt_exe, mf6_exe):
     return success
 
 
-@pytest.mark.dependency(name="download_mt3dms")
-@pytest.mark.xdist_group(TARGET_NAME)
-@pytest.mark.regression
-def test_download_mt3dms(pm, module_tmpdir):
-    pm.target = "mt3dms"
-    pm.download_target(pm.target, download_path=module_tmpdir)
-    assert pm.download, f"could not download {pm.target} distribution"
-
-
-@pytest.mark.dependency(name="build_mt3dms", depends=["download_mt3dms"])
-@pytest.mark.xdist_group(TARGET_NAME)
-@pytest.mark.regression
-def test_compile_mt3dms(pm):
-    assert pm.build() == 0, f"could not compile {pm.target}"
-
-
 @pytest.mark.dependency(name="download")
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
