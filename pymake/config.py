@@ -1,3 +1,6 @@
+# mfpymake version file automatically created using
+# update_version.py on June 16, 2024 18:36:44
+
 __author__ = "Joseph D. Hughes"
 __date__ = "June 16, 2024"
 __version__ = "1.2.10"
