@@ -66,6 +66,7 @@ target/
 
 # files in the autotest directory
 autotest/temp*/
+autotest/.failed/
 autotest/*.json
 autotest/code.md
 mod_temp/
