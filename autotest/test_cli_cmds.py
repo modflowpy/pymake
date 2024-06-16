@@ -83,7 +83,6 @@ def test_make_program_all(module_tmpdir) -> None:
             "--appdir",
             str(module_tmpdir / "all"),
             "--verbose",
-            "--dryrun",
         ]
         run_cli_cmd(cmd)
 

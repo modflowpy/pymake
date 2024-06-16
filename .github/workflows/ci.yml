@@ -83,7 +83,18 @@ jobs:
         with:
           name: failed-schedule-${{ matrix.os }}-${{ matrix.FC }}-${{ matrix.FC_V }}
           path: ./autotest/.failed
-          
+
+      - name: Print coverage report before upload
+        run: |
+          pixi run coverage-report
+  
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          file: ./autotest/coverage.xml
+  
 
   pymake-os-compiler:
     name: pymake CI gcc on different OSs
@@ -145,8 +156,13 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install make
 
-      - name: Run pytest on Linux and MacOS
-        if: runner.os != 'Windows'
+      - name: test on Linux
+        if: runner.os == 'Linux'
+        run: |
+          pixi run autotest
+
+      - name: test on MacOS
+        if: runner.os == 'macOS'
         run: |
           pixi run autotest-base
 
@@ -154,7 +170,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          pixi run autotest-Windows
+          pixi run autotest-base
 
       - name: Upload failed test output
         if: failure()
@@ -163,4 +179,14 @@ jobs:
           name: failed-${{ matrix.os }}-${{ matrix.FC }}-${{ matrix.FC_V }}
           path: ./autotest/.failed
 
-
+      - name: Print coverage report before upload
+        run: |
+          pixi run coverage-report
+  
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          file: ./autotest/coverage.xml
+  

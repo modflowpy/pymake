@@ -68,7 +68,7 @@ def run_mfusg(fn, exe):
 
 
 @pytest.mark.dependency(name="download")
-@pytest.mark.regrression
+@pytest.mark.regression
 def test_download(pm, pm_gsi, module_tmpdir, targets):
     pm.download_target(targets[0], download_path=module_tmpdir)
     assert pm.download, f"could not download {targets[0]}"
