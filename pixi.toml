@@ -42,10 +42,11 @@ test = "meson test --verbose --no-rebuild -C"
 
 # test
 download-examples = {cmd = "python ci_setup.py", cwd = "autotest"}
-autotest = { cmd = "pytest -v -n auto --dist=loadfile -m='base or regression' --durations 0 --cov=pymake --cov-report=xml --keep-failed .failed", cwd = "autotest" }
-autotest-base = { cmd = "pytest -v -n auto --dist=loadfile -m='base' --durations 0 --cov=pymake --cov-report=xml --keep-failed .failed", cwd = "autotest" }
-autotest-Windows = { cmd = "pytest -v -m='base' --durations 0 --cov=pymake --cov-report=xml --basetemp=$RUNNER_TEMP/pytest_temp --keep-failed .failed", cwd = "autotest" }
+autotest = { cmd = "pytest -v -n auto --dist=loadgroup -m='base or regression' --durations 0 --cov=pymake --cov-report=xml --keep-failed .failed", cwd = "autotest" }
+autotest-base = { cmd = "pytest -v -n auto --dist=loadgroup -m='base' --durations 0 --cov=pymake --cov-report=xml --keep-failed .failed", cwd = "autotest" }
+autotest-Windows = { cmd = "pytest -v -n auto --dist=loadgroup -m='base' --durations 0 --cov=pymake --cov-report=xml --basetemp=$RUNNER_TEMP/pytest_temp --keep-failed .failed", cwd = "autotest" }
 build-all = { cmd = "pytest -v -m='schedule' -n auto --keep-failed .failed test_cli_cmds.py", cwd = "autotest" }
+autotest-slow = { cmd = "pytest -v -n auto -m='slow' --durations 0 --cov=pymake --cov-report=xml --keep-failed .failed", cwd = "autotest" }
 
 # coverage report
 coverage-report = { cmd = "coverage report", cwd = "autotest"}
