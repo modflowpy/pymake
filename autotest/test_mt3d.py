@@ -88,7 +88,7 @@ def run_mt3dusgs(workspace, mt3dms_exe, mfnwt_exe, mf6_exe):
 
 
 @pytest.mark.dependency(name="download_mt3dms")
-@pytest.mark.base
+@pytest.mark.regression
 def test_download_mt3dms(pm, module_tmpdir):
     pm.target = "mt3dms"
     pm.download_target(pm.target, download_path=module_tmpdir)
@@ -96,13 +96,13 @@ def test_download_mt3dms(pm, module_tmpdir):
 
 
 @pytest.mark.dependency(name="build_mt3dms", depends=["download_mt3dms"])
-@pytest.mark.base
+@pytest.mark.regression
 def test_compile_mt3dms(pm):
     assert pm.build() == 0, f"could not compile {pm.target}"
 
 
 @pytest.mark.dependency(name="download")
-@pytest.mark.base
+@pytest.mark.regression
 def test_download(pm, module_tmpdir, target):
     pm.reset(str(target))
     pm.download_target(target, download_path=module_tmpdir)
@@ -110,7 +110,7 @@ def test_download(pm, module_tmpdir, target):
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.base
+@pytest.mark.regression
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 

@@ -59,14 +59,14 @@ def run_gridgen(cmd, ws, exe):
 
 
 @pytest.mark.dependency(name="download")
-@pytest.mark.base
+@pytest.mark.regression
 def test_download(pm, module_tmpdir, target):
     pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.base
+@pytest.mark.regression
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 

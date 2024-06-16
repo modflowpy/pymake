@@ -100,14 +100,14 @@ def build_with_makefile(pm, workspace, exe):
 
 
 @pytest.mark.dependency(name="download")
-@pytest.mark.base
+@pytest.mark.regression
 def test_download(pm, module_tmpdir, target):
     pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.base
+@pytest.mark.regression
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
@@ -118,39 +118,3 @@ def test_compile(pm, target):
 def test_mf6(ws, target):
     success, _ = flopy.run_model(target, None, model_ws=ws, silent=False)
     assert success, f"could not run {ws}"
-
-
-@pytest.mark.dependency(name="makefile", depends=["build"])
-@pytest.mark.base
-def test_makefile(pm, module_tmpdir, target):
-    assert build_with_makefile(
-        pm, module_tmpdir, target
-    ), f"could not compile {target} with makefile"
-
-
-@pytest.mark.dependency(name="shared", depends=["makefile"])
-@pytest.mark.base
-def test_sharedobject(pm, module_tmpdir, workspace, target_so, prog_data):
-    # reconfigure pymake object
-    pm.target = str(target_so)
-    pm.appdir = module_tmpdir
-    pm.srcdir = workspace / prog_data.srcdir
-    pm.srcdir2 = workspace / "src"
-    pm.excludefiles = [os.path.join(pm.srcdir2, "mf6.f90")]
-    pm.makefile = True
-    pm.makeclean = True
-    pm.sharedobject = True
-    pm.inplace = True
-    pm.dryrun = False
-
-    # build the target
-    assert pm.build() == 0, f"could not compile {pm.target}"
-    assert target_so.is_file()
-
-
-@pytest.mark.dependency(name="shared_makefile", depends=["shared", "makefile"])
-@pytest.mark.base
-def test_sharedobject_makefile(pm, module_tmpdir, target_so):
-    assert build_with_makefile(
-        pm, module_tmpdir, target_so
-    ), f"could not compile {target_so} with makefile"

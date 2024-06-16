@@ -143,14 +143,14 @@ def run_modpath7(namefile, mp7_exe, mf2005_exe, mfusg_exe, mf6_exe):
 
 
 @pytest.mark.dependency(name="download")
-@pytest.mark.base
+@pytest.mark.regression
 def test_download(pm, module_tmpdir, target):
     pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.base
+@pytest.mark.regression
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 

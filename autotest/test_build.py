@@ -12,11 +12,6 @@ import pymake
 RERUNS = 3
 
 targets = pymake.usgs_program_data.get_keys(current=True)
-targets_make = [
-    t
-    for t in targets
-    if t not in ("libmf6", "gridgen", "mf2000", "swtv4", "mflgr")
-]
 test_ostag = get_ostag()
 test_fc_env = os.environ.get("FC")
 if "win" in test_ostag:
@@ -26,6 +21,15 @@ elif "win" not in test_ostag and test_fc_env in ("ifort",):
 else:
     meson_exclude = ("sutra",)
 targets_meson = [t for t in targets if t not in meson_exclude]
+
+if "win" in test_ostag and test_fc_env in ("ifort",):
+    targets_make = []
+else:
+    targets_make = [
+        t
+        for t in targets
+        if t not in ("libmf6", "gridgen", "mf2000", "swtv4", "mflgr")
+    ]
 
 
 def build_with_makefile(target, path, fc):
@@ -103,7 +107,6 @@ def test_meson_build(function_tmpdir, target: str) -> None:
 
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
-@pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
 @pytest.mark.parametrize("target", targets_make)
 def test_makefile_build(function_tmpdir, target: str) -> None:
     pm = pymake.Pymake(verbose=True)
