@@ -6,10 +6,12 @@ import pytest
 
 import pymake
 
+TARGET_NAME = "mf2005"
+
 
 @pytest.fixture(scope="module")
 def target(module_tmpdir) -> Path:
-    target = "mf2005"
+    target = TARGET_NAME
     if sys.platform.lower() == "win32":
         target += ".exe"
     return module_tmpdir / target
@@ -43,6 +45,7 @@ def run_mf2005(namefile, ws, exe):
 
 
 @pytest.mark.dependency(name="download")
+@pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 def test_download(pm, module_tmpdir, target):
     pm.download_target(target, download_path=module_tmpdir)
@@ -50,12 +53,14 @@ def test_download(pm, module_tmpdir, target):
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
+@pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.dependency(name="test", depends=["build"])
+@pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 @pytest.mark.parametrize(
     "namefile",

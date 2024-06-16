@@ -68,6 +68,7 @@ def run_mfusg(fn, exe):
 
 
 @pytest.mark.dependency(name="download")
+@pytest.mark.xdist_group("mfusg")
 @pytest.mark.regression
 def test_download(pm, pm_gsi, module_tmpdir, targets):
     pm.download_target(targets[0], download_path=module_tmpdir)
@@ -78,6 +79,7 @@ def test_download(pm, pm_gsi, module_tmpdir, targets):
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
+@pytest.mark.xdist_group("mfusg")
 @pytest.mark.regression
 def test_compile(pm, pm_gsi, targets):
     assert pm.build() == 0, f"could not compile {targets[0]}"
@@ -88,6 +90,7 @@ def test_compile(pm, pm_gsi, targets):
 
 
 @pytest.mark.dependency(name="test", depends=["download", "build"])
+@pytest.mark.xdist_group("mfusg")
 @pytest.mark.regression
 @pytest.mark.parametrize(
     "namefile",
