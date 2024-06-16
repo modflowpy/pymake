@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+from platform import system
 
 import flopy
 import pytest
@@ -124,7 +125,8 @@ def test_compile(pm, target):
 
 
 @pytest.mark.regression
-@pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
+# @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
+@pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
 @pytest.mark.xdist_group(TARGET_NAME)
 def test_download_exes(module_tmpdir):
     pymake.getmfexes(module_tmpdir, exes=("mfnwt", "mf6"), verbose=True)
@@ -132,7 +134,7 @@ def test_download_exes(module_tmpdir):
 
 @pytest.mark.regression
 @pytest.mark.xdist_group(TARGET_NAME)
-@pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
+# @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 @pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
 @pytest.mark.parametrize(
     "ws",
