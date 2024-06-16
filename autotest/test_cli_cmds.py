@@ -5,21 +5,23 @@ from platform import system
 
 import pytest
 from flaky import flaky
-from modflow_devtools.misc import set_dir, set_env
+from modflow_devtools.misc import set_dir
 
-from pymake import linker_update_environment
+import pymake
 
 RERUNS = 3
 
-targets = (
+TARGETS = (
     "triangle",
     "crt",
 )
 
-meson_parm = (
+MESON_PARM = (
     True,
     False,
 )
+
+TARGETS_ALL = pymake.usgs_program_data.get_keys(current=True)
 
 
 def run_cli_cmd(cmd: list) -> None:
@@ -44,51 +46,68 @@ def run_cli_cmd(cmd: list) -> None:
 @flaky(max_runs=RERUNS)
 @pytest.mark.dependency(name="make_program")
 @pytest.mark.base
-@pytest.mark.parametrize("target", targets)
+@pytest.mark.parametrize("target", TARGETS)
 def test_make_program(function_tmpdir, target: str) -> None:
-    cmd = [
-        "make-program",
-        target,
-        "--appdir",
-        str(function_tmpdir),
-        "--verbose",
-    ]
-    run_cli_cmd(cmd)
+    with set_dir(function_tmpdir):
+        cmd = [
+            "make-program",
+            target,
+            "--appdir",
+            str(function_tmpdir),
+            "--verbose",
+        ]
+        run_cli_cmd(cmd)
 
 
 @flaky(max_runs=RERUNS)
-@pytest.mark.dependency(name="make_program")
+@pytest.mark.dependency(name="make_program_mf2005")
 @pytest.mark.base
 def test_make_program_double(function_tmpdir) -> None:
-    cmd = [
-        "make-program",
-        "mf2005",
-        "--double",
-        "--verbose",
-        "--appdir",
-        str(function_tmpdir),
-    ]
-    run_cli_cmd(cmd)
+    with set_dir(function_tmpdir):
+        cmd = [
+            "make-program",
+            "mf2005",
+            "--double",
+            "--verbose",
+            "--appdir",
+            str(function_tmpdir),
+        ]
+        run_cli_cmd(cmd)
 
 
 @pytest.mark.dependency(name="make_program_all")
 @pytest.mark.schedule
-def test_make_program_all(module_tmpdir) -> None:
-    cmd = [
-        "make-program",
-        ":",
-        "--appdir",
-        str(module_tmpdir / "all"),
-        "--verbose",
-        "--dryrun",
-    ]
-    run_cli_cmd(cmd)
+def test_make_program_all(function_tmpdir) -> None:
+    with set_dir(function_tmpdir):
+        cmd = [
+            "make-program",
+            ":",
+            "--appdir",
+            str(function_tmpdir),
+            "--verbose",
+        ]
+        run_cli_cmd(cmd)
+
+
+@pytest.mark.dependency(name="make_program_all_parametrize")
+@pytest.mark.schedule
+@pytest.mark.parametrize("target", TARGETS_ALL)
+def test_make_program_all_parametrize(function_tmpdir, target: str) -> None:
+    with set_dir(function_tmpdir):
+        cmd = [
+            "make-program",
+            target,
+            "--appdir",
+            str(function_tmpdir),
+            "--verbose",
+        ]
+        run_cli_cmd(cmd)
 
 
 @flaky(max_runs=RERUNS)
 @pytest.mark.dependency(name="mfpymake")
 @pytest.mark.base
-@pytest.mark.parametrize("meson", meson_parm)
+@pytest.mark.parametrize("meson", MESON_PARM)
 def test_mfpymake(function_tmpdir, meson: bool) -> None:
     with set_dir(function_tmpdir):
         src = (
@@ -116,7 +135,7 @@ def test_mfpymake(function_tmpdir, meson: bool) -> None:
             fc = os.environ.get("FC")
             cmd.append(fc)
 
-        linker_update_environment(fc=fc)
+        pymake.linker_update_environment(fc=fc)
 
         if meson:
             cmd.append("--meson")

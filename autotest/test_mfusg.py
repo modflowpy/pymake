@@ -4,8 +4,12 @@ from platform import system
 
 import flopy
 import pytest
+from modflow_devtools.misc import set_dir
 
 import pymake
+
+APPS = ["mfusg", "mfusg_gsi"]
+EXT = ".exe" if system() == "Windows" else ""
 
 
 @pytest.fixture(scope="module")
@@ -21,25 +25,7 @@ def prog_data(targets) -> dict:
 
 @pytest.fixture(scope="module")
 def workspace(module_tmpdir, prog_data) -> Path:
-    return module_tmpdir / prog_data.dirname
-
-
-@pytest.fixture(scope="module")
-def pm(module_tmpdir, targets) -> pymake.Pymake:
-    pm = pymake.Pymake(verbose=True)
-    pm.target = str(targets[0])
-    pm.appdir = str(module_tmpdir)
-    yield pm
-    pm.finalize()
-
-
-@pytest.fixture(scope="module")
-def pm_gsi(module_tmpdir, targets) -> pymake.Pymake:
-    pm_gsi = pymake.Pymake(verbose=True)
-    pm_gsi.target = str(targets[1])
-    pm_gsi.appdir = str(module_tmpdir)
-    yield pm_gsi
-    pm_gsi.finalize()
+    return module_tmpdir / f"temp/{prog_data.dirname}"
 
 
 def edit_namefile(namefile):
@@ -67,24 +53,27 @@ def run_mfusg(fn, exe):
     assert success, errmsg
 
 
-@pytest.mark.dependency(name="download")
-@pytest.mark.base
-def test_download(pm, pm_gsi, module_tmpdir, targets):
-    pm.download_target(targets[0], download_path=module_tmpdir)
-    assert pm.download, f"could not download {targets[0]}"
-
-    pm_gsi.download_target(targets[1], download_path=module_tmpdir)
-    assert pm_gsi.download, f"could not download {targets[1]}"
-
-
-@pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.base
-def test_compile(pm, pm_gsi, targets):
-    assert pm.build() == 0, f"could not compile {targets[0]}"
-    assert (targets[0]).is_file()
-
-    assert pm_gsi.build() == 0, f"could not compile {targets[1]}"
-    assert targets[1].is_file()
+@pytest.mark.dependency(name="build")
+@pytest.mark.regression
+@pytest.mark.parametrize(
+    "target",
+    APPS,
+)
+def test_compile(module_tmpdir, target):
+    target_path = module_tmpdir / f"{target}{EXT}"
+    cc = os.environ.get("CC", "gcc")
+    fc = os.environ.get("FC", "gfortran")
+    pymake.linker_update_environment(cc=cc, fc=fc)
+    with set_dir(module_tmpdir):
+        assert (
+            pymake.build_apps(
+                target,
+                verbose=True,
+                clean=False,
+                meson=True,
+            )
+            == 0
+        ), f"could not compile {target}"
 
 
 @pytest.mark.dependency(name="test", depends=["build"])
@@ -101,8 +90,12 @@ def test_compile(pm, pm_gsi, targets):
         "03_conduit_confined/ex3.nam",
     ],
 )
-def test_mfusg(workspace, namefile, targets):
+@pytest.mark.parametrize(
+    "target",
+    APPS,
+)
+def test_mfusg(module_tmpdir, workspace, namefile, target):
+    target_path = module_tmpdir / f"{target}{EXT}"
     namefile_path = workspace / "test" / namefile
     edit_namefile(namefile_path)
-    run_mfusg(namefile_path, targets[0])
-    run_mfusg(namefile_path, targets[1])
+    run_mfusg(namefile_path, target_path)

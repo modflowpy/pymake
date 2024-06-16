@@ -83,6 +83,19 @@ jobs:
         run: |
           pixi run autotest-Windows
 
+      - name: Scheduled job test
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          pixi run build-all
+
+      - name: Upload failed test output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-${{ runner.os }}-intel
+          path: ./autotest/.failed
+  
+
       - name: Print coverage report before upload
         run: |
           pixi run coverage-report

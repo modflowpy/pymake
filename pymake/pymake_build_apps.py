@@ -42,7 +42,7 @@ def build_apps(
     appdir=None,
     verbose=None,
     double=False,
-    meson=False,
+    meson=True,
     mesondir=".",
     clean=True,
 ):
@@ -63,9 +63,9 @@ def build_apps(
         force double precision. (default is False)
     meson : bool
         boolean indicating that the executable should be built using the
-        meson build system. (default is False)
+        meson build system. (default is True)
     mesondir : str
-        Main meson.build file path
+        Main meson.build file path. (default is the current directory ".")
     clean : bool
         boolean determining of final download should be removed
 
@@ -127,7 +127,8 @@ def build_apps(
             shutil.rmtree(pth)
 
     # set object to clean after each build
-    pmobj.makeclean = True
+    if not pmobj.meson:
+        pmobj.makeclean = True
 
     # reset variables based on passed args
     if download_dir is not None:

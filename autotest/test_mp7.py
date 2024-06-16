@@ -5,6 +5,7 @@ from platform import system
 
 import flopy
 import pytest
+from modflow_devtools.misc import set_dir
 
 import pymake
 
@@ -24,16 +25,7 @@ def prog_data(target) -> dict:
 
 @pytest.fixture(scope="module")
 def workspace(module_tmpdir, prog_data) -> Path:
-    return module_tmpdir / prog_data.dirname
-
-
-@pytest.fixture(scope="module")
-def pm(module_tmpdir, target) -> pymake.Pymake:
-    pm = pymake.Pymake(verbose=True)
-    pm.target = str(target)
-    pm.appdir = str(module_tmpdir)
-    yield pm
-    pm.finalize()
+    return module_tmpdir / f"temp/{prog_data.dirname}"
 
 
 def replace_data(dpth):
@@ -142,20 +134,30 @@ def run_modpath7(namefile, mp7_exe, mf2005_exe, mfusg_exe, mf6_exe):
     return success
 
 
-@pytest.mark.dependency(name="download")
-@pytest.mark.base
-def test_download(pm, module_tmpdir, target):
-    pm.download_target(target, download_path=module_tmpdir)
-    assert pm.download, f"could not download {target} distribution"
+@pytest.mark.dependency(name="build")
+@pytest.mark.regression
+def test_compile(module_tmpdir, target):
+    cc = os.environ.get("CC", "gcc")
+    fc = os.environ.get("FC", "gfortran")
+    pymake.linker_update_environment(cc=cc, fc=fc)
+    with set_dir(module_tmpdir):
+        assert (
+            pymake.build_apps(
+                target.stem,
+                verbose=True,
+                clean=False,
+                meson=True,
+            )
+            == 0
+        ), f"could not compile {target.stem}"
 
 
-@pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.base
-def test_compile(pm, target):
-    assert pm.build() == 0, f"could not compile {target}"
-
-
-@pytest.mark.dependency(name="download_exes")
+@pytest.mark.dependency(
+    name="download_exes",
+    depends=[
+        "build",
+    ],
+)
 @pytest.mark.regression
 def test_download_exes(module_tmpdir):
     pymake.getmfexes(
@@ -163,9 +165,7 @@ def test_download_exes(module_tmpdir):
     )
 
 
-@pytest.mark.dependency(
-    name="test", depends=["download", "download_exes", "build"]
-)
+@pytest.mark.dependency(name="test", depends=["build", "download_exes"])
 @pytest.mark.regression
 @pytest.mark.parametrize(
     "namefile",

@@ -173,7 +173,7 @@ python mymf6script.py -fc ifort -cc icc
 
 When pymake is installed, a `make-program` (or `make-program.exe` for Windows) program is installed. `make-program` can
 be used to build MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7,
-GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, and SUTRA. Utility programs CRT, Triangle, and GRIDGEN can also
+GSFLOW, VS2DT, MT3DMS, MT3D-USGS, and SEAWAT. Utility programs CRT, Triangle, and GRIDGEN can also
 be built. `make-program` downloads the distribution file (requires an internet connection), unzips the file, sets the
 pymake settings required to build the program, and compiles the program from the source files. Optional pymake command
 line arguments can be used to customize the build (`-fc`, `-cc`, `--fflags`, etc.). For example, MODFLOW 6 could be
