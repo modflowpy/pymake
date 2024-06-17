@@ -126,18 +126,17 @@ def update_version(
 
 
 if __name__ == "__main__":
+    epilog = """\
+    Update version information stored in version.txt in the project root
+    and other files in the repository. If --version is not provided, the
+    version number will not be changed. The version tag must comply with
+    '<major>.<minor>.<patch>' format convention for semantic versioning.
+    To show the version without changing anything, use --get (short -g).
+    """
     parser = argparse.ArgumentParser(
         prog=f"Update {_project_name} version",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent(
-            """\
-            Update version information stored in version.txt in the project root
-            and other files in the repository. If --version is not provided, the
-            version number will not be changed. The version tag must comply with
-            '<major>.<minor>.<patch>' format convention for semantic versioning.
-            To show the version without changing anything, use --get (short -g).
-            """
-        ),
+        epilog=textwrap.dedent(epilog),
     )
     parser.add_argument(
         "-v",
