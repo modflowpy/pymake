@@ -8,12 +8,10 @@ import pytest
 
 import pymake
 
-TARGET_NAME = "mp6"
-
 
 @pytest.fixture(scope="module")
 def target(module_tmpdir) -> Path:
-    name = TARGET_NAME
+    name = "mp6"
     ext = ".exe" if system() == "Windows" else ""
     return module_tmpdir / f"{name}{ext}"
 
@@ -62,22 +60,19 @@ def update_files(fn, workspace):
 
 
 @pytest.mark.dependency(name="download")
-@pytest.mark.xdist_group(TARGET_NAME)
-@pytest.mark.regression
+@pytest.mark.base
 def test_download(pm, module_tmpdir, target):
     pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.xdist_group(TARGET_NAME)
-@pytest.mark.regression
+@pytest.mark.base
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.dependency(name="test", depends=["build"])
-@pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 @pytest.mark.parametrize(
     "namefile", [f"EXAMPLE-{n}.mpsim" for n in range(1, 10)]

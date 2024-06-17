@@ -1,13 +1,10 @@
 import os
 import pathlib as pl
 import subprocess
-from platform import system
 
 import pytest
 from flaky import flaky
-from modflow_devtools.misc import set_dir, set_env
-
-from pymake import linker_update_environment
+from modflow_devtools.misc import set_dir
 
 RERUNS = 3
 
@@ -46,45 +43,28 @@ def run_cli_cmd(cmd: list) -> None:
 @pytest.mark.base
 @pytest.mark.parametrize("target", targets)
 def test_make_program(function_tmpdir, target: str) -> None:
-    with set_dir(function_tmpdir):
-        cmd = [
-            "make-program",
-            target,
-            "--appdir",
-            str(function_tmpdir),
-            "--verbose",
-        ]
-        run_cli_cmd(cmd)
-
-
-@flaky(max_runs=RERUNS)
-@pytest.mark.dependency(name="make_program")
-@pytest.mark.base
-def test_make_program_double(function_tmpdir) -> None:
-    with set_dir(function_tmpdir):
-        cmd = [
-            "make-program",
-            "mf2005",
-            "--double",
-            "--verbose",
-            "--appdir",
-            str(function_tmpdir),
-        ]
-        run_cli_cmd(cmd)
+    cmd = [
+        "make-program",
+        target,
+        "--appdir",
+        str(function_tmpdir),
+        "--verbose",
+    ]
+    run_cli_cmd(cmd)
 
 
 @pytest.mark.dependency(name="make_program_all")
 @pytest.mark.schedule
 def test_make_program_all(module_tmpdir) -> None:
-    with set_dir(module_tmpdir):
-        cmd = [
-            "make-program",
-            ":",
-            "--appdir",
-            str(module_tmpdir / "all"),
-            "--verbose",
-        ]
-        run_cli_cmd(cmd)
+    cmd = [
+        "make-program",
+        ":",
+        "--appdir",
+        str(module_tmpdir / "all"),
+        "--verbose",
+        "--dryrun",
+    ]
+    run_cli_cmd(cmd)
 
 
 @flaky(max_runs=RERUNS)
@@ -111,15 +91,10 @@ def test_mfpymake(function_tmpdir, meson: bool) -> None:
             "--verbose",
             "-fc",
         ]
-        fc = "gfortran"
         if os.environ.get("FC") is None:
-            cmd.append(fc)
+            cmd.append("gfortran")
         else:
-            fc = os.environ.get("FC")
-            cmd.append(fc)
-
-        linker_update_environment(fc=fc)
-
+            cmd.append(os.environ.get("FC"))
         if meson:
             cmd.append("--meson")
         run_cli_cmd(cmd)

@@ -7,10 +7,6 @@ on:
   pull_request:
     branches:
       - master
-      - develop
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 jobs:
 
 
@@ -23,17 +19,43 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.8.1
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          pixi-version: v0.19.1
-          manifest-path: "pixi.toml"
+          python-version: "3.12"
 
-      - name: Lint
-        run: pixi run check-lint
+      - name: Setup Graphviz
+        uses: ts-graphviz/setup-graphviz@v2
 
-      - name: Check format
-        run: pixi run check-format
+      - name: Install packages
+        run: |
+          pip install requests pydotplus appdirs numpy matplotlib
+          pip install https://github.com/modflowpy/flopy/zipball/develop
+          pip install pylint flake8 black
+
+      - name: Run isort
+        run: |
+          echo "if isort check fails update isort using"
+          echo "  pip install isort --upgrade"
+          echo "and run"
+          echo "  isort ./flopy"
+          echo "and then commit the changes."
+          isort --verbose --check --diff ./pymake
+
+      - name: Run black
+        run: |
+          echo "if black check fails update black using"
+          echo "  pip install black --upgrade"
+          echo "and run"
+          echo "  black ./flopy"
+          echo "and then commit the changes."
+          black --check --diff ./pymake
+
+      - name: Run flake8
+        run: flake8 --count --show-source --exit-zero ./pymake
+
+      - name: Run pylint
+        run: pylint --jobs=2 --errors-only --exit-zero ./pymake
 
   pymake_setup:
     name: standard installation

@@ -1192,7 +1192,8 @@ def _create_win_batch(
     # open the batch file
     f = open(batchfile, "w")
 
-    # only write the command to batchfile if env vars aren't already configured
+    # only write the compilervars batch command to batchfile if env vars aren't already configured
+    # https://www.intel.com/content/www/us/en/develop/documentation/oneapi-programming-guide/top/oneapi-development-environment-setup/use-the-setvars-script-with-windows.html
     if os.environ.get("SETVARS_COMPLETED") != "1":
         line = "call " + intel_setvars + "\n"
         f.write(line)

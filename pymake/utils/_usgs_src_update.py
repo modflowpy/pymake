@@ -10,8 +10,6 @@ import sys
 import types
 from typing import Union
 
-from ..utils.usgsprograms import usgs_program_data
-
 
 def _get_function_names(module, select_name=None):
     """Get a dictionary of functions available in a user-specified source file.
@@ -65,13 +63,9 @@ def _build_replace(targets):
     if isinstance(targets, str):
         targets = [targets]
 
-    # remove exe extension from targets, as well as
-    # d (debug) and dbl (double precision) suffixes
+    # remove exe extension from targets
     for idx, target in enumerate(targets):
-        tgt = pl.Path(target).with_suffix("").name.replace("dbl", "")
-        if tgt.endswith("d") and tgt[:-1] in usgs_program_data.get_keys():
-            tgt = tgt[:-1]
-        targets[idx] = tgt
+        targets[idx] = pl.Path(target).with_suffix("").name
 
     # get a dictionary of update functions
     funcs = _get_function_names(sys.modules[__name__], select_name="_update_")
@@ -346,14 +340,14 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
 
     """
     tags = {
-        "FMTARG = 'BINARY'": "FMTARG = 'UNFORMATTED'\n        ACCARG = 'STREAM'",  # noqa: E501
+        "FMTARG = 'BINARY'": "FMTARG = 'UNFORMATTED'\n        ACCARG = 'STREAM'",
         ",SHARED,ACCESS='SEQUENTIAL'": ",ACCESS='SEQUENTIAL'",
         "FORM=FMTARG,SHARED,": "FORM=FMTARG,",
         ",BUFFERED='YES',": ",",
         ", BUFFERED='NO')": ")",
         ",SHARE = 'DENYNONE'": ",",
         ", SHARE = 'DENYNONE',": ",",
-        "FORM='FORMATTED',ACCESS='SEQUENTIAL',": "FORM='FORMATTED',ACCESS='SEQUENTIAL'",  # noqa: E501
+        "FORM='FORMATTED',ACCESS='SEQUENTIAL',": "FORM='FORMATTED',ACCESS='SEQUENTIAL'",
     }
 
     fpth = pl.Path(srcdir) / "glo2basu1.f"
@@ -466,6 +460,114 @@ def _update_mfnwt_files(srcdir, fc, cc, arch, double):
 
     # update gwf2swi27.f or gwf2swi27.f
     _update_swi(srcdir, double)
+
+
+def _update_prms_files(srcdir, fc, cc, arch, double):
+    """Update PRMS source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
+    # remove existing *.mod, *.o, and *.a (if any are left) files
+    dpths = [
+        os.path.join(srcdir, o)
+        for o in os.listdir(srcdir)
+        if os.path.isdir(os.path.join(srcdir, o))
+    ]
+
+    for dpth in dpths:
+        for f in os.listdir(dpth):
+            ext = os.path.splitext(f)[1]
+            fpth = os.path.join(dpth, f)
+            if ext in [".mod", ".o", ".a"]:
+                os.remove(fpth)
+
+    # remove specific files
+    fpths = (
+        os.path.join(srcdir, "prms", "gsflow_module.f90"),
+        os.path.join(srcdir, "prms", "gsflow_prms.f90"),
+    )
+    for fpth in fpths:
+        if os.path.isfile(fpth):
+            os.remove(fpth)
+
+    return
+
+
+def _update_gsflow_files(srcdir, fc, cc, arch, double):
+    """Update GSFLOW source files
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
+    # update utl7.f
+    _update_utl7(srcdir)
+
+    # update gwf2swt7.f
+    _update_swt(srcdir)
+
+    # update gwf2swi27.f or gwf2swi27.fpp
+    _update_swi(srcdir, double)
+
+    # remove merge and lib directories
+    pths = [os.path.join(srcdir, "merge"), os.path.join(srcdir, "lib")]
+    for pth in pths:
+        if os.path.isdir(pth):
+            shutil.rmtree(pth)
+
+    # remove existing *.mod, *.o, and *.a (if any are left) files
+    dpths = [
+        os.path.join(srcdir, o)
+        for o in os.listdir(srcdir)
+        if os.path.isdir(os.path.join(srcdir, o))
+    ]
+
+    for dpth in dpths:
+        for f in os.listdir(dpth):
+            ext = os.path.splitext(f)[1]
+            fpth = os.path.join(dpth, f)
+            if ext in [".mod", ".o", ".a"]:
+                os.remove(fpth)
+
+    # remove specific files
+    fpths = [
+        os.path.join(srcdir, "modflow", "gwf2ag1_NWT_rsr.f"),
+    ]
+    for fpth in fpths:
+        if os.path.isfile(fpth):
+            os.remove(fpth)
+
+    return
 
 
 def _update_mf2000_files(srcdir, fc, cc, arch, double):
@@ -785,8 +887,6 @@ def _update_mf6_external_dependencies(
         "Distributed/MpiRunControl.F90",
         "Distributed/MpiWorld.f90",
         "Solution/ParallelSolution.f90",
-        "Distributed/MpiUnitCache.f90",
-        "Distributed/MpiMessageCache.f90",
     )
     for file in parallel_files:
         path = srcdir / file

@@ -1,24 +1,24 @@
 import os
 import sys
 from pathlib import Path
-from platform import system
 from typing import List
 
 import pytest
-from modflow_devtools.misc import set_dir
-from modflow_devtools.ostags import get_binary_suffixes
 
 import pymake
-from pymake import linker_update_environment
-
-TARGET_NAME = "mf6"
 
 
 @pytest.fixture(scope="module")
 def targets() -> List[Path]:
-    target = TARGET_NAME
-    ext, shared_ext = get_binary_suffixes()
+    target = "mf6"
+    ext = ""
+    shared_ext = ".so"
     executables = [target, "zbud6", "mf5to6", "libmf6"]
+    if sys.platform.lower() == "win32":
+        ext = ".exe"
+        shared_ext = ".dll"
+    elif sys.platform.lower() == "darwin":
+        shared_ext = ".dylib"
     for idx, _ in enumerate(executables[:3]):
         executables[idx] += ext
     executables[3] += shared_ext
@@ -40,7 +40,6 @@ def pm(workspace, targets) -> pymake.Pymake:
     pm = pymake.Pymake(verbose=True)
     pm.target = str(targets[0])
     pm.appdir = str(workspace / "bin")
-    pm.fc = os.environ.get("FC", "gfortran")
     pm.meson = True
     pm.makeclean = True
     pm.mesondir = str(workspace)
@@ -50,57 +49,52 @@ def pm(workspace, targets) -> pymake.Pymake:
 
 
 @pytest.mark.base
-@pytest.mark.xdist_group(TARGET_NAME)
 def test_build_with_existing_meson(pm, module_tmpdir, workspace, targets):
-    with set_dir(module_tmpdir):
-        # set default compilers
-        fc, cc = "gfortran", "gcc"
+    # set default compilers
+    fc, cc = "gfortran", "gcc"
 
-        # get the arguments
-        for idx, arg in enumerate(sys.argv):
-            if arg == "-fc":
-                fc = sys.argv[idx + 1]
-            elif "-fc=" in arg:
-                fc = arg.split("=")[1]
-            if arg == "-cc":
-                cc = sys.argv[idx + 1]
-            elif "-cc=" in arg:
-                cc = arg.split("=")[1]
+    # get the arguments
+    for idx, arg in enumerate(sys.argv):
+        if arg == "-fc":
+            fc = sys.argv[idx + 1]
+        elif "-fc=" in arg:
+            fc = arg.split("=")[1]
+        if arg == "-cc":
+            cc = sys.argv[idx + 1]
+        elif "-cc=" in arg:
+            cc = arg.split("=")[1]
 
-        # check if fc differs from environmental variable
-        fc_env = os.environ.get("FC")
-        if fc_env is not None:
-            if fc != fc_env:
-                fc = fc_env
+    # check if fc differs from environmental variable
+    fc_env = os.environ.get("FC")
+    if fc_env is not None:
+        if fc != fc_env:
+            fc = fc_env
 
-        # check if cc differs from environmental variable
-        cc_env = os.environ.get("CC")
-        if cc_env is not None:
-            if cc != cc_env:
-                cc = cc_env
+    # check if cc differs from environmental variable
+    cc_env = os.environ.get("CC")
+    if cc_env is not None:
+        if cc != cc_env:
+            cc = cc_env
 
-        # print fortran and c/c++ compilers
-        print(f"fortran compiler={fc}\n" + f"c/c++ compiler={cc}\n")
+    # print fortran and c/c++ compilers
+    print(f"fortran compiler={fc}\n" + f"c/c++ compiler={cc}\n")
 
-        # download modflow 6
-        pm.download_target(targets[0], download_path=module_tmpdir)
-        assert pm.download, f"could not download {targets[0]} distribution"
+    # download modflow 6
+    pm.download_target(targets[0], download_path=module_tmpdir)
+    assert pm.download, f"could not download {targets[0]} distribution"
 
-        linker_update_environment(cc=cc, fc=fc)
+    # make modflow 6 with existing meson.build file
+    returncode = pymake.meson_build(
+        workspace,
+        fc,
+        cc,
+        appdir=pm.appdir,
+    )
+    assert (
+        returncode == 0
+    ), "could not build modflow 6 applications using existing meson.build file"
 
-        # make modflow 6 with existing meson.build file
-        returncode = pymake.meson_build(
-            workspace,
-            fc,
-            cc,
-            appdir=pm.appdir,
-        )
-        assert returncode == 0, (
-            "could not build modflow 6 applications "
-            + "using existing meson.build file"
-        )
-
-        # check that all of the executables exist
-        for executable in targets:
-            exe_pth = os.path.join(pm.appdir, executable)
-            assert os.path.isfile(exe_pth), f"{exe_pth} does not exist"
+    # check that all of the executables exist
+    for executable in targets:
+        exe_pth = os.path.join(pm.appdir, executable)
+        assert os.path.isfile(exe_pth), f"{exe_pth} does not exist"

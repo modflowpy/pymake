@@ -24,9 +24,6 @@ var/
 .installed.cfg
 *.egg
 
-# pixi
-.pixi/
-
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -66,7 +63,6 @@ target/
 
 # files in the autotest directory
 autotest/temp*/
-autotest/.failed/
 autotest/*.json
 autotest/code.md
 mod_temp/
@@ -83,6 +79,3 @@ venv/
 
 # mac files
 **/.DS_Store
-
-# environment files
-**.env

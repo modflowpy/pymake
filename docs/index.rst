@@ -17,7 +17,7 @@ programs released by the USGS.
 
 pymake includes example scripts for building MODFLOW 6, MODFLOW-2005,
 MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7,
-VS2DT, MT3DMS, MT3D-USGS, SEAWAT, and SUTRA. Example scripts for
+GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, and SUTRA. Example scripts for
 creating the utility programs CRT, Triangle, and GRIDGEN are also included.
 The scripts download the distribution file from the USGS (and other
 organizations) and compile the source into a binary executable.

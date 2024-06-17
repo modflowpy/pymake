@@ -4,19 +4,9 @@ on:
   schedule:
     - cron: '0 7 * * *' # run at 7 AM UTC every day
   push:
-    paths-ignore:
-      - 'README.md'
-      - 'docs/*.md'
   pull_request:
     branches:
       - master
-      - develop
-    paths-ignore:
-      - 'README.md'
-      - 'docs/*.md'
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 jobs:
 
   pymakeCI-requests:
@@ -30,32 +20,32 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.8.1
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          pixi-version: v0.19.1
-          manifest-path: "pixi.toml"
+          python-version: "3.12"
 
-      - name: pixi post-install
-        working-directory: pymake
+      - name: Install python packages
         run: |
-          pixi run postinstall
+          python -m pip install --upgrade pip
+          pip install ".[test]"
 
       - name: Run pytest
+        working-directory: ./autotest
         run: |
-          pixi run autotest-request
+          pytest -v -n=auto -m requests --durations=0 --cov=pymake --cov-report=xml
 
-      - name: Upload failed test output
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: failed-requests
-          path: ./autotest/.failed
+      - name: Run scheduled tests
+        if: ${{ github.event_name == 'schedule' }}
+        working-directory: ./autotest
+        run: |
+          pytest -v -m="schedule" --durations=0 --cov=pymake --cov-report=xml
 
       - name: Print coverage report before upload
+        working-directory: ./autotest
         run: |
-          pixi run coverage-report
-  
+          coverage report
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         env:

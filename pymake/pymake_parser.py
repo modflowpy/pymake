@@ -232,7 +232,7 @@ def _get_standard_arg_dict():
         },
         "zip": {
             "tag": ("--zip",),
-            "help": "Zip built executable. (default is None)",
+            "help": "Zip built executable. (default is False)",
             "default": None,
             "choices": None,
             "action": None,
