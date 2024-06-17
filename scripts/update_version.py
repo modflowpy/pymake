@@ -32,20 +32,32 @@ _initial_version = Version("0.0.1")
 _current_version = Version(_version_txt_path.read_text().strip())
 
 
-def update_version_txt(version: Version):
-    with open(_version_txt_path, "w") as f:
+def update_version_txt(version: Version) -> None:
+    """Update version number in version.txt
+
+    Parameters
+    ----------
+    version : Version
+        version number
+    """
+    with open(_version_txt_path, "w", encoding="utf8") as f:
         f.write(str(version))
     print(f"Updated {_version_txt_path} to version {version}")
 
 
-def update_version_py(timestamp: datetime, version: Version):
+def update_version_py(timestamp: datetime, version: Version) -> None:
+    """Update version number in config.py
+
+    Parameters
+    ----------
+    timestamp : datetime
+        current datetime
+    version : Version
+        version number
+    """
     lines = file_paths["config.py"].read_text().rstrip().split("\n")
 
-    with open(_version_py_path, "w") as f:
-        f.write(
-            f"# {_project_name} version file automatically created using\n"
-            f"# {Path(__file__).name} on {timestamp:%B %d, %Y %H:%M:%S}\n\n"
-        )
+    with open(_version_py_path, "w", encoding="utf8") as f:
         for line in lines:
             if "__date__" in line:
                 line = f'__date__ = "{timestamp:%B %d, %Y}"'
@@ -55,10 +67,14 @@ def update_version_py(timestamp: datetime, version: Version):
     print(f"Updated {_version_py_path} to version {version}")
 
 
-def update_readme_markdown(
-    timestamp: datetime,
-    version: Version,
-):
+def update_readme_markdown(version: Version) -> None:
+    """Update README.md
+
+    Parameters
+    ----------
+    version : Version
+        version number
+    """
     fpth = file_paths["README.md"]
 
     # read README.md into memory
@@ -66,7 +82,7 @@ def update_readme_markdown(
 
     # rewrite README.md
     terminate = False
-    with open(fpth, "w") as f:
+    with open(fpth, "w", encoding="utf8") as f:
         for line in lines:
             if "### Version " in line:
                 line = f"### Version {version}"
@@ -77,10 +93,14 @@ def update_readme_markdown(
     print(f"Updated {fpth} to version {version}")
 
 
-def update_codejson(
-    timestamp: datetime,
-    version: Version,
-):
+def update_codejson(version: Version) -> None:
+    """Update code.json
+
+    Parameters
+    ----------
+    version : Version
+        version number
+    """
     # define json filename
     json_fname = file_paths["code.json"]
 
@@ -88,7 +108,7 @@ def update_codejson(
     data = json.loads(json_fname.read_text())
 
     # rewrite the json file
-    with open(json_fname, "w") as f:
+    with open(json_fname, "w", encoding="utf8") as f:
         json.dump(data, f, indent=4)
         f.write("\n")
 
@@ -98,7 +118,17 @@ def update_codejson(
 def update_version(
     timestamp: datetime = datetime.now(),
     version: Version = None,
-):
+) -> None:
+    """Main function for updating all of the files containing
+       version information
+
+    Parameters
+    ----------
+    timestamp : datetime, optional
+        datetime object, by default datetime.now()
+    version : Version, optional
+        version number, by default None
+    """
     lock_path = Path(_version_txt_path.name + ".lock")
     try:
         lock = FileLock(lock_path)
@@ -112,8 +142,8 @@ def update_version(
         with lock:
             update_version_txt(version)
             update_version_py(timestamp, version)
-            update_readme_markdown(timestamp, version)
-            update_codejson(timestamp, version)
+            update_readme_markdown(version)
+            update_codejson(version)
     finally:
         try:
             lock_path.unlink()
