@@ -37,6 +37,7 @@ jobs:
           pip install --upgrade pip
           pip install build twine
           pip install .
+          pip install ".[lint, test]"
 
       - name: Make code.md
         run: make-code-json
