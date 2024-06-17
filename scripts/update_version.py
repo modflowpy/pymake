@@ -1,5 +1,4 @@
 import argparse
-import json
 import re
 import textwrap
 from datetime import datetime
@@ -15,7 +14,6 @@ _version_py_path = _project_root_path / "pymake" / "config.py"
 
 # file names and the path to the file relative to the repo root directory
 file_paths_list = [
-    _project_root_path / "code.json",
     _project_root_path / "README.md",
     _project_root_path / "version.txt",
     _project_root_path / "pymake" / "config.py",
@@ -28,7 +26,6 @@ def split_nonnumeric(s):
     return [s[: match.start()], s[match.start() :]] if match else s
 
 
-_initial_version = Version("0.0.1")
 _current_version = Version(_version_txt_path.read_text().strip())
 
 
@@ -93,28 +90,6 @@ def update_readme_markdown(version: Version) -> None:
     print(f"Updated {fpth} to version {version}")
 
 
-def update_codejson(version: Version) -> None:
-    """Update code.json
-
-    Parameters
-    ----------
-    version : Version
-        version number
-    """
-    # define json filename
-    json_fname = file_paths["code.json"]
-
-    # load and modify json file
-    data = json.loads(json_fname.read_text())
-
-    # rewrite the json file
-    with open(json_fname, "w", encoding="utf8") as f:
-        json.dump(data, f, indent=4)
-        f.write("\n")
-
-    print(f"Updated {json_fname} to version {version}")
-
-
 def update_version(
     timestamp: datetime = datetime.now(),
     version: Version = None,
@@ -143,7 +118,6 @@ def update_version(
             update_version_txt(version)
             update_version_py(timestamp, version)
             update_readme_markdown(version)
-            update_codejson(version)
     finally:
         try:
             lock_path.unlink()
@@ -157,12 +131,11 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent(
             """\
-            Update version information stored in version.txt in the project
-            root, as well as several other files in the repository. If 
-            --version is not provided, the version number will not be 
-            changed. A file lock is held to synchronize file access. The 
-            version tag must comply with standard '<major>.<minor>.<patch>' 
-            format conventions for semantic versioning.
+            Update version information stored in version.txt in the project root
+            and other files in the repository. If --version is not provided, the
+            version number will not be changed. The version tag must comply with
+            '<major>.<minor>.<patch>' format convention for semantic versioning.
+            To show the version without changing anything, use --get (short -g).
             """
         ),
     )
@@ -183,9 +156,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.get:
-        print(
-            Version((_project_root_path / "version.txt").read_text().strip())
-        )
+        print(_current_version)
     else:
         update_version(
             timestamp=datetime.now(),
