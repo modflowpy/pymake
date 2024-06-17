@@ -49,3 +49,6 @@ autotest-schedule = { cmd = "pytest -v -m='schedule' --durations=0 --cov=pymake 
 
 # coverage report
 coverage-report = { cmd = "coverage report", cwd = "autotest"}
+
+# release 
+update-version = { cmd = "python scripts/update_version.py -v"}

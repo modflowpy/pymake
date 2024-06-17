@@ -1,6 +1,9 @@
+# mfpymake version file automatically created using
+# update_version.py on June 16, 2024 18:36:44
+
 __author__ = "Joseph D. Hughes"
-__date__ = "February 12, 2024"
-__version__ = "1.2.10.dev0"
+__date__ = "June 16, 2024"
+__version__ = "1.2.10"
 __maintainer__ = "Joseph D. Hughes"
 __email__ = "jdhughes@usgs.gov"
 __status__ = "Production"
