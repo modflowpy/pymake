@@ -39,8 +39,12 @@ jobs:
           pip install .
           pip install ".[lint, test]"
 
-      - name: Make code.md
-        run: make-code-json
+      - name: Make metadata files
+        uses: nick-fields/retry@v3
+        with:
+          timeout_seconds: 10
+          max_attempts: 3
+          command: make-code-json
 
       - name: Upload code.md
         uses: actions/upload-artifact@v3
@@ -68,12 +72,16 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           ver="${{ steps.version.outputs.version }}"
+
+          # remove metadata files
+          rm code.json
+          rm code.md
           
           # commit and push changes
           git config core.sharedRepository true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pymake
+          git add -A
           git commit -m "ci(release): set version to ${{ steps.version.outputs.version }}"
           git push origin "${{ github.ref_name }}"
 
@@ -118,7 +126,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          version=$(python scripts/update_version.py -g)
+          version=$(cat version.txt)
           title="pymake $version"
           notes=$(cat code.md)
           gh release create "$version" \
