@@ -7,6 +7,13 @@ from pathlib import Path
 from filelock import FileLock
 from packaging.version import Version
 
+_epilog = """\
+Update version information stored in version.txt in the project root
+and other files in the repository. If --version is not provided, the
+version number will not be changed. The version tag must comply with
+'<major>.<minor>.<patch>' format convention for semantic versioning.
+To show the version without changing anything, use --get (short -g).
+"""
 _project_name = "mfpymake"
 _project_root_path = Path(__file__).parent.parent
 _version_txt_path = _project_root_path / "version.txt"
@@ -126,17 +133,10 @@ def update_version(
 
 
 if __name__ == "__main__":
-    epilog = """\
-    Update version information stored in version.txt in the project root
-    and other files in the repository. If --version is not provided, the
-    version number will not be changed. The version tag must comply with
-    '<major>.<minor>.<patch>' format convention for semantic versioning.
-    To show the version without changing anything, use --get (short -g).
-    """
     parser = argparse.ArgumentParser(
         prog=f"Update {_project_name} version",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent(epilog),
+        epilog=textwrap.dedent(_epilog),
     )
     parser.add_argument(
         "-v",
