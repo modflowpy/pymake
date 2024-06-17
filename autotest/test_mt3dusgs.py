@@ -1,16 +1,21 @@
 import os
 import sys
 from pathlib import Path
+from platform import system
 
 import flopy
 import pytest
 
 import pymake
 
+TARGET_NAME = "mt3dusgs"
+EXT = ".exe" if system() == "Windows" else ""
+
 
 @pytest.fixture(scope="module")
 def target(module_tmpdir) -> Path:
-    return module_tmpdir / "mt3dusgs"
+    name = TARGET_NAME
+    return module_tmpdir / f"{TARGET_NAME}{EXT}"
 
 
 @pytest.fixture(scope="module")
@@ -87,22 +92,9 @@ def run_mt3dusgs(workspace, mt3dms_exe, mfnwt_exe, mf6_exe):
     return success
 
 
-@pytest.mark.dependency(name="download_mt3dms")
-@pytest.mark.base
-def test_download_mt3dms(pm, module_tmpdir):
-    pm.target = "mt3dms"
-    pm.download_target(pm.target, download_path=module_tmpdir)
-    assert pm.download, f"could not download {pm.target} distribution"
-
-
-@pytest.mark.dependency(name="build_mt3dms", depends=["download_mt3dms"])
-@pytest.mark.base
-def test_compile_mt3dms(pm):
-    assert pm.build() == 0, f"could not compile {pm.target}"
-
-
 @pytest.mark.dependency(name="download")
-@pytest.mark.base
+@pytest.mark.xdist_group(TARGET_NAME)
+@pytest.mark.regression
 def test_download(pm, module_tmpdir, target):
     pm.reset(str(target))
     pm.download_target(target, download_path=module_tmpdir)
@@ -110,19 +102,23 @@ def test_download(pm, module_tmpdir, target):
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.base
+@pytest.mark.xdist_group(TARGET_NAME)
+@pytest.mark.regression
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.regression
-@pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
+# @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
+@pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
+@pytest.mark.xdist_group(TARGET_NAME)
 def test_download_exes(module_tmpdir):
     pymake.getmfexes(module_tmpdir, exes=("mfnwt", "mf6"), verbose=True)
 
 
 @pytest.mark.regression
-@pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
+@pytest.mark.xdist_group(TARGET_NAME)
+# @pytest.mark.skipif(sys.platform == "darwin", reason="do not run on OSX")
 @pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
 @pytest.mark.parametrize(
     "ws",

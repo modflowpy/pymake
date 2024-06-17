@@ -9,10 +9,12 @@ from modflow_devtools.misc import is_in_ci
 
 import pymake
 
+TARGET_NAME = "swtv4"
+
 
 @pytest.fixture(scope="module")
 def target(module_tmpdir) -> Path:
-    name = "swtv4"
+    name = TARGET_NAME
     ext = ".exe" if system() == "Windows" else ""
     return module_tmpdir / f"{name}{ext}"
 
@@ -76,19 +78,22 @@ def build_seawat_dependency_graphs(src_path, dep_path):
 
 
 @pytest.mark.dependency(name="download")
-@pytest.mark.base
+@pytest.mark.xdist_group(TARGET_NAME)
+@pytest.mark.regression
 def test_download(pm, module_tmpdir, target):
     pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target}"
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.base
+@pytest.mark.xdist_group(TARGET_NAME)
+@pytest.mark.regression
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.dependency(name="test", depends=["build"])
+@pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 @pytest.mark.parametrize(
     "namefile",
@@ -122,6 +127,7 @@ def test_seawat(namefile, workspace, target):
 
 
 @pytest.mark.dependency(name="graph", depends=["test"])
+@pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 def test_dependency_graphs(workspace, prog_data):
     src_path = workspace / prog_data.srcdir
