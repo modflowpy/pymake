@@ -4,7 +4,6 @@
 This script originates from pymake: https://github.com/modflowpy/pymake
 It requires Python 3.6 or later, and has no dependencies.
 """
-
 import sys
 from pathlib import Path
 
@@ -56,14 +55,6 @@ Examples:
             "choices": None,
             "action": None,
         },
-        "appdir": {
-            "tag": ("-ad", "--appdir"),
-            "help": "code.json path that overides FPTH defined path, "
-            + "Default is None.",
-            "default": None,
-            "choices": None,
-            "action": None,
-        },
         "prog_data": {
             "tag": ("--prog_data",),
             "help": "User-specified program database. If prog_data is None, "
@@ -105,29 +96,12 @@ Examples:
             "choices": None,
             "action": "store_true",
         },
-        "partial_json": {
-            "tag": ("--partial_json",),
-            "help": "Create a partial code.json based on targets in the "
-            + "parent path for the code.json file (FPTH). "
-            + "Default is False.",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "zip": {
-            "tag": ("--zip",),
-            "help": "Zip code.json into ZIP. (default is None)",
-            "default": None,
-            "choices": None,
-            "action": None,
-            "type": (str, Path),
-        },
         "verbose": {
             "tag": (
                 "-v",
                 "--verbose",
             ),
-            "help": "Verbose output to terminal. Default is False.",
+            "help": "boolean for verbose output to terminal. Default is True.",
             "default": False,
             "choices": None,
             "action": "store_true",
@@ -141,10 +115,6 @@ Examples:
 
     # define args
     args = vars(parser_args)
-
-    # clean up zip argument in args
-    args["zip_path"] = args["zip"]
-    del args["zip"]
 
     # run build_apps
     try:

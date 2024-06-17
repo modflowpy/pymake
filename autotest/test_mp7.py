@@ -10,12 +10,10 @@ import pymake
 
 ext = ".exe" if system() == "Windows" else ""
 
-TARGET_NAME = "mp7"
-
 
 @pytest.fixture(scope="module")
 def target(module_tmpdir):
-    name = TARGET_NAME
+    name = "mp7"
     return module_tmpdir / f"{name}{ext}"
 
 
@@ -145,22 +143,19 @@ def run_modpath7(namefile, mp7_exe, mf2005_exe, mfusg_exe, mf6_exe):
 
 
 @pytest.mark.dependency(name="download")
-@pytest.mark.xdist_group(TARGET_NAME)
-@pytest.mark.regression
+@pytest.mark.base
 def test_download(pm, module_tmpdir, target):
     pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.xdist_group(TARGET_NAME)
-@pytest.mark.regression
+@pytest.mark.base
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.dependency(name="download_exes")
-@pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 def test_download_exes(module_tmpdir):
     pymake.getmfexes(
@@ -171,7 +166,6 @@ def test_download_exes(module_tmpdir):
 @pytest.mark.dependency(
     name="test", depends=["download", "download_exes", "build"]
 )
-@pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 @pytest.mark.parametrize(
     "namefile",

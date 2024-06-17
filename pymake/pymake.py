@@ -54,11 +54,9 @@ MODFLOW 6 was built.
 
 import argparse
 import os
-import pathlib as pl
 import shutil
 import sys
 import time
-from zipfile import ZipFile
 
 from .config import __description__
 from .pymake_base import main
@@ -258,57 +256,29 @@ class Pymake:
                     targets.append(target)
 
             # add code.json
-            if pl.Path("code.json").exists():
-                if "code.json" not in targets:
-                    targets.append("code.json")
+            if "code.json" not in targets:
+                targets.append("code.json")
 
             # delete the zip file if it exists
             if os.path.exists(zip_pth):
-                if self.keep:
-                    if self.verbose:
-                        print(
-                            "Appending files to existing "
-                            + f"zipfile '{pl.Path(zip_pth).resolve()}'"
-                        )
-                    with ZipFile(
-                        zip_pth,
-                        mode="r",
-                    ) as zf:
-                        available_file_paths = zf.namelist()
-                        pop_list = []
-                        for target in targets:
-                            for temp_path in available_file_paths:
-                                if target == temp_path:
-                                    pop_list.append(target)
-                                    break
-                        for target in pop_list:
-                            targets.remove(target)
-                else:
-                    if self.verbose:
-                        print(
-                            "Deleting existing zipfile "
-                            + f"'{pl.Path(zip_pth).resolve()}'"
-                        )
-                    os.remove(zip_pth)
+                if self.verbose:
+                    msg = f"Deleting existing zipfile '{zip_pth}'"
+                    print(msg)
+                os.remove(zip_pth)
 
             # print a message describing the zip process
             if self.verbose:
-                print(
+                msg = (
                     f"Compressing files in '{appdir}' "
-                    + f"directory to zip file '{pl.Path(zip_pth).resolve()}'"
+                    + f"directory to zip file '{zip_pth}'"
                 )
+                print(msg)
                 for idx, target in enumerate(targets):
-                    print(
-                        f" {idx + 1:>3d}. adding " + f"'{target}' to zipfile"
-                    )
+                    msg = f" {idx + 1:>3d}. adding " + f"'{target}' to zipfile"
+                    print(msg)
 
             # compress the compiled executables
-            if not zip_all(
-                zip_pth,
-                dir_pths=appdir,
-                patterns=targets,
-                append=self.keep,
-            ):
+            if not zip_all(zip_pth, dir_pths=appdir, patterns=targets):
                 self.returncode = 1
 
         return
@@ -503,6 +473,8 @@ class Pymake:
             "libmf6",
             "gridgen",
             "mf6beta",
+            "gsflow",
+            "prms",
         ):
             self.include_subdirs = True
         else:
@@ -620,7 +592,6 @@ class Pymake:
         if extrafiles is None:
             if self._get_base_target() in ("zbud6",):
                 extrafiles = [
-                    "../../../src/Utilities/CharString.f90",
                     "../../../src/Utilities/ArrayHandlers.f90",
                     "../../../src/Utilities/ArrayReaders.f90",
                     "../../../src/Utilities/BlockParser.f90",

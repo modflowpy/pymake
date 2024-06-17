@@ -4,7 +4,6 @@
 This script originates from pymake: https://github.com/modflowpy/pymake
 It requires Python 3.6 or later, and has no dependencies.
 """
-
 import sys
 from pathlib import Path
 

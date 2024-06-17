@@ -95,13 +95,7 @@ class pymakeZipFile(ZipFile):
             self.extract(zipinfo, path, pwd)
 
     @staticmethod
-    def compressall(
-        path,
-        file_pths=None,
-        dir_pths=None,
-        patterns=None,
-        append=False,
-    ):
+    def compressall(path, file_pths=None, dir_pths=None, patterns=None):
         """Compress selected files or files in selected directories.
 
         Parameters
@@ -114,9 +108,6 @@ class pymakeZipFile(ZipFile):
             directory paths to include in the output zip file (default is None)
         patterns : str or list of str
             file patterns to include in the output zip file (default is None)
-        append : bool
-            boolean indicating if file paths should be appended to an existing
-            zip file
 
         Returns
         -------
@@ -168,19 +159,21 @@ class pymakeZipFile(ZipFile):
                     tlist.append(file_pth)
             file_pths = tlist
 
-        if append and pl.Path(path).exists():
-            mode = "a"
-        else:
-            mode = "w"
-
+        # write the zipfile
         success = True
         if len(file_pths) > 0:
-            with ZipFile(path, mode=mode, compression=ZIP_DEFLATED) as zf:
-                for file_pth in file_pths:
-                    arcname = os.path.basename(file_pth)
-                    zf.write(file_pth, arcname=arcname)
+            zf = ZipFile(path, "w", ZIP_DEFLATED)
+
+            # write files to zip file
+            for file_pth in file_pths:
+                arcname = os.path.basename(file_pth)
+                zf.write(file_pth, arcname=arcname)
+
+            # close the zip file
+            zf.close()
         else:
-            print("No files to add to the zip file")
+            msg = "No files to add to the zip file"
+            print(msg)
             success = False
 
         return success
@@ -478,13 +471,7 @@ def download_and_unzip(
     return success
 
 
-def zip_all(
-    path,
-    file_pths=None,
-    dir_pths=None,
-    patterns=None,
-    append=False,
-):
+def zip_all(path, file_pths=None, dir_pths=None, patterns=None):
     """Compress all files in the user-provided list of file paths and directory
     paths that match the provided file patterns.
 
@@ -500,20 +487,13 @@ def zip_all(
     patterns : str or list
         file pattern or list of file patterns s to match to when creating a
         list of files that will be compressed
-    append : bool
-        boolean indicating if file paths should be appended to an existing
-        zip file
 
     Returns
     -------
 
     """
     return pymakeZipFile.compressall(
-        path,
-        file_pths=file_pths,
-        dir_pths=dir_pths,
-        patterns=patterns,
-        append=append,
+        path, file_pths=file_pths, dir_pths=dir_pths, patterns=patterns
     )
 
 

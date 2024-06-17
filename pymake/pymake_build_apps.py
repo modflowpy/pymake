@@ -41,7 +41,7 @@ def build_apps(
     download_dir=None,
     appdir=None,
     verbose=None,
-    double=False,
+    release_precision=True,
     meson=False,
     mesondir=".",
     clean=True,
@@ -52,15 +52,19 @@ def build_apps(
     ----------
     targets : str or list of str
         targets to build. If targets is None, all current targets will
-        be built. Default is None
+        be build. Default is None
     pymake_object : Pymake()
         Pymake object created outside of build_apps
     download_dir : str
         download directory path
     appdir : str
         target path
-    double : bool
-        force double precision. (default is False)
+    release_precision : bool
+        boolean indicating if only the release precision version should be
+        build. If release_precision is False, then the release precision
+        version will be compiled along with a double precision version of
+        the program for programs where the standard_switch and double_switch
+        in usgsprograms.txt is True. default is True.
     meson : bool
         boolean indicating that the executable should be built using the
         meson build system. (default is False)
@@ -88,7 +92,7 @@ def build_apps(
         targets = usgs_program_data.get_keys(current=True)
     else:
         if isinstance(targets, str):
-            targets = targets.split(",")
+            targets = [targets]
 
     code_dict = {}
 
@@ -205,6 +209,11 @@ def build_apps(
         download_verify = True
         timeout = 30
 
+        # reset meson
+        if target in ("prms",):
+            pmobj.meson = True
+            pmobj.inplace = True
+
         # set target and srcdir
         pmobj.target = target.replace("dev", "")
         pmobj.srcdir = os.path.join(
@@ -212,19 +221,16 @@ def build_apps(
         )
 
         # determine if single, double, or both should be built
-        prog_precision = usgs_program_data.get_precision(target)
+        precision = usgs_program_data.get_precision(target)
 
         # just build the first precision in precision list if
-        # reset prog_precision if double
-        if double:
-            prog_precision = ["double"]
+        # standard_precision is True
+        if release_precision:
+            precision = precision[0:1]
 
-        for precision_str in prog_precision:
+        for double in precision:
             # set double flag
-            if precision_str == "double":
-                pmobj.double = True
-            else:
-                pmobj.double = False
+            pmobj.double = double
 
             # determine if the target should be built
             build_target = pmobj.set_build_target_bool(

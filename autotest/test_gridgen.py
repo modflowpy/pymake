@@ -1,18 +1,16 @@
+import os
 import pathlib as pl
 import subprocess
-from os import environ
 from platform import system
 
 import pytest
 
 import pymake
 
-TARGET_NAME = "gridgen"
-
 
 @pytest.fixture(scope="module")
 def target(module_tmpdir) -> pl.Path:
-    name = TARGET_NAME
+    name = "gridgen"
     ext = ".exe" if system() == "Windows" else ""
     return module_tmpdir / f"{name}{ext}"
 
@@ -32,8 +30,8 @@ def pm(module_tmpdir, target) -> pymake.Pymake:
     pm = pymake.Pymake(verbose=True)
     pm.target = str(target)
     pm.appdir = str(module_tmpdir)
-    pm.cc = environ.get("CXX", "g++")
-    pm.fc = None
+    pm.cc = os.environ.get("CXX", "g++")
+    pm.fc = os.environ.get("FC", "gfortran")
     pm.inplace = True
     pm.makeclean = True
     yield pm
@@ -61,22 +59,19 @@ def run_gridgen(cmd, ws, exe):
 
 
 @pytest.mark.dependency(name="download")
-@pytest.mark.xdist_group(TARGET_NAME)
-@pytest.mark.regression
+@pytest.mark.base
 def test_download(pm, module_tmpdir, target):
     pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target} distribution"
 
 
 @pytest.mark.dependency(name="build", depends=["download"])
-@pytest.mark.xdist_group(TARGET_NAME)
-@pytest.mark.regression
+@pytest.mark.base
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
 
 @pytest.mark.dependency(name="test", depends=["build"])
-@pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 @pytest.mark.parametrize(
     "cmd",

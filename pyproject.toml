@@ -33,7 +33,7 @@ requires-python = ">=3.8"
 dependencies = [
     "numpy",
     "requests",
-    "networkx",
+    "networkx >= 2.6.3",
     "meson",
     "ninja",
     "pydotplus",
@@ -41,15 +41,18 @@ dependencies = [
 dynamic = ["version", "readme"]
 [project.optional-dependencies]
 lint = [
+    "black",
     "cffconvert",
-    "ruff",
+    "flake8",
+    "isort",
+    "pylint",
 ]
 test = [
     "mfpymake[lint]",
     "coverage",
     "flaky",
     "filelock",
-    "pytest!=8.1.0",
+    "pytest",
     "pytest-benchmark",
     "pytest-cov",
     "pytest-dependency",
@@ -87,30 +90,18 @@ include = ["pymake", "pymake.*"]
 [tool.setuptools.package-data]
 "pymake.utils" = ["usgsprograms.txt"]
 
+[tool.black]
+line-length = 79
+target_version = ["py38"]
+
+[tool.flynt]
+line-length = 79
+verbose = true
+
+[tool.isort]
+profile = "black"
+src_paths = ["pymake", "autotest", "examples"]
+line_length = 79
+
 [tool.setuptools_scm]
 fallback_version = "999"
-
-[tool.ruff]
-line-length = 79
-target-version = "py38"
-include = [
-    "pyproject.toml",
-    "pymake/**/*.py",
-    "autotest/**/*.py",
-    "docs/**/*.py",
-]
-
-[tool.ruff.lint]
-select = ["F", "E", "I001"]
-ignore = [
-    "E402", # module level import not at top of file
-    "E712", # Avoid equality comparisons to `True`
-    "E722", # do not use bare `except`
-    "E741", # ambiguous variable name
-    "F401", # unused import
-    "F403", # unable to detect undefined names (star imports)
-    "F524", # `.format` missing argument(s) for placeholder(s)
-    "F811", # Redefinition of unused variable
-    "F821", # undefined name TODO FIXME
-    "F841", # local variable assigned but never used
-]
