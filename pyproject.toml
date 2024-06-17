@@ -98,6 +98,7 @@ include = [
     "pymake/**/*.py",
     "autotest/**/*.py",
     "docs/**/*.py",
+    "scripts/**/*.py",
 ]
 
 [tool.ruff.lint]
