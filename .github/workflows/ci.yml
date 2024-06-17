@@ -20,7 +20,7 @@ concurrency:
 jobs:
 
   pymake-os-compiler:
-    name: pymake CI on different OSs with gcc and intel-classic
+    name: pymake compilers
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -114,7 +114,7 @@ jobs:
           file: ./autotest/coverage.xml
   
   pymake-schedule:
-    name: pymake scheduled CI different OSs with gcc and intel-classic
+    name: pymake scheduled
     if: ${{ github.event_name == 'schedule' }}
     runs-on: ${{ matrix.os }}
     strategy:
