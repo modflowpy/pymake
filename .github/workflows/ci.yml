@@ -1,0 +1,192 @@
+name: pymake continuous integration
+
+on:
+  schedule:
+    - cron: '0 7 * * *' # run at 7 AM UTC every day
+  push:
+    paths-ignore:
+      - 'README.md'
+      - 'docs/*.md'
+  pull_request:
+    branches:
+      - master
+      - develop
+    paths-ignore:
+      - 'README.md'
+      - 'docs/*.md'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+
+  pymake-os-compiler:
+    name: pymake compilers
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # test latest gcc and python
+          - {os: ubuntu-latest, FC: gcc, FC_V: 13}
+          - {os: macos-latest, FC: gcc, FC_V: 13}
+          - {os: windows-latest, FC: gcc, FC_V: 13}
+          # test latest python and intel-classic
+          - {os: ubuntu-latest, FC: intel-classic, FC_V: 2021.7}
+          - {os: macos-13, FC: intel-classic, FC_V: 2021.7}
+          - {os: windows-2019, FC: intel-classic, FC_V: 2021.7}
+          # test latest python and previous gcc
+          - {os: ubuntu-latest, FC: gcc, FC_V: 12}
+          - {os: ubuntu-latest, FC: gcc, FC_V: 11}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        if: ${{ (runner.os == 'macOS') && (matrix.FC == 'intel-classic') }}
+        with:
+          xcode-version: "14.3.1"
+
+      - name: Setup Graphviz on Linux
+        if: runner.os == 'Linux'
+        uses: ts-graphviz/setup-graphviz@v2
+
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.19.1
+          manifest-path: "pixi.toml"
+
+      - name: pixi post-install
+        working-directory: pymake
+        run: |
+          pixi run postinstall
+
+      - name: Setup ${{ matrix.FC }} ${{ matrix.FC_V }} on ${{ matrix.os }}
+        uses: fortran-lang/setup-fortran@main
+        with:
+          compiler: ${{ matrix.FC }}
+          version: ${{ matrix.FC_V }}
+
+      - name: Download examples for pytest runs
+        run: |
+          pixi run download-examples 
+      
+      - name: Install make
+        if: runner.os == 'Windows'
+        run: choco install make
+
+      - name: test on Linux
+        if: runner.os == 'Linux'
+        run: |
+          pixi run autotest
+
+      - name: test on MacOS
+        if: runner.os == 'macOS'
+        run: |
+          pixi run autotest-base
+
+      - name: test on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          pixi run autotest-base
+
+      - name: Upload failed test output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-${{ matrix.os }}-${{ matrix.FC }}-${{ matrix.FC_V }}
+          path: ./autotest/.failed
+
+      - name: Print coverage report before upload
+        run: |
+          pixi run coverage-report
+  
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          file: ./autotest/coverage.xml
+  
+  pymake-schedule:
+    name: pymake scheduled
+    if: ${{ github.event_name == 'schedule' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # test latest gcc and python
+          - {os: ubuntu-latest, FC: gcc, FC_V: 13}
+          - {os: macos-latest, FC: gcc, FC_V: 13}
+          - {os: windows-latest, FC: gcc, FC_V: 13}
+          # test latest python and intel
+          - {os: ubuntu-latest, FC: intel-classic, FC_V: 2021.7}
+          - {os: macos-13, FC: intel-classic, FC_V: 2021.7}
+          - {os: windows-2019, FC: intel-classic, FC_V: 2021.7}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        if: ${{ (runner.os == 'macOS') && (matrix.FC == 'intel-classic') }}
+        with:
+          xcode-version: "14.3.1"
+
+      - name: Setup Graphviz on Linux
+        if: runner.os == 'Linux'
+        uses: ts-graphviz/setup-graphviz@v2
+
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.19.1
+          manifest-path: "pixi.toml"
+
+      - name: pixi post-install
+        working-directory: pymake
+        run: |
+          pixi run postinstall
+
+      - name: Setup ${{ matrix.FC }} ${{ matrix.FC_V }} on ${{ matrix.os }}
+        uses: fortran-lang/setup-fortran@main
+        with:
+          compiler: ${{ matrix.FC }}
+          version: ${{ matrix.FC_V }}
+      
+      - name: Install make
+        if: runner.os == 'Windows'
+        run: choco install make
+
+      - name: Run scheduled tests
+        run: |
+          pixi run autotest-schedule
+
+      - name: Upload failed test output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-schedule-${{ matrix.os }}-${{ matrix.FC }}-${{ matrix.FC_V }}
+          path: ./autotest/.failed
+
+      - name: Print coverage report before upload
+        run: |
+          pixi run coverage-report
+  
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          file: ./autotest/coverage.xml
+  
+

@@ -7,6 +7,10 @@ on:
   pull_request:
     branches:
       - master
+      - develop
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
 
   pymake_rtd:

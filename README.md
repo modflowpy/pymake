@@ -2,7 +2,7 @@
 
 Python package for building MODFLOW-based programs from source files.
 
-### Version 1.2.9.dev0
+### Version 1.2.10
 
 [![PyPI Version](https://img.shields.io/pypi/v/mfpymake.png)](https://pypi.python.org/pypi/mfpymake)
 [![Anaconda Version](https://anaconda.org/conda-forge/mfpymake/badges/version.svg)](https://anaconda.org/conda-forge/mfpymake)  
@@ -55,13 +55,8 @@ The help message identifies required positional arguments and optional arguments
 default values.
 
 ```
-usage: mfpymake [-h] [-fc {ifort,mpiifort,gfortran,none}]
-                [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}]
-                [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e]
-                [-dr] [-sd] [-ff FFLAGS] [-cf CFLAGS] [-sl {-lc,-lm}] [-mf]
-                [-md] [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES]
-                [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace]
-                [--networkx] [--meson] [--mesondir]
+usage: mfpymake [-h] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e] [-dr] [-sd] [-ff FFLAGS]
+                [-cf CFLAGS] [-sl {-lc,-lm}] [-mf] [-md] [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace] [--networkx] [--meson] [--mesondir]
                 srcdir target
 
 This is the pymake program for compiling fortran, c, and c++ source
@@ -73,70 +68,45 @@ positional arguments:
   srcdir                Path source directory.
   target                Name of target to create. (can include path)
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -fc {ifort,mpiifort,gfortran,none}
                         Fortran compiler to use. (default is gfortran)
   -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
                         C/C++ compiler to use. (default is gcc)
   -ar {ia32,ia32_intel64,intel64}, --arch {ia32,ia32_intel64,intel64}
-                        Architecture to use for Intel and Microsoft compilers
-                        on Windows. (default is intel64)
-  -mc, --makeclean      Clean temporary object, module, and source files when
-                        done. (default is False)
+                        Architecture to use for Intel and Microsoft compilers on Windows. (default is intel64)
+  -mc, --makeclean      Clean temporary object, module, and source files when done. (default is False)
   -dbl, --double        Force double precision. (default is False)
   -dbg, --debug         Create debug version. (default is False)
-  -e, --expedite        Only compile out of date source files. Clean must not
-                        have been used on previous build. (default is False)
-  -dr, --dryrun         Do not actually compile. Files will be deleted, if
-                        --makeclean is used. Does not work yet for ifort.
-                        (default is False)
-  -sd, --subdirs        Include source files in srcdir subdirectories.
-                        (default is None)
+  -e, --expedite        Only compile out of date source files. Clean must not have been used on previous build. (default is False)
+  -dr, --dryrun         Do not actually compile. Files will be deleted, if --makeclean is used. Does not work yet for ifort. (default is False)
+  -sd, --subdirs        Include source files in srcdir subdirectories. (default is None)
   -ff FFLAGS, --fflags FFLAGS
-                        Additional Fortran compiler flags. Fortran compiler
-                        flags should be enclosed in quotes and start with a
-                        blank space or separated from the name (-ff or
-                        --fflags) with a equal sign (-ff='-O3'). (default is
-                        None)
+                        Additional Fortran compiler flags. Fortran compiler flags should be enclosed in quotes and start with a blank space or separated from the name (-ff or --fflags) with a equal sign
+                        (-ff='-O3'). (default is None)
   -cf CFLAGS, --cflags CFLAGS
-                        Additional C/C++ compiler flags. C/C++ compiler flags
-                        should be enclosed in quotes and start with a blank
-                        space or separated from the name (-cf or --cflags)
-                        with a equal sign (-cf='-O3'). (default is None)
+                        Additional C/C++ compiler flags. C/C++ compiler flags should be enclosed in quotes and start with a blank space or separated from the name (-cf or --cflags) with a equal sign
+                        (-cf='-O3'). (default is None)
   -sl {-lc,-lm}, --syslibs {-lc,-lm}
-                        Linker system libraries. Linker libraries should be
-                        enclosed in quotes and start with a blank space or
-                        separated from the name (-sl or --syslibs) with a
-                        equal sign (-sl='-libgcc'). (default is None)
+                        Linker system libraries. Linker libraries should be enclosed in quotes and start with a blank space or separated from the name (-sl or --syslibs) with a equal sign (-sl='-libgcc').
+                        (default is None)
   -mf, --makefile       Create a GNU make makefile. (default is False)
   -md, --makefiledir    GNU make makefile directory. (default is '.')
   -cs COMMONSRC, --commonsrc COMMONSRC
-                        Additional directory with common source files.
-                        (default is None)
+                        Additional directory with common source files. (default is None)
   -ef EXTRAFILES, --extrafiles EXTRAFILES
-                        List of extra source files to include in the
-                        compilation. extrafiles can be either a list of files
-                        or the name of a text file that contains a list of
-                        files. (default is None)
+                        List of extra source files to include in the compilation. extrafiles can be either a list of files or the name of a text file that contains a list of files. (default is None)
   -exf EXCLUDEFILES, --excludefiles EXCLUDEFILES
-                        List of extra source files to exclude from the
-                        compilation. excludefiles can be either a list of
-                        files or the name of a text file that contains a list
-                        of files. (default is None)
-  -so, --sharedobject   Create shared object or dll on Windows. (default is
-                        False)
+                        List of extra source files to exclude from the compilation. excludefiles can be either a list of files or the name of a text file that contains a list of files. (default is None)
+  -so, --sharedobject   Create shared object or dll on Windows. (default is False)
   -ad APPDIR, --appdir APPDIR
-                        Target path that overides path defined target path
-                        (default is None)
+                        Target path that overides path defined target path (default is None)
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)
-  --zip ZIP             Zip built executable. (default is False)
-  --inplace             Source files in srcdir are used directly. (default is
-                        False)
-  --networkx            Use networkx package to build Directed Acyclic Graph
-                        use to determine the order source files are compiled
-                        in. (default is False)
+  --zip ZIP             Zip built executable. (default is None)
+  --inplace             Source files in srcdir are used directly. (default is False)
+  --networkx            Use networkx package to build Directed Acyclic Graph use to determine the order source files are compiled in. (default is False)
   --meson               Use meson to build executable. (default is False)
   --mesondir            meson directory. (default is '.')
 
@@ -203,7 +173,7 @@ python mymf6script.py -fc ifort -cc icc
 
 When pymake is installed, a `make-program` (or `make-program.exe` for Windows) program is installed. `make-program` can
 be used to build MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7,
-GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, GSFLOW, PRMS, and SUTRA. Utility programs CRT, Triangle, and GRIDGEN can also
+GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, and SUTRA. Utility programs CRT, Triangle, and GRIDGEN can also
 be built. `make-program` downloads the distribution file (requires an internet connection), unzips the file, sets the
 pymake settings required to build the program, and compiles the program from the source files. Optional pymake command
 line arguments can be used to customize the build (`-fc`, `-cc`, `--fflags`, etc.). For example, MODFLOW 6 could be
@@ -230,14 +200,14 @@ To install pymake using conda type:
 conda install -c conda-forge mfpymake
 ```
 
-To install pymake directly from the git repository type:
+To install the latest pymake release directly from the git repository type:
 
 ```
 pip install https://github.com/modflowpy/pymake/zipball/master
 ```
 
-To update your version of pymake with the latest from the git repository type:
+To update your version of pymake with the latest development version from the git repository type:
 
 ```
-pip install https://github.com/modflowpy/pymake/zipball/master --upgrade
+pip install https://github.com/modflowpy/pymake/zipball/develop --upgrade
 ```

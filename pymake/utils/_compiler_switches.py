@@ -1,9 +1,10 @@
-"""Private functions for setting c/c++ and fortran compiler flags and
-appropriate linker flags for defined targets.
+"""Public and private functions for setting c/c++ and fortran compiler
+flags and appropriate linker flags for defined targets.
 """
 
 import os
 import sys
+from subprocess import check_output
 
 from ._compiler_language_files import (
     _get_c_files,
@@ -15,6 +16,28 @@ from ._Popen_wrapper import (
     _process_Popen_communicate,
     _process_Popen_initialize,
 )
+
+
+def linker_update_environment(cc="gcc", fc="gfortran", verbose=False):
+    """Add additional LDFLAGS to the environment based on OS and compilers.
+
+    Parameters
+    ----------
+    fc : str
+        fortran compiler
+    cc : str
+        c or cpp compiler
+    verbose : bool
+        boolean for verbose output to terminal
+
+    Returns
+    -------
+    None
+    """
+    syslibs = _darwin_syslibs(cc, fc, verbose=verbose)
+    if syslibs is not None:
+        environ = os.environ
+        environ.update({"LDFLAGS": syslibs})
 
 
 def _check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
@@ -339,9 +362,6 @@ def _get_fortran_flags(
                     "fpe:0",
                     "traceback",
                     "nologo",
-                    "Qdiag-disable:7416",
-                    "Qdiag-disable:7025",
-                    "Qdiag-disable:5268",
                 ]
                 if debug:
                     flags += ["debug:full", "Zi"]
@@ -784,25 +804,6 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
         if target == "mp7":
             if fc == "gfortran":
                 fflags.append("-ffree-line-length-512")
-        elif target in ("gsflow", "prms"):
-            if fc == "ifort":
-                if osname == "win32":
-                    fflags += [
-                        "-fp:source",
-                        "-names:lowercase",
-                        "-assume:underscore",
-                    ]
-                else:
-                    pass
-            elif fc == "gfortran":
-                fflags += ["-O1", "-fno-second-underscore"]
-                opt = "-fallow-argument-mismatch"
-                if _check_gnu_switch_available(
-                    opt, compiler=fc, verbose=verbose
-                ):
-                    fflags += [
-                        opt,
-                    ]
         elif target in (
             "mf2000",
             "mt3dms",
@@ -902,17 +903,6 @@ def _set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
                     cflags += ["-lm"]
             else:
                 cflags += ["-DNO_TIMER"]
-        elif target in (
-            "gsflow",
-            "prms",
-        ):
-            if cc in ["icc", "icpl", "icl"]:
-                if osname == "win32":
-                    cflags += ["-D_CRT_SECURE_NO_WARNINGS"]
-                else:
-                    cflags += ["-D_UF"]
-            elif cc == "gcc":
-                cflags += ["-O1"]
 
         # add additional cflags from the command line
         if argv:
@@ -1004,6 +994,10 @@ def _set_syslibs(
     if default_syslibs:
         syslibs.append("-lc")
 
+    darwin_options = _darwin_syslibs(cc, fc, verbose)
+    if darwin_options is not None:
+        syslibs.append(darwin_options)
+
     # add additional syslibs for select programs
     if target == "triangle":
         if osname in ("linux", "darwin"):
@@ -1016,10 +1010,6 @@ def _set_syslibs(
                 lcc = True
             if lfc and lcc:
                 syslibs += ["-lm"]
-    elif target in ("gsflow", "prms"):
-        if "win32" not in osname:
-            if "ifort" in fc:
-                syslibs += ["-nofor_main"]
 
     # add additional syslibs from the command line
     if argv:
@@ -1070,3 +1060,46 @@ def _get_os_macro(osname=None):
     else:
         os_macro = None
     return os_macro
+
+
+def _darwin_syslibs(cc, fc, verbose=False):
+    """Get additional syslibs for Darwin systems using gcc
+       tool chain and command line tools greater than 14
+
+    Parameters
+    ----------
+    cc : str
+        c compiler
+    fc : str
+        fortran compiler
+    verbose : bool
+        boolean for verbose output to terminal
+
+    Returns
+    -------
+    linker_str : str
+        additiona; linker flags for darwin systems. Default is None
+    """
+    linker_str = None
+    if _get_osname() == "darwin":
+        if cc in (
+            "gcc",
+            "g++",
+        ) or fc in ("gfortran",):
+            cmd = ["pkgutil", "--pkg-info=com.apple.pkg.CLTools_Executables"]
+            out_lines = check_output(cmd).decode("utf-8").splitlines()
+            version = None
+            tag = "version: "
+            for line in out_lines:
+                if line.startswith(tag):
+                    version = line.replace(tag, "")
+                    break
+            if version is not None:
+                major = int(version.split(".")[0])
+            if major > 14:
+                linker_str = "-Wl,-ld_classic"
+            if verbose:
+                print(f"C/C++ compiler: {cc} \nFortran compiler: {fc}")
+                print(f"Command line tools version: {version}")
+                print(f"Command line tools major version number: {major}")
+    return linker_str
