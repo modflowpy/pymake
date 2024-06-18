@@ -166,15 +166,15 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install make
 
+      - name: Print current directory
+        run: |
+          pwd
+          ls -h .
+          ls -h autotest/
+
       - name: Run scheduled tests
         run: |
           pixi run autotest-schedule
-
-      - name: Upload failed test output
-        if: failure()
-        run: |
-          pwd
-          ls -h autotest/
   
       - name: Upload failed test output
         if: failure()
