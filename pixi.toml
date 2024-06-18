@@ -53,6 +53,3 @@ coverage-report = { cmd = "coverage report", cwd = "autotest"}
 # release 
 update-version = { cmd = "python scripts/update_version.py -v"}
 create-codejson = { cmd = "make-code-json" }
-
-[target.win-64.tasks]
-autotest-schedule = { cmd = "pytest -v -m='schedule' --durations=0 --cov=pymake --cov-report=xml --basetemp=$(pwd)/temp --keep-failed .failed", cwd = "autotest" }

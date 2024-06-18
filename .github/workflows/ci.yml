@@ -166,12 +166,6 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install make
 
-      - name: Print current directory
-        run: |
-          pwd
-          ls -h .
-          ls -h autotest/
-
       - name: Run scheduled tests
         run: |
           pixi run autotest-schedule
@@ -181,7 +175,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: failed-schedule-${{ matrix.os }}-${{ matrix.FC }}-${{ matrix.FC_V }}
-          path: ./autotest/.failed
+          path: autotest/.failed
 
       - name: Print coverage report before upload
         run: |
