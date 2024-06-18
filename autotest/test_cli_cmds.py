@@ -51,7 +51,7 @@ def test_make_program(function_tmpdir, target: str) -> None:
             "make-program",
             target,
             "--appdir",
-            str(function_tmpdir),
+            ".",
             "--verbose",
         ]
         run_cli_cmd(cmd)
@@ -68,7 +68,7 @@ def test_make_program_double(function_tmpdir) -> None:
             "--double",
             "--verbose",
             "--appdir",
-            str(function_tmpdir),
+            ".",
         ]
         run_cli_cmd(cmd)
 
@@ -81,7 +81,7 @@ def test_make_program_all(module_tmpdir) -> None:
             "make-program",
             ":",
             "--appdir",
-            str(module_tmpdir / "all"),
+            ".",
             "--verbose",
         ]
         run_cli_cmd(cmd)
