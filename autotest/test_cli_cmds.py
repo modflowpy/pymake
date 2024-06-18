@@ -81,7 +81,7 @@ def test_make_program_all(module_tmpdir) -> None:
             "make-program",
             ":",
             "--appdir",
-            str(module_tmpdir / "all"),
+            str(module_tmpdir),
             "--verbose",
         ]
         run_cli_cmd(cmd)
