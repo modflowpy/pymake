@@ -114,7 +114,7 @@ jobs:
   
   pymake-schedule:
     name: pymake scheduled
-    # if: ${{ github.event_name == 'schedule' }}
+    if: ${{ github.event_name == 'schedule' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
