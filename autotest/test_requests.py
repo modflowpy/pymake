@@ -97,6 +97,7 @@ def test_latest_assets():
         "code.json",
         "code.md",
         "mac.zip",
+        "macarm.zip",
         "linux.zip",
         "win64.zip",
     ]
