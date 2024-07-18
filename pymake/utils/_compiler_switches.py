@@ -830,7 +830,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
                     "-Wunused-label",
                     "-Wunused-variable",
                     "-pedantic",
-                    "-std=f2008",
+                    "-std=f2018",
                     "-Wcharacter-truncation",
                 ]
 
