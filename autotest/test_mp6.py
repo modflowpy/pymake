@@ -79,16 +79,12 @@ def test_compile(pm, target):
 @pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
-@pytest.mark.parametrize(
-    "namefile", [f"EXAMPLE-{n}.mpsim" for n in range(1, 10)]
-)
+@pytest.mark.parametrize("namefile", [f"EXAMPLE-{n}.mpsim" for n in range(1, 10)])
 def test_mp6(namefile, workspace, target):
     example_ws = workspace / "example-run"
     if not (example_ws / namefile).is_file():
         pytest.skip(f"Namefile {namefile} does not exist")
 
     update_files(namefile, example_ws)
-    success, _ = flopy.run_model(
-        target, namefile, model_ws=example_ws, silent=False
-    )
+    success, _ = flopy.run_model(target, namefile, model_ws=example_ws, silent=False)
     assert success, f"could not run {namefile}"

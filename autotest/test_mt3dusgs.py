@@ -42,9 +42,7 @@ def run_mt3dusgs(workspace, mt3dms_exe, mfnwt_exe, mf6_exe):
     model_ws = workspace
 
     files = [
-        f
-        for f in os.listdir(model_ws)
-        if os.path.isfile(os.path.join(model_ws, f))
+        f for f in os.listdir(model_ws) if os.path.isfile(os.path.join(model_ws, f))
     ]
 
     mf_nam = None

@@ -126,10 +126,7 @@ class Pymake:
             setattr(self, key, value["default"])
 
         # parse command line arguments if python is running script
-        if (
-            sys.argv[0].lower().endswith(".py")
-            or "make-program" in sys.argv[0].lower()
-        ):
+        if sys.argv[0].lower().endswith(".py") or "make-program" in sys.argv[0].lower():
             self._arg_parser()
 
         # reset select variables using passed variables
@@ -298,9 +295,7 @@ class Pymake:
                     + f"directory to zip file '{pl.Path(zip_pth).resolve()}'"
                 )
                 for idx, target in enumerate(targets):
-                    print(
-                        f" {idx + 1:>3d}. adding " + f"'{target}' to zipfile"
-                    )
+                    print(f" {idx + 1:>3d}. adding " + f"'{target}' to zipfile")
 
             # compress the compiled executables
             if not zip_all(
@@ -654,10 +649,7 @@ class Pymake:
                     fpth = os.path.join(srcdir, extrafiles)
                     extrafiles = os.path.normpath(fpth)
                 else:
-                    msg = (
-                        "invalid extrafiles format - "
-                        + "must be a list or string"
-                    )
+                    msg = "invalid extrafiles format - " + "must be a list or string"
                     raise ValueError(msg)
 
             # reset extrafiles
@@ -677,9 +669,7 @@ class Pymake:
         """
         if self.excludefiles is None:
             if self._get_base_target() in ("libmf6",):
-                self.excludefiles = [
-                    os.path.join(self.download_dir, "src", "mf6.f90")
-                ]
+                self.excludefiles = [os.path.join(self.download_dir, "src", "mf6.f90")]
         return
 
     def build(self, target=None, srcdir=None, modify_exe_name=False):
@@ -730,9 +720,7 @@ class Pymake:
         if self.fc != "none":
             if self.fflags is None:
                 optlevel = (
-                    _get_optlevel(
-                        self.target, self.fc, self.cc, self.debug, [], []
-                    )
+                    _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
                     + " "
                 )
 
@@ -749,9 +737,7 @@ class Pymake:
         if self.cc != "none":
             if self.cflags is None:
                 optlevel = (
-                    _get_optlevel(
-                        self.target, self.fc, self.cc, self.debug, [], []
-                    )
+                    _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
                     + " "
                 )
 
@@ -776,9 +762,7 @@ class Pymake:
                 )[1]
             )
 
-        self.target = self.update_target(
-            self.target, modify_target=modify_exe_name
-        )
+        self.target = self.update_target(self.target, modify_target=modify_exe_name)
 
         build_target = self.set_build_target_bool()
 

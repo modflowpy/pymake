@@ -228,9 +228,7 @@ def build_apps(
 
             # determine if the target should be built
             build_target = pmobj.set_build_target_bool(
-                target=pmobj.update_target(
-                    target, modify_target=update_target_name
-                )
+                target=pmobj.update_target(target, modify_target=update_target_name)
             )
 
             # setup download for target
@@ -252,10 +250,7 @@ def build_apps(
         end_downcomp = datetime.now()
         elapsed = end_downcomp - start_downcomp
         if pmobj.verbose:
-            print(
-                "elapsed download and compile time (hh:mm:ss.ms): "
-                + f"{elapsed}\n"
-            )
+            print("elapsed download and compile time (hh:mm:ss.ms): " + f"{elapsed}\n")
 
     end_time = datetime.now()
     elapsed = end_time - start_time

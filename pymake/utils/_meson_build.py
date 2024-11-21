@@ -190,9 +190,7 @@ def meson_setup(
         else:
             command_list.append("--prefix=$(pwd)")
 
-        libdir = os.path.relpath(
-            os.path.abspath(appdir), os.path.abspath(mesondir)
-        )
+        libdir = os.path.relpath(os.path.abspath(appdir), os.path.abspath(mesondir))
         command_list.append(f"--libdir={libdir}")
         command_list.append(f"--bindir={libdir}")
 

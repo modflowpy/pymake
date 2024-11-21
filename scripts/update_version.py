@@ -149,8 +149,7 @@ if __name__ == "__main__":
         "--get",
         required=False,
         action="store_true",
-        help="Just get the current version number, "
-        + "no updates (defaults false)",
+        help="Just get the current version number, " + "no updates (defaults false)",
     )
     args = parser.parse_args()
 
@@ -159,7 +158,5 @@ if __name__ == "__main__":
     else:
         update_version(
             timestamp=datetime.now(),
-            version=(
-                Version(args.version) if args.version else _current_version
-            ),
+            version=(Version(args.version) if args.version else _current_version),
         )

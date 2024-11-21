@@ -188,10 +188,7 @@ def _preprocess_file(srcfiles, meson=False):
                 break
 
         else:
-            msg = (
-                "_preprocess_file: could not "
-                + f"open {os.path.basename(srcfile)}"
-            )
+            msg = "_preprocess_file: could not " + f"open {os.path.basename(srcfile)}"
             raise FileNotFoundError(msg)
 
     return preprocess

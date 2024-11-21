@@ -122,9 +122,7 @@ def _update_triangle_files(srcdir, fc, cc, arch, double):
         with open(src, "r") as f:
             lines = f.readlines()
             for idx, line in enumerate(lines):
-                lines[idx] = line.replace(
-                    "unsigned long", "unsigned long long"
-                )
+                lines[idx] = line.replace("unsigned long", "unsigned long long")
         with open(src, "w") as f:
             for line in lines:
                 f.write(line)
@@ -245,13 +243,8 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
             lines = [line.rstrip() for line in open(fpth)]
             f = open(fpth, "w")
             for line in lines:
-                if (
-                    "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                    in line
-                ):
-                    line = (
-                        "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                    )
+                if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
+                    line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
                 f.write(f"{line}\n")
             f.close()
     else:
@@ -262,20 +255,10 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
             f = open(fpth, "w")
             for line in lines:
                 # comment out the 32 bit one and activate the 64 bit line
-                if (
-                    "C      !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
-                    in line
-                ):
-                    line = (
-                        "       !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
-                    )
-                if (
-                    "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                    in line
-                ):
-                    line = (
-                        "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                    )
+                if "C      !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT" in line:
+                    line = "       !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
+                if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
+                    line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
                 f.write(f"{line}\n")
             f.close()
 
@@ -499,15 +482,11 @@ def _update_mf2000_files(srcdir, fc, cc, arch, double):
 
     # Move src files and serial src file to src directory
     tpth = os.path.join(srcdir, "mf2k")
-    files = [
-        f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))
-    ]
+    files = [f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))]
     for f in files:
         shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
     tpth = os.path.join(srcdir, "mf2k", "serial")
-    files = [
-        f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))
-    ]
+    files = [f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))]
     for f in files:
         shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
 

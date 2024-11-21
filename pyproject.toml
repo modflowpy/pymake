@@ -91,15 +91,7 @@ include = ["pymake", "pymake.*"]
 fallback_version = "999"
 
 [tool.ruff]
-line-length = 79
-target-version = "py38"
-include = [
-    "pyproject.toml",
-    "pymake/**/*.py",
-    "autotest/**/*.py",
-    "docs/**/*.py",
-    "scripts/**/*.py",
-]
+line-length = 88
 
 [tool.ruff.lint]
 select = ["F", "E", "I001"]

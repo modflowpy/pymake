@@ -136,9 +136,7 @@ def _get_f_nodelist(srcfiles):
         try:
             f = open(srcfile, "rb")
         except:
-            print(
-                f"get_f_nodelist: could not open {os.path.basename(srcfile)}"
-            )
+            print(f"get_f_nodelist: could not open {os.path.basename(srcfile)}")
             sourcefile_module_dict[srcfile] = []
             continue
         lines = f.read()
@@ -262,8 +260,7 @@ def _order_c_source_files(srcfiles, networkx):
             f = open(srcfile, "rb")
         except:
             print(
-                "order_c_source_files: could not open "
-                + f"{os.path.basename(srcfile)}"
+                "order_c_source_files: could not open " + f"{os.path.basename(srcfile)}"
             )
             sourcefile_module_dict[srcfile] = []
             continue
@@ -284,10 +281,7 @@ def _order_c_source_files(srcfiles, networkx):
                 # add source file for this c(pp) file if it is the same
                 # as the include file without the extension
                 bn = os.path.basename(srcfile)
-                if (
-                    os.path.splitext(modulename)[0]
-                    == os.path.splitext(bn)[0].upper()
-                ):
+                if os.path.splitext(modulename)[0] == os.path.splitext(bn)[0].upper():
                     module_dict[modulename] = srcfile
 
                 # add include file name

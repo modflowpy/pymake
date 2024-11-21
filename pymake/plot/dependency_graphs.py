@@ -119,9 +119,7 @@ def _add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
                 edge_set.add(tpl)
                 edge = pydot.Edge(node_dict[n], node_dict[m])
                 graph.add_edge(edge)
-                _add_pydot_edges(
-                    graph, node_dict, edge_set, m, ilev + 1, level
-                )
+                _add_pydot_edges(graph, node_dict, edge_set, m, ilev + 1, level)
     return
 
 

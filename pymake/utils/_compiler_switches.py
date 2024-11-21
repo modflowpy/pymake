@@ -2,6 +2,8 @@
 flags and appropriate linker flags for defined targets.
 """
 
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-complex
+
 import os
 import sys
 from subprocess import check_output
@@ -160,9 +162,7 @@ def _get_prepend(compiler, osname):
     return prepend
 
 
-def _get_optlevel(
-    target, fc, cc, debug, fflags, cflags, osname=None, verbose=False
-):
+def _get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
     """Return a compiler optimization switch.
 
     Parameters
@@ -339,9 +339,7 @@ def _get_fortran_flags(
                         flags.append("pedantic")
                     if _check_gnu_switch_available("-Wcharacter-truncation"):
                         flags.append("Wcharacter-truncation")
-                    if _check_gnu_switch_available(
-                        "-Wno-unused-dummy-argument"
-                    ):
+                    if _check_gnu_switch_available("-Wno-unused-dummy-argument"):
                         flags.append("Wno-unused-dummy-argument")
                     if _check_gnu_switch_available("-Wno-intrinsic-shadow"):
                         flags.append("Wno-intrinsic-shadow")
@@ -811,9 +809,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
         ):
             if fc == "gfortran":
                 opt = "-fallow-argument-mismatch"
-                if _check_gnu_switch_available(
-                    opt, compiler=fc, verbose=verbose
-                ):
+                if _check_gnu_switch_available(opt, compiler=fc, verbose=verbose):
                     fflags += [
                         opt,
                     ]

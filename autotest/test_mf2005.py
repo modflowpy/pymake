@@ -91,7 +91,5 @@ def test_mf2005(namefile, workspace, target):
     if not (example_ws / namefile).is_file():
         pytest.skip(f"{namefile} does not exist")
 
-    success, _ = flopy.run_model(
-        target, namefile, model_ws=example_ws, silent=False
-    )
+    success, _ = flopy.run_model(target, namefile, model_ws=example_ws, silent=False)
     assert success, f"could not run {namefile} with {target}"
