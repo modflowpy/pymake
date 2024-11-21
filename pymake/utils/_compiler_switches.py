@@ -2,6 +2,8 @@
 flags and appropriate linker flags for defined targets.
 """
 
+# pylint: disable=too-many-arguments
+
 import os
 import sys
 from subprocess import check_output
@@ -160,7 +162,7 @@ def _get_prepend(compiler, osname):
     return prepend
 
 
-def _get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None, verbose=False):
+def _get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
     """Return a compiler optimization switch.
 
     Parameters
