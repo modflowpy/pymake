@@ -2,7 +2,7 @@
 flags and appropriate linker flags for defined targets.
 """
 
-# pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-branches, too-complex
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-complex
 
 import os
 import sys
