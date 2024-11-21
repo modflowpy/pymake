@@ -91,10 +91,7 @@ def _process_Popen_communicate(proc, verbose=True):
 
     # catch non-zero return code
     if proc.returncode != 0:
-        msg = (
-            f"{' '.join(proc.args)} failed\n"
-            + f"\tstatus code {proc.returncode}\n"
-        )
+        msg = f"{' '.join(proc.args)} failed\n" + f"\tstatus code {proc.returncode}\n"
         print(msg)
 
     return stderr, stdout

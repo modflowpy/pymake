@@ -163,8 +163,7 @@ def test_mfexes_download_and_unzip_and_zip(function_tmpdir):
     success = pymake.zip_all(
         str(zip_pth),
         file_pths=[
-            os.path.join(function_tmpdir, e)
-            for e in os.listdir(function_tmpdir)
+            os.path.join(function_tmpdir, e) for e in os.listdir(function_tmpdir)
         ],
     )
     assert success, "could not create zipfile using file names"
@@ -178,9 +177,7 @@ def test_mfexes_download_and_unzip_and_zip(function_tmpdir):
     # zip up exe's using directories and a pattern
     zip_pth = function_tmpdir / "ziptest03.zip"
     print(f"creating '{zip_pth}'")
-    success = pymake.zip_all(
-        str(zip_pth), dir_pths=function_tmpdir, patterns="mf"
-    )
+    success = pymake.zip_all(str(zip_pth), dir_pths=function_tmpdir, patterns="mf")
     assert success, "could not create zipfile using directories and a pattern"
 
     # zip up exe's using files and directories
@@ -189,8 +186,7 @@ def test_mfexes_download_and_unzip_and_zip(function_tmpdir):
     success = pymake.zip_all(
         str(zip_pth),
         file_pths=[
-            os.path.join(function_tmpdir, e)
-            for e in os.listdir(function_tmpdir)
+            os.path.join(function_tmpdir, e) for e in os.listdir(function_tmpdir)
         ],
         dir_pths=function_tmpdir,
     )
@@ -283,9 +279,7 @@ def test_usgsprograms_export_json(module_tmpdir):
 def test_usgsprograms_load_json_error(module_tmpdir):
     fpth = os.path.join(module_tmpdir, "code.test.error.json")
     my_dict = {"mf2005": {"bad": 12, "key": True}}
-    pymake.usgs_program_data.export_json(
-        fpth=fpth, prog_data=my_dict, update=False
-    )
+    pymake.usgs_program_data.export_json(fpth=fpth, prog_data=my_dict, update=False)
 
     with pytest.raises(KeyError):
         pymake.usgs_program_data.load_json(fpth=fpth)

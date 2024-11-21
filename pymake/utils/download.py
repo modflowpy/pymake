@@ -390,9 +390,9 @@ def download_and_unzip(
                         # write information to the screen
                         if verbose:
                             if file_size > 0:
-                                download_percent = float(
-                                    download_size
-                                ) / float(file_size)
+                                download_percent = float(download_size) / float(
+                                    file_size
+                                )
                                 msg = (
                                     "     downloaded "
                                     + sbfmt.format(bfmt.format(download_size))
@@ -445,9 +445,7 @@ def download_and_unzip(
         raise ConnectionError(msg)
 
     # Unzip the file, and delete zip file if successful.
-    if "zip" in os.path.basename(file_name) or "exe" in os.path.basename(
-        file_name
-    ):
+    if "zip" in os.path.basename(file_name) or "exe" in os.path.basename(file_name):
         z = pymakeZipFile(file_name)
         try:
             # write a message
@@ -545,9 +543,7 @@ def _get_zipname(platform):
             else:
                 platform = "win32"
         else:
-            errmsg = (
-                f"Could not determine platform. sys.platform is {sys.platform}"
-            )
+            errmsg = f"Could not determine platform. sys.platform is {sys.platform}"
             raise Exception(errmsg)
     else:
         msg = f"unknown platform detected ({platform})"
@@ -579,10 +575,7 @@ def _get_default_url():
 
     """
 
-    return (
-        f"https://github.com/{_get_default_repo()}/"
-        + "releases/latest/download/"
-    )
+    return f"https://github.com/{_get_default_repo()}/" + "releases/latest/download/"
 
 
 def _get_default_json(tag_name=None):
@@ -611,10 +604,7 @@ def _get_default_json(tag_name=None):
             + f"releases/latest/download/{tag_name}/"
         )
     else:
-        url = (
-            f"https://github.com/{_get_default_repo()}/"
-            + "releases/latest/download/"
-        )
+        url = f"https://github.com/{_get_default_repo()}/" + "releases/latest/download/"
 
     # define asset names and paths for assets
     names = ["mac.zip", "linux.zip", "win32.zip", "win64.zip"]
@@ -714,10 +704,7 @@ def _repo_json(
                     request_url = release["url"]
                     break
             if request_url is None:
-                msg = (
-                    f"Could not find tag_name ('{tag_name}') "
-                    + "in release catalog"
-                )
+                msg = f"Could not find tag_name ('{tag_name}') " + "in release catalog"
                 if error_return:
                     print(msg)
                     return None
@@ -764,9 +751,7 @@ def _repo_json(
     return json_obj
 
 
-def get_repo_assets(
-    github_repo=None, version=None, error_return=False, verify=True
-):
+def get_repo_assets(github_repo=None, version=None, error_return=False, verify=True):
     """Return a dictionary containing the file name and the link to the asset
     contained in a github repository.
 

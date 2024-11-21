@@ -635,10 +635,7 @@ def _clean_temp_files(
 
     # remove temporary directories
     if verbose:
-        msg = (
-            "\nCleaning up temporary source, object, "
-            + "and module directories..."
-        )
+        msg = "\nCleaning up temporary source, object, " + "and module directories..."
         print(msg)
     if not inplace:
         if os.path.isdir(srcdir_temp):
@@ -844,9 +841,7 @@ def _pymake_compile(
     )
 
     # set optimization levels
-    optlevel = _get_optlevel(
-        target, fc, cc, debug, fflags, cflags, verbose=verbose
-    )
+    optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags, verbose=verbose)
 
     # get fortran and c compiler switches
     tfflags = _get_fortran_flags(
@@ -1161,9 +1156,7 @@ def _create_win_batch(
                     + f"{latest_version}\\env\\vars.bat"
                 )
             else:
-                cpvars = (
-                    "C:\\Program Files (x86)\\Intel\\oneAPI\\" + "setvars.bat"
-                )
+                cpvars = "C:\\Program Files (x86)\\Intel\\oneAPI\\" + "setvars.bat"
             if not os.path.isfile(cpvars):
                 raise Exception(f"Could not find cpvars: {cpvars}")
             intel_setvars = f'"{cpvars}"'
@@ -1174,9 +1167,7 @@ def _create_win_batch(
         for ift in iflist:
             stand_alone_intel = os.environ.get(ift)
             if stand_alone_intel is not None:
-                cpvars = os.path.join(
-                    stand_alone_intel, "bin", "compilervars.bat"
-                )
+                cpvars = os.path.join(stand_alone_intel, "bin", "compilervars.bat")
                 if not os.path.isfile(cpvars):
                     raise Exception(f"Could not find cpvars: {cpvars}")
                 intel_setvars = '"' + os.path.normpath(cpvars) + '" ' + arch
@@ -1184,8 +1175,7 @@ def _create_win_batch(
     # check if either OneAPI or stand alone intel is installed
     if intel_setvars is None:
         err_msg = (
-            "OneAPI or stand alone version of Intel compilers "
-            + "is not installed"
+            "OneAPI or stand alone version of Intel compilers " + "is not installed"
         )
         raise ValueError(err_msg)
 
@@ -1205,11 +1195,7 @@ def _create_win_batch(
             searchdir.append(dirname)
 
     # write commands to build object files
-    line = (
-        "echo Creating object files to create '"
-        + os.path.basename(target)
-        + "'\n"
-    )
+    line = "echo Creating object files to create '" + os.path.basename(target) + "'\n"
     f.write(line)
     for srcfile in srcfiles:
         if srcfile.endswith(".c") or srcfile.endswith(".cpp"):
@@ -1243,11 +1229,7 @@ def _create_win_batch(
         f.write(cmd + "\n")
 
     # write commands to link
-    line = (
-        "echo Linking object files to create '"
-        + os.path.basename(target)
-        + "'\n"
-    )
+    line = "echo Linking object files to create '" + os.path.basename(target) + "'\n"
     f.write(line)
 
     # assemble the link command
@@ -1460,9 +1442,7 @@ def _create_makefile(
         for ext in cext:
             f.write(f"$(OBJDIR)/%{objext} : %{ext}\n")
             f.write("\t@mkdir -p $(@D)\n")
-            line = (
-                "\t$(CC) $(OPTLEVEL) $(CFLAGS) -c $< -o $@ " + "$(INCSWITCH)\n"
-            )
+            line = "\t$(CC) $(OPTLEVEL) $(CFLAGS) -c $< -o $@ " + "$(INCSWITCH)\n"
             f.write(f"{line}\n")
 
     # close the makefile
@@ -1483,10 +1463,7 @@ def _create_makefile(
     line += "\tdetected_OS = Windows\n"
     line += "\tOS_macro = -D_WIN32\n"
     line += "else\n"
-    line += (
-        "\tdetected_OS = $(shell sh -c 'uname 2>/dev/null "
-        + "|| echo Unknown')\n"
-    )
+    line += "\tdetected_OS = $(shell sh -c 'uname 2>/dev/null " + "|| echo Unknown')\n"
     line += "\tifeq ($(detected_OS), Darwin)\n"
     line += "\t\tOS_macro = -D__APPLE__\n"
     line += "\telse\n"
@@ -1566,9 +1543,7 @@ def _create_makefile(
         f.write(line)
 
     # optimization level
-    optlevel = _get_optlevel(
-        target, fc, cc, debug, fflags, cflags, verbose=verbose
-    )
+    optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags, verbose=verbose)
     line = "# set the optimization level (OPTLEVEL) if not defined\n"
     line += f"OPTLEVEL ?= {optlevel.replace('/', '-')}\n\n"
     f.write(line)
