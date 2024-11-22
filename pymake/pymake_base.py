@@ -841,7 +841,7 @@ def _pymake_compile(
     )
 
     # set optimization levels
-    optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags, verbose=verbose)
+    optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags)
 
     # get fortran and c compiler switches
     tfflags = _get_fortran_flags(
@@ -1543,7 +1543,7 @@ def _create_makefile(
         f.write(line)
 
     # optimization level
-    optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags, verbose=verbose)
+    optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags)
     line = "# set the optimization level (OPTLEVEL) if not defined\n"
     line += f"OPTLEVEL ?= {optlevel.replace('/', '-')}\n\n"
     f.write(line)
