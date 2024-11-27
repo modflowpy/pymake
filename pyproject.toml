@@ -103,15 +103,9 @@ select = [
     "UP",   # Pyupgrade
 ]
 ignore = [
-    "E402", # module level import not at top of file
-    "E712", # Avoid equality comparisons to `True`
     "E722", # do not use bare `except`
     "E741", # ambiguous variable name
     "F401", # unused import
-    "F403", # unable to detect undefined names (star imports)
-    "F524", # `.format` missing argument(s) for placeholder(s)
-    "F811", # Redefinition of unused variable
-    "F821", # undefined name TODO FIXME
     "F841", # local variable assigned but never used
     "RUF005", # collection literal concatenation
     "RUF022", # Apply an isort-style sorting to `__all__`
