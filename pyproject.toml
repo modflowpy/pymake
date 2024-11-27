@@ -94,7 +94,14 @@ fallback_version = "999"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["F", "E", "I001"]
+select = [
+    "D409", # pydocstyle - section-underline-matches-section-length
+    "E",    # pycodestyle error
+    "F",    # Pyflakes
+    "I001", # isort - unsorted-imports
+    "RUF",  # Ruff-specific rules
+    "UP",   # Pyupgrade
+]
 ignore = [
     "E402", # module level import not at top of file
     "E712", # Avoid equality comparisons to `True`
@@ -106,4 +113,7 @@ ignore = [
     "F811", # Redefinition of unused variable
     "F821", # undefined name TODO FIXME
     "F841", # local variable assigned but never used
+    "RUF005", # collection literal concatenation
+    "RUF022", # Apply an isort-style sorting to `__all__`
+    "UP015", # redundant open modes
 ]

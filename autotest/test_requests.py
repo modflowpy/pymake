@@ -77,9 +77,8 @@ def test_latest_version():
     version = pymake.repo_latest_version()
     test_version = "5.0"
     msg = (
-        f"returned version ({version}) "
-        + "is not greater than or equal to "
-        + f"defined version ({test_version})"
+        f"returned version ({version}) is not greater than or equal to "
+        f"defined version ({test_version})"
     )
     if version is not None:
         assert float(version) >= float(test_version), msg
@@ -125,10 +124,7 @@ def test_previous_assets():
     assets = pymake.get_repo_assets(
         mfexes_repo_name, version=version, error_return=True
     )
-    msg = (
-        "failed to get release {} ".format(version)
-        + f"from the '{mfexes_repo_name}' repo"
-    )
+    msg = f"failed to get release {version} " + f"from the '{mfexes_repo_name}' repo"
     if allow_failure:
         if not isinstance(assets, dict):
             print(msg)
@@ -235,10 +231,7 @@ def test_target_keys():
     for target in targets:
         target_dict = pymake.usgs_program_data.get_target(target)
         test_dict = prog_dict[target]
-        msg = (
-            f"dictionary from {target} "
-            + "does not match dictionary from .get_target()"
-        )
+        msg = f"dictionary from {target} does not match dictionary from .get_target()"
         assert target_dict == test_dict, msg
 
 
@@ -268,7 +261,7 @@ def test_usgsprograms_export_json(module_tmpdir):
             temp_dict[fill_key] = value[fill_key]
         msg = (
             f"json dictionary for {key} key "
-            + "is not equal to the .usgs_prog_data dictionary"
+            "is not equal to the .usgs_prog_data dictionary"
         )
         assert value == temp_dict, msg
 

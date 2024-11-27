@@ -22,8 +22,8 @@ A table listing the available pymake targets is included below:
 import datetime
 import json
 import os
-import pathlib as pl
 import sys
+from pathlib import Path
 
 from .download import _request_header, zip_all
 
@@ -352,9 +352,8 @@ class usgs_program_data:
         elif current:
             sel = "the current"
         print(
-            f'writing a json file ("{fpth}") '
-            + f"of {sel} USGS programs\n"
-            + f'in the "{program_data_file}" database.\n'
+            f'writing a json file ("{fpth}") of {sel} USGS programs\n'
+            f'in the "{program_data_file}" database.\n'
         )
         if prog_data is not None:
             for idx, key in enumerate(prog_data.keys()):
@@ -362,19 +361,19 @@ class usgs_program_data:
 
         # process the passed file path into appdir and file_name
         if appdir is None:
-            appdir = pl.Path(".")
-            file_name = pl.Path(fpth)
+            appdir = Path(".")
+            file_name = Path(fpth)
             if file_name.parent != str(appdir):
                 appdir = file_name.parent
                 file_name = file_name.name
             else:
                 for idx, argv in enumerate(sys.argv):
                     if argv in ("--appdir", "-ad"):
-                        appdir = pl.Path(sys.argv[idx + 1])
+                        appdir = Path(sys.argv[idx + 1])
         else:
             if isinstance(appdir, str):
-                appdir = pl.Path(appdir)
-            file_name = pl.Path(fpth).name
+                appdir = Path(appdir)
+            file_name = Path(fpth).name
 
         if str(appdir) != ".":
             appdir.mkdir(parents=True, exist_ok=True)
@@ -422,7 +421,7 @@ class usgs_program_data:
         if partial_json:
             # find targets in appdir
             found_targets = []
-            for appdir_file in pl.Path(appdir).iterdir():
+            for appdir_file in appdir.iterdir():
                 temp_target = appdir_file.stem
                 if temp_target.endswith("dbl"):
                     temp_target = temp_target.replace("dbl", "")
@@ -441,7 +440,7 @@ class usgs_program_data:
                 del prog_data[target]
 
         # update double_switch based on executables in appdir
-        for appdir_file in pl.Path(appdir).iterdir():
+        for appdir_file in appdir.iterdir():
             temp_target = appdir_file.stem
             if temp_target.endswith("dbl"):
                 temp_target = temp_target.replace("dbl", "")
@@ -454,7 +453,7 @@ class usgs_program_data:
                 json.dump(prog_data, file_obj, indent=4, sort_keys=True)
         except:
             msg = f'could not export json file "{file_name}"'
-            raise IOError(msg)
+            raise OSError(msg)
 
         # write code.json if appdir is not the root directory
         if str(appdir) != ".":
@@ -486,16 +485,8 @@ class usgs_program_data:
         # zip code.json
         if prog_data is not None and zip_path is not None:
             if verbose:
-                print(
-                    "Compressing code.json to "
-                    + f"zipfile '{pl.Path(zip_path).resolve()}'"
-                )
-            zip_all(
-                zip_path,
-                dir_pths=appdir,
-                patterns=["code.json"],
-                append=True,
-            )
+                print(f"Compressing code.json to zipfile '{Path(zip_path).resolve()}'")
+            zip_all(zip_path, dir_pths=appdir, patterns=["code.json"], append=True)
 
         return
 
@@ -559,7 +550,7 @@ class usgs_program_data:
                     print(f"    {kkey}: {vvalue}")
         else:
             msg = f'could not load json file "{fpth}".'
-            raise IOError(msg)
+            raise OSError(msg)
 
         # print continuation line
         print("\n")

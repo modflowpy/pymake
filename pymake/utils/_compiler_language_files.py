@@ -9,7 +9,7 @@ def _get_fortran_files(srcfiles, extensions=False):
     """Return a list of fortran files or unique fortran file extensions.
 
     Parameters
-    -------
+    ----------
     srcfiles : list
         list of source file names
     extensions : bool
@@ -48,7 +48,7 @@ def _get_c_files(srcfiles, extensions=False):
     """Return a list of c and cpp files or unique c and cpp file extensions.
 
     Parameters
-    -------
+    ----------
     srcfiles : list
         list of source file names
     extensions : bool

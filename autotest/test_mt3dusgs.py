@@ -158,8 +158,5 @@ def test_mt3dusgs(module_tmpdir, workspace, ws, target):
         pytest.skip(reason="excluding {ws}")
 
     assert run_mt3dusgs(
-        workspace / "data" / ws,
-        target,
-        mfnwt_exe,
-        module_tmpdir / "mf6",
+        workspace / "data" / ws, target, mfnwt_exe, module_tmpdir / "mf6"
     ), f"could not run {ws}"

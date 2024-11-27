@@ -1,14 +1,13 @@
 import os
-import pathlib as pl
 import shutil
+from pathlib import Path
 
 from modflow_devtools.misc import get_model_paths
 
 import pymake
 
-temp_pth = pl.Path("temp")
-if not temp_pth.exists():
-    temp_pth.mkdir()
+temp_pth = Path("temp")
+temp_pth.mkdir(exist_ok=True)
 mf6_exdir = temp_pth / "mf6examples"
 if mf6_exdir.is_dir():
     shutil.rmtree(mf6_exdir)

@@ -12,12 +12,12 @@
 """
 
 import os
-import pathlib as pl
 import shutil
 import sys
 import tarfile
 import timeit
 from http.client import responses
+from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 import requests
@@ -143,7 +143,7 @@ class pymakeZipFile(ZipFile):
         if dir_pths is None:
             dir_pths = []
         else:
-            if isinstance(dir_pths, (str, pl.Path)):
+            if isinstance(dir_pths, (str, Path)):
                 dir_pths = [dir_pths]
 
         # convert find to a list if a str (a tuple is allowed)
@@ -168,7 +168,7 @@ class pymakeZipFile(ZipFile):
                     tlist.append(file_pth)
             file_pths = tlist
 
-        if append and pl.Path(path).exists():
+        if append and Path(path).exists():
             mode = "a"
         else:
             mode = "w"
@@ -575,7 +575,7 @@ def _get_default_url():
 
     """
 
-    return f"https://github.com/{_get_default_repo()}/" + "releases/latest/download/"
+    return f"https://github.com/{_get_default_repo()}/releases/latest/download/"
 
 
 def _get_default_json(tag_name=None):
@@ -584,7 +584,7 @@ def _get_default_json(tag_name=None):
 
     Parameters
     ----------
-    tag_name : str
+    tag_name : str, optional
         github repository release tag
 
     Returns
@@ -598,13 +598,9 @@ def _get_default_json(tag_name=None):
     json_obj = {"tag_name": tag_name}
 
     # create appropriate url
-    if tag_name is not None:
-        url = (
-            f"https://github.com/{_get_default_repo()}/"
-            + f"releases/latest/download/{tag_name}/"
-        )
-    else:
-        url = f"https://github.com/{_get_default_repo()}/" + "releases/latest/download/"
+    url = f"https://github.com/{_get_default_repo()}/releases/latest/download/"
+    if tag_name:
+        url += f"{tag_name}/"
 
     # define asset names and paths for assets
     names = ["mac.zip", "linux.zip", "win32.zip", "win64.zip"]
@@ -704,7 +700,7 @@ def _repo_json(
                     request_url = release["url"]
                     break
             if request_url is None:
-                msg = f"Could not find tag_name ('{tag_name}') " + "in release catalog"
+                msg = f"Could not find tag_name ('{tag_name}') in release catalog"
                 if error_return:
                     print(msg)
                     return None
@@ -955,8 +951,7 @@ def getmfnightly(
     # Determine path for file download and then download and unzip
     # https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest/download/
     download_url = (
-        "https://github.com/MODFLOW-USGS/"
-        + "modflow6-nightly-build/releases/latest/download/"
+        "https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest/download/"
         + zipname
     )
     download_and_unzip(
