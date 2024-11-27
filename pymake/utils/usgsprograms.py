@@ -448,12 +448,8 @@ class usgs_program_data:
                     prog_data[temp_target]["double_switch"] = True
 
         # write code.json to root directory - used by executables CI
-        try:
-            with open(file_name, "w") as file_obj:
-                json.dump(prog_data, file_obj, indent=4, sort_keys=True)
-        except:
-            msg = f'could not export json file "{file_name}"'
-            raise OSError(msg)
+        with open(file_name, "w") as file_obj:
+            json.dump(prog_data, file_obj, indent=4, sort_keys=True)
 
         # write code.json if appdir is not the root directory
         if str(appdir) != ".":
