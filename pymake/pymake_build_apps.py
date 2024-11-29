@@ -99,8 +99,7 @@ def build_apps(
             pmobj = pymake_object
         else:
             msg = (
-                f"pymake_object ({type(pymake_object)}) "
-                + f"is not of type {type(Pymake())}"
+                f"pymake_object ({type(pymake_object)}) is not of type {type(Pymake())}"
             )
             raise TypeError(msg)
 
@@ -147,7 +146,7 @@ def build_apps(
             if pmobj.verbose:
                 print(
                     f"{target} will be built "
-                    + f'for the "{sys.platform}" operating system\n'
+                    f'for the "{sys.platform}" operating system\n'
                 )
 
         # save initial compiler settings

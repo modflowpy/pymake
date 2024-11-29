@@ -84,19 +84,19 @@ def meson_build(
         else:
             print(
                 "Could not run 'meson setup' using the meson build file "
-                + f"'{meson_test_path}'"
+                f"'{meson_test_path}'"
             )
 
         # return if setup and install were successful
         if returncode == 0:
             print(
                 "\n\nBuilt executable(s) using the meson build file "
-                + f"'{meson_test_path}'"
+                f"'{meson_test_path}'"
             )
         else:
             print(
                 "Could not run 'meson install' using the meson build file "
-                + f"'{meson_test_path}'"
+                f"'{meson_test_path}'"
             )
     else:
         returncode = 1
@@ -264,7 +264,7 @@ def _meson_build(
     """Build the target using meson
 
     Parameters
-    -------
+    ----------
     target : str
         path for executable to create
     srcdir : str
@@ -305,12 +305,7 @@ def _meson_build(
 
     """
     # use existing build file if it already exists
-    returncode = meson_build(
-        mesondir,
-        fc=fc,
-        cc=cc,
-        appdir=os.path.dirname(target),
-    )
+    returncode = meson_build(mesondir, fc=fc, cc=cc, appdir=os.path.dirname(target))
     if returncode == 0:
         return returncode
 
@@ -325,10 +320,7 @@ def _meson_build(
         source_path_dict["extra"] = common_path
 
     # write meson.build files with directories in each source directory
-    _create_source_meson_build(
-        source_path_dict,
-        srcfiles,
-    )
+    _create_source_meson_build(source_path_dict, srcfiles)
 
     # write main meson.build file
     main_meson_file, fc_meson, cc_meson = _create_main_meson_build(
@@ -389,7 +381,7 @@ def _create_main_meson_build(
     source_path_dict
     verbose
     Parameters
-    -------
+    ----------
     mesondir : str
         Main meson.build file path
     target : str
@@ -431,7 +423,7 @@ def _create_main_meson_build(
 
     """
     appdir = os.path.relpath(os.path.dirname(target), mesondir)
-    target = os.path.splitext((os.path.basename(target)))[0]
+    target = os.path.splitext(os.path.basename(target))[0]
     osname = _get_osname()
 
     # get target version number
@@ -452,7 +444,7 @@ def _create_main_meson_build(
     if mainfile is None:
         linker_language = "fortran"
     else:
-        main_ext = os.path.splitext((os.path.basename(mainfile)))[1].lower()
+        main_ext = os.path.splitext(os.path.basename(mainfile))[1].lower()
         if fext is not None:
             if main_ext in fext:
                 linker_language = "fortran"
@@ -520,15 +512,7 @@ def _create_main_meson_build(
         )
 
     # optimization level
-    optlevel = _get_optlevel(
-        target,
-        fc,
-        cc,
-        debug,
-        fflags,
-        cflags,
-        verbose=verbose,
-    )
+    optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags)
     optlevel_int = int(optlevel.replace("-O", "").replace("/O", ""))
 
     main_meson_file = Path(mesondir) / "meson.build"
@@ -593,9 +577,9 @@ def _create_main_meson_build(
                 compiler_abbr = "cc"
             line += (
                 "add_project_arguments("
-                + f"{compiler_abbr}.get_supported_arguments("
-                + f"{compiler_abbr}_compile_args), "
-                + f"language: '{language}')\n"
+                f"{compiler_abbr}.get_supported_arguments("
+                f"{compiler_abbr}_compile_args), "
+                f"language: '{language}')\n"
             )
         if linker_language == "fortran":
             linker_abbr = "fc"
@@ -637,13 +621,13 @@ def _create_main_meson_build(
         if sharedobject:
             line = (
                 f"library('{target}', sources{include_text}"
-                + ", install: true, name_prefix: '', "
-                + f"install_dir: '{appdir}')\n\n"
+                ", install: true, name_prefix: '', "
+                f"install_dir: '{appdir}')\n\n"
             )
         else:
             line = (
                 f"executable('{target}', sources{include_text}"
-                + f", install: true, install_dir: '{appdir}')\n\n"
+                f", install: true, install_dir: '{appdir}')\n\n"
             )
         f.write(line)
 

@@ -1,6 +1,6 @@
-import pathlib as pl
 import subprocess
 from os import environ
+from pathlib import Path
 from platform import system
 
 import pytest
@@ -11,7 +11,7 @@ TARGET_NAME = "gridgen"
 
 
 @pytest.fixture(scope="module")
-def target(module_tmpdir) -> pl.Path:
+def target(module_tmpdir) -> Path:
     name = TARGET_NAME
     ext = ".exe" if system() == "Windows" else ""
     return module_tmpdir / f"{name}{ext}"
@@ -23,7 +23,7 @@ def prog_data(target) -> dict:
 
 
 @pytest.fixture(scope="module")
-def workspace(module_tmpdir, prog_data) -> pl.Path:
+def workspace(module_tmpdir, prog_data) -> Path:
     return module_tmpdir / prog_data.dirname
 
 
@@ -42,11 +42,7 @@ def pm(module_tmpdir, target) -> pymake.Pymake:
 
 def run_command(args, cwd):
     p = subprocess.Popen(
-        args,
-        shell=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        cwd=cwd,
+        args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd
     )
     for line in p.stdout.readlines():
         print(line.decode().strip())

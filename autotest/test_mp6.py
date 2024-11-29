@@ -44,20 +44,12 @@ def update_files(fn, workspace):
         if rf in fn.lower():
             fname1 = workspace / f"{rf}.locations"
             fname2 = workspace / f"{rf}_mod.locations"
-            print(
-                "copy {} to {}".format(
-                    os.path.basename(fname1), os.path.basename(fname2)
-                )
-            )
+            print(f"copy {os.path.basename(fname1)} to {os.path.basename(fname2)}")
             shutil.copy(fname1, fname2)
             print(f"deleting {os.path.basename(fname1)}")
             os.remove(fname1)
             fname1 = workspace / f"{rf.upper()}.locations"
-            print(
-                "renmae {} to {}".format(
-                    os.path.basename(fname2), os.path.basename(fname1)
-                )
-            )
+            print(f"renmae {os.path.basename(fname2)} to {os.path.basename(fname1)}")
             os.rename(fname2, fname1)
 
 

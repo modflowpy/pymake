@@ -14,7 +14,7 @@ __status__ = "Production"
 import os
 
 
-class Node(object):
+class Node:
     def __init__(self, name):
         self.name = name
         self.dependencies = []
@@ -27,7 +27,7 @@ class Node(object):
         return
 
 
-class DirectedAcyclicGraph(object):
+class DirectedAcyclicGraph:
     def __init__(self, nodelist, networkx=False):
         self.nodelist = nodelist
         self.networkx = networkx

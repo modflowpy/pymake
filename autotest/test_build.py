@@ -61,13 +61,7 @@ def test_build(function_tmpdir, target: str) -> None:
         pm.inplace = True
         fc = os.environ.get("FC", "gfortran")
         assert (
-            pymake.build_apps(
-                target,
-                pm,
-                verbose=True,
-                clean=False,
-            )
-            == 0
+            pymake.build_apps(target, pm, verbose=True, clean=False) == 0
         ), f"could not compile {target}"
 
 
@@ -80,13 +74,7 @@ def test_meson_build(function_tmpdir, target: str) -> None:
     pymake.linker_update_environment(cc=cc, fc=fc)
     with set_dir(function_tmpdir):
         assert (
-            pymake.build_apps(
-                target,
-                verbose=True,
-                clean=False,
-                meson=True,
-            )
-            == 0
+            pymake.build_apps(target, verbose=True, clean=False, meson=True) == 0
         ), f"could not compile {target}"
 
 

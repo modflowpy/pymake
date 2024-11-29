@@ -7,6 +7,7 @@ It requires Python 3.6 or later, and has no dependencies.
 
 import sys
 from pathlib import Path
+from textwrap import dedent
 
 from pymake.pymake_base import main as pymake_main
 from pymake.pymake_parser import parser
@@ -25,16 +26,20 @@ def main() -> None:
     """
     # Show meaningful examples at bottom of help
     prog = Path(sys.argv[0]).stem
-    examples = (
-        "Examples:\n\n"
-        + "Compile MODFLOW 6 from the root directory containing the \n"
-        + "source files in subdirectories in the src/ subdirectory:\n\n"
-        + f"$ {prog} src/ mf6 --subdirs\n\n"
-        + "Compile MODFLOW 6 in the bin subdirectory using the Intel \n"
-        + "Fortran compiler from the root directory containing the source \n"
-        + "files in subdirectories in the the src/ subdirectory:\n\n"
-        + f"$ {prog} src/ mf6 --subdirs -fc ifort --appdir bin\n"
-    )
+    examples = dedent(f"""\
+        Examples:
+
+        Compile MODFLOW 6 from the root directory containing the
+        source files in subdirectories in the src/ subdirectory:
+
+        $ {prog} src/ mf6 --subdirs
+
+        Compile MODFLOW 6 in the bin subdirectory using the Intel
+        Fortran compiler from the root directory containing the source
+        files in subdirectories in the the src/ subdirectory:
+
+        $ {prog} src/ mf6 --subdirs -fc ifort --appdir bin
+        """)
 
     # get the arguments
     args = parser(examples=examples)
