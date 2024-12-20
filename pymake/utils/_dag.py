@@ -12,6 +12,7 @@ __email__ = "langevin@usgs.gov"
 __status__ = "Production"
 
 import os
+import re
 
 
 class Node:
@@ -125,6 +126,7 @@ def _get_f_nodelist(srcfiles):
     # create a dictionary that has a list of modules used within each source
     # create a list of Nodes for later ordering
     # create a dictionary of nodes
+    submodule_pattern = r"\(([^)]+)\)"
     module_dict = {}
     sourcefile_module_dict = {}
     nodelist = []
@@ -148,11 +150,15 @@ def _get_f_nodelist(srcfiles):
             linelist = line.strip().split()
             if len(linelist) == 0:
                 continue
-            if linelist[0].upper() in ["MODULE", "SUBMODULE"]:
+            if linelist[0].upper() == "MODULE":
                 modulename = linelist[1].upper()
                 module_dict[modulename] = srcfile
             if linelist[0].upper() == "USE":
                 modulename = linelist[1].split(",")[0].upper()
+                if modulename not in modulelist:
+                    modulelist.append(modulename)
+            if "SUBMODULE" in linelist[0].upper():
+                modulename = re.findall(submodule_pattern, linelist[0])[0].upper()
                 if modulename not in modulelist:
                     modulelist.append(modulename)
 
@@ -171,7 +177,7 @@ def _get_f_nodelist(srcfiles):
                 if m in module_dict:
                     mlocation = module_dict[m]
                     if mlocation != srcfile:
-                        # print 'adding dependency: ', srcfile, mlocation
+                        # print(f"adding dependency: {srcfile} {mlocation}")
                         node.add_dependency(nodedict[mlocation])
         except:
             print(f"get_f_nodelist: {srcfile} key does not exist")
