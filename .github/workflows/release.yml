@@ -128,7 +128,7 @@ jobs:
         run: |
           version=$(cat version.txt)
           title="pymake $version"
-          notes=$(cat code.md)
+          notes=$(cat code.md/code.md)
           gh release create "$version" \
             --target master \
             --title "$title" \
