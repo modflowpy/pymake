@@ -2,6 +2,8 @@
 flags and appropriate linker flags for defined targets.
 """
 
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-complex
+
 import os
 import sys
 from subprocess import check_output
@@ -94,7 +96,7 @@ def _get_osname():
     """Return the lower case OS platform name.
 
     Parameters
-    -------
+    ----------
 
     Returns
     -------
@@ -138,7 +140,7 @@ def _get_prepend(compiler, osname):
     """Return the appropriate prepend for a compiler switch for a OS.
 
     Parameters
-    -------
+    ----------
     compiler : str
         compiler name
     osname : str
@@ -160,13 +162,11 @@ def _get_prepend(compiler, osname):
     return prepend
 
 
-def _get_optlevel(
-    target, fc, cc, debug, fflags, cflags, osname=None, verbose=False
-):
+def _get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
     """Return a compiler optimization switch.
 
     Parameters
-    -------
+    ----------
     target : str
         executable to create
     fc : str
@@ -182,8 +182,6 @@ def _get_optlevel(
     osname : str
         optional lower case OS name. If not passed it will be determined
         using sys.platform
-    verbose : bool
-        boolean for verbose output to terminal
 
     Returns
     -------
@@ -269,7 +267,7 @@ def _get_fortran_flags(
     """Return a list of pymake and user specified fortran compiler switches.
 
     Parameters
-    -------
+    ----------
     target : str
         executable to create
     fc : str
@@ -339,9 +337,7 @@ def _get_fortran_flags(
                         flags.append("pedantic")
                     if _check_gnu_switch_available("-Wcharacter-truncation"):
                         flags.append("Wcharacter-truncation")
-                    if _check_gnu_switch_available(
-                        "-Wno-unused-dummy-argument"
-                    ):
+                    if _check_gnu_switch_available("-Wno-unused-dummy-argument"):
                         flags.append("Wno-unused-dummy-argument")
                     if _check_gnu_switch_available("-Wno-intrinsic-shadow"):
                         flags.append("Wno-intrinsic-shadow")
@@ -430,7 +426,7 @@ def _get_c_flags(
     """Return a list of standard and user specified c/c++ compiler switches.
 
     Parameters
-    -------
+    ----------
     target : str
         executable to create
     cc : str
@@ -584,7 +580,7 @@ def _get_linker_flags(
     specified linker switches (syslibs).
 
     Parameters
-    -------
+    ----------
     target : str
         executable to create
     fc : str
@@ -811,9 +807,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
         ):
             if fc == "gfortran":
                 opt = "-fallow-argument-mismatch"
-                if _check_gnu_switch_available(
-                    opt, compiler=fc, verbose=verbose
-                ):
+                if _check_gnu_switch_available(opt, compiler=fc, verbose=verbose):
                     fflags += [
                         opt,
                     ]
@@ -851,7 +845,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
             if verbose:
                 msg = (
                     f"{target} fortran code "
-                    + "will be built with the following predefined flags:\n"
+                    "will be built with the following predefined flags:\n"
                 )
                 msg += f"    {' '.join(fflags)}\n"
                 print(msg)
@@ -921,7 +915,7 @@ def _set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
             if verbose:
                 msg = (
                     f"{target} c/c++ code "
-                    + "will be built with the following predefined flags:\n"
+                    "will be built with the following predefined flags:\n"
                 )
                 msg += f"    {' '.join(cflags)}\n"
                 print(msg)

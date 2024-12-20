@@ -54,10 +54,10 @@ MODFLOW 6 was built.
 
 import argparse
 import os
-import pathlib as pl
 import shutil
 import sys
 import time
+from pathlib import Path
 from zipfile import ZipFile
 
 from .config import __description__
@@ -126,10 +126,7 @@ class Pymake:
             setattr(self, key, value["default"])
 
         # parse command line arguments if python is running script
-        if (
-            sys.argv[0].lower().endswith(".py")
-            or "make-program" in sys.argv[0].lower()
-        ):
+        if sys.argv[0].lower().endswith(".py") or "make-program" in sys.argv[0].lower():
             self._arg_parser()
 
         # reset select variables using passed variables
@@ -214,9 +211,7 @@ class Pymake:
 
         """
         loc_dict = _get_standard_arg_dict()
-        parser = argparse.ArgumentParser(
-            description=__description__,
-        )
+        parser = argparse.ArgumentParser(description=__description__)
         for _, value in loc_dict.items():
             tag = value["tag"][0]
             # only process optional command line variables
@@ -258,22 +253,17 @@ class Pymake:
                     targets.append(target)
 
             # add code.json
-            if pl.Path("code.json").exists():
+            if Path("code.json").exists():
                 if "code.json" not in targets:
                     targets.append("code.json")
 
             # delete the zip file if it exists
+            zip_str = str(Path(zip_pth).resolve())
             if os.path.exists(zip_pth):
                 if self.keep:
                     if self.verbose:
-                        print(
-                            "Appending files to existing "
-                            + f"zipfile '{pl.Path(zip_pth).resolve()}'"
-                        )
-                    with ZipFile(
-                        zip_pth,
-                        mode="r",
-                    ) as zf:
+                        print(f"Appending files to existing zipfile '{zip_str}'")
+                    with ZipFile(zip_pth, mode="r") as zf:
                         available_file_paths = zf.namelist()
                         pop_list = []
                         for target in targets:
@@ -285,29 +275,20 @@ class Pymake:
                             targets.remove(target)
                 else:
                     if self.verbose:
-                        print(
-                            "Deleting existing zipfile "
-                            + f"'{pl.Path(zip_pth).resolve()}'"
-                        )
+                        print(f"Deleting existing zipfile '{zip_str}'")
                     os.remove(zip_pth)
 
             # print a message describing the zip process
             if self.verbose:
                 print(
-                    f"Compressing files in '{appdir}' "
-                    + f"directory to zip file '{pl.Path(zip_pth).resolve()}'"
+                    f"Compressing files in '{appdir}' directory to zip file '{zip_str}'"
                 )
                 for idx, target in enumerate(targets):
-                    print(
-                        f" {idx + 1:>3d}. adding " + f"'{target}' to zipfile"
-                    )
+                    print(f" {idx + 1:>3d}. adding '{target}' to zipfile")
 
             # compress the compiled executables
             if not zip_all(
-                zip_pth,
-                dir_pths=appdir,
-                patterns=targets,
-                append=self.keep,
+                zip_pth, dir_pths=appdir, patterns=targets, append=self.keep
             ):
                 self.returncode = 1
 
@@ -409,11 +390,7 @@ class Pymake:
         """
         # setup the download
         self.download_setup(
-            target,
-            url=url,
-            download_path=download_path,
-            verify=verify,
-            timeout=timeout,
+            target, url=url, download_path=download_path, verify=verify, timeout=timeout
         )
 
         return self.download_url()
@@ -471,13 +448,15 @@ class Pymake:
                             if self.verbose:
                                 print(
                                     "removing download "
-                                    + f"directory...'{self.download_dir}'"
+                                    f"directory...'{self.download_dir}'"
                                 )
                             break
                         except:
                             if self.verbose:
-                                msg = f"    removal attempt {itries + 1:>2d} "
-                                msg += f"of {ntries:>2d}"
+                                msg = (
+                                    f"    removal attempt {itries + 1:>2d} "
+                                    f"of {ntries:>2d}"
+                                )
                                 print(msg)
 
                     # wait prior to returning on windows
@@ -654,10 +633,7 @@ class Pymake:
                     fpth = os.path.join(srcdir, extrafiles)
                     extrafiles = os.path.normpath(fpth)
                 else:
-                    msg = (
-                        "invalid extrafiles format - "
-                        + "must be a list or string"
-                    )
+                    msg = "invalid extrafiles format - must be a list or string"
                     raise ValueError(msg)
 
             # reset extrafiles
@@ -677,9 +653,7 @@ class Pymake:
         """
         if self.excludefiles is None:
             if self._get_base_target() in ("libmf6",):
-                self.excludefiles = [
-                    os.path.join(self.download_dir, "src", "mf6.f90")
-                ]
+                self.excludefiles = [os.path.join(self.download_dir, "src", "mf6.f90")]
         return
 
     def build(self, target=None, srcdir=None, modify_exe_name=False):
@@ -730,9 +704,7 @@ class Pymake:
         if self.fc != "none":
             if self.fflags is None:
                 optlevel = (
-                    _get_optlevel(
-                        self.target, self.fc, self.cc, self.debug, [], []
-                    )
+                    _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
                     + " "
                 )
 
@@ -749,9 +721,7 @@ class Pymake:
         if self.cc != "none":
             if self.cflags is None:
                 optlevel = (
-                    _get_optlevel(
-                        self.target, self.fc, self.cc, self.debug, [], []
-                    )
+                    _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
                     + " "
                 )
 
@@ -776,9 +746,7 @@ class Pymake:
                 )[1]
             )
 
-        self.target = self.update_target(
-            self.target, modify_target=modify_exe_name
-        )
+        self.target = self.update_target(self.target, modify_target=modify_exe_name)
 
         build_target = self.set_build_target_bool()
 

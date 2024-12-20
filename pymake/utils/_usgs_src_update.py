@@ -4,10 +4,10 @@ releases.
 """
 
 import os
-import pathlib as pl
 import shutil
 import sys
 import types
+from pathlib import Path
 from typing import Union
 
 from ..utils.usgsprograms import usgs_program_data
@@ -68,7 +68,7 @@ def _build_replace(targets):
     # remove exe extension from targets, as well as
     # d (debug) and dbl (double precision) suffixes
     for idx, target in enumerate(targets):
-        tgt = pl.Path(target).with_suffix("").name.replace("dbl", "")
+        tgt = Path(target).with_suffix("").name.replace("dbl", "")
         if tgt.endswith("d") and tgt[:-1] in usgs_program_data.get_keys():
             tgt = tgt[:-1]
         targets[idx] = tgt
@@ -122,9 +122,7 @@ def _update_triangle_files(srcdir, fc, cc, arch, double):
         with open(src, "r") as f:
             lines = f.readlines()
             for idx, line in enumerate(lines):
-                lines[idx] = line.replace(
-                    "unsigned long", "unsigned long long"
-                )
+                lines[idx] = line.replace("unsigned long", "unsigned long long")
         with open(src, "w") as f:
             for line in lines:
                 f.write(line)
@@ -245,13 +243,8 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
             lines = [line.rstrip() for line in open(fpth)]
             f = open(fpth, "w")
             for line in lines:
-                if (
-                    "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                    in line
-                ):
-                    line = (
-                        "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                    )
+                if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
+                    line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
                 f.write(f"{line}\n")
             f.close()
     else:
@@ -262,20 +255,10 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
             f = open(fpth, "w")
             for line in lines:
                 # comment out the 32 bit one and activate the 64 bit line
-                if (
-                    "C      !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
-                    in line
-                ):
-                    line = (
-                        "       !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
-                    )
-                if (
-                    "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                    in line
-                ):
-                    line = (
-                        "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                    )
+                if "C      !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT" in line:
+                    line = "       !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
+                if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
+                    line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
                 f.write(f"{line}\n")
             f.close()
 
@@ -346,17 +329,20 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
 
     """
     tags = {
-        "FMTARG = 'BINARY'": "FMTARG = 'UNFORMATTED'\n        ACCARG = 'STREAM'",  # noqa: E501
+        "FMTARG = 'BINARY'": "FMTARG = 'UNFORMATTED'\n        ACCARG = 'STREAM'",
         ",SHARED,ACCESS='SEQUENTIAL'": ",ACCESS='SEQUENTIAL'",
         "FORM=FMTARG,SHARED,": "FORM=FMTARG,",
         ",BUFFERED='YES',": ",",
         ", BUFFERED='NO')": ")",
         ",SHARE = 'DENYNONE'": ",",
         ", SHARE = 'DENYNONE',": ",",
-        "FORM='FORMATTED',ACCESS='SEQUENTIAL',": "FORM='FORMATTED',ACCESS='SEQUENTIAL'",  # noqa: E501
+        "FORM='FORMATTED',ACCESS='SEQUENTIAL',": "FORM='FORMATTED',ACCESS='SEQUENTIAL'",
     }
 
-    fpth = pl.Path(srcdir) / "glo2basu1.f"
+    if not isinstance(srcdir, Path):
+        srcdir = Path(srcdir)
+
+    fpth = srcdir / "glo2basu1.f"
     if fpth.exists():
         with open(fpth) as f:
             lines = f.readlines()
@@ -370,7 +356,7 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
 
     tags = {",share='DENYNONE',": ","}
 
-    fpth = pl.Path(srcdir) / "UpdtSt.for"
+    fpth = srcdir / "UpdtSt.for"
     if fpth.exists():
         with open(fpth) as f:
             lines = f.readlines()
@@ -384,7 +370,7 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
 
     tag = "DEALLOCATE(ITHFLG)"
     tag2 = "DEALLOCATE(LAYTYP)"
-    fpth = pl.Path(srcdir) / "gwf2bcf-lpf-u1.f"
+    fpth = srcdir / "gwf2bcf-lpf-u1.f"
     if fpth.exists():
         with open(fpth) as f:
             lines = f.readlines()
@@ -399,7 +385,7 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
 
     tag = "FORM = 'BINARY',"
     tag2 = "FORM = FORMC,"
-    fpth = pl.Path(srcdir) / "gwt2dptu1.f"
+    fpth = srcdir / "gwt2dptu1.f"
     if fpth.exists():
         with open(fpth) as f:
             lines = f.readlines()
@@ -412,7 +398,7 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
 
     tag = "FORM = 'BINARY',"
     tag2 = "FORM = FORM,"
-    fpth = pl.Path(srcdir) / "glo2btnu1.f"
+    fpth = srcdir / "glo2btnu1.f"
     if fpth.exists():
         with open(fpth) as f:
             lines = f.readlines()
@@ -424,9 +410,9 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
         f.close()
 
     # rename "utl7u1 RD.f" to "utl7u1_RD.f"
-    fpth = pl.Path(srcdir) / "utl7u1 RD.f"
+    fpth = srcdir / "utl7u1 RD.f"
     if fpth.exists():
-        fpth_rename = pl.Path(srcdir) / "utl7u1_RD.f"
+        fpth_rename = srcdir / "utl7u1_RD.f"
         if fpth_rename.exists():
             os.remove(fpth_rename)
         os.rename(fpth, fpth_rename)
@@ -499,15 +485,11 @@ def _update_mf2000_files(srcdir, fc, cc, arch, double):
 
     # Move src files and serial src file to src directory
     tpth = os.path.join(srcdir, "mf2k")
-    files = [
-        f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))
-    ]
+    files = [f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))]
     for f in files:
         shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
     tpth = os.path.join(srcdir, "mf2k", "serial")
-    files = [
-        f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))
-    ]
+    files = [f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))]
     for f in files:
         shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
 
@@ -659,12 +641,12 @@ def _update_vs2dt_files(srcdir, fc, cc, arch, double):
     f1 = os.path.join(srcdir, "..", "vs2dt3_3.f")
     f1 = os.path.abspath(f1)
     if not os.path.isfile(f1):
-        raise IOError(f"{f1} does not exist")
+        raise OSError(f"{f1} does not exist")
     f2 = os.path.join(srcdir, "vs2dt3_3.f")
     f2 = os.path.abspath(f2)
     shutil.move(f1, f2)
     if not os.path.isfile(f2):
-        raise IOError(f"{f2} does not exist")
+        raise OSError(f"{f2} does not exist")
 
     f1 = open(os.path.join(srcdir, "vs2dt3_3.f"), "r")
     f2 = open(os.path.join(srcdir, "vs2dt3_3.f.tmp"), "w")
@@ -755,7 +737,7 @@ def _update_mf6_external_dependencies(
     target: str = "mf6",
 ) -> None:
     """
-    Remove MODFLOW 6 files with external library dependencies (PETSc, MPI).
+    Remove MODFLOW 6 files with external library dependencies (PETSc, MPI, NetCDF).
 
 
     Parameters
@@ -770,8 +752,8 @@ def _update_mf6_external_dependencies(
     None
 
     """
-    if not isinstance(srcdir, pl.Path):
-        srcdir = pl.Path(srcdir)
+    if not isinstance(srcdir, Path):
+        srcdir = Path(srcdir)
     if target == "libmf6":
         srcdir = srcdir.parent / "src"
     parallel_files = (
@@ -787,6 +769,14 @@ def _update_mf6_external_dependencies(
         "Solution/ParallelSolution.f90",
         "Distributed/MpiUnitCache.f90",
         "Distributed/MpiMessageCache.f90",
+        "Utilities/Export/DisNCMesh.f90",
+        "Utilities/Export/DisNCStructured.f90",
+        "Utilities/Export/DisvNCMesh.f90",
+        "Utilities/Export/MeshNCModel.f90",
+        "Utilities/Export/NCExportCreate.f90",
+        "Utilities/Idm/netcdf/NCArrayReader.f90",
+        "Utilities/Idm/netcdf/NCContextBuild.f90",
+        "Utilities/Idm/netcdf/NetCDFCommon.f90",
     )
     for file in parallel_files:
         path = srcdir / file

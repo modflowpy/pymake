@@ -58,9 +58,7 @@ def _get_extrafiles_common_path(external_files):
     if external_files is None:
         common_path = None
     else:
-        common_path = os.path.commonpath(
-            _get_extra_exclude_files(external_files)
-        )
+        common_path = os.path.commonpath(_get_extra_exclude_files(external_files))
         for tag in (f"src{os.sep}", f"source{os.sep}"):
             if tag in common_path:
                 str_index = common_path.find(tag)

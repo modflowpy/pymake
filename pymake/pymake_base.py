@@ -42,10 +42,11 @@ The script could be run from the command line using:
 
 import inspect
 import os
-import pathlib as pl
 import shutil
 import sys
 import traceback
+from pathlib import Path
+from textwrap import dedent
 
 from .config import __version__
 from .utils._compiler_language_files import (
@@ -185,13 +186,12 @@ def main(
             inplace = True
             print(
                 f"Using meson to build {os.path.basename(target)}, "
-                + "resetting inplace to True"
+                "resetting inplace to True"
             )
 
     if srcdir is not None and target is not None:
         objdir_temp, moddir_temp, srcdir_temp = get_temporary_directories(
-            appdir=appdir,
-            target=pl.Path(target).stem,
+            appdir=appdir, target=Path(target).stem
         )
         if inplace:
             srcdir_temp = srcdir
@@ -213,8 +213,8 @@ def main(
             cc = None
         if fc is None and cc is None:
             msg = (
-                "Nothing to do the fortran (-fc) and c/c++ compilers (-cc)"
-                + "are both 'none'."
+                "Nothing to do the fortran (-fc) and c/c++ compilers (-cc) "
+                "are both 'none'."
             )
             raise ValueError(msg)
 
@@ -360,9 +360,8 @@ def main(
             )
     else:
         msg = (
-            f"Nothing to do, the srcdir ({srcdir}) "
-            + f"and/or target ({target}) "
-            + "are not specified."
+            f"Nothing to do, the srcdir ({srcdir}) and/or target ({target}) "
+            "are not specified."
         )
         raise ValueError(msg)
 
@@ -437,9 +436,7 @@ def _pymake_initialize(
             shutil.rmtree(srcdir_temp)
         if excludefiles:
             shutil.copytree(
-                srcdir,
-                srcdir_temp,
-                ignore=shutil.ignore_patterns(*excludefiles),
+                srcdir, srcdir_temp, ignore=shutil.ignore_patterns(*excludefiles)
             )
         else:
             shutil.copytree(srcdir, srcdir_temp)
@@ -456,11 +453,7 @@ def _pymake_initialize(
                 srcdir_temp, os.path.basename(os.path.normpath(commonsrc))
             )
             if excludefiles:
-                shutil.copytree(
-                    src,
-                    dst,
-                    ignore=shutil.ignore_patterns(*excludefiles),
-                )
+                shutil.copytree(src, dst, ignore=shutil.ignore_patterns(*excludefiles))
             else:
                 shutil.copytree(src, dst)
         else:
@@ -635,10 +628,7 @@ def _clean_temp_files(
 
     # remove temporary directories
     if verbose:
-        msg = (
-            "\nCleaning up temporary source, object, "
-            + "and module directories..."
-        )
+        msg = "\nCleaning up temporary source, object, and module directories..."
         print(msg)
     if not inplace:
         if os.path.isdir(srcdir_temp):
@@ -717,14 +707,14 @@ def _create_openspec(intelwin, srcfiles, verbose):
                     data_access = "STREAM"
                     data_form = "UNFORMATTED"
 
-                line = (
-                    "c -- created by pymake_base.py\n"
-                    + "      CHARACTER*20 ACCESS,FORM,ACTION(2)\n"
-                    + f"      DATA ACCESS/'{data_access}'/\n"
-                    + f"      DATA FORM/'{data_form}'/\n"
-                    + "      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/\n"
-                    + "c -- end of include file\n"
-                )
+                line = dedent(f"""\
+                    c -- created by pymake_base.py
+                          CHARACTER*20 ACCESS,FORM,ACTION(2)
+                          DATA ACCESS/'{data_access}'/
+                          DATA FORM/'{data_form}'/
+                          DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
+                    c -- end of include file
+                """)
                 f.write(line)
                 f.close()
 
@@ -775,7 +765,7 @@ def _pymake_compile(
     """Standard compile method.
 
     Parameters
-    -------
+    ----------
     srcfiles : list
         list of source file names
     target : str
@@ -839,14 +829,11 @@ def _pymake_compile(
 
     # get temporary object and module directories
     objdir_temp, moddir_temp, _ = get_temporary_directories(
-        os.path.dirname(target),
-        target=pl.Path(target).stem,
+        os.path.dirname(target), target=Path(target).stem
     )
 
     # set optimization levels
-    optlevel = _get_optlevel(
-        target, fc, cc, debug, fflags, cflags, verbose=verbose
-    )
+    optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags)
 
     # get fortran and c compiler switches
     tfflags = _get_fortran_flags(
@@ -1049,24 +1036,19 @@ def _pymake_compile(
 
     # execute each command in cmdlists
     if not dryrun:
+        target_str = os.path.basename(target)
         for idx, cmdlist in enumerate(cmdlists):
             if idx == 0:
                 if intelwin:
                     msg = (
-                        f"\nCompiling '{os.path.basename(target)}' "
-                        + "for Windows using Intel compilers..."
+                        f"\nCompiling '{target_str}' "
+                        "for Windows using Intel compilers..."
                     )
                 else:
-                    msg = (
-                        "\nCompiling object files for "
-                        + f"'{os.path.basename(target)}'"
-                    )
+                    msg = f"\nCompiling object files for '{target_str}'"
                 print(msg)
             if idx > 0 and idx == ilink:
-                msg = (
-                    "\nLinking object files "
-                    + f"to make '{os.path.basename(target)}'..."
-                )
+                msg = f"\nLinking object files to make '{target_str}'..."
                 print(msg)
 
             # write the command to the terminal
@@ -1115,7 +1097,7 @@ def _create_win_batch(
     """Make an intel compiler batch file for compiling on windows.
 
     Parameters
-    -------
+    ----------
     batchfile : str
         batch file name to create
     fc : str
@@ -1158,12 +1140,10 @@ def _create_win_batch(
             if on_env_var == oneapi_list[0]:
                 cpvars = (
                     "C:\\Program Files (x86)\\Intel\\oneAPI\\compiler\\"
-                    + f"{latest_version}\\env\\vars.bat"
+                    f"{latest_version}\\env\\vars.bat"
                 )
             else:
-                cpvars = (
-                    "C:\\Program Files (x86)\\Intel\\oneAPI\\" + "setvars.bat"
-                )
+                cpvars = "C:\\Program Files (x86)\\Intel\\oneAPI\\setvars.bat"
             if not os.path.isfile(cpvars):
                 raise Exception(f"Could not find cpvars: {cpvars}")
             intel_setvars = f'"{cpvars}"'
@@ -1174,19 +1154,14 @@ def _create_win_batch(
         for ift in iflist:
             stand_alone_intel = os.environ.get(ift)
             if stand_alone_intel is not None:
-                cpvars = os.path.join(
-                    stand_alone_intel, "bin", "compilervars.bat"
-                )
+                cpvars = os.path.join(stand_alone_intel, "bin", "compilervars.bat")
                 if not os.path.isfile(cpvars):
                     raise Exception(f"Could not find cpvars: {cpvars}")
                 intel_setvars = '"' + os.path.normpath(cpvars) + '" ' + arch
                 break
     # check if either OneAPI or stand alone intel is installed
     if intel_setvars is None:
-        err_msg = (
-            "OneAPI or stand alone version of Intel compilers "
-            + "is not installed"
-        )
+        err_msg = "OneAPI or stand alone version of Intel compilers is not installed"
         raise ValueError(err_msg)
 
     # open the batch file
@@ -1205,11 +1180,8 @@ def _create_win_batch(
             searchdir.append(dirname)
 
     # write commands to build object files
-    line = (
-        "echo Creating object files to create '"
-        + os.path.basename(target)
-        + "'\n"
-    )
+    target_str = os.path.basename(target)
+    line = f"echo Creating object files to create '{target_str}'\n"
     f.write(line)
     for srcfile in srcfiles:
         if srcfile.endswith(".c") or srcfile.endswith(".cpp"):
@@ -1223,8 +1195,7 @@ def _create_win_batch(
                 cmd += f"/I{sd} "
 
             obj = os.path.join(
-                objdir_temp,
-                os.path.splitext(os.path.basename(srcfile))[0] + ".obj",
+                objdir_temp, os.path.splitext(os.path.basename(srcfile))[0] + ".obj"
             )
             cmd += "/Fo:" + obj + " "
             cmd += srcfile
@@ -1243,11 +1214,7 @@ def _create_win_batch(
         f.write(cmd + "\n")
 
     # write commands to link
-    line = (
-        "echo Linking object files to create '"
-        + os.path.basename(target)
-        + "'\n"
-    )
+    line = f"echo Linking object files to create '{target_str}'\n"
     f.write(line)
 
     # assemble the link command
@@ -1426,8 +1393,8 @@ def _create_makefile(
         for ext in cext:
             line += f"{ext} "
     line += objext
-    f.write(f"{line}\n")
-    f.write("\n")
+    f.write(line)
+    f.write("\n\n")
 
     f.write("OBJECTS = \\\n")
     for idx, srcfile in enumerate(srcfiles):
@@ -1452,18 +1419,16 @@ def _create_makefile(
             f.write("\t@mkdir -p $(@D)\n")
             line = (
                 "\t$(FC) $(OPTLEVEL) $(FFLAGS) -c $< -o $@ "
-                + "$(INCSWITCH) $(MODSWITCH)\n"
+                "$(INCSWITCH) $(MODSWITCH)\n\n"
             )
-            f.write(f"{line}\n")
+            f.write(line)
 
     if cext is not None:
         for ext in cext:
             f.write(f"$(OBJDIR)/%{objext} : %{ext}\n")
             f.write("\t@mkdir -p $(@D)\n")
-            line = (
-                "\t$(CC) $(OPTLEVEL) $(CFLAGS) -c $< -o $@ " + "$(INCSWITCH)\n"
-            )
-            f.write(f"{line}\n")
+            line = "\t$(CC) $(OPTLEVEL) $(CFLAGS) -c $< -o $@ $(INCSWITCH)\n\n"
+            f.write(line)
 
     # close the makefile
     f.close()
@@ -1483,10 +1448,7 @@ def _create_makefile(
     line += "\tdetected_OS = Windows\n"
     line += "\tOS_macro = -D_WIN32\n"
     line += "else\n"
-    line += (
-        "\tdetected_OS = $(shell sh -c 'uname 2>/dev/null "
-        + "|| echo Unknown')\n"
-    )
+    line += "\tdetected_OS = $(shell sh -c 'uname 2>/dev/null || echo Unknown')\n"
     line += "\tifeq ($(detected_OS), Darwin)\n"
     line += "\t\tOS_macro = -D__APPLE__\n"
     line += "\telse\n"
@@ -1505,7 +1467,7 @@ def _create_makefile(
     # write header
     line = (
         "# Define the directories for the object and module files\n"
-        + "# and the executable and its path.\n"
+        "# and the executable and its path.\n"
     )
     tpth = dpth.replace("\\", "/")
     line += f"BINDIR = {tpth}\n"
@@ -1566,9 +1528,7 @@ def _create_makefile(
         f.write(line)
 
     # optimization level
-    optlevel = _get_optlevel(
-        target, fc, cc, debug, fflags, cflags, verbose=verbose
-    )
+    optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags)
     line = "# set the optimization level (OPTLEVEL) if not defined\n"
     line += f"OPTLEVEL ?= {optlevel.replace('/', '-')}\n\n"
     f.write(line)

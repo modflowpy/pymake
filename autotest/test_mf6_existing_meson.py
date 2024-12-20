@@ -89,16 +89,10 @@ def test_build_with_existing_meson(pm, module_tmpdir, workspace, targets):
         linker_update_environment(cc=cc, fc=fc)
 
         # make modflow 6 with existing meson.build file
-        returncode = pymake.meson_build(
-            workspace,
-            fc,
-            cc,
-            appdir=pm.appdir,
-        )
-        assert returncode == 0, (
-            "could not build modflow 6 applications "
-            + "using existing meson.build file"
-        )
+        returncode = pymake.meson_build(workspace, fc, cc, appdir=pm.appdir)
+        assert (
+            returncode == 0
+        ), "could not build modflow 6 applications using existing meson.build file"
 
         # check that all of the executables exist
         for executable in targets:

@@ -50,16 +50,14 @@ Examples:
                 "-f",
                 "--fpth",
             ),
-            "help": "Path for the json file to be created. "
-            + 'Default is "code.json".',
+            "help": 'Path for the json file to be created. Default is "code.json".',
             "default": "code.json",
             "choices": None,
             "action": None,
         },
         "appdir": {
             "tag": ("-ad", "--appdir"),
-            "help": "code.json path that overides FPTH defined path, "
-            + "Default is None.",
+            "help": "code.json path that overides FPTH defined path. Default is None.",
             "default": None,
             "choices": None,
             "action": None,
@@ -67,8 +65,7 @@ Examples:
         "prog_data": {
             "tag": ("--prog_data",),
             "help": "User-specified program database. If prog_data is None, "
-            + "it will be created from the USGS program database."
-            + "Default is None.",
+            "it will be created from the USGS program database. Default is None.",
             "default": None,
             "choices": None,
             "action": None,
@@ -76,8 +73,8 @@ Examples:
         "current": {
             "tag": ("--current",),
             "help": "If False, all USGS program targets are listed. "
-            + "If True, only USGS program targets that are "
-            + " defined as current are listed. Default is True.",
+            "If True, only USGS program targets that are defined as current "
+            "are listed. Default is True.",
             "default": True,
             "choices": None,
             "action": "store_true",
@@ -87,20 +84,19 @@ Examples:
                 "-u",
                 "--update",
             ),
-            "help": "If True, existing targets in the user-specified "
-            + "program database with values in the USGS "
-            + "program database. If False, existing targets "
-            + "in the user-specified program database "
-            + "will not be updated. Default is True.",
+            "help": "If True, existing targets in the user-specified program database "
+            "with values in the USGS program database. If False, existing targets "
+            "in the user-specified program database will not be updated. "
+            "Default is True.",
             "default": True,
             "choices": None,
             "action": "store_true",
         },
         "write_markdown": {
             "tag": ("--write_markdown",),
-            "help": "If True, write markdown file that includes the "
-            + "target name, version, and the last-modified date of "
-            + "the download asset (url). Default is True.",
+            "help": "If True, write markdown file that includes the target name, "
+            "version, and the last-modified date of the download asset (url). "
+            "Default is True.",
             "default": True,
             "choices": None,
             "action": "store_true",
@@ -108,8 +104,7 @@ Examples:
         "partial_json": {
             "tag": ("--partial_json",),
             "help": "Create a partial code.json based on targets in the "
-            + "parent path for the code.json file (FPTH). "
-            + "Default is False.",
+            "parent path for the code.json file (FPTH). Default is False.",
             "default": False,
             "choices": None,
             "action": "store_true",

@@ -12,9 +12,10 @@ __email__ = "langevin@usgs.gov"
 __status__ = "Production"
 
 import os
+import re
 
 
-class Node(object):
+class Node:
     def __init__(self, name):
         self.name = name
         self.dependencies = []
@@ -27,7 +28,7 @@ class Node(object):
         return
 
 
-class DirectedAcyclicGraph(object):
+class DirectedAcyclicGraph:
     def __init__(self, nodelist, networkx=False):
         self.nodelist = nodelist
         self.networkx = networkx
@@ -125,6 +126,7 @@ def _get_f_nodelist(srcfiles):
     # create a dictionary that has a list of modules used within each source
     # create a list of Nodes for later ordering
     # create a dictionary of nodes
+    submodule_pattern = r"\(([^)]+)\)"
     module_dict = {}
     sourcefile_module_dict = {}
     nodelist = []
@@ -136,9 +138,7 @@ def _get_f_nodelist(srcfiles):
         try:
             f = open(srcfile, "rb")
         except:
-            print(
-                f"get_f_nodelist: could not open {os.path.basename(srcfile)}"
-            )
+            print(f"get_f_nodelist: could not open {os.path.basename(srcfile)}")
             sourcefile_module_dict[srcfile] = []
             continue
         lines = f.read()
@@ -150,11 +150,15 @@ def _get_f_nodelist(srcfiles):
             linelist = line.strip().split()
             if len(linelist) == 0:
                 continue
-            if linelist[0].upper() in ["MODULE", "SUBMODULE"]:
+            if linelist[0].upper() == "MODULE":
                 modulename = linelist[1].upper()
                 module_dict[modulename] = srcfile
             if linelist[0].upper() == "USE":
                 modulename = linelist[1].split(",")[0].upper()
+                if modulename not in modulelist:
+                    modulelist.append(modulename)
+            if line.strip().upper().startswith("SUBMODULE"):
+                modulename = re.findall(submodule_pattern, line)[0].upper()
                 if modulename not in modulelist:
                     modulelist.append(modulename)
 
@@ -173,7 +177,7 @@ def _get_f_nodelist(srcfiles):
                 if m in module_dict:
                     mlocation = module_dict[m]
                     if mlocation != srcfile:
-                        # print 'adding dependency: ', srcfile, mlocation
+                        # print(f"adding dependency: {srcfile} {mlocation}")
                         node.add_dependency(nodedict[mlocation])
         except:
             print(f"get_f_nodelist: {srcfile} key does not exist")
@@ -262,8 +266,7 @@ def _order_c_source_files(srcfiles, networkx):
             f = open(srcfile, "rb")
         except:
             print(
-                "order_c_source_files: could not open "
-                + f"{os.path.basename(srcfile)}"
+                "order_c_source_files: could not open " + f"{os.path.basename(srcfile)}"
             )
             sourcefile_module_dict[srcfile] = []
             continue
@@ -284,10 +287,7 @@ def _order_c_source_files(srcfiles, networkx):
                 # add source file for this c(pp) file if it is the same
                 # as the include file without the extension
                 bn = os.path.basename(srcfile)
-                if (
-                    os.path.splitext(modulename)[0]
-                    == os.path.splitext(bn)[0].upper()
-                ):
+                if os.path.splitext(modulename)[0] == os.path.splitext(bn)[0].upper():
                     module_dict[modulename] = srcfile
 
                 # add include file name

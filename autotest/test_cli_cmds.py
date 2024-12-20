@@ -1,7 +1,8 @@
 import os
-import pathlib as pl
 import subprocess
+from pathlib import Path
 from platform import system
+from textwrap import dedent
 
 import pytest
 from flaky import flaky
@@ -47,13 +48,7 @@ def run_cli_cmd(cmd: list) -> None:
 @pytest.mark.parametrize("target", targets)
 def test_make_program(function_tmpdir, target: str) -> None:
     with set_dir(function_tmpdir):
-        cmd = [
-            "make-program",
-            target,
-            "--appdir",
-            str(function_tmpdir),
-            "--verbose",
-        ]
+        cmd = ["make-program", target, "--appdir", ".", "--verbose"]
         run_cli_cmd(cmd)
 
 
@@ -62,14 +57,7 @@ def test_make_program(function_tmpdir, target: str) -> None:
 @pytest.mark.base
 def test_make_program_double(function_tmpdir) -> None:
     with set_dir(function_tmpdir):
-        cmd = [
-            "make-program",
-            "mf2005",
-            "--double",
-            "--verbose",
-            "--appdir",
-            str(function_tmpdir),
-        ]
+        cmd = ["make-program", "mf2005", "--double", "--verbose", "--appdir", "."]
         run_cli_cmd(cmd)
 
 
@@ -77,13 +65,7 @@ def test_make_program_double(function_tmpdir) -> None:
 @pytest.mark.schedule
 def test_make_program_all(module_tmpdir) -> None:
     with set_dir(module_tmpdir):
-        cmd = [
-            "make-program",
-            ":",
-            "--appdir",
-            str(module_tmpdir / "all"),
-            "--verbose",
-        ]
+        cmd = ["make-program", ":", "--appdir", ".", "--verbose"]
         run_cli_cmd(cmd)
 
 
@@ -93,13 +75,13 @@ def test_make_program_all(module_tmpdir) -> None:
 @pytest.mark.parametrize("meson", meson_parm)
 def test_mfpymake(function_tmpdir, meson: bool) -> None:
     with set_dir(function_tmpdir):
-        src = (
-            "program hello\n"
-            + "  ! This is a comment line; it is ignored by the compiler\n"
-            + "  print *, 'Hello, World!'\n"
-            + "end program hello\n"
-        )
-        src_file = pl.Path("src/hello.f90")
+        src = dedent("""\
+            program hello
+              ! This is a comment line; it is ignored by the compiler
+              print *, 'Hello, World!'
+            end program hello
+        """)
+        src_file = Path("src/hello.f90")
         src_file.parent.mkdir(parents=True, exist_ok=True)
         with open(src_file, "w") as f:
             f.write(src)

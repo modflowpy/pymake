@@ -40,9 +40,7 @@ def pm(module_tmpdir, target) -> pymake.Pymake:
 
 def replace_data(dpth):
     fpths = [
-        name
-        for name in os.listdir(dpth)
-        if os.path.isfile(os.path.join(dpth, name))
+        name for name in os.listdir(dpth) if os.path.isfile(os.path.join(dpth, name))
     ]
     repl = False
     if "ex01_mf2005.dis" in fpths:
@@ -137,9 +135,7 @@ def run_modpath7(namefile, mp7_exe, mf2005_exe, mfusg_exe, mf6_exe):
 
     if success:
         fpth = os.path.basename(namefile)
-        success, _ = flopy.run_model(
-            mp7_exe, fpth, model_ws=model_ws, silent=False
-        )
+        success, _ = flopy.run_model(mp7_exe, fpth, model_ws=model_ws, silent=False)
 
     return success
 
@@ -163,14 +159,10 @@ def test_compile(pm, target):
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 def test_download_exes(module_tmpdir):
-    pymake.getmfexes(
-        str(module_tmpdir), exes=("mf2005", "mfusg", "mf6"), verbose=True
-    )
+    pymake.getmfexes(str(module_tmpdir), exes=("mf2005", "mfusg", "mf6"), verbose=True)
 
 
-@pytest.mark.dependency(
-    name="test", depends=["download", "download_exes", "build"]
-)
+@pytest.mark.dependency(name="test", depends=["download", "download_exes", "build"])
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 @pytest.mark.parametrize(
