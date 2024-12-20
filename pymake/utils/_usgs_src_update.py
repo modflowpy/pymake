@@ -737,7 +737,7 @@ def _update_mf6_external_dependencies(
     target: str = "mf6",
 ) -> None:
     """
-    Remove MODFLOW 6 files with external library dependencies (PETSc, MPI).
+    Remove MODFLOW 6 files with external library dependencies (PETSc, MPI, NetCDF).
 
 
     Parameters
@@ -769,6 +769,14 @@ def _update_mf6_external_dependencies(
         "Solution/ParallelSolution.f90",
         "Distributed/MpiUnitCache.f90",
         "Distributed/MpiMessageCache.f90",
+        "Utilities/Export/DisNCMesh.f90",
+        "Utilities/Export/DisNCStructured.f90",
+        "Utilities/Export/DisvNCMesh.f90",
+        "Utilities/Export/MeshNCModel.f90",
+        "Utilities/Export/NCExportCreate.f90",
+        "Utilities/Idm/netcdf/NCArrayReader.f90",
+        "Utilities/Idm/netcdf/NCContextBuild.f90",
+        "Utilities/Idm/netcdf/NetCDFCommon.f90",
     )
     for file in parallel_files:
         path = srcdir / file
