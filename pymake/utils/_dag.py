@@ -157,8 +157,8 @@ def _get_f_nodelist(srcfiles):
                 modulename = linelist[1].split(",")[0].upper()
                 if modulename not in modulelist:
                     modulelist.append(modulename)
-            if "SUBMODULE" in linelist[0].upper():
-                modulename = re.findall(submodule_pattern, linelist[0])[0].upper()
+            if line.strip().upper().startswith("SUBMODULE"):
+                modulename = re.findall(submodule_pattern, line)[0].upper()
                 if modulename not in modulelist:
                     modulelist.append(modulename)
 
