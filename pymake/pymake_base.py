@@ -1333,8 +1333,7 @@ def _create_makefile(
 
     # build heading
     heading = (
-        f"# makefile created by pymake (version {__version__}) "
-        f"for the '{exe_name}' executable.\n"
+        f"# makefile created by pymake for the '{exe_name}' executable.\n"
     )
 
     # open makefile
@@ -1353,6 +1352,7 @@ def _create_makefile(
     if srcdir2 is not None:
         dirs2 = [d[0].replace("\\", "/") for d in os.walk(srcdir2)]
         dirs = dirs + dirs2
+    dirs = sorted(dirs)
 
     # source files in extrafiles
     files = _get_extra_exclude_files(extrafiles)
