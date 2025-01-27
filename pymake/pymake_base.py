@@ -1332,9 +1332,7 @@ def _create_makefile(
     exe_name = os.path.splitext(os.path.basename(target))[0]
 
     # build heading
-    heading = (
-        f"# makefile created by pymake for the '{exe_name}' executable.\n"
-    )
+    heading = f"# makefile created by pymake for the '{exe_name}' executable.\n"
 
     # open makefile
     f = open(os.path.join(make_dir, "makefile"), "w")
