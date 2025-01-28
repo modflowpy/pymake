@@ -31,7 +31,7 @@ jobs:
           # - {os: macos-latest, FC: gcc, FC_V: 13, shell: bash}
           # - {os: windows-latest, FC: gcc, FC_V: 13, shell: pwsh}
           # test latest python and intel-classic
-          - {os: ubuntu-latest, FC: intel-classic, FC_V: 2021.7, shell: bash}
+          - {os: ubuntu-22.04, FC: intel-classic, FC_V: 2021.7, shell: bash}
           # - {os: macos-13, FC: intel-classic, FC_V: 2021.7, shell: bash}
           # - {os: windows-2019, FC: intel-classic, FC_V: 2021.7, shell: pwsh}
           # test latest python and previous gcc
