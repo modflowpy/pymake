@@ -36,6 +36,8 @@ def pm(module_tmpdir, target) -> pymake.Pymake:
     pm.fc = None
     pm.inplace = True
     pm.makeclean = True
+    if system() == "Linux":
+        pm.cflags = "-D_Float128=__float12"
     yield pm
     pm.finalize()
 
