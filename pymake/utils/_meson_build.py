@@ -533,7 +533,7 @@ def _create_main_meson_build(
         else:
             line += "false',\n"
         if target in ("mf6", "libmf6", "zbud6"):
-            line += "\t\t'fortran_std=f2008'\n"
+            line += "\t\t'fortran_std=f2018'\n"
         line += "\t])\n\n"
         f.write(line)
 
