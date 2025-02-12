@@ -1,7 +1,7 @@
 target     ,  version,  current, url                                                                                            , dirname             , srcdir              ,    standard_switch, double_switch, shared_object
-mf6        ,  6.6.0  ,  True   , https://github.com/MODFLOW-USGS/modflow6/releases/download/6.6.0/mf6.6.0_linux.zip             , mf6.6.0_linux       , src                 ,    True           , False        , False
-zbud6      ,  6.6.0  ,  True   , https://github.com/MODFLOW-USGS/modflow6/releases/download/6.6.0/mf6.6.0_linux.zip             , mf6.6.0_linux       , utils/zonebudget/src,    True           , False        , False
-libmf6     ,  6.6.0  ,  True   , https://github.com/MODFLOW-USGS/modflow6/releases/download/6.6.0/mf6.6.0_linux.zip             , mf6.6.0_linux       , srcbmi              ,    True           , False        , True
+mf6        ,  6.6.1  ,  True   , https://github.com/MODFLOW-USGS/modflow6/releases/download/6.6.1/mf6.6.1_linux.zip             , mf6.6.1_linux       , src                 ,    True           , False        , False
+zbud6      ,  6.6.1  ,  True   , https://github.com/MODFLOW-USGS/modflow6/releases/download/6.6.1/mf6.6.1_linux.zip             , mf6.6.1_linux       , utils/zonebudget/src,    True           , False        , False
+libmf6     ,  6.6.1  ,  True   , https://github.com/MODFLOW-USGS/modflow6/releases/download/6.6.1/mf6.6.1_linux.zip             , mf6.6.1_linux       , srcbmi              ,    True           , False        , True
 mp7        ,  7.2.001,  True   , https://water.usgs.gov/water-resources/software/MODPATH/modpath_7_2_001.zip                    , modpath_7_2_001     , source              ,    True           , False        , False
 mt3dms     ,  5.3.0  ,  True   , https://github.com/MODFLOW-USGS/mt3dms/releases/download/2.0/mt3dms-2.0.zip                    , mt3dms-2.0          , true-binary         ,    True           , False        , False
 mt3dusgs   ,  1.1.0  ,  True   , https://water.usgs.gov/water-resources/software/MT3D-USGS/mt3dusgs1.1.0.zip                    , mt3dusgs1.1.0       , src                 ,    True           , False        , False
