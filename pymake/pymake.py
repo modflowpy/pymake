@@ -620,6 +620,8 @@ class Pymake:
                     "../../../src/Utilities/version.f90",
                     "../../../src/Utilities/DevFeature.f90",
                     "../../../src/Utilities/Message.f90",
+                    "../../../src/Utilities/GridFileReader.f90",
+                    "../../../src/Utilities/HashTable.f90",
                 ]
 
             # evaluate extrafiles type
