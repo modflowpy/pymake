@@ -66,7 +66,7 @@ jobs:
           pixi run postinstall
 
       - name: Setup ${{ matrix.FC }} ${{ matrix.FC_V }} on ${{ matrix.os }}
-        uses: fortran-lang/setup-fortran@main
+        uses: fortran-lang/setup-fortran@v1
         with:
           compiler: ${{ matrix.FC }}
           version: ${{ matrix.FC_V }}
@@ -125,7 +125,7 @@ jobs:
           - {os: macos-latest, FC: gcc, FC_V: 13, shell: bash}
           - {os: windows-latest, FC: gcc, FC_V: 13, shell: pwsh}
           # test latest python and intel
-          - {os: ubuntu-latest, FC: intel-classic, FC_V: 2021.7, shell: bash}
+          - {os: ubuntu-22.04, FC: intel-classic, FC_V: 2021.7, shell: bash}
           - {os: macos-13, FC: intel-classic, FC_V: 2021.7, shell: bash}
           - {os: windows-2019, FC: intel-classic, FC_V: 2021.7, shell: pwsh}
     defaults:
@@ -157,7 +157,7 @@ jobs:
           pixi run postinstall
 
       - name: Setup ${{ matrix.FC }} ${{ matrix.FC_V }} on ${{ matrix.os }}
-        uses: fortran-lang/setup-fortran@main
+        uses: fortran-lang/setup-fortran@v1
         with:
           compiler: ${{ matrix.FC }}
           version: ${{ matrix.FC_V }}
