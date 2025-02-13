@@ -35,6 +35,9 @@ jobs:
       - name: Check format
         run: pixi run check-format
 
+      - name: Check spelling
+        run: pixi run check-spelling
+
   pymake_setup:
     name: standard installation
     runs-on: ubuntu-latest

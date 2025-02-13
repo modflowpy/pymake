@@ -44,7 +44,7 @@ def linker_update_environment(cc="gcc", fc="gfortran", verbose=False):
 
 def _check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
     """Determine if a specified GNU compiler switch exists. Not all switches
-    will be detected, for example '-O2'  adn '-fbounds-check=on'.
+    will be detected, for example '-O2'  and '-fbounds-check=on'.
 
     Parameters
     ----------
@@ -174,7 +174,7 @@ def _get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
     cc : str
         c or cpp compiler
     debug : bool
-        flag indicating is a debug executible will be built
+        flag indicating is a debug executable will be built
     fflags : list
         user provided list of fortran compiler flags
     cflags : list
@@ -488,7 +488,7 @@ def _get_c_flags(
                 pass
         elif cc in ["clang", "clang++"]:
             if sharedobject:
-                msg = "shared library not implement fo clang"
+                msg = "shared library not implement for clang"
                 raise NotImplementedError(msg)
             if debug:
                 flags += ["g"]
@@ -1072,7 +1072,7 @@ def _darwin_syslibs(cc, fc, verbose=False):
     Returns
     -------
     linker_str : str
-        additiona; linker flags for darwin systems. Default is None
+        additional; linker flags for darwin systems. Default is None
     """
     linker_str = None
     if _get_osname() == "darwin":

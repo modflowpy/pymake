@@ -36,7 +36,9 @@ postinstall = "pip install --no-build-isolation --no-deps --disable-pip-version-
 # format
 check-lint = "ruff check ."
 check-format = "ruff format . --check"
+check-spelling = "codespell"
 fix-style = "ruff check . --fix; ruff format ."
+
 
 # build
 test = "meson test --verbose --no-rebuild -C"

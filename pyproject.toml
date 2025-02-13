@@ -100,3 +100,9 @@ ignore = [
     "RUF022", # Apply an isort-style sorting to `__all__`
     "UP015", # redundant open modes
 ]
+
+[tool.codespell]
+ignore-words-list = [
+    "Fo",
+    "nam",
+]

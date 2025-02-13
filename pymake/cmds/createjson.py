@@ -57,7 +57,7 @@ Examples:
         },
         "appdir": {
             "tag": ("-ad", "--appdir"),
-            "help": "code.json path that overides FPTH defined path. Default is None.",
+            "help": "code.json path that overrides FPTH defined path. Default is None.",
             "default": None,
             "choices": None,
             "action": None,
