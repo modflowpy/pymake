@@ -114,7 +114,7 @@ jobs:
   
   pymake-schedule:
     name: pymake scheduled
-    if: ${{ github.event_name == 'schedule' }}
+    # if: ${{ github.event_name == 'schedule' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -157,7 +157,7 @@ jobs:
           pixi run postinstall
 
       - name: Setup ${{ matrix.FC }} ${{ matrix.FC_V }} on ${{ matrix.os }}
-        uses: fortran-lang/setup-fortran@main
+        uses: fortran-lang/setup-fortran@v1
         with:
           compiler: ${{ matrix.FC }}
           version: ${{ matrix.FC_V }}
