@@ -31,7 +31,7 @@ options:
                         Additional C/C++ compiler flags. C/C++ compiler flags should be enclosed in quotes and start with a blank space or separated from the name (-cf or --cflags) with a equal sign
                         (-cf='-O3'). (default is None)
   -ad APPDIR, --appdir APPDIR
-                        Target path that overides path defined target path (default is None)
+                        Target path that overrides path defined target path (default is None)
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)
   --zip ZIP             Zip built executable. (default is None)
@@ -60,7 +60,7 @@ connection), unzips the distribution file, sets the pymake settings required to 
 source files to build the program. MT3DMS will be downloaded from the University of Alabama and Triangle will be
 downloaded from [netlib.org](http://www.netlib.org/voronoi/triangle.zip). Optional command line arguments can be used to
 customize the build (`-fc`, `-cc`, `--fflags`, etc.). For example, MODFLOW 6 could be built using intel compilers and
-an `O3` optimation level by specifying:
+an `O3` optimization level by specifying:
 
 ```console
 make-program mf6 -fc=ifort --fflags='-O3'

@@ -101,7 +101,7 @@ options:
                         List of extra source files to exclude from the compilation. excludefiles can be either a list of files or the name of a text file that contains a list of files. (default is None)
   -so, --sharedobject   Create shared object or dll on Windows. (default is False)
   -ad APPDIR, --appdir APPDIR
-                        Target path that overides path defined target path (default is None)
+                        Target path that overrides path defined target path (default is None)
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)
   --zip ZIP             Zip built executable. (default is None)
