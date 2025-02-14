@@ -1,6 +1,0 @@
-global-exclude .DS_Store *.pyc *.pyo *.pyd *.swp *.bak *~ .* *.sh *.yml *.md *.toml
-exclude docs/*
-exclude autotest/*
-include pyproject.toml
-include pymake/utils/usgsprograms.txt
-

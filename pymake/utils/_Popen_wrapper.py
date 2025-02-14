@@ -17,7 +17,7 @@ def _process_Popen_initialize(cmdlist, intelwin=False, cwd=None):
         boolean indicating is Intel compilers are being used on Windows and
         if stderr should be sent to the terminal
     cwd : str
-        path to execute Popen in (defaulr is None)
+        path to execute Popen in (default is None)
 
     Returns
     -------

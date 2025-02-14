@@ -22,7 +22,7 @@ mfpymake -h
 ```
 
 The help message identifies required positional arguments and optional
-arguments that can be provided to overide default values.
+arguments that can be provided to override default values.
 
 ```
 usage: mfpymake [-h] [-fc {ifort,mpiifort,gfortran,none}]
@@ -97,7 +97,7 @@ optional arguments:
   -so, --sharedobject   Create shared object or dll on Windows. (default is
                         False)
   -ad APPDIR, --appdir APPDIR
-                        Target path that overides path defined target path
+                        Target path that overrides path defined target path
                         (default is None)
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)

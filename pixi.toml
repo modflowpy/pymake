@@ -11,8 +11,9 @@ coverage = "*"
 filelock = "*"
 flaky = "*"
 flopy = "*"
+hatchling = ">=1.27.0,<2"
 matplotlib = "*"
-meson = "1.3.0"
+meson = "*"
 modflow-devtools = "*"
 networkx = "*"
 ninja = "*"
@@ -35,7 +36,9 @@ postinstall = "pip install --no-build-isolation --no-deps --disable-pip-version-
 # format
 check-lint = "ruff check ."
 check-format = "ruff format . --check"
+check-spelling = "codespell"
 fix-style = "ruff check . --fix; ruff format ."
+
 
 # build
 test = "meson test --verbose --no-rebuild -C"

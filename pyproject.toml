@@ -1,14 +1,11 @@
 [build-system]
-# Minimum requirements for the build system to execute
-requires = [
-    "setuptools>=61",
-    "wheel",
-]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "mfpymake"
 description = "pymake is a Python package to compile MODFLOW-based models."
+readme = "README.md"
 authors = [
     { name = "mfpymake Team", email = "modflow@usgs.gov" },
 ]
@@ -38,7 +35,8 @@ dependencies = [
     "ninja",
     "pydotplus",
 ]
-dynamic = ["version", "readme"]
+dynamic = ["version"]
+
 [project.optional-dependencies]
 lint = [
     "cffconvert",
@@ -60,11 +58,11 @@ test = [
     "modflow-devtools",
     "flopy",
 ]
+
 [project.scripts]
 mfpymake = "pymake.cmds.mfpymakecli:main"
 make-program = "pymake.cmds.build:main"
 make-code-json = "pymake.cmds.createjson:main"
-
 
 [project.urls]
 Documentation = "https://mfpymake.readthedocs.io"
@@ -72,23 +70,14 @@ Documentation = "https://mfpymake.readthedocs.io"
 "Bug Tracker" = "https://github.com/modflowpy/pymake/issues"
 "Source Code" = "https://github.com/modflowpy/pymake"
 
+[tool.hatch.build.targets.sdist]
+only-include = ["pymake"]
 
-[tool.setuptools]
-include-package-data = true
-zip-safe = false
+[tool.hatch.build.targets.wheel]
+packages = ["pymake"]
 
-[tool.setuptools.dynamic]
-version = { attr = "pymake.config.__version__" }
-readme = { file = ["README.md"], content-type = "text/markdown" }
-
-[tool.setuptools.packages.find]
-include = ["pymake", "pymake.*"]
-
-[tool.setuptools.package-data]
-"pymake.utils" = ["usgsprograms.txt"]
-
-[tool.setuptools_scm]
-fallback_version = "999"
+[tool.hatch.version]
+path = "pymake/config.py"
 
 [tool.ruff]
 line-length = 88
@@ -110,4 +99,10 @@ ignore = [
     "RUF005", # collection literal concatenation
     "RUF022", # Apply an isort-style sorting to `__all__`
     "UP015", # redundant open modes
+]
+
+[tool.codespell]
+ignore-words-list = [
+    "Fo",
+    "nam",
 ]

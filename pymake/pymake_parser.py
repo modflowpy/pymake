@@ -211,7 +211,7 @@ def _get_standard_arg_dict():
         },
         "appdir": {
             "tag": ("-ad", "--appdir"),
-            "help": """Target path that overides path defined target
+            "help": """Target path that overrides path defined target
                          path (default is None)""",
             "default": None,
             "choices": None,

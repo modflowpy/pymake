@@ -5,7 +5,7 @@ application database. Available functionality includes:
 2. Get data for a specific target
 3. Get a dictionary with the data for all targets
 4. Get the current version of a target
-5. Get a list indicating if single and double precsion versions of the
+5. Get a list indicating if single and double precision versions of the
    target application should be built
 6. Functions to load, update, and export a USGS-style "code.json" json file
    containing information in the USGS application database
@@ -314,7 +314,7 @@ class usgs_program_data:
         fpth : str
             Path for the json file to be created. Default is "code.json"
         appdir : str
-            path for code.json. Overides code.json path defined in fpth.
+            path for code.json. Overrides code.json path defined in fpth.
             Default is None.
         prog_data : dict
             User-specified program database. If prog_data is None, it will
