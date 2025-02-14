@@ -36,9 +36,9 @@ def run_cli_cmd(cmd: list) -> None:
         stderr = stderr.decode()
         print(stderr)
 
-    assert (
-        process.returncode == 0
-    ), f"'{' '.join(cmd)}' failed\n\tstatus code {process.returncode}\n"
+    assert process.returncode == 0, (
+        f"'{' '.join(cmd)}' failed\n\tstatus code {process.returncode}\n"
+    )
     return
 
 
