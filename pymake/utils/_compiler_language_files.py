@@ -22,7 +22,7 @@ def _get_fortran_files(srcfiles, extensions=False):
         list of fortran files or unique fortran file extensions
 
     """
-    if isinstance(srcfiles, (str,)):
+    if isinstance(srcfiles, str):
         srcfiles = [srcfiles]
     files_out = []
     for srcfile in srcfiles:
