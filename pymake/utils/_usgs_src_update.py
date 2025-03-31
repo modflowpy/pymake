@@ -666,7 +666,7 @@ def _update_vs2dt_files(srcdir, fc, cc, arch, double):
 
 
 def _update_mf6_files(
-    srcdir: Union[str, os.PathLike],
+    srcdir: str | os.PathLike,
     fc: str,
     cc: str,
     arch: str,
@@ -699,7 +699,7 @@ def _update_mf6_files(
 
 
 def _update_libmf6_files(
-    srcdir: Union[str, os.PathLike],
+    srcdir: str | os.PathLike,
     fc: str,
     cc: str,
     arch: str,
@@ -733,7 +733,7 @@ def _update_libmf6_files(
 
 # common source file replacement functions
 def _update_mf6_external_dependencies(
-    srcdir: Union[str, os.PathLike],
+    srcdir: str | os.PathLike,
     target: str = "mf6",
 ) -> None:
     """

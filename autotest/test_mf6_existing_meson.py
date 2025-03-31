@@ -2,7 +2,6 @@ import os
 import sys
 from pathlib import Path
 from platform import system
-from typing import List
 
 import pytest
 from modflow_devtools.misc import set_dir
@@ -15,7 +14,7 @@ TARGET_NAME = "mf6"
 
 
 @pytest.fixture(scope="module")
-def targets() -> List[Path]:
+def targets() -> list[Path]:
     target = TARGET_NAME
     ext, shared_ext = get_binary_suffixes()
     executables = [target, "zbud6", "mf5to6", "libmf6"]
