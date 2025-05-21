@@ -19,7 +19,7 @@ if "win" in test_ostag:
 elif "win" not in test_ostag and test_fc_env in ("ifort",):
     meson_exclude = ["mf2000", "mf2005", "swtv4", "mflgr", "sutra"]
 else:
-    meson_exclude = ["sutra",]
+    meson_exclude = ["sutra"]
 if "win" in test_ostag and test_fc_env in ("ifort",):
     meson_exclude += ["mf2000", "mf2005", "swtv4", "mflgr"]
 

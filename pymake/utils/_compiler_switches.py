@@ -902,7 +902,6 @@ def _set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
                 if cc.startswith("i"):
                     cflags += ["-GR"]
 
-
         # add additional cflags from the command line
         if argv:
             for idx, arg in enumerate(sys.argv):
