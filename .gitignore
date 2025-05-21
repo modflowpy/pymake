@@ -86,3 +86,5 @@ venv/
 
 # environment files
 **.env
+
+.trash/
