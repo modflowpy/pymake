@@ -824,7 +824,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
                     "-Wunused-label",
                     "-Wunused-variable",
                     "-pedantic",
-                    "-std=f2008",
+                    "-std=f2018",
                     "-Wcharacter-truncation",
                 ]
 
@@ -897,6 +897,10 @@ def _set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
                     cflags += ["-lm"]
             else:
                 cflags += ["-DNO_TIMER"]
+        elif target == "gridgen":
+            if osname in ("linux", "darwin"):
+                if cc.startswith("i"):
+                    cflags += ["-frtti"]
 
         # add additional cflags from the command line
         if argv:

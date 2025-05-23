@@ -17,10 +17,10 @@ TARGET_NAME = "mf6"
 def targets() -> list[Path]:
     target = TARGET_NAME
     ext, shared_ext = get_binary_suffixes()
-    executables = [target, "zbud6", "mf5to6", "libmf6"]
-    for idx, _ in enumerate(executables[:3]):
+    executables = [target, "zbud6", "libmf6"]
+    for idx, _ in enumerate(executables[:-1]):
         executables[idx] += ext
-    executables[3] += shared_ext
+    executables[-1] += shared_ext
     return executables
 
 
