@@ -42,6 +42,18 @@ jobs:
         shell: ${{ matrix.shell }}
 
     steps:
+      - name: Free Disk Space (Ubuntu)
+        if: runner.os == 'Linux'
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - name: Checkout repo
         uses: actions/checkout@v4
 
@@ -55,9 +67,9 @@ jobs:
         uses: ts-graphviz/setup-graphviz@v2
 
       - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.8.2
+        uses: prefix-dev/setup-pixi@v0.8.8
         with:
-          pixi-version: v0.34.0
+          pixi-version: v0.42.1
           manifest-path: "pixi.toml"
 
       - name: pixi post-install
@@ -106,7 +118,7 @@ jobs:
           pixi run coverage-report
   
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
@@ -133,6 +145,18 @@ jobs:
         shell: ${{ matrix.shell }}
 
     steps:
+      - name: Free Disk Space (Ubuntu)
+        if: runner.os == 'Linux'
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - name: Checkout repo
         uses: actions/checkout@v4
 
@@ -146,9 +170,9 @@ jobs:
         uses: ts-graphviz/setup-graphviz@v2
 
       - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.8.2
+        uses: prefix-dev/setup-pixi@v0.8.8
         with:
-          pixi-version: v0.34.0
+          pixi-version: v0.42.1
           manifest-path: "pixi.toml"
 
       - name: pixi post-install
@@ -182,7 +206,7 @@ jobs:
           pixi run coverage-report
   
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:

@@ -143,7 +143,7 @@ class pymakeZipFile(ZipFile):
         if dir_pths is None:
             dir_pths = []
         else:
-            if isinstance(dir_pths, (str, Path)):
+            if isinstance(dir_pths, str | Path):
                 dir_pths = [dir_pths]
 
         # convert find to a list if a str (a tuple is allowed)
@@ -862,7 +862,7 @@ def getmfexes(
         download_dir = os.path.join(".", "download_dir")
         if isinstance(exes, str):
             exes = tuple(exes)
-        elif isinstance(exes, (int, float)):
+        elif isinstance(exes, int | float):
             msg = "exes keyword must be a string or a list/tuple of strings"
             raise TypeError(msg)
 
@@ -944,7 +944,7 @@ def getmfnightly(
         download_dir = os.path.join(".", "download_dir")
         if isinstance(exes, str):
             exes = tuple(exes)
-        elif isinstance(exes, (int, float)):
+        elif isinstance(exes, int | float):
             msg = "exes keyword must be a string or a list/tuple of strings"
             raise TypeError(msg)
 

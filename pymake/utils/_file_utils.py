@@ -20,7 +20,7 @@ def _get_extra_exclude_files(external_file):
     if external_file is None:
         files = None
     else:
-        if isinstance(external_file, (list, tuple)):
+        if isinstance(external_file, list | tuple):
             files = external_file
         elif os.path.isfile(external_file):
             efpth = os.path.dirname(external_file)
