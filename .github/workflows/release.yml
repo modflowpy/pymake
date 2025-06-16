@@ -120,7 +120,7 @@ jobs:
           pip install ".[test]"
 
       - name: Download artifacts
-        uses: dawidd6/action-download-artifact@v10
+        uses: dawidd6/action-download-artifact@v11
 
       - name: Draft release
         env:
