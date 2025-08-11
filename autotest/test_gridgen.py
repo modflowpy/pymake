@@ -91,6 +91,4 @@ def test_compile(pm, target):
     ],
 )
 def test_gridgen(cmd, workspace, target):
-    assert run_gridgen(cmd, workspace / "test", target), (
-        f"could not run {cmd}"
-    )
+    assert run_gridgen(cmd, workspace / "test", target), f"could not run {cmd}"
