@@ -33,10 +33,13 @@ jobs:
           # test latest python and intel-classic
           - {os: ubuntu-22.04, FC: intel-classic, FC_V: 2021.7, shell: bash}
           - {os: macos-13, FC: intel-classic, FC_V: 2021.7, shell: bash}
-          - {os: windows-2019, FC: intel-classic, FC_V: 2021.7, shell: pwsh}
+          - {os: windows-2022, FC: intel-classic, FC_V: 2021.7, shell: pwsh}
           # test latest python and previous gcc
           - {os: ubuntu-latest, FC: gcc, FC_V: 12, shell: bash}
           - {os: ubuntu-latest, FC: gcc, FC_V: 11, shell: bash}
+          # test ifx
+          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash}
+          - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh}
     defaults:
       run:
         shell: ${{ matrix.shell }}
@@ -139,7 +142,10 @@ jobs:
           # test latest python and intel
           - {os: ubuntu-22.04, FC: intel-classic, FC_V: 2021.7, shell: bash}
           - {os: macos-13, FC: intel-classic, FC_V: 2021.7, shell: bash}
-          - {os: windows-2019, FC: intel-classic, FC_V: 2021.7, shell: pwsh}
+          - {os: windows-2022, FC: intel-classic, FC_V: 2021.7, shell: pwsh}
+          # test ifx
+          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash}
+          - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh}
     defaults:
       run:
         shell: ${{ matrix.shell }}
