@@ -64,6 +64,12 @@ jobs:
         if: ${{ (runner.os == 'macOS') && (matrix.FC == 'intel-classic') }}
         with:
           xcode-version: "14.3.1"
+        
+      - name: Setup MSBuild.exe
+        if: ${{ (runner.os == 'windows-2022') && (matrix.FC == 'intel-classic') }}
+        uses: microsoft/setup-msbuild@v1.0.2
+        with:
+          vs-version: 16.11
 
       - name: Setup Graphviz on Linux
         if: runner.os == 'Linux'
