@@ -55,7 +55,7 @@ jobs:
           swap-storage: true
 
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - uses: maxim-lobanov/setup-xcode@v1
         if: ${{ (runner.os == 'macOS') && (matrix.FC == 'intel-classic') }}
@@ -158,7 +158,7 @@ jobs:
           swap-storage: true
 
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - uses: maxim-lobanov/setup-xcode@v1
         if: ${{ (runner.os == 'macOS') && (matrix.FC == 'intel-classic') }}
