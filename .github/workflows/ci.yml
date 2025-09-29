@@ -33,7 +33,7 @@ jobs:
           # test latest python and intel-classic
           - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash}
           - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash}
-          - {os: windows-2022, compiler: intel-classic, version: 2021.12, shell: pwsh}
+          - {os: windows-2022, compiler: intel-classic, version: 2021.9, shell: pwsh}
           # test latest python and previous gcc
           - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash}
           - {os: ubuntu-latest, compiler: gcc, version: 11, shell: bash}
@@ -139,7 +139,7 @@ jobs:
           # test latest python and intel
           - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash}
           - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash}
-          - {os: windows-2022, compiler: intel-classic, version: 2021.12, shell: pwsh}
+          - {os: windows-2022, compiler: intel-classic, version: 2021.9, shell: pwsh}
     defaults:
       run:
         shell: ${{ matrix.shell }}
