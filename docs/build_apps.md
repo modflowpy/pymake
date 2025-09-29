@@ -7,7 +7,8 @@ and options can be determined by executing:
 ```console
 $ make-program --help
 
-usage: make-program [-h] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dbl] [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--meson]
+usage: make-program [-h] [-fc {ifort,mpiifort,gfortran,ifx,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,icx,icpx,none}] [-dbl] [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep] [--zip ZIP]
+                    [--meson]
                     targets
 
 Download and build USGS MODFLOW and related programs.
@@ -18,9 +19,9 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -fc {ifort,mpiifort,gfortran,none}
+  -fc {ifort,mpiifort,gfortran,ifx,none}
                         Fortran compiler to use. (default is gfortran)
-  -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
+  -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,icx,icpx,none}
                         C/C++ compiler to use. (default is gcc)
   -dbl, --double        Force double precision. (default is False)
   -dr, --dryrun         Do not actually compile. Files will be deleted, if --makeclean is used. Does not work yet for ifort. (default is False)
@@ -50,7 +51,7 @@ Examples:
 
   Download and compile all programs in the ./temp subdirectory:
     $ make-program : --appdir temp
-
+    
 ```
 
 `make-program` can be used to build MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000,

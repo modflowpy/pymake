@@ -274,12 +274,15 @@ def main(
                     if fc in (
                         "ifort",
                         "mpiifort",
+                        "ifx",
                     ):
                         intelwin = True
                 if cc is not None:
                     if cc in (
                         "cl",
                         "icl",
+                        "icx",
+                        "icpx",
                     ):
                         intelwin = True
 
@@ -989,7 +992,7 @@ def _pymake_compile(
             # put object files and module files in objdir_temp and moddir_temp
             else:
                 cmdlist.append(f"-I{objdir_temp}")
-                if fc in ["ifort", "mpiifort"]:
+                if fc in ["ifort", "mpiifort", "ifx"]:
                     cmdlist.append("-module")
                     cmdlist.append(moddir_temp + "/")
                 else:
@@ -1579,7 +1582,7 @@ def _create_makefile(
             tfflags.append("-cpp")
         line += f"\t\tFFLAGS ?= {' '.join(tfflags)}\n"
         line += "\tendif\n"
-        line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
+        line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort, ifx))\n"
         tfflags = _get_fortran_flags(
             target,
             "ifort",
@@ -1658,7 +1661,7 @@ def _create_makefile(
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
         line += "\tendif\n"
-        line += "\tifeq ($(CC), $(filter $(CC), icc mpiicc icpc))\n"
+        line += "\tifeq ($(CC), $(filter $(CC), icc mpiicc icpc icx icpx))\n"
         tcflags = _get_c_flags(
             target,
             "icc",
@@ -1768,7 +1771,7 @@ def _create_makefile(
         line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
         # ifort compiler
-        line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
+        line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort ifx))\n"
         _, tsyslibs = _get_linker_flags(
             target,
             "ifort",
@@ -1789,11 +1792,11 @@ def _create_makefile(
     line = "# check for Windows error condition\n"
     line += "ifeq ($(detected_OS), Windows)\n"
     if fext is not None:
-        line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
+        line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort ifx))\n"
         line += "\t\tWINDOWSERROR = $(FC)\n"
         line += "\tendif\n"
     if cext is not None:
-        line += "\tifeq ($(CC), $(filter $(CC), icl))\n"
+        line += "\tifeq ($(CC), $(filter $(CC), icl icx icpx))\n"
         line += "\t\tWINDOWSERROR = $(CC)\n"
         line += "\tendif\n"
     line += "endif\n\n"

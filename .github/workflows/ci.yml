@@ -140,6 +140,9 @@ jobs:
           - {os: ubuntu-22.04, FC: intel-classic, FC_V: 2021.7, shell: bash}
           - {os: macos-13, FC: intel-classic, FC_V: 2021.7, shell: bash}
           - {os: windows-2022, FC: intel-classic, FC_V: 2021.7, shell: pwsh}
+          # test ifx
+          - {os: ubuntu-22.04, compiler: intel, version: "2025.0", shell: bash}
+          - {os: windows-2022, compiler: intel, version: "2025.0", shell: pwsh}          
     defaults:
       run:
         shell: ${{ matrix.shell }}

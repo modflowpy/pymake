@@ -351,7 +351,7 @@ def _get_fortran_flags(
             os_macro = _get_os_macro(osname)
             if os_macro is not None:
                 flags.append(os_macro)
-        elif fc in ["ifort", "mpiifort"]:
+        elif fc in ["ifort", "mpiifort", "ifx"]:
             if osname == "win32":
                 flags += [
                     "heap-arrays:0",
@@ -652,6 +652,7 @@ def _get_linker_flags(
                 if fc in (
                     "ifort",
                     "mpiifort",
+                    "ifx",
                 ):
                     syslibs_out.append("static-intel")
 
@@ -662,16 +663,11 @@ def _get_linker_flags(
             if fc in (
                 "ifort",
                 "mpiifort",
+                "ifx",
             ):
                 gnu_compiler = False
         else:
-            if cc in (
-                "icc",
-                "mpiicc",
-                "icl",
-                "cl",
-                "clang",
-            ):
+            if cc in ("icc", "mpiicc", "icl", "cl", "clang", "icxicpx"):
                 gnu_compiler = False
         if osname == "win32":
             if gnu_compiler:
@@ -719,12 +715,15 @@ def _get_linker_flags(
             if fc in (
                 "ifort",
                 "mpiifort",
+                "ifx",
             ):
                 addswitch = True
         else:
             if cc in (
                 "icl",
                 "cl",
+                "icx",
+                "icpx",
             ):
                 addswitch = True
         if addswitch:
@@ -975,11 +974,11 @@ def _set_syslibs(
     default_syslibs = True
     if osname == "win32":
         if fc is not None:
-            if fc in ["ifort", "gfortran"]:
+            if fc in ["ifort", "gfortran", "ifx"]:
                 default_syslibs = False
         if default_syslibs:
             if cc is not None:
-                if cc in ["cl", "icl", "gcc", "g++"]:
+                if cc in ["cl", "icl", "gcc", "g++", "icx", "icpx"]:
                     default_syslibs = False
 
     if verbose:

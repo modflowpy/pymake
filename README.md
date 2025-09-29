@@ -15,7 +15,7 @@ This is a python package for compiling MODFLOW-based and other Fortran, C, and
 C++ programs. The package determines the build order using a directed acyclic
 graph and then compiles the source files using GNU compilers (`gcc`, `g++`,
 `gfortran`), Clang compilers (`clang`, `clang++`), or the Intel compilers (`ifort`,
-`icl`, `icc`, `mpiifort`).
+`icl`, `icc`, `mpiifort`, `ifx`).
 
 pymake can be run from the command line or it can be called from within python.
 By default, pymake sets the optimization level, Fortran flags, C/C++ flags, and
@@ -55,7 +55,7 @@ The help message identifies required positional arguments and optional arguments
 default values.
 
 ```
-usage: mfpymake [-h] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e] [-dr] [-sd] [-ff FFLAGS]
+usage: mfpymake [-h] [-fc {ifort,mpiifort,gfortran,ifx,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,icx,icpx,none}] [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e] [-dr] [-sd] [-ff FFLAGS]
                 [-cf CFLAGS] [-sl {-lc,-lm}] [-mf] [-md] [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace] [--networkx] [--meson] [--mesondir]
                 srcdir target
 
@@ -70,9 +70,9 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -fc {ifort,mpiifort,gfortran,none}
+  -fc {ifort,mpiifort,gfortran,ifx,none}
                         Fortran compiler to use. (default is gfortran)
-  -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
+  -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,icx,icpx,none}
                         C/C++ compiler to use. (default is gcc)
   -ar {ia32,ia32_intel64,intel64}, --arch {ia32,ia32_intel64,intel64}
                         Architecture to use for Intel and Microsoft compilers on Windows. (default is intel64)
@@ -110,22 +110,22 @@ options:
   --meson               Use meson to build executable. (default is False)
   --mesondir            meson directory. (default is '.')
 
-Note that the source directory should not contain any bad 
-or duplicate source files as all source files in the source 
-directory, the common source file directory (srcdir2), and 
-the extra files (extrafiles) will be built and linked. 
-Files can be excluded by using the excludefiles command 
+Note that the source directory should not contain any bad
+or duplicate source files as all source files in the source
+directory, the common source file directory (srcdir2), and
+the extra files (extrafiles) will be built and linked.
+Files can be excluded by using the excludefiles command
 line switch.
 
 Examples:
 
-Compile MODFLOW 6 from the root directory containing the 
+Compile MODFLOW 6 from the root directory containing the
 source files in subdirectories in the src/ subdirectory:
 
 $ mfpymake src/ mf6 --subdirs
 
-Compile MODFLOW 6 in the bin subdirectory using the Intel 
-Fortran compiler from the root directory containing the source 
+Compile MODFLOW 6 in the bin subdirectory using the Intel
+Fortran compiler from the root directory containing the source
 files in subdirectories in the the src/ subdirectory:
 
 $ mfpymake src/ mf6 --subdirs -fc ifort --appdir bin

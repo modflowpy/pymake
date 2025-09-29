@@ -8,7 +8,8 @@ pymake Documentation
 This is a python package for compiling MODFLOW-based and other Fortran, C, and
 C++ programs. The package determines the build order using a directed acyclic
 graph and then compiles the source files using GNU compilers (:code:`gcc`,
-:code:`g++`, :code:`gfortran`) or Intel compilers (:code:`ifort`, :code:`icc`).
+:code:`g++`, :code:`gfortran`) or Intel compilers (:code:`ifort`, :code:`icc`,
+:code:`ifx`, :code:`icx`, :code:`icpx`).
 
 pymake can be run from the command line or it can be called from within python.
 By default, pymake sets the optimization level, Fortran flags, C/C++ flags, and

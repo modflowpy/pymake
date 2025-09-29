@@ -483,7 +483,7 @@ def _create_main_meson_build(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        if osname == "win32" and fc in ("ifort",):
+        if osname == "win32" and fc in ("ifort", "ifx"):
             meson_ext_flag = False
         else:
             meson_ext_flag = True
