@@ -323,7 +323,7 @@ def _meson_build(
     _create_source_meson_build(source_path_dict, srcfiles)
 
     # write main meson.build file
-    main_meson_file, fc_meson, cc_meson = _create_main_meson_build(
+    _, fc_meson, cc_meson = _create_main_meson_build(
         mesondir,
         target,
         srcfiles,

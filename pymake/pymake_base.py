@@ -999,7 +999,7 @@ def _pymake_compile(
             cmdlist.append(srcfile)
 
             # object file name and location
-            srcname, srcext = os.path.splitext(srcfile)
+            srcname, _ = os.path.splitext(srcfile)
             srcname = srcname.split(os.path.sep)[-1]
             objfile = os.path.join(objdir_temp, srcname + ".o")
             cmdlist.append("-o")
