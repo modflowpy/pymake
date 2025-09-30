@@ -59,7 +59,7 @@ jobs:
 
       - name: Install Specific version of MSVC (Windows)
         if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
-        uses: microsoft/setup-msvc@v1
+        uses: microsoft/setup-msbuild@v2
         with:
           vs-version: '[15.9.34,15.9.35)'
 
@@ -168,7 +168,7 @@ jobs:
 
       - name: Install Specific version of MSVC (Windows)
         if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
-        uses: microsoft/setup-msvc@v1
+        uses: microsoft/setup-msbuild@v2
         with:
           vs-version: '[15.9.34,15.9.35)'
 
