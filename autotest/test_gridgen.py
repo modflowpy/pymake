@@ -9,11 +9,10 @@ import pymake
 
 TARGET_NAME = "gridgen"
 
-test_cc_env = environ.get("CC", "ALL_OTHERS")
-if system() == "Windows":
-    skip_test = True
-else:
-    skip_test = False
+CC_ENV = environ.get("CCX")
+SKIP_TEST = 'false'
+if system() == "Windows" and CC_ENV.lower() == "icl":
+    SKIP_TEST = 'true'
 
 
 @pytest.fixture(scope="module")
@@ -65,7 +64,7 @@ def run_gridgen(cmd, ws, exe):
 @pytest.mark.dependency(name="download")
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
-@pytest.mark.skipif(skip_test, reason="do not run on Windows with intel-classic")
+@pytest.mark.skipif(SKIP_TEST == 'true', reason="do not run on Windows")
 def test_download(pm, module_tmpdir, target):
     pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target} distribution"
@@ -74,7 +73,7 @@ def test_download(pm, module_tmpdir, target):
 @pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
-@pytest.mark.skipif(skip_test, reason="do not run on Windows with intel-classic")
+@pytest.mark.skipif(SKIP_TEST == 'true', reason="do not run on Windows")
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
@@ -82,7 +81,7 @@ def test_compile(pm, target):
 @pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
-@pytest.mark.skipif(skip_test, reason="do not run on Windows with intel-classic")
+@pytest.mark.skipif(SKIP_TEST == 'true', reason="do not run on Windows")
 @pytest.mark.parametrize(
     "cmd",
     [
