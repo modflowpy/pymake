@@ -57,11 +57,21 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v5
 
-      - name: Install Specific version of MSVC (Windows)
+      - name: Download Visual Studio Build Tools 2019
         if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          toolset: 16.0
+        shell: powershell
+        run: |
+          Invoke-WebRequest -Uri "https://aka.ms/vs/16/release/vs_buildtools.exe" -OutFile "vs_buildtools.exe"
+
+      - name: Install Visual Studio Build Tools 2019
+        if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
+        shell: cmd
+        run: |
+          vs_buildtools.exe --quiet --wait --norestart --nocache ^
+            --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ^
+            --add Microsoft.VisualStudio.Component.VC.MFC.x64 ^
+            --add Microsoft.VisualStudio.Component.VC.ATL.x64 ^
+            --add Microsoft.VisualStudio.Component.Windows10SDK.18362
 
       - uses: maxim-lobanov/setup-xcode@v1
         if: ${{ (runner.os == 'macOS') && (matrix.compiler == 'intel-classic') }}
@@ -166,11 +176,21 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v5
 
-      - name: Install Specific version of MSVC (Windows)
+      - name: Download Visual Studio Build Tools 2019
         if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          toolset: 16.0
+        shell: powershell
+        run: |
+          Invoke-WebRequest -Uri "https://aka.ms/vs/16/release/vs_buildtools.exe" -OutFile "vs_buildtools.exe"
+
+      - name: Install Visual Studio Build Tools 2019
+        if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
+        shell: cmd
+        run: |
+          vs_buildtools.exe --quiet --wait --norestart --nocache ^
+            --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ^
+            --add Microsoft.VisualStudio.Component.VC.MFC.x64 ^
+            --add Microsoft.VisualStudio.Component.VC.ATL.x64 ^
+            --add Microsoft.VisualStudio.Component.Windows10SDK.18362
 
       - uses: maxim-lobanov/setup-xcode@v1
         if: ${{ (runner.os == 'macOS') && (matrix.compiler == 'intel-classic') }}
