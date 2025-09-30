@@ -44,6 +44,7 @@ def build_apps(
     double=False,
     meson=False,
     mesondir=".",
+    exclude=None,
     clean=True,
 ):
     """Build all of the current targets or a subset of targets.
@@ -66,6 +67,8 @@ def build_apps(
         meson build system. (default is False)
     mesondir : str
         Main meson.build file path
+    exclude : str or list of str
+        list of targets to exclude from build
     clean : bool
         boolean determining of final download should be removed
 
@@ -89,6 +92,12 @@ def build_apps(
     else:
         if isinstance(targets, str):
             targets = targets.split(",")
+
+    # exclude targets
+    if exclude is not None:
+        if isinstance(exclude, str):
+            exclude = exclude.split(",")
+        targets = [t for t in targets if t not in exclude]
 
     code_dict = {}
 

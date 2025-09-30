@@ -39,10 +39,6 @@ check-format = "ruff format . --check"
 check-spelling = "codespell"
 fix-style = "ruff check . --fix; ruff format ."
 
-
-# build
-test = "meson test --verbose --no-rebuild -C"
-
 # test
 download-examples = {cmd = "python ci_setup.py", cwd = "autotest"}
 autotest = { cmd = "pytest -v -n auto --dist=loadgroup -m='base or regression' --durations 0 --cov=pymake --cov-report=xml --keep-failed .failed", cwd = "autotest" }
