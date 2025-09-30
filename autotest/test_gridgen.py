@@ -11,10 +11,9 @@ import pymake
 TARGET_NAME = "gridgen"
 
 test_ostag = get_ostag()
-test_fc_env = environ.get("FC")
-if "win" in test_ostag and test_fc_env in (
-    "icc",
-    "icpc",
+test_cc_env = environ.get("CCX")
+if "win" in test_ostag and test_cc_env in (
+    "icl",
 ):
     skip_on_windows = True
 else:
