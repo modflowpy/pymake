@@ -61,7 +61,7 @@ jobs:
         if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          toolset: '15.9.34'
+          toolset: 16.0
 
       - uses: maxim-lobanov/setup-xcode@v1
         if: ${{ (runner.os == 'macOS') && (matrix.compiler == 'intel-classic') }}
@@ -170,7 +170,7 @@ jobs:
         if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          toolset: '15.9.34'
+          toolset: 16.0
 
       - uses: maxim-lobanov/setup-xcode@v1
         if: ${{ (runner.os == 'macOS') && (matrix.compiler == 'intel-classic') }}
