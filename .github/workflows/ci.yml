@@ -59,9 +59,9 @@ jobs:
 
       - name: Install Specific version of MSVC (Windows)
         if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
-        uses: microsoft/setup-msbuild@v2
+        uses: ilammy/msvc-dev-cmd@v1
         with:
-          vs-version: '[15.9.34,15.9.35)'
+          toolset: '15.9.34'
 
       - uses: maxim-lobanov/setup-xcode@v1
         if: ${{ (runner.os == 'macOS') && (matrix.compiler == 'intel-classic') }}
@@ -168,9 +168,9 @@ jobs:
 
       - name: Install Specific version of MSVC (Windows)
         if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
-        uses: microsoft/setup-msbuild@v2
+        uses: ilammy/msvc-dev-cmd@v1
         with:
-          vs-version: '[15.9.34,15.9.35)'
+          toolset: '15.9.34'
 
       - uses: maxim-lobanov/setup-xcode@v1
         if: ${{ (runner.os == 'macOS') && (matrix.compiler == 'intel-classic') }}
