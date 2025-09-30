@@ -57,21 +57,27 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v5
 
-      - name: Download Visual Studio Build Tools 2019
-        if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
-        shell: powershell
-        run: |
-          Invoke-WebRequest -Uri "https://aka.ms/vs/16/release/vs_buildtools.exe" -OutFile "vs_buildtools.exe"
 
       - name: Install Visual Studio Build Tools 2019
         if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
-        shell: cmd
+        shell: pwsh
         run: |
-          vs_buildtools.exe --quiet --wait --norestart --nocache ^
-            --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ^
-            --add Microsoft.VisualStudio.Component.VC.MFC.x64 ^
-            --add Microsoft.VisualStudio.Component.VC.ATL.x64 ^
-            --add Microsoft.VisualStudio.Component.Windows10SDK.18362
+            START "" /WAIT "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify `
+              --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community" ` # Adjust path and edition as needed
+              --add Microsoft.VisualStudio.Workload.ManagedDesktop ` # Example workload
+              --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ` # Example component
+              --quiet --norestart
+
+      - name: Verify VS2019 installation (optional)
+        if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
+        shell: pwsh
+        run: |
+          if (Test-Path "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community") {
+            Write-Host "Visual Studio 2019 installed successfully."
+          } else {
+            Write-Host "Visual Studio 2019 installation failed."
+            exit 1
+          }              
 
       - uses: maxim-lobanov/setup-xcode@v1
         if: ${{ (runner.os == 'macOS') && (matrix.compiler == 'intel-classic') }}
@@ -176,21 +182,26 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v5
 
-      - name: Download Visual Studio Build Tools 2019
-        if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
-        shell: powershell
-        run: |
-          Invoke-WebRequest -Uri "https://aka.ms/vs/16/release/vs_buildtools.exe" -OutFile "vs_buildtools.exe"
-
       - name: Install Visual Studio Build Tools 2019
         if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
-        shell: cmd
+        shell: pwsh
         run: |
-          vs_buildtools.exe --quiet --wait --norestart --nocache ^
-            --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ^
-            --add Microsoft.VisualStudio.Component.VC.MFC.x64 ^
-            --add Microsoft.VisualStudio.Component.VC.ATL.x64 ^
-            --add Microsoft.VisualStudio.Component.Windows10SDK.18362
+            START "" /WAIT "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" modify `
+              --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community" ` # Adjust path and edition as needed
+              --add Microsoft.VisualStudio.Workload.ManagedDesktop ` # Example workload
+              --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ` # Example component
+              --quiet --norestart
+
+      - name: Verify VS2019 installation (optional)
+        if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
+        shell: pwsh
+        run: |
+          if (Test-Path "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community") {
+            Write-Host "Visual Studio 2019 installed successfully."
+          } else {
+            Write-Host "Visual Studio 2019 installation failed."
+            exit 1
+          }              
 
       - uses: maxim-lobanov/setup-xcode@v1
         if: ${{ (runner.os == 'macOS') && (matrix.compiler == 'intel-classic') }}
