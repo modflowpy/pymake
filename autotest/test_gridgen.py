@@ -4,20 +4,16 @@ from pathlib import Path
 from platform import system
 
 import pytest
-from modflow_devtools.misc import get_ostag
 
 import pymake
 
 TARGET_NAME = "gridgen"
 
-test_ostag = get_ostag()
-test_cc_env = environ.get("CCX")
-if "win" in test_ostag and test_cc_env in (
-    "icl",
-):
-    skip_on_windows = True
+test_cc_env = environ.get("CC", "ALL_OTHERS")
+if system() == "Windows" and test_cc_env.lower() == "icl":
+    skip_test = True
 else:
-    skip_on_windows = False
+    skip_test = False
 
 
 @pytest.fixture(scope="module")
@@ -69,7 +65,7 @@ def run_gridgen(cmd, ws, exe):
 @pytest.mark.dependency(name="download")
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
-@pytest.mark.skipif(skip_on_windows, reason="do not run on Windows with intel-classic")
+@pytest.mark.skipif(skip_test, reason="do not run on Windows with intel-classic")
 def test_download(pm, module_tmpdir, target):
     pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target} distribution"
@@ -78,7 +74,7 @@ def test_download(pm, module_tmpdir, target):
 @pytest.mark.dependency(name="build", depends=["download"])
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
-@pytest.mark.skipif(skip_on_windows, reason="do not run on Windows with intel-classic")
+@pytest.mark.skipif(skip_test, reason="do not run on Windows with intel-classic")
 def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
@@ -86,7 +82,7 @@ def test_compile(pm, target):
 @pytest.mark.dependency(name="test", depends=["build"])
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
-@pytest.mark.skipif(skip_on_windows, reason="do not run on Windows with intel-classic")
+@pytest.mark.skipif(skip_test, reason="do not run on Windows with intel-classic")
 @pytest.mark.parametrize(
     "cmd",
     [
