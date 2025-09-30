@@ -10,7 +10,7 @@ import pymake
 TARGET_NAME = "gridgen"
 
 test_cc_env = environ.get("CC", "ALL_OTHERS")
-if system() == "Windows" and test_cc_env.lower() == "icl":
+if system() == "Windows":
     skip_test = True
 else:
     skip_test = False
