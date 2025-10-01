@@ -9,10 +9,11 @@ import pymake
 
 TARGET_NAME = "gridgen"
 
-CC_ENV = environ.get("CCX")
-SKIP_TEST = 'false'
-if system() == "Windows" and CC_ENV.lower() == "icl":
+CC_ENV = environ.get("CC", "false")
+if system() == "Windows" and "icl" in CC_ENV.lower():
     SKIP_TEST = 'true'
+else:
+    SKIP_TEST = 'false'
 
 
 @pytest.fixture(scope="module")
