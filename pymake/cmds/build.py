@@ -28,6 +28,7 @@ DICT_KEYS = (
     "keep",
     "dryrun",
     "meson",
+    "exclude",
 )
 
 # command arguments (sys.argv) to pop from ARGS
@@ -43,7 +44,7 @@ COM_ARG_KEYS = (
 )
 
 # ARGS to keep and pass to build_apps()
-KEEP_ARG_KEYS = ("double",)
+KEEP_ARG_KEYS = "double"
 
 
 def main() -> None:
@@ -94,6 +95,16 @@ Examples:
         "targets": {
             "tag": ("targets",),
             "help": targets_help,
+            "default": None,
+            "choices": None,
+            "action": None,
+        },
+        "exclude": {
+            "tag": (
+                "-ex",
+                "--exclude",
+            ),
+            "help": "exclude specific target(s) from build",
             "default": None,
             "choices": None,
             "action": None,

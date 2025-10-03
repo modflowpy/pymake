@@ -12,6 +12,7 @@ import pymake
 RERUNS = 1
 
 targets = pymake.usgs_program_data.get_keys(current=True)
+targets_exclude = []
 test_ostag = get_ostag()
 test_fc_env = os.environ.get("FC")
 if "win" in test_ostag:
@@ -22,7 +23,9 @@ else:
     meson_exclude = ["sutra"]
 if "win" in test_ostag and test_fc_env in ("ifort",):
     meson_exclude += ["mf2000", "mf2005", "swtv4", "mflgr"]
+    targets_exclude = ["gridgen"]
 
+targets = [t for t in targets if t not in targets_exclude]
 targets_meson = [t for t in targets if t not in meson_exclude]
 
 make_exclude = ("libmf6", "gridgen", "mf2000", "swtv4", "mflgr")

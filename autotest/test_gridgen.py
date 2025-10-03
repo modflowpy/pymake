@@ -9,6 +9,14 @@ import pymake
 
 TARGET_NAME = "gridgen"
 
+CC_ENV = environ.get("CC", "false")
+
+
+def valid_configuration():
+    if system() == "Windows" and "icl" in CC_ENV.lower():
+        return False
+    return True
+
 
 @pytest.fixture(scope="module")
 def target(module_tmpdir) -> Path:
@@ -60,6 +68,8 @@ def run_gridgen(cmd, ws, exe):
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 def test_download(pm, module_tmpdir, target):
+    if not valid_configuration():
+        pytest.skip("unsupported configuration")
     pm.download_target(target, download_path=module_tmpdir)
     assert pm.download, f"could not download {target} distribution"
 
@@ -68,6 +78,8 @@ def test_download(pm, module_tmpdir, target):
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression
 def test_compile(pm, target):
+    if not valid_configuration():
+        pytest.skip("unsupported configuration")
     assert pm.build() == 0, f"could not compile {target}"
 
 
@@ -91,6 +103,6 @@ def test_compile(pm, target):
     ],
 )
 def test_gridgen(cmd, workspace, target):
-    assert run_gridgen(cmd, workspace / "examples" / "biscayne", target), (
-        f"could not run {cmd}"
-    )
+    if not valid_configuration():
+        pytest.skip("unsupported configuration")
+    assert run_gridgen(cmd, workspace / "test", target), f"could not run {cmd}"

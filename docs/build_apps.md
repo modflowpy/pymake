@@ -7,7 +7,8 @@ and options can be determined by executing:
 ```console
 $ make-program --help
 
-usage: make-program [-h] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dbl] [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--meson]
+usage: make-program [-h] [-ex EXCLUDE] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dbl] [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep] [--zip ZIP]
+                    [--meson]
                     targets
 
 Download and build USGS MODFLOW and related programs.
@@ -18,6 +19,8 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
+  -ex EXCLUDE, --exclude EXCLUDE
+                        exclude specific target(s) from build
   -fc {ifort,mpiifort,gfortran,none}
                         Fortran compiler to use. (default is gfortran)
   -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
@@ -50,11 +53,11 @@ Examples:
 
   Download and compile all programs in the ./temp subdirectory:
     $ make-program : --appdir temp
-
+    
 ```
 
 `make-program` can be used to build MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000,
-MODPATH 6, MODPATH 7, GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, GSFLOW, PRMS, and SUTRA. Utility programs CRT, Triangle,
+MODPATH 6, MODPATH 7, GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, and SUTRA. Utility programs CRT, Triangle,
 and GRIDGEN can also be built. `make-program` downloads the distribution file from the USGS (requires internet
 connection), unzips the distribution file, sets the pymake settings required to build the program, and compiles the
 source files to build the program. MT3DMS will be downloaded from the University of Alabama and Triangle will be
