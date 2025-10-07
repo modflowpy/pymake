@@ -187,14 +187,12 @@ jobs:
           version: ${{ matrix.version }}
 
       - name: Run scheduled tests on ${{ matrix.os }} with ${{ matrix.compiler }}
-        if: ${{ (runner.os != 'Windows') && (matrix.compiler != 'intel-classic') }}
-        run: |
-          pixi run autotest-schedule
+        if: runner.os != 'Windows' || matrix.compiler != 'intel-classic'
+        run: pixi run autotest-schedule
 
       - name: Run scheduled tests on ${{ matrix.os }} with ${{ matrix.compiler }}
-        if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
-        run: |
-          pixi run autotest-schedule -k "not gridgen"
+        if: runner.os == 'Windows' && matrix.compiler == 'intel-classic'
+        run: pixi run autotest-schedule -k "not gridgen"
   
       - name: Upload failed test output
         if: failure()
