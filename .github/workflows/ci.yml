@@ -126,7 +126,7 @@ jobs:
   
   pymake-schedule:
     name: pymake scheduled
-    if: ${{ github.event_name == 'schedule' }}
+    # if: ${{ github.event_name == 'schedule' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -194,7 +194,7 @@ jobs:
       - name: Run scheduled tests on ${{ matrix.os }} with ${{ matrix.compiler }}
         if: ${{ (runner.os == 'Windows') && (matrix.compiler == 'intel-classic') }}
         run: |
-          pixi run autotest-schedule --exclude gridgen
+          pixi run autotest-schedule -k "not gridgen"
   
       - name: Upload failed test output
         if: failure()
