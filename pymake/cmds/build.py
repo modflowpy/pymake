@@ -100,10 +100,7 @@ Examples:
             "action": None,
         },
         "exclude": {
-            "tag": (
-                "-ex",
-                "--exclude",
-            ),
+            "tag": ("--exclude",),
             "help": "exclude specific target(s) from build",
             "default": None,
             "choices": None,

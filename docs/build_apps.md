@@ -7,7 +7,7 @@ and options can be determined by executing:
 ```console
 $ make-program --help
 
-usage: make-program [-h] [-ex EXCLUDE] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dbl] [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep] [--zip ZIP]
+usage: make-program [-h] [--exclude EXCLUDE] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dbl] [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep] [--zip ZIP]
                     [--meson]
                     targets
 
@@ -19,8 +19,7 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -ex EXCLUDE, --exclude EXCLUDE
-                        exclude specific target(s) from build
+  --exclude EXCLUDE     exclude specific target(s) from build
   -fc {ifort,mpiifort,gfortran,none}
                         Fortran compiler to use. (default is gfortran)
   -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
