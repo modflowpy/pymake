@@ -192,7 +192,7 @@ jobs:
 
       - name: Run scheduled tests on ${{ matrix.os }} with ${{ matrix.compiler }}
         if: runner.os == 'Windows' && matrix.compiler == 'intel-classic'
-        run: pixi run autotest-schedule -k "not gridgen"
+        run: pixi run autotest-schedule --exclude gridgen
   
       - name: Upload failed test output
         if: failure()

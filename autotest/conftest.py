@@ -88,3 +88,12 @@ def pytest_report_header(config):
     if not_found:
         lines.append("optional packages not found: " + ", ".join(not_found))
     return "\n".join(lines)
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--exclude",
+        action="store",
+        default="",
+        help="forwarded to --exclude when testing 'make-program :'",
+    )

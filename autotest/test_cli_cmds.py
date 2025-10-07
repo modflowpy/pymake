@@ -23,6 +23,11 @@ meson_parm = (
 )
 
 
+@pytest.fixture
+def exclude(request) -> str:
+    return request.config.getoption("--exclude")
+
+
 def run_cli_cmd(cmd: list) -> None:
     process = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=os.getcwd()
@@ -63,9 +68,9 @@ def test_make_program_double(function_tmpdir) -> None:
 
 @pytest.mark.dependency(name="make_program_all")
 @pytest.mark.schedule
-def test_make_program_all(module_tmpdir) -> None:
+def test_make_program_all(module_tmpdir, exclude) -> None:
     with set_dir(module_tmpdir):
-        cmd = ["make-program", ":", "--appdir", ".", "--verbose"]
+        cmd = ["make-program", ":", "--appdir", ".", "--verbose", "--exclude", exclude]
         run_cli_cmd(cmd)
 
 
