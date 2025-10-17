@@ -108,13 +108,15 @@ jobs:
         run: |
           pixi run autotest-base
 
-      - name: Run scheduled tests on ${{ matrix.os }} with ${{ matrix.compiler }}
+      - name: Run scheduled tests on MacOS and Linux with all compilers but intel-classic
         if: ${{ github.event_name == 'schedule' && (runner.os != 'Windows' || matrix.compiler != 'intel-classic') }}
-        run: pixi run autotest-schedule
+        run: |
+          pixi run autotest-schedule
 
-      - name: Run scheduled tests on ${{ matrix.os }} with ${{ matrix.compiler }}
+      - name: Run scheduled tests on Windows with intel-classic compiler
         if: ${{ github.event_name == 'schedule' && runner.os == 'Windows' && matrix.compiler == 'intel-classic' }}
-        run: pixi run autotest-schedule --exclude gridgen
+        run: |
+          pixi run autotest-schedule --exclude gridgen
 
       - name: Upload failed test output
         if: failure()
