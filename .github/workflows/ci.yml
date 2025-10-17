@@ -14,6 +14,8 @@ on:
     paths-ignore:
       - 'README.md'
       - 'docs/*.md'
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -106,6 +108,16 @@ jobs:
         run: |
           pixi run autotest-base
 
+      - name: Run scheduled tests on MacOS and Linux with all compilers but intel-classic
+        if: ${{ github.event_name == 'schedule' && (runner.os != 'Windows' || matrix.compiler != 'intel-classic') }}
+        run: |
+          pixi run autotest-schedule
+
+      - name: Run scheduled tests on Windows with intel-classic compiler
+        if: ${{ github.event_name == 'schedule' && runner.os == 'Windows' && matrix.compiler == 'intel-classic' }}
+        run: |
+          pixi run autotest-schedule --exclude gridgen
+
       - name: Upload failed test output
         if: failure()
         uses: actions/upload-artifact@v4
@@ -124,92 +136,3 @@ jobs:
         with:
           file: ./autotest/coverage.xml
   
-  pymake-schedule:
-    name: pymake scheduled
-    if: github.event_name == 'schedule'
-    runs-on: matrix.os
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # test latest gcc and python
-          - {os: ubuntu-latest, compiler: gcc, version: 13, shell: bash}
-          - {os: macos-latest, compiler: gcc, version: 13, shell: bash}
-          - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh}
-          # test latest python and intel
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash}
-          - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash}
-          - {os: windows-2022, compiler: intel-classic, version: 2021.7, shell: pwsh}
-    defaults:
-      run:
-        shell: matrix.shell
-
-    steps:
-      - name: Free Disk Space (Ubuntu)
-        if: runner.os == 'Linux'
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
-
-      - name: Checkout repo
-        uses: actions/checkout@v5
-
-      - uses: maxim-lobanov/setup-xcode@v1
-        if: runner.os == 'macOS' && matrix.compiler == 'intel-classic'
-        with:
-          xcode-version: "14.3.1"
-
-      - name: Setup Graphviz on Linux
-        if: runner.os == 'Linux'
-        uses: ts-graphviz/setup-graphviz@v2
-
-      - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.9.0
-        with:
-          pixi-version: v0.42.1
-          manifest-path: "pixi.toml"
-
-      - name: pixi post-install
-        working-directory: pymake
-        run: |
-          pixi run postinstall
-
-      - name: Setup ${{ matrix.compiler }} ${{ matrix.version }} on ${{ matrix.os }}
-        uses: fortran-lang/setup-fortran@v1
-        with:
-          compiler: ${{ matrix.compiler }}
-          version: ${{ matrix.version }}
-
-      - name: Run scheduled tests on ${{ matrix.os }} with ${{ matrix.compiler }}
-        if: runner.os != 'Windows' || matrix.compiler != 'intel-classic'
-        run: pixi run autotest-schedule
-
-      - name: Run scheduled tests on ${{ matrix.os }} with ${{ matrix.compiler }}
-        if: runner.os == 'Windows' && matrix.compiler == 'intel-classic'
-        run: pixi run autotest-schedule --exclude gridgen
-  
-      - name: Upload failed test output
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: failed-schedule-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.version }}
-          path: autotest/.failed
-
-      - name: Print coverage report before upload
-        run: |
-          pixi run coverage-report
-  
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        with:
-          file: ./autotest/coverage.xml
-  
-

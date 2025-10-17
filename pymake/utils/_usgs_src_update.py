@@ -119,13 +119,20 @@ def _update_triangle_files(srcdir, fc, cc, arch, double):
     # modify long to long long on windows
     if "win32" in sys.platform.lower() and cc in ("icl", "cl"):
         src = os.path.join(srcdir, "triangle.c")
+        updateSource = True
         with open(src, "r") as f:
             lines = f.readlines()
-            for idx, line in enumerate(lines):
-                lines[idx] = line.replace("unsigned long", "unsigned long long")
-        with open(src, "w") as f:
             for line in lines:
-                f.write(line)
+                if "unsigned_long" in line:
+                    updateSource = False
+                    break
+            if updateSource:
+                for idx, line in enumerate(lines):
+                    lines[idx] = line.replace("unsigned long", "unsigned long long")
+        if updateSource:
+            with open(src, "w") as f:
+                for line in lines:
+                    f.write(line)
     return
 
 

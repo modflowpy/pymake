@@ -896,7 +896,7 @@ def _set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
                 if cc.startswith("g"):
                     cflags += ["-lm"]
             else:
-                cflags += ["-DNO_TIMER"]
+                cflags += ["-DNO_TIMER", "-DCPU86", "-DWINDOWS"]
         elif target == "gridgen":
             if osname in ("linux", "darwin"):
                 if cc.startswith("i"):
