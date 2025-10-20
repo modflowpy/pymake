@@ -181,7 +181,7 @@ class Pymake:
         for key, value in _get_standard_arg_dict().items():
             print_value = getattr(self, key, value["default"])
             if isinstance(print_value, list):
-                print_value = ", ".join(print_value)
+                print_value = ", ".join(str(print_value))
             print(f" {key}={print_value}")
         print("\n")
 
