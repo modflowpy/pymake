@@ -447,10 +447,7 @@ class Pymake:
                         try:
                             shutil.rmtree(download_dir)
                             if self.verbose:
-                                print(
-                                    "removing download "
-                                    f"directory...'{download_dir}'"
-                                )
+                                print(f"removing download directory...'{download_dir}'")
                             break
                         except:
                             if self.verbose:
