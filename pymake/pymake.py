@@ -181,7 +181,7 @@ class Pymake:
         for key, value in _get_standard_arg_dict().items():
             print_value = getattr(self, key, value["default"])
             if isinstance(print_value, list):
-                print_value = ", ".join(str(print_value))
+                print_value = ", ".join(print_value)
             print(f" {key}={print_value}")
         print("\n")
 
@@ -360,7 +360,7 @@ class Pymake:
             self.verify = verify
             self.timeout = timeout
             self.download_path = download_path
-            self.download_dir = Path(download_path) / prog_dict.dirname
+            self.download_dir = os.path.join(download_path, prog_dict.dirname)
 
         return
 
@@ -435,7 +435,8 @@ class Pymake:
                 # reset self.download
                 self.download = None
 
-                if self.download_dir.is_dir():
+                download_dir = Path(self.download_dir)
+                if download_dir.is_dir():
                     ntries = 10
                     for itries in range(ntries):
                         # wait to delete on windows
@@ -444,11 +445,11 @@ class Pymake:
 
                         # remove the directory
                         try:
-                            shutil.rmtree(self.download_dir)
+                            shutil.rmtree(download_dir)
                             if self.verbose:
                                 print(
                                     "removing download "
-                                    f"directory...'{self.download_dir}'"
+                                    f"directory...'{download_dir}'"
                                 )
                             break
                         except:
@@ -551,7 +552,7 @@ class Pymake:
         """
         if self.srcdir2 is None:
             if self._get_base_target() in ("libmf6",):
-                self.srcdir2 = self.download_dir / "src"
+                self.srcdir2 = os.path.join(self.download_dir, "src")
         return
 
     def _set_sharedobject(self):
@@ -655,7 +656,7 @@ class Pymake:
         """
         if self.excludefiles is None:
             if self._get_base_target() in ("libmf6",):
-                self.excludefiles = [self.download_dir / "src/mf6.f90"]
+                self.excludefiles = [os.path.join(self.download_dir, "src", "mf6.f90")]
         return
 
     def build(self, target=None, srcdir=None, modify_exe_name=False):
@@ -685,7 +686,7 @@ class Pymake:
 
         prog_dict = usgs_program_data.get_target(self.target)
         if self.srcdir is None:
-            self.srcdir = self.download_dir / prog_dict.srcdir
+            self.srcdir = os.path.join(self.download_dir, prog_dict.srcdir)
 
         # set include_subdirs for known targets
         self._set_include_subdirs()
