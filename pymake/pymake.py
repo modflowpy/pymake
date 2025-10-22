@@ -435,7 +435,8 @@ class Pymake:
                 # reset self.download
                 self.download = None
 
-                if os.path.exists(self.download_dir):
+                download_dir = Path(self.download_dir)
+                if download_dir.is_dir():
                     ntries = 10
                     for itries in range(ntries):
                         # wait to delete on windows
@@ -444,12 +445,9 @@ class Pymake:
 
                         # remove the directory
                         try:
-                            shutil.rmtree(self.download_dir)
+                            shutil.rmtree(download_dir)
                             if self.verbose:
-                                print(
-                                    "removing download "
-                                    f"directory...'{self.download_dir}'"
-                                )
+                                print(f"removing download directory...'{download_dir}'")
                             break
                         except:
                             if self.verbose:
