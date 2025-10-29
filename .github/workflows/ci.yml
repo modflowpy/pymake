@@ -34,7 +34,7 @@ jobs:
           - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh}
           # test latest python and intel-classic
           - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash}
-          - {os: macos-13, compiler: intel-classic, version: 2021.7, shell: bash}
+          - {os: macos-13, compiler: intel-classic, version: 2021.6, shell: bash}
           - {os: windows-2022, compiler: intel-classic, version: 2021.7, shell: pwsh}
           # test latest python and previous gcc
           - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash}
