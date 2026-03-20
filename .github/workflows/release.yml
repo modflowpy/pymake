@@ -40,7 +40,7 @@ jobs:
           pip install ".[lint, test]"
 
       - name: Make metadata files
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_seconds: 10
           max_attempts: 3
