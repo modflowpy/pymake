@@ -1367,7 +1367,7 @@ def _create_makefile(
     f.write(line)
     vpaths = []
     for idx, source_dir in enumerate(dirs):
-        rel_source_dir = os.path.relpath(source_dir, make_dir)
+        rel_source_dir = os.path.relpath(source_dir, make_dir).replace("\\", "/")
         vpaths.append(f"SOURCEDIR{idx + 1}")
         line = f"{vpaths[idx]}={rel_source_dir}\n"
         f.write(line)
