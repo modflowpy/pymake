@@ -1,5 +1,7 @@
-"""Utility functions to extract information for a target from the USGS
-application database. Available functionality includes:
+"""Utility functions to extract target information from the USGS database.
+
+Information for a target is extracted from the USGS application database.
+Available functionality includes:
 
 1. Get a list of available targets
 2. Get data for a specific target
@@ -215,7 +217,6 @@ class usgs_program_data:
             list of USGS program targets
 
         """
-
         return usgs_program_data()._target_keys(current=current)
 
     @staticmethod

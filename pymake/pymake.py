@@ -144,7 +144,7 @@ class Pymake:
                 self.cc = env_var
 
     def reset(self, target):
-        """Reset PyMake object variables for a target
+        """Reset PyMake object variables for a target.
 
         Parameters
         ----------
@@ -161,7 +161,7 @@ class Pymake:
         self.srcdir = None
 
     def finalize(self):
-        """Finalize Pymake class
+        """Finalize Pymake class.
 
         Returns
         -------
@@ -171,7 +171,7 @@ class Pymake:
             self._download_cleanup()
 
     def _print_settings(self):
-        """Print settings defined by command line arguments
+        """Print settings defined by command line arguments.
 
         Returns
         -------
@@ -186,7 +186,7 @@ class Pymake:
         print("\n")
 
     def argv_reset_settings(self, args):
-        """Reset settings using command line arguments
+        """Reset settings using command line arguments.
 
         Parameters
         ----------
@@ -295,7 +295,7 @@ class Pymake:
         return
 
     def _clean_targets(self):
-        """Clean up list of targets
+        """Clean up list of targets.
 
         Returns
         -------
@@ -318,7 +318,7 @@ class Pymake:
     def download_setup(
         self, target, url=None, download_path=".", verify=True, timeout=30
     ):
-        """Setup download
+        """Setup download.
 
         Parameters
         ----------
@@ -367,7 +367,7 @@ class Pymake:
     def download_target(
         self, target, url=None, download_path=".", verify=True, timeout=30
     ):
-        """Setup and download url
+        """Setup and download url.
 
         Parameters
         ----------
@@ -396,7 +396,7 @@ class Pymake:
         return self.download_url()
 
     def download_url(self):
-        """Download files from the url
+        """Download files from the url.
 
         Returns
         -------
@@ -518,7 +518,7 @@ class Pymake:
         return build_target
 
     def _get_base_target(self):
-        """Get base target name without path and extension
+        """Get base target name without path and extension.
 
         Returns
         -------
@@ -657,7 +657,7 @@ class Pymake:
         return
 
     def build(self, target=None, srcdir=None, modify_exe_name=False):
-        """Build the target
+        """Build the target.
 
         Parameters
         ----------
@@ -818,7 +818,7 @@ class Pymake:
         return self.returncode
 
     def update_build_targets(self):
-        """Add target to build_targets list if it is not in the list
+        """Add target to build_targets list if it is not in the list.
 
         Returns
         -------

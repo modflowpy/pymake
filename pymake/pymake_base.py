@@ -181,7 +181,6 @@ def main(
         return code
 
     """
-
     if meson:
         if not inplace:
             inplace = True
@@ -516,7 +515,7 @@ def _pymake_initialize(
 
 
 def get_temporary_directories(appdir=None, target=None):
-    """Get paths to temporary object, module, and source files
+    """Get paths to temporary object, module, and source files.
 
     Parameters
     ----------

@@ -17,7 +17,7 @@ __license__ = "CC0"
 
 
 def main() -> None:
-    """mfpymake command line interface
+    """Mfpymake command line interface.
 
     Returns
     -------

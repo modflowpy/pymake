@@ -1,4 +1,6 @@
-"""Utility functions to:
+"""Utility functions to download and compress software releases.
+
+Available functionality includes:
 
 1. download and unzip software releases from the USGS and other organizations
    (triangle, MT3DMS).
@@ -24,8 +26,10 @@ import requests
 
 
 class pymakeZipFile(ZipFile):
-    """ZipFile file attributes are not being preserved. This class preserves
-    file attributes as described on StackOverflow at
+    """ZipFile subclass that preserves file attributes.
+
+    ZipFile file attributes are not being preserved. This class preserves file
+    attributes as described on StackOverflow at
     https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
 
     """
@@ -124,7 +128,6 @@ class pymakeZipFile(ZipFile):
             boolean indicating if the output zip file was created
 
         """
-
         # create an empty list
         if file_pths is None:
             file_pths = []
@@ -187,7 +190,7 @@ class pymakeZipFile(ZipFile):
 
 
 def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
-    """Make a url request
+    """Make a url request.
 
     Parameters
     ----------
@@ -242,7 +245,7 @@ def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
 
 
 def _request_header(url, max_requests=10, timeout=1, verbose=False):
-    """Get the headers from a url
+    """Get the headers from a url.
 
     Parameters
     ----------
@@ -328,7 +331,6 @@ def download_and_unzip(
     -------
 
     """
-
     # create download directory
     if not os.path.exists(pth):
         if verbose:
@@ -574,7 +576,6 @@ def _get_default_url():
         default url for executables repository repo name
 
     """
-
     return f"https://github.com/{_get_default_repo()}/releases/latest/download/"
 
 

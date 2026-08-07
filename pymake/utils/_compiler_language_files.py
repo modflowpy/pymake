@@ -1,4 +1,4 @@
-"""Private functions for processing c/c++ and fortran files"""
+"""Private functions for processing c/c++ and fortran files."""
 
 import os
 
@@ -257,7 +257,7 @@ def _get_main(srcfiles):
 
 
 def _get_srcfiles(srcdir, include_subdir):
-    """Get a list of source files in source file directory srcdir
+    """Get a list of source files in source file directory srcdir.
 
     Parameters
     ----------

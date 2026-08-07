@@ -36,6 +36,7 @@ def linker_update_environment(cc="gcc", fc="gfortran", verbose=False):
     Returns
     -------
     None
+
     """
     syslibs = _darwin_syslibs(cc, fc, verbose=verbose)
     if syslibs is not None:
@@ -1083,7 +1084,7 @@ def _set_syslibs(
 
 # hidden functions
 def _get_os_macro(osname=None):
-    """Get OS macro
+    """Get OS macro.
 
     Parameters
     ----------
@@ -1115,7 +1116,7 @@ def _get_os_macro(osname=None):
 
 def _darwin_syslibs(cc, fc, verbose=False):
     """Get additional syslibs for Darwin systems using gcc
-       tool chain and command line tools greater than 14
+       tool chain and command line tools greater than 14.
 
     Parameters
     ----------
@@ -1130,6 +1131,7 @@ def _darwin_syslibs(cc, fc, verbose=False):
     -------
     linker_str : str
         additional; linker flags for darwin systems. Default is None
+
     """
     linker_str = None
     if _get_osname() == "darwin":

@@ -2,7 +2,8 @@
 and  C++ programs. The package determines the build order using a directed
 acyclic graph and then compiles the source files using GNU compilers
 (:code:`gcc`, :code:`g++`, :code:`gfortran`) or Intel compilers
-(:code:`ifort`, :code:`icc`)."""
+(:code:`ifort`, :code:`icc`).
+"""
 
 # pymake
 from .config import (
