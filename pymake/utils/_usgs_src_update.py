@@ -10,6 +10,7 @@ import types
 from pathlib import Path
 from typing import Union
 
+from ..utils._compiler_switches import _get_base_compiler_name
 from ..utils.usgsprograms import usgs_program_data
 
 
@@ -117,7 +118,10 @@ def _update_triangle_files(srcdir, fc, cc, arch, double):
 
     """
     # modify long to long long on windows
-    if "win32" in sys.platform.lower() and cc in ("icl", "cl"):
+    if "win32" in sys.platform.lower() and _get_base_compiler_name(cc) in (
+        "icl",
+        "cl",
+    ):
         src = os.path.join(srcdir, "triangle.c")
         updateSource = True
         with open(src, "r") as f:
@@ -243,7 +247,7 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
 
     if "linux" in sys.platform.lower() or "darwin" in sys.platform.lower():
         updfile = False
-        if cc in ["icc", "clang", "gcc"]:
+        if _get_base_compiler_name(cc) in ["icc", "clang", "gcc"]:
             updfile = True
         if updfile:
             fpth = os.path.join(srcdir, "gmg1.f")

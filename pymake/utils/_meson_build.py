@@ -9,6 +9,7 @@ from ._compiler_language_files import (
     _preprocess_file,
 )
 from ._compiler_switches import (
+    _get_base_compiler_name,
     _get_c_flags,
     _get_fortran_flags,
     _get_linker_flags,
@@ -154,7 +155,7 @@ def meson_setup(
                 else:
                     command_list.append(f"FC={fc}")
         if cc is not None:
-            if cc in ("g++", "clang++"):
+            if _get_base_compiler_name(cc) in ("g++", "clang++"):
                 cc_env = os.environ.get("CXX")
                 if cc_env is not None:
                     if cc_env != cc:
@@ -483,16 +484,17 @@ def _create_main_meson_build(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        if osname == "win32" and fc in ("ifort",):
+        if osname == "win32" and _get_base_compiler_name(fc) in ("ifort",):
             meson_ext_flag = False
         else:
             meson_ext_flag = True
         preprocess = _preprocess_file(srcfiles, meson=meson_ext_flag)
         if preprocess:
-            if fc == "gfortran":
+            if _get_base_compiler_name(fc) == "gfortran":
                 fflags_meson.append("-cpp")
             else:
-                fflags_meson.append(f"{_get_prepend(fc, _get_osname())}fpp")
+                prepend = _get_prepend(_get_base_compiler_name(fc), _get_osname())
+                fflags_meson.append(f"{prepend}fpp")
     cc_meson = None
     cflags_meson = None
     if cext is not None:

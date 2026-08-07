@@ -32,6 +32,10 @@ from datetime import datetime
 
 from .pymake import Pymake
 from .pymake_base import get_temporary_directories
+from .utils._compiler_switches import (
+    _get_base_compiler_name,
+    _replace_base_compiler_name,
+)
 from .utils.usgsprograms import usgs_program_data
 
 
@@ -174,10 +178,10 @@ def build_apps(
         # reset compilers
         if target in ("gridgen",):
             pmobj.fc = "none"
-            if pmobj.cc in ("gcc",):
-                pmobj.cc = "g++"
-            elif pmobj.cc in ("clang",):
-                pmobj.cc = "clang++"
+            if _get_base_compiler_name(pmobj.cc) in ("gcc",):
+                pmobj.cc = _replace_base_compiler_name(pmobj.cc, "g++")
+            elif _get_base_compiler_name(pmobj.cc) in ("clang",):
+                pmobj.cc = _replace_base_compiler_name(pmobj.cc, "clang++")
         elif target in ("triangle",):
             pmobj.fc = "none"
         elif target in ("mf6", "libmf6"):

@@ -57,6 +57,7 @@ from .utils._compiler_language_files import (
     _preprocess_file,
 )
 from .utils._compiler_switches import (
+    _get_base_compiler_name,
     _get_c_flags,
     _get_fortran_flags,
     _get_linker_flags,
@@ -271,13 +272,13 @@ def main(
         if not meson:
             if _get_osname() == "win32":
                 if fc is not None:
-                    if fc in (
+                    if _get_base_compiler_name(fc) in (
                         "ifort",
                         "mpiifort",
                     ):
                         intelwin = True
                 if cc is not None:
-                    if cc in (
+                    if _get_base_compiler_name(cc) in (
                         "cl",
                         "icl",
                     ):
@@ -976,7 +977,7 @@ def _pymake_compile(
                     cmdlist.append(switch)
                 # add preprocessor option, if necessary
                 if _preprocess_file(srcfile):
-                    if os.path.basename(fc) == "gfortran":
+                    if _get_base_compiler_name(fc) == "gfortran":
                         pp_tag = "-cpp"
                     else:
                         pp_tag = "-fpp"
@@ -989,7 +990,7 @@ def _pymake_compile(
             # put object files and module files in objdir_temp and moddir_temp
             else:
                 cmdlist.append(f"-I{objdir_temp}")
-                if fc in ["ifort", "mpiifort"]:
+                if _get_base_compiler_name(fc) in ["ifort", "mpiifort"]:
                     cmdlist.append("-module")
                     cmdlist.append(moddir_temp + "/")
                 else:
@@ -1230,6 +1231,35 @@ def _create_win_batch(
     f.close()
 
     return
+
+
+def _makefile_compiler_ifeq(variable, compilers, indent="\t"):
+    """Build a makefile conditional that matches a compiler.
+
+    A version suffix, for example 'gfortran-13', is also matched.
+
+    Parameters
+    ----------
+    variable : str
+        makefile compiler variable name ('FC' or 'CC')
+    compilers : list
+        base compiler names to match
+    indent : str
+        string prepended to the conditional
+
+    Returns
+    -------
+    line : str
+        makefile conditional
+
+    """
+    patterns = []
+    for compiler in compilers:
+        patterns += [compiler, f"{compiler}-%"]
+
+    return (
+        f"{indent}ifeq ($({variable}), $(filter {' '.join(patterns)}, $({variable})))\n"
+    )
 
 
 def _create_makefile(
@@ -1542,7 +1572,7 @@ def _create_makefile(
         # build fortran flags for each os
         line = "# set the fortran flags\n"
         line += "ifeq ($(detected_OS), Windows)\n"
-        line += "\tifeq ($(FC), gfortran)\n"
+        line += _makefile_compiler_ifeq("FC", ["gfortran"])
         tfflags = _get_fortran_flags(
             target,
             "gfortran",
@@ -1561,7 +1591,7 @@ def _create_makefile(
         line += f"\t\tFFLAGS ?= {' '.join(tfflags)}\n"
         line += "\tendif\n"
         line += "else\n"
-        line += "\tifeq ($(FC), gfortran)\n"
+        line += _makefile_compiler_ifeq("FC", ["gfortran"])
         tfflags = _get_fortran_flags(
             target,
             "gfortran",
@@ -1579,7 +1609,7 @@ def _create_makefile(
             tfflags.append("-cpp")
         line += f"\t\tFFLAGS ?= {' '.join(tfflags)}\n"
         line += "\tendif\n"
-        line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
+        line += _makefile_compiler_ifeq("FC", ["ifort", "mpiifort"])
         tfflags = _get_fortran_flags(
             target,
             "ifort",
@@ -1605,7 +1635,7 @@ def _create_makefile(
     if cext is not None:
         line = "# set the c/c++ flags\n"
         line += "ifeq ($(detected_OS), Windows)\n"
-        line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
+        line += _makefile_compiler_ifeq("CC", ["gcc", "g++"])
         tcflags = _get_c_flags(
             target,
             "gcc",
@@ -1618,7 +1648,7 @@ def _create_makefile(
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
         line += "\tendif\n"
-        line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
+        line += _makefile_compiler_ifeq("CC", ["clang", "clang++"])
         tcflags = _get_c_flags(
             target,
             "clang",
@@ -1632,7 +1662,7 @@ def _create_makefile(
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
         line += "\tendif\n"
         line += "else\n"
-        line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
+        line += _makefile_compiler_ifeq("CC", ["gcc", "g++"])
         tcflags = _get_c_flags(
             target,
             "gcc",
@@ -1645,7 +1675,7 @@ def _create_makefile(
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
         line += "\tendif\n"
-        line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
+        line += _makefile_compiler_ifeq("CC", ["clang", "clang++"])
         tcflags = _get_c_flags(
             target,
             "clang",
@@ -1658,7 +1688,7 @@ def _create_makefile(
         )
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
         line += "\tendif\n"
-        line += "\tifeq ($(CC), $(filter $(CC), icc mpiicc icpc))\n"
+        line += _makefile_compiler_ifeq("CC", ["icc", "mpiicc", "icpc"])
         tcflags = _get_c_flags(
             target,
             "icc",
@@ -1690,7 +1720,7 @@ def _create_makefile(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
+        line += _makefile_compiler_ifeq("CC", ["gcc", "g++"])
         line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
         _, tsyslibs = _get_linker_flags(
@@ -1703,7 +1733,7 @@ def _create_makefile(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
+        line += _makefile_compiler_ifeq("CC", ["clang", "clang++"])
         line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
     # fortran compiler used for linking
@@ -1718,7 +1748,7 @@ def _create_makefile(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        line += "\tifeq ($(FC), $(filter $(FC), gfortran))\n"
+        line += _makefile_compiler_ifeq("FC", ["gfortran"])
         line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
     # linux and osx
@@ -1735,7 +1765,7 @@ def _create_makefile(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        line += "\tifeq ($(CC), $(filter $(CC), gcc g++))\n"
+        line += _makefile_compiler_ifeq("CC", ["gcc", "g++"])
         line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
         _, tsyslibs = _get_linker_flags(
@@ -1748,13 +1778,13 @@ def _create_makefile(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        line += "\tifeq ($(CC), $(filter $(CC), clang clang++))\n"
+        line += _makefile_compiler_ifeq("CC", ["clang", "clang++"])
         line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
     # fortran compiler used for linking
     else:
         # gfortran compiler
-        line += "\tifeq ($(FC), gfortran)\n"
+        line += _makefile_compiler_ifeq("FC", ["gfortran"])
         _, tsyslibs = _get_linker_flags(
             target,
             "gfortran",
@@ -1768,7 +1798,7 @@ def _create_makefile(
         line += f"\t\tLDFLAGS ?= {' '.join(tsyslibs)}\n"
         line += "\tendif\n"
         # ifort compiler
-        line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
+        line += _makefile_compiler_ifeq("FC", ["ifort", "mpiifort"])
         _, tsyslibs = _get_linker_flags(
             target,
             "ifort",
@@ -1789,11 +1819,11 @@ def _create_makefile(
     line = "# check for Windows error condition\n"
     line += "ifeq ($(detected_OS), Windows)\n"
     if fext is not None:
-        line += "\tifeq ($(FC), $(filter $(FC), ifort mpiifort))\n"
+        line += _makefile_compiler_ifeq("FC", ["ifort", "mpiifort"])
         line += "\t\tWINDOWSERROR = $(FC)\n"
         line += "\tendif\n"
     if cext is not None:
-        line += "\tifeq ($(CC), $(filter $(CC), icl))\n"
+        line += _makefile_compiler_ifeq("CC", ["icl"])
         line += "\t\tWINDOWSERROR = $(CC)\n"
         line += "\tendif\n"
     line += "endif\n\n"
