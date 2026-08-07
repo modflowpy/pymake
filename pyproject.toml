@@ -83,7 +83,15 @@ line-length = 88
 
 [tool.ruff.lint]
 select = [
+    "D200", # pydocstyle - unnecessary-multiline-docstring
+    "D202", # pydocstyle - blank-line-after-function
+    "D209", # pydocstyle - new-line-after-last-paragraph
+    "D400", # pydocstyle - missing-trailing-period
+    "D403", # pydocstyle - first-word-uncapitalized
     "D409", # pydocstyle - section-underline-matches-section-length
+    "D410", # pydocstyle - no-blank-line-after-section
+    "D411", # pydocstyle - no-blank-line-before-section
+    "D413", # pydocstyle - missing-blank-line-after-last-section
     "E",    # pycodestyle error
     "F",    # Pyflakes
     "I001", # isort - unsorted-imports

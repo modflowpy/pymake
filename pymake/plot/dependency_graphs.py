@@ -1,4 +1,6 @@
-"""Dependency graphs for applications can be created using:
+"""Create dependency graphs for application source files.
+
+Dependency graphs can be created using:
 
 .. code-block:: python
 
@@ -28,7 +30,7 @@ from ..utils._dag import _get_f_nodelist
 
 
 def to_pydot(dag, filename="mygraph.png"):
-    """Create a png file of a Directed Acyclic Graph
+    """Create a png file of a Directed Acyclic Graph.
 
     Parameters
     ----------

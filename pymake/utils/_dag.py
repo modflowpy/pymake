@@ -1,7 +1,9 @@
-"""Set of classes for building a directed acyclic graph (DAG). A DAG can be
-used to determine the order of dependencies in source code and determine
-compiling order.  Topological sort pseudocode based on:
+"""Set of classes for building a directed acyclic graph (DAG).
+
+A DAG can be used to determine the order of dependencies in source code and
+determine compiling order. Topological sort pseudocode is based on
 https://en.wikipedia.org/wiki/Topological_sorting
+
 """
 
 __author__ = "Christian D. Langevin"

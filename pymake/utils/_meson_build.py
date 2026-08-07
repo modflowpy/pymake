@@ -23,7 +23,7 @@ from .usgsprograms import usgs_program_data
 
 @contextmanager
 def _set_directory(path: Path):
-    """Sets the cwd within the context
+    """Sets the cwd within the context.
 
     Parameters
     ----------
@@ -51,7 +51,7 @@ def meson_build(
     appdir=".",
     build_dir="_build",
 ):
-    """Build executable(s) using the meson build system
+    """Build executable(s) using the meson build system.
 
     Parameters
     ----------
@@ -112,7 +112,7 @@ def meson_setup(
     appdir=".",
     build_dir="_build",
 ):
-    """Run meson setup command
+    """Run meson setup command.
 
     Parameters
     ----------
@@ -214,7 +214,7 @@ def meson_install(
     mesondir,
     build_dir="_build",
 ):
-    """Run meson install command
+    """Run meson install command.
 
     Parameters
     ----------
@@ -262,7 +262,7 @@ def _meson_build(
     mesondir,
     verbose,
 ):
-    """Build the target using meson
+    """Build the target using meson.
 
     Parameters
     ----------
@@ -364,7 +364,7 @@ def _create_main_meson_build(
     source_path_dict,
     verbose,
 ):
-    """Create the main meson build file
+    """Create the main meson build file.
 
     Parameters
     ----------
@@ -381,6 +381,7 @@ def _create_main_meson_build(
     sharedobject
     source_path_dict
     verbose
+
     Parameters
     ----------
     mesondir : str

@@ -208,7 +208,7 @@ def _update_mt3dms_files(srcdir, fc, cc, arch, double):
 
 
 def _update_swtv4_files(srcdir, fc, cc, arch, double):
-    """Update SEAWAT source files
+    """Update SEAWAT source files.
 
     Parameters
     ----------
@@ -277,7 +277,7 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
 
 
 def _update_mf2005_files(srcdir, fc, cc, arch, double):
-    """Update MODFLOW2005 source files
+    """Update MODFLOW2005 source files.
 
     Parameters
     ----------
@@ -319,7 +319,7 @@ def _update_mf2005_files(srcdir, fc, cc, arch, double):
 
 
 def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
-    """Update GSI version of MODFLOW-USG source files
+    """Update GSI version of MODFLOW-USG source files.
 
     Parameters
     ----------
@@ -430,7 +430,7 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
 
 
 def _update_mfnwt_files(srcdir, fc, cc, arch, double):
-    """Update MODFLOW-NWT source files
+    """Update MODFLOW-NWT source files.
 
     Parameters
     ----------
@@ -466,7 +466,7 @@ def _update_mfnwt_files(srcdir, fc, cc, arch, double):
 
 
 def _update_mf2000_files(srcdir, fc, cc, arch, double):
-    """Update MODFLOW-2000 source files
+    """Update MODFLOW-2000 source files.
 
     Parameters
     ----------
@@ -523,7 +523,7 @@ def _update_mf2000_files(srcdir, fc, cc, arch, double):
 
 
 def _update_mflgr_files(srcdir, fc, cc, arch, double):
-    """Update MODFLOW-LGR source files
+    """Update MODFLOW-LGR source files.
 
     Parameters
     ----------
@@ -548,7 +548,7 @@ def _update_mflgr_files(srcdir, fc, cc, arch, double):
 
 
 def _update_mp6_files(srcdir, fc, cc, arch, double):
-    """Update MODPATH 6 source files
+    """Update MODPATH 6 source files.
 
     Parameters
     ----------
@@ -596,7 +596,7 @@ def _update_mp6_files(srcdir, fc, cc, arch, double):
 
 
 def _update_mp7_files(srcdir, fc, cc, arch, double):
-    """Update MODPATH 7 source files
+    """Update MODPATH 7 source files.
 
     Parameters
     ----------
@@ -628,7 +628,7 @@ def _update_mp7_files(srcdir, fc, cc, arch, double):
 
 
 def _update_vs2dt_files(srcdir, fc, cc, arch, double):
-    """Update VS2DT source files
+    """Update VS2DT source files.
 
     Parameters
     ----------
@@ -685,7 +685,7 @@ def _update_mf6_files(
 ) -> None:
     """
     Update MODFLOW 6 source files to remove files with external dependencies.
-    This was required for releases >= 6.4.2
+    This was required for releases >= 6.4.2.
 
     Parameters
     ----------
@@ -718,7 +718,7 @@ def _update_libmf6_files(
 ) -> None:
     """
     Update MODFLOW 6 shared object source files to remove files with external
-    dependencies. This was required for releases >= 6.4.2
+    dependencies. This was required for releases >= 6.4.2.
 
     Parameters
     ----------
@@ -798,7 +798,7 @@ def _update_mf6_external_dependencies(
 
 
 def _update_utl7(srcdir):
-    """Update utl7.f source file
+    """Update utl7.f source file.
 
     Parameters
     ----------
@@ -826,7 +826,7 @@ def _update_utl7(srcdir):
 
 
 def _update_swt(srcdir):
-    """Update gwf2swt7.f source file
+    """Update gwf2swt7.f source file.
 
     Parameters
     ----------
@@ -855,7 +855,7 @@ def _update_swt(srcdir):
 
 
 def _update_swi(srcdir, double):
-    """Update gwf2swi27.f and gwf2swi27.fpp source files
+    """Update gwf2swi27.f and gwf2swi27.fpp source files.
 
     Parameters
     ----------
@@ -900,7 +900,7 @@ def _update_swi(srcdir, double):
 
 
 def _update_pcg(srcdir):
-    """Update pcg7.f source file
+    """Update pcg7.f source file.
 
     Parameters
     ----------

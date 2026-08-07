@@ -47,7 +47,6 @@ def pytest_runtest_makereport(item, call):
 
 def pytest_report_header(config):
     """Header for pytest to show versions of packages."""
-
     required = []
     extra = {}
     for item in metadata.requires("flopy"):

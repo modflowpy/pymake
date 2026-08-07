@@ -14,8 +14,7 @@ if mf6_exdir.is_dir():
 
 
 def download_mf6_examples(verbose=False):
-    """Download mf6 examples and return location of folder"""
-
+    """Download mf6 examples and return location of folder."""
     target = "mf6"
     pm = pymake.Pymake(verbose=True)
     pm.target = target
@@ -41,7 +40,7 @@ def download_mf6_examples(verbose=False):
 
 
 def examples_list(verbose=False):
-    """Build list of examples
+    """Build list of examples.
 
     Returns
     -------

@@ -48,7 +48,7 @@ KEEP_ARG_KEYS = "double"
 
 
 def main() -> None:
-    """Command line interface
+    """Command line interface.
 
     Returns
     -------

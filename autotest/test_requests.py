@@ -13,10 +13,7 @@ RERUNS = 3
 
 
 def which(program):
-    """
-    Test to make sure that the program is executable
-
-    """
+    """Test to make sure that the program is executable."""
     import os
 
     def is_exe(fpath):

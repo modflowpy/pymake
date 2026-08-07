@@ -1,7 +1,8 @@
-"""Function to build MODFLOW-based models and other utility software based on
-targets defined in the usgsprograms database (usgsprograms.txt). The
-usgsprograms database can be queried using functions in the usgsprograms
-module. An example of using :code:`pymake.build_apps()` to build MODFLOW 6 is:
+"""Build MODFLOW-based models and other utility software.
+
+Targets are defined in the usgsprograms database (usgsprograms.txt), which can
+be queried using functions in the usgsprograms module. An example of using
+:code:`pymake.build_apps()` to build MODFLOW 6 is:
 
 .. code-block:: python
 
@@ -82,7 +83,6 @@ def build_apps(
         integer value indicating successful completion (0) or failure (>0)
 
     """
-
     start_time = datetime.now()
 
     # intercept all string (":") from make-program

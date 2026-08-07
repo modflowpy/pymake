@@ -37,12 +37,13 @@ _current_version = Version(_version_txt_path.read_text().strip())
 
 
 def update_version_txt(version: Version) -> None:
-    """Update version number in version.txt
+    """Update version number in version.txt.
 
     Parameters
     ----------
     version : Version
         version number
+
     """
     with open(_version_txt_path, "w", encoding="utf8") as f:
         f.write(str(version))
@@ -50,7 +51,7 @@ def update_version_txt(version: Version) -> None:
 
 
 def update_version_py(timestamp: datetime, version: Version) -> None:
-    """Update version number in config.py
+    """Update version number in config.py.
 
     Parameters
     ----------
@@ -58,6 +59,7 @@ def update_version_py(timestamp: datetime, version: Version) -> None:
         current datetime
     version : Version
         version number
+
     """
     lines = file_paths["config.py"].read_text().rstrip().split("\n")
 
@@ -72,12 +74,13 @@ def update_version_py(timestamp: datetime, version: Version) -> None:
 
 
 def update_readme_markdown(version: Version) -> None:
-    """Update README.md
+    """Update README.md.
 
     Parameters
     ----------
     version : Version
         version number
+
     """
     fpth = file_paths["README.md"]
 
@@ -102,7 +105,7 @@ def update_version(
     version: Version = None,
 ) -> None:
     """Main function for updating all of the files containing
-       version information
+       version information.
 
     Parameters
     ----------
@@ -110,6 +113,7 @@ def update_version(
         datetime object, by default datetime.now()
     version : Version, optional
         version number, by default None
+
     """
     lock_path = Path(_version_txt_path.name + ".lock")
     try:
