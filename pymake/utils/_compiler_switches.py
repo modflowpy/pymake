@@ -5,6 +5,7 @@ flags and appropriate linker flags for defined targets.
 # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-branches,too-complex
 
 import os
+import re
 import sys
 from subprocess import check_output
 
@@ -51,7 +52,8 @@ def _check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
     switch : str
         compiler switch
     compiler : str
-        compiler name, must be gfortran or gcc
+        compiler name, must be gfortran or gcc. a version suffix, for
+        example 'gfortran-13', is allowed
     verbose : bool
         boolean for verbose output to terminal
 
@@ -62,7 +64,7 @@ def _check_gnu_switch_available(switch, compiler="gfortran", verbose=False):
 
     """
     # test if compiler is valid
-    if compiler not in ["gfortran", "gcc"]:
+    if _get_base_compiler_name(compiler) not in ["gfortran", "gcc"]:
         msg = "compiler must be 'gfortran' or 'gcc'."
         raise ValueError(msg)
 
@@ -136,6 +138,49 @@ def _get_base_app_name(value):
     return value
 
 
+def _get_base_compiler_name(value):
+    """Remove path, extension, and version suffix from a compiler name.
+
+    Parameters
+    ----------
+    value : str
+        compiler name, for example '/usr/bin/gfortran-13'
+
+    Returns
+    -------
+    value : str
+        base compiler name, for example 'gfortran'
+
+    """
+    if value is None:
+        return None
+
+    return re.sub(r"-\d+(\.\d+)*$", "", _get_base_app_name(value))
+
+
+def _replace_base_compiler_name(value, name):
+    """Replace the base name of a compiler, retaining any version suffix.
+
+    Parameters
+    ----------
+    value : str
+        compiler name, for example 'gcc-13'
+    name : str
+        replacement base compiler name, for example 'g++'
+
+    Returns
+    -------
+    value : str
+        compiler name with the base name replaced, for example 'g++-13'
+
+    """
+    head, tail = os.path.split(value)
+    suffix = re.search(r"-\d+(\.\d+)*$", _get_base_app_name(tail))
+    tail = name if suffix is None else name + suffix.group(0)
+
+    return os.path.join(head, tail)
+
+
 def _get_prepend(compiler, osname):
     """Return the appropriate prepend for a compiler switch for a OS.
 
@@ -198,9 +243,9 @@ def _get_optlevel(target, fc, cc, debug, fflags, cflags, osname=None):
 
     # remove .exe extension from compiler if necessary
     if fc is not None:
-        fc = _get_base_app_name(fc)
+        fc = _get_base_compiler_name(fc)
     if cc is not None:
-        cc = _get_base_app_name(cc)
+        cc = _get_base_compiler_name(cc)
 
     compiler = None
     if fc is not None:
@@ -297,8 +342,10 @@ def _get_fortran_flags(
 
     # define fortran flags
     if fc is not None:
-        # remove .exe extension of necessary
+        # remove .exe extension of necessary. the executable name is retained
+        # so that the compiler that will be used can be queried for switches
         fc = _get_base_app_name(fc)
+        fc_base = _get_base_compiler_name(fc)
 
         # remove target .exe extension, if necessary
         target = _get_base_app_name(target)
@@ -308,10 +355,10 @@ def _get_fortran_flags(
             osname = _get_osname()
 
         # get - or / to prepend for compiler switches
-        prepend = _get_prepend(fc, osname)
+        prepend = _get_prepend(fc_base, osname)
 
         # generate standard fortran flags
-        if fc == "gfortran":
+        if fc_base == "gfortran":
             if sharedobject:
                 if osname != "win32":
                     flags.append("fPIC")
@@ -323,27 +370,37 @@ def _get_fortran_flags(
             flags.append("fbacktrace")
             if debug:
                 flags += ["g", "fcheck=all", "fbounds-check", "Wall"]
-                if _check_gnu_switch_available("-ffpe-trap", verbose=verbose):
+                if _check_gnu_switch_available(
+                    "-ffpe-trap", compiler=fc, verbose=verbose
+                ):
                     flags.append("ffpe-trap=overflow,zero,invalid,denormal")
             else:
-                if _check_gnu_switch_available("-ffpe-summary"):
+                if _check_gnu_switch_available("-ffpe-summary", compiler=fc):
                     flags.append("ffpe-summary=overflow")
-                if _check_gnu_switch_available("-ffpe-trap"):
+                if _check_gnu_switch_available("-ffpe-trap", compiler=fc):
                     flags.append("ffpe-trap=overflow,zero,invalid")
                 if target in ("mf6", "libmf6", "zbud6"):
-                    if _check_gnu_switch_available("-fall-intrinsics"):
+                    if _check_gnu_switch_available("-fall-intrinsics", compiler=fc):
                         flags.append("fall-intrinsics")
-                    if _check_gnu_switch_available("-pedantic"):
+                    if _check_gnu_switch_available("-pedantic", compiler=fc):
                         flags.append("pedantic")
-                    if _check_gnu_switch_available("-Wcharacter-truncation"):
+                    if _check_gnu_switch_available(
+                        "-Wcharacter-truncation", compiler=fc
+                    ):
                         flags.append("Wcharacter-truncation")
-                    if _check_gnu_switch_available("-Wno-unused-dummy-argument"):
+                    if _check_gnu_switch_available(
+                        "-Wno-unused-dummy-argument", compiler=fc
+                    ):
                         flags.append("Wno-unused-dummy-argument")
-                    if _check_gnu_switch_available("-Wno-intrinsic-shadow"):
+                    if _check_gnu_switch_available(
+                        "-Wno-intrinsic-shadow", compiler=fc
+                    ):
                         flags.append("Wno-intrinsic-shadow")
-                    if _check_gnu_switch_available("-Wno-maybe-uninitialized"):
+                    if _check_gnu_switch_available(
+                        "-Wno-maybe-uninitialized", compiler=fc
+                    ):
                         flags.append("Wno-maybe-uninitialized")
-                    if _check_gnu_switch_available("-Wno-uninitialized"):
+                    if _check_gnu_switch_available("-Wno-uninitialized", compiler=fc):
                         flags.append("Wno-uninitialized")
             if double:
                 flags += ["fdefault-real-8", "fdefault-double-8"]
@@ -351,7 +408,7 @@ def _get_fortran_flags(
             os_macro = _get_os_macro(osname)
             if os_macro is not None:
                 flags.append(os_macro)
-        elif fc in ["ifort", "mpiifort"]:
+        elif fc_base in ["ifort", "mpiifort"]:
             if osname == "win32":
                 flags += [
                     "heap-arrays:0",
@@ -455,8 +512,10 @@ def _get_c_flags(
 
     # define c flags
     if cc is not None:
-        # remove .exe extension of necessary
+        # remove .exe extension of necessary. the executable name is retained
+        # so that the compiler that will be used can be queried for switches
         cc = _get_base_app_name(cc)
+        cc_base = _get_base_compiler_name(cc)
 
         # remove target .exe extension, if necessary
         target = _get_base_app_name(target)
@@ -466,10 +525,10 @@ def _get_c_flags(
             osname = _get_osname()
 
         # get - or / to prepend for compiler switches
-        prepend = _get_prepend(cc, osname)
+        prepend = _get_prepend(cc_base, osname)
 
         # generate c flags
-        if cc in ["gcc", "g++"]:
+        if cc_base in ["gcc", "g++"]:
             if sharedobject:
                 if osname != "win32":
                     flags.append("fPIC")
@@ -480,13 +539,11 @@ def _get_c_flags(
                     flags.remove("fPIC")
             if debug:
                 flags += ["g"]
-                if _check_gnu_switch_available(
-                    "-Wall", compiler="gcc", verbose=verbose
-                ):
+                if _check_gnu_switch_available("-Wall", compiler=cc, verbose=verbose):
                     flags.append("Wall")
             else:
                 pass
-        elif cc in ["clang", "clang++"]:
+        elif cc_base in ["clang", "clang++"]:
             if sharedobject:
                 msg = "shared library not implement for clang"
                 raise NotImplementedError(msg)
@@ -498,9 +555,9 @@ def _get_c_flags(
                     flags.append("Wall")
             else:
                 pass
-        elif cc in ["icc", "icpc", "mpiicc", "mpiicpc", "icl", "cl"]:
+        elif cc_base in ["icc", "icpc", "mpiicc", "mpiicpc", "icl", "cl"]:
             if osname == "win32":
-                if cc in ["icl", "cl"]:
+                if cc_base in ["icl", "cl"]:
                     flags += ["nologo"]
                 if debug:
                     flags.append("/debug:full")
@@ -513,7 +570,7 @@ def _get_c_flags(
 
                 if debug:
                     flags += ["debug full"]
-        elif cc in ["cl"]:
+        elif cc_base in ["cl"]:
             if osname == "win32":
                 if debug:
                     flags.append("Zi")
@@ -528,7 +585,7 @@ def _get_c_flags(
             if ffiles is not None:
                 iso_c_check = True
                 if osname == "win32":
-                    if cc in ["icl", "cl"]:
+                    if cc_base in ["icl", "cl"]:
                         iso_c_check = False
                 if iso_c_check:
                     use_iso_c = _get_iso_c(ffiles)
@@ -614,9 +671,9 @@ def _get_linker_flags(
 
     # remove .exe extension of necessary
     if fc is not None:
-        fc = _get_base_app_name(fc)
+        fc = _get_base_compiler_name(fc)
     if cc is not None:
-        cc = _get_base_app_name(cc)
+        cc = _get_base_compiler_name(cc)
 
     # set linker compiler
     compiler = None
@@ -794,18 +851,20 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
         # remove target .exe extension, if necessary
         target = _get_base_app_name(target)
 
-        # remove .exe extension if necessary
+        # remove .exe extension if necessary. the executable name is retained
+        # so that the compiler that will be used can be queried for switches
         fc = _get_base_app_name(fc)
+        fc_base = _get_base_compiler_name(fc)
 
         if target == "mp7":
-            if fc == "gfortran":
+            if fc_base == "gfortran":
                 fflags.append("-ffree-line-length-512")
         elif target in (
             "mf2000",
             "mt3dms",
             "swtv4",
         ):
-            if fc == "gfortran":
+            if fc_base == "gfortran":
                 opt = "-fallow-argument-mismatch"
                 if _check_gnu_switch_available(opt, compiler=fc, verbose=verbose):
                     fflags += [
@@ -816,7 +875,7 @@ def _set_fflags(target, fc="gfortran", argv=True, osname=None, verbose=False):
             "libmf6",
             "zbud6",
         ):
-            if fc == "gfortran":
+            if fc_base == "gfortran":
                 fflags += [
                     "-fall-intrinsics",
                     "-Wtabs",
@@ -889,7 +948,7 @@ def _set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
         target = _get_base_app_name(target)
 
         # remove .exe extension of necessary
-        cc = _get_base_app_name(cc)
+        cc = _get_base_compiler_name(cc)
 
         if target == "triangle":
             if osname in ("linux", "darwin"):
@@ -964,9 +1023,9 @@ def _set_syslibs(
 
     # remove .exe extension of necessary
     if fc is not None:
-        fc = _get_base_app_name(fc)
+        fc = _get_base_compiler_name(fc)
     if cc is not None:
-        cc = _get_base_app_name(cc)
+        cc = _get_base_compiler_name(cc)
 
     # initialize syslibs
     syslibs = []
@@ -997,16 +1056,10 @@ def _set_syslibs(
         syslibs.append(darwin_options)
 
     # add additional syslibs for select programs
+    # triangle is a c program that uses the math library
     if target == "triangle":
         if osname in ("linux", "darwin"):
-            if fc is None:
-                lfc = True
-            else:
-                lfc = fc.startswith("g")
-            lcc = False
             if cc in ("gcc", "g++", "clang", "clang++"):
-                lcc = True
-            if lfc and lcc:
                 syslibs += ["-lm"]
 
     # add additional syslibs from the command line

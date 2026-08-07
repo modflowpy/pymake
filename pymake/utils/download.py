@@ -455,9 +455,9 @@ def download_and_unzip(
 
             # extract the files
             z.extractall(pth)
-        except:
-            p = "Could not unzip the file.  Stopping."
-            raise Exception(p)
+        except Exception as exc:
+            p = f"Could not unzip '{file_name}'.  Stopping."
+            raise Exception(p) from exc
         z.close()
     elif "tar" in os.path.basename(file_name):
         ar = tarfile.open(file_name)

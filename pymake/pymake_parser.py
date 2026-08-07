@@ -16,6 +16,37 @@ import argparse
 from textwrap import dedent
 
 from .config import __description__
+from .utils._compiler_switches import _get_base_compiler_name
+
+
+def _compiler_type(choices):
+    """Build an argparse type that validates a compiler name.
+
+    A version suffix, for example 'gfortran-13', is accepted and returned
+    unmodified.
+
+    Parameters
+    ----------
+    choices : list
+        valid base compiler names
+
+    Returns
+    -------
+    _validate : function
+        argparse type function
+
+    """
+
+    def _validate(value):
+        if _get_base_compiler_name(value) not in choices:
+            valid = ", ".join(f"'{choice}'" for choice in choices)
+            raise argparse.ArgumentTypeError(
+                f"invalid choice: '{value}' (choose from {valid}, "
+                "optionally with a version suffix such as '-13')"
+            )
+        return value
+
+    return _validate
 
 
 def _get_standard_arg_dict():
@@ -44,31 +75,43 @@ def _get_standard_arg_dict():
         },
         "fc": {
             "tag": ("-fc",),
-            "help": "Fortran compiler to use. (default is gfortran)",
+            "help": """Fortran compiler to use. A version suffix, for example
+                         gfortran-13, can be included. Valid compilers are
+                         ifort, mpiifort, gfortran, and none.
+                         (default is gfortran)""",
             "default": "gfortran",
-            "choices": [
-                "ifort",
-                "mpiifort",
-                "gfortran",
-                "none",
-            ],
+            "choices": None,
+            "validator": _compiler_type(
+                [
+                    "ifort",
+                    "mpiifort",
+                    "gfortran",
+                    "none",
+                ]
+            ),
             "action": None,
         },
         "cc": {
             "tag": ("-cc",),
-            "help": "C/C++ compiler to use. (default is gcc)",
+            "help": """C/C++ compiler to use. A version suffix, for example
+                         gcc-13, can be included. Valid compilers are gcc,
+                         clang, clang++, icc, icl, mpiicc, g++, cl, and none.
+                         (default is gcc)""",
             "default": "gcc",
-            "choices": [
-                "gcc",
-                "clang",
-                "clang++",
-                "icc",
-                "icl",
-                "mpiicc",
-                "g++",
-                "cl",
-                "none",
-            ],
+            "choices": None,
+            "validator": _compiler_type(
+                [
+                    "gcc",
+                    "clang",
+                    "clang++",
+                    "icc",
+                    "icl",
+                    "mpiicc",
+                    "g++",
+                    "cl",
+                    "none",
+                ]
+            ),
             "action": None,
         },
         "arch": {
@@ -300,6 +343,7 @@ def _parser_setup(parser_obj, value, reset_default=False):
             help=value["help"],
             default=default,
             choices=value["choices"],
+            type=value.get("validator"),
         )
     else:
         parser_obj.add_argument(
