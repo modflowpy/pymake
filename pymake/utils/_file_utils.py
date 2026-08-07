@@ -41,7 +41,7 @@ def _get_extra_exclude_files(external_file):
 
 
 def _get_extrafiles_common_path(external_files):
-    """
+    """Get the common source path for a list of external files.
 
     Parameters
     ----------

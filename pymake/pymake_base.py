@@ -1279,7 +1279,7 @@ def _create_makefile(
     verbose,
     makedefaults="makedefaults",
 ):
-    """
+    """Write a GNU make makefile and makedefaults file for the target.
 
     Parameters
     ----------

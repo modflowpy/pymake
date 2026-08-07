@@ -86,6 +86,7 @@ select = [
     "D200", # pydocstyle - unnecessary-multiline-docstring
     "D202", # pydocstyle - blank-line-after-function
     "D209", # pydocstyle - new-line-after-last-paragraph
+    "D212", # pydocstyle - multi-line-summary-first-line
     "D400", # pydocstyle - missing-trailing-period
     "D403", # pydocstyle - first-word-uncapitalized
     "D409", # pydocstyle - section-underline-matches-section-length

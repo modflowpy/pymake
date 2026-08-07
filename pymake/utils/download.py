@@ -35,7 +35,7 @@ class pymakeZipFile(ZipFile):
     """
 
     def extract(self, member, path=None, pwd=None):
-        """
+        """Extract a file from the zipfile, preserving file permissions.
 
         Parameters
         ----------

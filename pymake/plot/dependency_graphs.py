@@ -63,7 +63,7 @@ def to_pydot(dag, filename="mygraph.png"):
 
 
 def _add_pydot_nodes(graph, node_dict, n, ilev, level):
-    """
+    """Recursively add a node and its dependencies to a pydot graph.
 
     Parameters
     ----------
@@ -94,7 +94,7 @@ def _add_pydot_nodes(graph, node_dict, n, ilev, level):
 
 
 def _add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
-    """
+    """Recursively add the edges for a node and its dependencies to a graph.
 
     Parameters
     ----------

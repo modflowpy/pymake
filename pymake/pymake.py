@@ -76,8 +76,7 @@ from .utils.usgsprograms import usgs_program_data
 
 
 class Pymake:
-    """
-    Pymake class for interacting with pymake functionality. This is essentially
+    """Pymake class for interacting with pymake functionality. This is essentially
     a wrapper for all of the pymake functions needed to download and build
     a target.
 
@@ -420,7 +419,7 @@ class Pymake:
         return self.download
 
     def _download_cleanup(self):
-        """
+        """Remove the temporary download directory.
 
         Returns
         -------
