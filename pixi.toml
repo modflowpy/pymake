@@ -51,6 +51,7 @@ coverage-report = { cmd = "coverage report", cwd = "autotest"}
 
 # release
 update-version = { cmd = "python scripts/update_version.py -v"}
+update-programs = { cmd = "python scripts/update_programs.py"}
 create-codejson = { cmd = "make-code-json" }
 
 # the build environment adds the compilers needed to build targets locally,
