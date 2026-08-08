@@ -49,6 +49,20 @@ autotest-schedule = { cmd = "pytest -v -m='schedule' --durations=0 --cov=pymake 
 # coverage report
 coverage-report = { cmd = "coverage report", cwd = "autotest"}
 
-# release 
+# release
 update-version = { cmd = "python scripts/update_version.py -v"}
 create-codejson = { cmd = "make-code-json" }
+
+# the build environment adds the compilers needed to build targets locally,
+# for example 'pixi run -e build autotest-base'. the compilers are not in the
+# default environment because continuous integration installs its own
+[environments]
+build = { features = ["build"] }
+
+[feature.build]
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
+
+[feature.build.dependencies]
+gcc = "*"
+gxx = "*"
+gfortran = "*"
