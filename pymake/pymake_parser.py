@@ -215,7 +215,7 @@ def _get_standard_arg_dict():
             "help": "GNU make makefile directory. (default is '.')",
             "default": ".",
             "choices": None,
-            "action": "store_true",
+            "action": None,
         },
         "srcdir2": {
             "tag": ("-cs", "--commonsrc"),
@@ -311,7 +311,7 @@ def _get_standard_arg_dict():
             "help": "meson directory. (default is '.')",
             "default": ".",
             "choices": None,
-            "action": "store_true",
+            "action": None,
         },
     }
 

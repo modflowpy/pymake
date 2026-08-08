@@ -462,6 +462,32 @@ class Pymake:
 
         return
 
+    def _set_mesondir(self):
+        """Set mesondir to a downloaded meson build file. Default is unchanged.
+
+        A number of the distributed source releases provide their own meson
+        build file, which is preferred over the one pymake generates. The
+        directory is only changed when mesondir is still the default, so that
+        a mesondir set by the user is respected.
+
+        Returns
+        -------
+
+        """
+        if not self.meson:
+            return
+
+        if self.mesondir != _get_standard_arg_dict()["mesondir"]["default"]:
+            return
+
+        if self.download_dir is None:
+            return
+
+        if (Path(self.download_dir) / "meson.build").is_file():
+            self.mesondir = self.download_dir
+            if self.verbose:
+                print(f"using the meson build file in...'{self.mesondir}'")
+
     def _set_include_subdirs(self):
         """Determine if sub-directories in the source directory should be
         included.
@@ -683,6 +709,9 @@ class Pymake:
         prog_dict = usgs_program_data.get_target(self.target)
         if self.srcdir is None:
             self.srcdir = os.path.join(self.download_dir, prog_dict.srcdir)
+
+        # set mesondir for a downloaded target that provides a meson build file
+        self._set_mesondir()
 
         # set include_subdirs for known targets
         self._set_include_subdirs()
