@@ -25,9 +25,47 @@ import datetime
 import json
 import os
 import sys
+import warnings
 from pathlib import Path
 
 from .download import _request_header, zip_all
+
+# target names that have been renamed, mapped to the current name
+renamed_targets = {
+    "mfusg_gsi": "mfusgt",
+}
+
+# renamed targets that have already been warned about, so that a build does
+# not repeat the warning for every internal lookup
+_warned_targets = set()
+
+
+def _resolve_target(key):
+    """Resolve a renamed target to its current name.
+
+    Parameters
+    ----------
+    key : str
+        program key (name), which may be a name that has been renamed
+
+    Returns
+    -------
+    key : str
+        current program key (name)
+
+    """
+    if key in renamed_targets:
+        current = renamed_targets[key]
+        if key not in _warned_targets:
+            _warned_targets.add(key)
+            warnings.warn(
+                f"target '{key}' has been renamed to '{current}'",
+                DeprecationWarning,
+                stacklevel=4,
+            )
+        key = current
+
+    return key
 
 
 class dotdict(dict):
@@ -138,6 +176,7 @@ class usgs_program_data:
             dictionary with attributes for program key (name)
 
         """
+        key = _resolve_target(key)
         if key not in self._program_dict:
             msg = f'"{key}" key does not exist. Available keys: '
             for idx, k in enumerate(self._program_dict.keys()):
