@@ -189,6 +189,34 @@ class pymakeZipFile(ZipFile):
         return success
 
 
+def _github_headers(url):
+    """Get the request headers to use for a url.
+
+    A GitHub API request is authenticated with GITHUB_TOKEN, if it is set, so
+    that the request uses the much larger authenticated rate limit.
+
+    Parameters
+    ----------
+    url : str
+        url address for the request
+
+    Returns
+    -------
+    headers : dict
+        request headers, empty if the url is not a GitHub API url or no token
+        is available
+
+    """
+    if not url.startswith("https://api.github.com/"):
+        return {}
+
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        return {}
+
+    return {"Authorization": f"Bearer {token}"}
+
+
 def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
     """Make a url request.
 
@@ -226,6 +254,7 @@ def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
                 stream=True,
                 verify=verify,
                 timeout=timeout,
+                headers=_github_headers(url),
             )
             if verbose:
                 print(f"    status: {responses[req.status_code]}")
