@@ -1,3 +1,5 @@
+"""Update usgsprograms.txt targets to the latest GitHub release."""
+
 import argparse
 import re
 import textwrap
@@ -148,6 +150,89 @@ def format_programs(header, rows):
     return "\n".join(lines) + "\n"
 
 
+def _substitute_tag(value, tag, latest):
+    """Substitute a release tag, or the version in it, into a value.
+
+    Parameters
+    ----------
+    value : str
+        value that may embed the tag or the version, for example an asset
+        name or an extracted directory name
+    tag : str
+        the release tag being replaced
+    latest : str
+        the release tag replacing it
+
+    Returns
+    -------
+    value : str
+        value with the tag or version substituted
+
+    """
+    for old, new in ((tag, latest), (version_from_tag(tag), version_from_tag(latest))):
+        if old in value:
+            return value.replace(old, new)
+
+    return value
+
+
+def _resolve_asset(row, match, latest, verbose=False):
+    """Determine the release asset url and directory for a target.
+
+    Parameters
+    ----------
+    row : dict
+        a usgsprograms.txt row
+    match : re.Match
+        the match of the row url against the release asset pattern
+    latest : str
+        the latest release tag
+    verbose : bool
+        boolean indicating if output will be printed to the terminal
+
+    Returns
+    -------
+    status : str
+        a terminal status, or None when the url was resolved
+    detail : str
+        description of the status
+    update : dict
+        column values to change
+
+    """
+    repo, tag, asset = match.group("repo"), match.group("tag"), match.group("asset")
+
+    try:
+        assets = get_repo_assets(github_repo=repo, version=latest)
+    except Exception as exc:
+        return "error", f"{repo} {latest} assets: {type(exc).__name__}", {}
+
+    # the asset name often embeds the tag or version, so substitute both, then
+    # confirm the asset is actually in the release before using it
+    candidates = (_substitute_tag(asset, tag, latest), asset)
+    new_asset = next((name for name in candidates if name in assets), None)
+    if new_asset is None:
+        return (
+            "manual",
+            f"{repo} {tag} -> {latest}, no asset matching '{asset}' "
+            f"(release has: {', '.join(sorted(assets))})",
+            {},
+        )
+
+    if new_asset != asset and verbose:
+        print(f"    asset {asset} -> {new_asset}")
+
+    # the extracted directory often embeds the tag or version, for example
+    # 'mf6.6.3_linux'. a directory that embeds neither, such as '.', is
+    # left alone
+    update = {"url": assets[new_asset]}
+    dirname = _substitute_tag(row["dirname"], tag, latest)
+    if dirname != row["dirname"]:
+        update["dirname"] = dirname
+
+    return None, "", update
+
+
 def resolve_target(row, verbose=False):
     """Determine the latest release for a target.
 
@@ -193,45 +278,10 @@ def resolve_target(row, verbose=False):
         update["url"] = url.replace(f"/tags/{tag}.zip", f"/tags/{latest}.zip")
         update["dirname"] = archive_dirname(repo, latest)
     else:
-        asset = match.group("asset")
-        # the asset name often embeds the tag or version, so substitute both,
-        # then confirm the asset is actually in the release before using it
-        try:
-            assets = get_repo_assets(github_repo=repo, version=latest)
-        except Exception as exc:
-            return "error", f"{repo} {latest} assets: {type(exc).__name__}", {}
-
-        candidates = [
-            asset.replace(tag, latest).replace(
-                version_from_tag(tag), version_from_tag(latest)
-            ),
-            asset,
-        ]
-        new_asset = next((name for name in candidates if name in assets), None)
-        if new_asset is None:
-            return (
-                "manual",
-                f"{repo} {tag} -> {latest}, no asset matching '{asset}' "
-                f"(release has: {', '.join(sorted(assets))})",
-                {},
-            )
-        update["url"] = assets[new_asset]
-        if new_asset != asset and verbose:
-            print(f"    asset {asset} -> {new_asset}")
-
-        # the extracted directory often embeds the tag or version, for example
-        # 'mf6.6.3_linux'. a directory that embeds neither, such as '.', is
-        # left alone
-        dirname = row["dirname"]
-        for old, new in (
-            (tag, latest),
-            (version_from_tag(tag), version_from_tag(latest)),
-        ):
-            if old in dirname:
-                dirname = dirname.replace(old, new)
-                break
-        if dirname != row["dirname"]:
-            update["dirname"] = dirname
+        status, detail, asset_update = _resolve_asset(row, match, latest, verbose)
+        if status is not None:
+            return status, detail, {}
+        update.update(asset_update)
 
     # only update the version when the current one was derived from the old tag
     if row["version"] == version_from_tag(tag):
