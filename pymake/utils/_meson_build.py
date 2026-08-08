@@ -50,6 +50,7 @@ def meson_build(
     cc=None,
     appdir=".",
     build_dir="_build",
+    debug=None,
 ):
     """Build executable(s) using the meson build system.
 
@@ -68,6 +69,9 @@ def meson_build(
         current working directory)
     build_dir : str
         directory where meson build files are generated (default is _build)
+    debug : bool
+        boolean indicating if a debug executable will be built. the build
+        type is left to the meson build file when None (default is None)
 
     Returns
     -------
@@ -78,7 +82,7 @@ def meson_build(
     meson_test_path = Path(mesondir) / "meson.build"
     if meson_test_path.is_file():
         # setup meson
-        returncode = meson_setup(mesondir, fc=fc, cc=cc, appdir=appdir)
+        returncode = meson_setup(mesondir, fc=fc, cc=cc, appdir=appdir, debug=debug)
         # build and install executable(s) using meson
         if returncode == 0:
             returncode = meson_install(mesondir)
@@ -111,6 +115,7 @@ def meson_setup(
     cc="gcc",
     appdir=".",
     build_dir="_build",
+    debug=None,
 ):
     """Run meson setup command.
 
@@ -129,6 +134,9 @@ def meson_setup(
         current working directory)
     build_dir : str
         directory where meson build files are generated (default is _build)
+    debug : bool
+        boolean indicating if a debug executable will be built. the build
+        type is left to the meson build file when None (default is None)
 
     Returns
     -------
@@ -195,6 +203,12 @@ def meson_setup(
         command_list.append(f"--libdir={libdir}")
         command_list.append(f"--bindir={libdir}")
 
+        # the build type is only set for a meson build file pymake did not
+        # generate, because a generated one sets the optimization and debug
+        # options itself and a build type on the command line overrides them
+        if debug is not None:
+            command_list.append(f"--buildtype={'debug' if debug else 'release'}")
+
         if os.path.isdir(build_dir):
             command_list.append("--wipe")
 
@@ -222,6 +236,9 @@ def meson_install(
         path to the main meson.build file
     build_dir : str
         directory where meson build files are generated (default is _build)
+    debug : bool
+        boolean indicating if a debug executable will be built. the build
+        type is left to the meson build file when None (default is None)
 
     Returns
     -------
@@ -306,7 +323,9 @@ def _meson_build(
 
     """
     # use existing build file if it already exists
-    returncode = meson_build(mesondir, fc=fc, cc=cc, appdir=os.path.dirname(target))
+    returncode = meson_build(
+        mesondir, fc=fc, cc=cc, appdir=os.path.dirname(target), debug=debug
+    )
     if returncode == 0:
         return returncode
 
