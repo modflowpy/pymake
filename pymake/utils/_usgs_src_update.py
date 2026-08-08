@@ -702,8 +702,7 @@ def _update_mf6_files(
     arch: str,
     double: bool,
 ) -> None:
-    """
-    Update MODFLOW 6 source files to remove files with external dependencies.
+    """Update MODFLOW 6 source files to remove files with external dependencies.
     This was required for releases >= 6.4.2.
 
     Parameters
@@ -735,8 +734,7 @@ def _update_libmf6_files(
     arch: str,
     double: bool,
 ) -> None:
-    """
-    Update MODFLOW 6 shared object source files to remove files with external
+    """Update MODFLOW 6 shared object source files to remove files with external
     dependencies. This was required for releases >= 6.4.2.
 
     Parameters
@@ -766,8 +764,7 @@ def _update_mf6_external_dependencies(
     srcdir: str | os.PathLike,
     target: str = "mf6",
 ) -> None:
-    """
-    Remove MODFLOW 6 files with external library dependencies (PETSc, MPI, NetCDF).
+    """Remove MODFLOW 6 files with external library dependencies (PETSc, MPI, NetCDF).
 
 
     Parameters
