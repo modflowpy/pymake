@@ -67,3 +67,11 @@ platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
 gcc = "*"
 gxx = "*"
 gfortran = "*"
+
+# gcc uses libc++ on macOS, and the libc++ 22 headers need a c++ standard
+# newer than the one gcc defaults to, which breaks the c++ targets
+[feature.build.target.osx-64.dependencies]
+libcxx = "<22"
+
+[feature.build.target.osx-arm64.dependencies]
+libcxx = "<22"
