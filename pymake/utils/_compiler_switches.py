@@ -952,6 +952,11 @@ def _set_cflags(target, cc="gcc", argv=True, osname=None, verbose=False):
         cc = _get_base_compiler_name(cc)
 
         if target == "triangle":
+            # triangle declares its functions in the K&R style, which a c
+            # compiler defaulting to c23 rejects. gcc 15 and later default
+            # to c23
+            if cc in ("gcc", "clang"):
+                cflags += ["-std=gnu17"]
             if osname in ("linux", "darwin"):
                 if cc.startswith("g"):
                     cflags += ["-lm"]
