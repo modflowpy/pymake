@@ -356,20 +356,18 @@ def download_and_unzip(
         verbose=verbose,
     )
 
-    # get content length, if available
+    # get content length, if available. a url that is generated on request,
+    # such as a github tag archive, is sent chunked without a content length
     tag = "Content-length"
-    if tag in req.headers:
-        file_size = req.headers[tag]
-        len_file_size = len(file_size)
-        file_size = int(file_size)
+    file_size = int(req.headers.get(tag, 0))
 
-        bfmt = "{:" + f"{len_file_size}" + ",d}"
-        sbfmt = "{:>" + f"{len(bfmt.format(int(file_size)))}" + "s} bytes"
-        msg = f"   file size: {sbfmt.format(bfmt.format(int(file_size)))}"
-        if verbose:
-            print(msg)
-    else:
-        file_size = 0.0
+    # the formats are always defined because they are used to report the
+    # download progress whether or not the content length is known
+    len_file_size = len(str(file_size)) if file_size > 0 else 12
+    bfmt = "{:" + f"{len_file_size}" + ",d}"
+    sbfmt = "{:>" + f"{len(bfmt.format(file_size))}" + "s} bytes"
+    if file_size > 0 and verbose:
+        print(f"   file size: {sbfmt.format(bfmt.format(file_size))}")
 
     # download data from url
     for idx in range(max_requests):
@@ -415,7 +413,7 @@ def download_and_unzip(
                             sys.stdout.flush()
 
                 success = True
-        except:
+        except (requests.RequestException, OSError):
             # reestablish request
             req = _request_get(
                 url,
