@@ -14,7 +14,7 @@ usage: make-program [-h] [--exclude EXCLUDE] [-fc {ifort,mpiifort,gfortran,none}
 Download and build USGS MODFLOW and related programs.
 
 positional arguments:
-  targets               Program(s) to build. Options: crt, gridgen, libmf6, mf2000, mf2005, mf6, mflgr, mfnwt, mfusg, mfusg_gsi, mp6, mp7, mt3dms, mt3dusgs, sutra, swtv4, triangle, vs2dt, zbud6, zonbud3,
+  targets               Program(s) to build. Options: crt, gridgen, libmf6, mf2000, mf2005, mf6, mflgr, mfnwt, mfusg, mfusgt, mp6, mp7, mt3dms, mt3dusgs, sutra, swtv4, triangle, vs2dt, zbud6, zonbud3,
                         zonbudusg, :. Specifying the target to be ':' will build all of the programs. Multiple targets can be specified by separating individual targets by a comma (i.e., mf6,zbud6).
 
 options:

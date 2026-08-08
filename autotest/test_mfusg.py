@@ -11,7 +11,7 @@ import pymake
 @pytest.fixture(scope="module")
 def targets(module_tmpdir):
     ext = ".exe" if system() == "Windows" else ""
-    return [module_tmpdir / f"{name}{ext}" for name in ["mfusg", "mfusg_gsi"]]
+    return [module_tmpdir / f"{name}{ext}" for name in ["mfusg", "mfusgt"]]
 
 
 @pytest.fixture(scope="module")

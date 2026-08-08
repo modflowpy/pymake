@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Union
 
 from ..utils._compiler_switches import _get_base_compiler_name
-from ..utils.usgsprograms import usgs_program_data
+from ..utils.usgsprograms import renamed_targets, usgs_program_data
 
 
 def _get_function_names(module, select_name=None):
@@ -72,7 +72,8 @@ def _build_replace(targets):
         tgt = Path(target).with_suffix("").name.replace("dbl", "")
         if tgt.endswith("d") and tgt[:-1] in usgs_program_data.get_keys():
             tgt = tgt[:-1]
-        targets[idx] = tgt
+        # a renamed target is resolved so that it finds its update function
+        targets[idx] = renamed_targets.get(tgt, tgt)
 
     # get a dictionary of update functions
     funcs = _get_function_names(sys.modules[__name__], select_name="_update_")
@@ -318,8 +319,8 @@ def _update_mf2005_files(srcdir, fc, cc, arch, double):
     _update_pcg(srcdir)
 
 
-def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
-    """Update GSI version of MODFLOW-USG source files.
+def _update_mfusgt_files(srcdir, fc, cc, arch, double):
+    """Update MODFLOW-USG Transport source files.
 
     Parameters
     ----------
