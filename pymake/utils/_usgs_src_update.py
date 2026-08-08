@@ -319,6 +319,77 @@ def _update_mf2005_files(srcdir, fc, cc, arch, double):
     _update_pcg(srcdir)
 
 
+def _replace_lines(fpth, transform):
+    """Rewrite each line of a source file, if the file exists.
+
+    Parameters
+    ----------
+    fpth : Path
+        path to the source file
+    transform : function
+        function that takes a source line and returns the line to write
+
+    Returns
+    -------
+
+    """
+    if not fpth.exists():
+        return
+
+    with open(fpth) as f:
+        lines = f.readlines()
+    with open(fpth, "w") as f:
+        for line in lines:
+            f.write(transform(line))
+
+
+def _tag_replacer(tags):
+    """Build a line transform that substitutes each tag.
+
+    Parameters
+    ----------
+    tags : dict
+        text to replace mapped to its replacement
+
+    Returns
+    -------
+    transform : function
+        function that takes a source line and returns the line to write
+
+    """
+
+    def transform(line):
+        for key, value in tags.items():
+            if key in line:
+                line = line.replace(key, value)
+        return line
+
+    return transform
+
+
+def _mfusgt_deallocate(line):
+    """Comment out the ITHFLG deallocation, restoring it before LAYTYP.
+
+    Parameters
+    ----------
+    line : str
+        source line
+
+    Returns
+    -------
+    line : str
+        the line to write
+
+    """
+    tag, tag2 = "DEALLOCATE(ITHFLG)", "DEALLOCATE(LAYTYP)"
+    if tag in line:
+        line = line.replace(tag, f"!{tag}")
+        if tag2 in line:
+            line = line.replace(tag2, f"{tag}\n        {tag2}")
+
+    return line
+
+
 def _update_mfusgt_files(srcdir, fc, cc, arch, double):
     """Update MODFLOW-USG Transport source files.
 
@@ -340,7 +411,10 @@ def _update_mfusgt_files(srcdir, fc, cc, arch, double):
     -------
 
     """
-    tags = {
+    if not isinstance(srcdir, Path):
+        srcdir = Path(srcdir)
+
+    basu_tags = {
         "FMTARG = 'BINARY'": "FMTARG = 'UNFORMATTED'\n        ACCARG = 'STREAM'",
         ",SHARED,ACCESS='SEQUENTIAL'": ",ACCESS='SEQUENTIAL'",
         "FORM=FMTARG,SHARED,": "FORM=FMTARG,",
@@ -350,76 +424,20 @@ def _update_mfusgt_files(srcdir, fc, cc, arch, double):
         ", SHARE = 'DENYNONE',": ",",
         "FORM='FORMATTED',ACCESS='SEQUENTIAL',": "FORM='FORMATTED',ACCESS='SEQUENTIAL'",
     }
-
-    if not isinstance(srcdir, Path):
-        srcdir = Path(srcdir)
-
-    fpth = srcdir / "glo2basu1.f"
-    if fpth.exists():
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            for key, value in tags.items():
-                if key in line:
-                    line = line.replace(key, value)
-            f.write(line)
-        f.close()
-
-    tags = {",share='DENYNONE',": ","}
-
-    fpth = srcdir / "UpdtSt.for"
-    if fpth.exists():
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            for key, value in tags.items():
-                if key in line:
-                    line = line.replace(key, value)
-            f.write(line)
-        f.close()
-
-    tag = "DEALLOCATE(ITHFLG)"
-    tag2 = "DEALLOCATE(LAYTYP)"
-    fpth = srcdir / "gwf2bcf-lpf-u1.f"
-    if fpth.exists():
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            if tag in line:
-                line = line.replace(tag, f"!{tag}")
-                if tag2 in line:
-                    line = line.replace(tag2, f"{tag}\n        {tag2}")
-            f.write(line)
-        f.close()
-
-    tag = "FORM = 'BINARY',"
-    tag2 = "FORM = FORMC,"
-    fpth = srcdir / "gwt2dptu1.f"
-    if fpth.exists():
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            if tag in line:
-                line = line.replace(tag, tag2)
-            f.write(line)
-        f.close()
-
-    tag = "FORM = 'BINARY',"
-    tag2 = "FORM = FORM,"
-    fpth = srcdir / "glo2btnu1.f"
-    if fpth.exists():
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            if tag in line:
-                line = line.replace(tag, tag2)
-            f.write(line)
-        f.close()
+    _replace_lines(srcdir / "glo2basu1.f", _tag_replacer(basu_tags))
+    _replace_lines(
+        srcdir / "UpdtSt.for",
+        _tag_replacer({",share='DENYNONE',": ","}),
+    )
+    _replace_lines(srcdir / "gwf2bcf-lpf-u1.f", _mfusgt_deallocate)
+    _replace_lines(
+        srcdir / "gwt2dptu1.f",
+        _tag_replacer({"FORM = 'BINARY',": "FORM = FORMC,"}),
+    )
+    _replace_lines(
+        srcdir / "glo2btnu1.f",
+        _tag_replacer({"FORM = 'BINARY',": "FORM = FORM,"}),
+    )
 
     # rename "utl7u1 RD.f" to "utl7u1_RD.f"
     fpth = srcdir / "utl7u1 RD.f"
