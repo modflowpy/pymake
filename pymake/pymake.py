@@ -728,51 +728,54 @@ class Pymake:
         # set sharedobject for known targets
         self._set_sharedobject()
 
-        # set compiler flags
-        if self.fc != "none":
-            if self.fflags is None:
-                optlevel = (
-                    _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
-                    + " "
-                )
+        # set compiler flags. a meson build determines its own flags,
+        # either in the build file the target provides or in the one
+        # pymake generates, so only user flags are passed on for meson
+        if not self.meson:
+            if self.fc != "none":
+                if self.fflags is None:
+                    optlevel = (
+                        _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
+                        + " "
+                    )
 
-                self.fflags = optlevel + " ".join(
-                    _get_fortran_flags(
+                    self.fflags = optlevel + " ".join(
+                        _get_fortran_flags(
+                            self.target,
+                            self.fc,
+                            [],
+                            self.debug,
+                            double=self.double,
+                            sharedobject=self.sharedobject,
+                        )
+                    )
+            if self.cc != "none":
+                if self.cflags is None:
+                    optlevel = (
+                        _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
+                        + " "
+                    )
+
+                    self.cflags = optlevel + " ".join(
+                        _get_c_flags(
+                            self.target,
+                            self.cc,
+                            [],
+                            self.debug,
+                            sharedobject=self.sharedobject,
+                        )
+                    )
+            if self.syslibs is None:
+                self.syslibs = " ".join(
+                    _get_linker_flags(
                         self.target,
                         self.fc,
-                        [],
-                        self.debug,
-                        double=self.double,
-                        sharedobject=self.sharedobject,
-                    )
-                )
-        if self.cc != "none":
-            if self.cflags is None:
-                optlevel = (
-                    _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
-                    + " "
-                )
-
-                self.cflags = optlevel + " ".join(
-                    _get_c_flags(
-                        self.target,
                         self.cc,
                         [],
-                        self.debug,
+                        [],
                         sharedobject=self.sharedobject,
-                    )
+                    )[1]
                 )
-        if self.syslibs is None:
-            self.syslibs = " ".join(
-                _get_linker_flags(
-                    self.target,
-                    self.fc,
-                    self.cc,
-                    [],
-                    [],
-                    sharedobject=self.sharedobject,
-                )[1]
-            )
 
         self.target = self.update_target(self.target, modify_target=modify_exe_name)
 

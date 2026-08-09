@@ -51,6 +51,9 @@ def meson_build(
     appdir=".",
     build_dir="_build",
     debug=None,
+    fflags=None,
+    cflags=None,
+    syslibs=None,
 ):
     """Build executable(s) using the meson build system.
 
@@ -72,6 +75,12 @@ def meson_build(
     debug : bool
         boolean indicating if a debug executable will be built. the build
         type is left to the meson build file when None (default is None)
+    fflags : list
+        user provided list of fortran compiler flags (default is None)
+    cflags : list
+        user provided list of c or cpp compiler flags (default is None)
+    syslibs : list
+        user provided list of linker flags (default is None)
 
     Returns
     -------
@@ -82,7 +91,16 @@ def meson_build(
     meson_test_path = Path(mesondir) / "meson.build"
     if meson_test_path.is_file():
         # setup meson
-        returncode = meson_setup(mesondir, fc=fc, cc=cc, appdir=appdir, debug=debug)
+        returncode = meson_setup(
+            mesondir,
+            fc=fc,
+            cc=cc,
+            appdir=appdir,
+            debug=debug,
+            fflags=fflags,
+            cflags=cflags,
+            syslibs=syslibs,
+        )
         # build and install executable(s) using meson
         if returncode == 0:
             returncode = meson_install(mesondir)
@@ -116,6 +134,9 @@ def meson_setup(
     appdir=".",
     build_dir="_build",
     debug=None,
+    fflags=None,
+    cflags=None,
+    syslibs=None,
 ):
     """Run meson setup command.
 
@@ -137,6 +158,12 @@ def meson_setup(
     debug : bool
         boolean indicating if a debug executable will be built. the build
         type is left to the meson build file when None (default is None)
+    fflags : list
+        user provided list of fortran compiler flags (default is None)
+    cflags : list
+        user provided list of c or cpp compiler flags (default is None)
+    syslibs : list
+        user provided list of linker flags (default is None)
 
     Returns
     -------
@@ -209,6 +236,19 @@ def meson_setup(
         if debug is not None:
             command_list.append(f"--buildtype={'debug' if debug else 'release'}")
 
+        # pass the flags the user asked for to the meson build file. the
+        # flags for a language the build file does not use are ignored
+        for option, flags in (
+            ("fortran_args", fflags),
+            ("c_args", cflags),
+            ("fortran_link_args", syslibs),
+            ("c_link_args", syslibs),
+        ):
+            if flags:
+                if isinstance(flags, str):
+                    flags = flags.split()
+                command_list.append(f"-D{option}={' '.join(flags)}")
+
         if os.path.isdir(build_dir):
             command_list.append("--wipe")
 
@@ -239,6 +279,12 @@ def meson_install(
     debug : bool
         boolean indicating if a debug executable will be built. the build
         type is left to the meson build file when None (default is None)
+    fflags : list
+        user provided list of fortran compiler flags (default is None)
+    cflags : list
+        user provided list of c or cpp compiler flags (default is None)
+    syslibs : list
+        user provided list of linker flags (default is None)
 
     Returns
     -------
@@ -324,7 +370,14 @@ def _meson_build(
     """
     # use existing build file if it already exists
     returncode = meson_build(
-        mesondir, fc=fc, cc=cc, appdir=os.path.dirname(target), debug=debug
+        mesondir,
+        fc=fc,
+        cc=cc,
+        appdir=os.path.dirname(target),
+        debug=debug,
+        fflags=fflags,
+        cflags=cflags,
+        syslibs=syslibs,
     )
     if returncode == 0:
         return returncode
