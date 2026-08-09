@@ -4,6 +4,7 @@ releases.
 """
 
 import os
+import re
 import shutil
 import sys
 import types
@@ -644,6 +645,47 @@ def _update_mp7_files(srcdir, fc, cc, arch, double):
             continue
         f.write(line)
     f.close()
+
+
+def _update_sutra_files(srcdir, fc, cc, arch, double):
+    """Update SUTRA source files.
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    fc : str
+        fortran compiler
+    cc : str
+        c/c++ compiler
+    arch : str
+        architecture
+    double : bool
+        boolean indicating if compiler switches are used to build a
+        double precision target
+
+    Returns
+    -------
+
+    """
+    # a fixed form source line carries an identifier after column 72, which
+    # a compiler ignores. meson does not, and fails to find the module a
+    # module statement declares, so the modules are built in the wrong order
+    if not isinstance(srcdir, Path):
+        srcdir = Path(srcdir)
+
+    module = re.compile(r"^ *module +\w+", re.IGNORECASE)
+    for fpth in sorted(srcdir.glob("*.f")):
+        lines = fpth.read_text(errors="replace").splitlines()
+        updated = False
+        for idx, line in enumerate(lines):
+            if len(line) > 72 and module.match(line):
+                lines[idx] = line[:72].rstrip()
+                updated = True
+        if updated:
+            fpth.write_text("\n".join(lines) + "\n")
+
+    return
 
 
 def _update_vs2dt_files(srcdir, fc, cc, arch, double):
