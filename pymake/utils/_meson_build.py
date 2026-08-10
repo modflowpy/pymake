@@ -421,6 +421,27 @@ def _meson_build(
     )
 
 
+def _meson_path(pth):
+    """Format a path so that it can be written to a meson build file.
+
+    A meson build file is read as text, so a Windows separator starts an
+    escape sequence, and a source directory such as 'true-binary' becomes a
+    tab. Meson accepts a forward slash on every platform.
+
+    Parameters
+    ----------
+    pth : str or Path
+        path to format
+
+    Returns
+    -------
+    pth : str
+        path with a forward slash separator
+
+    """
+    return Path(pth).as_posix()
+
+
 def _create_main_meson_build(
     mesondir,
     target,
@@ -496,7 +517,7 @@ def _create_main_meson_build(
         c/cpp compiler that meson will use. None if no c/cpp source files
 
     """
-    appdir = os.path.relpath(os.path.dirname(target), mesondir)
+    appdir = _meson_path(os.path.relpath(os.path.dirname(target), mesondir))
     target = os.path.splitext(os.path.basename(target))[0]
     osname = _get_osname()
 
@@ -668,7 +689,7 @@ def _create_main_meson_build(
         # add source directories
         line = ""
         for key, value in source_path_dict.items():
-            pth = os.path.relpath(value, mesondir)
+            pth = _meson_path(os.path.relpath(value, mesondir))
             line += f"subdir('{pth}')\n"
         line += "\n"
         f.write(line)
@@ -681,7 +702,7 @@ def _create_main_meson_build(
                 for root, dirs, files in os.walk(value):
                     for file in files:
                         if file.endswith(".h") or file.endswith(".hpp"):
-                            pth = os.path.relpath(root, mesondir)
+                            pth = _meson_path(os.path.relpath(root, mesondir))
                             include_dirs.append(pth)
                             break
             if len(include_dirs) > 0:
