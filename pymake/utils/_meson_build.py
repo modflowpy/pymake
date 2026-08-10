@@ -1,6 +1,7 @@
+"""Private functions to build a target with the meson build system."""
+
 import json
 import os
-import subprocess
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -337,11 +338,12 @@ def _rename_provided_target(mesondir, target, build_dir="_build"):
     if exe.is_file():
         return
 
-    command = ["meson", "introspect", "--installed", str(Path(mesondir) / build_dir)]
+    # meson writes what it installed to the build directory, so the file to
+    # rename does not have to be guessed from the directory it was put in
+    intro = Path(mesondir) / build_dir / "meson-info" / "intro-installed.json"
     try:
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
-        installed = [Path(pth) for pth in json.loads(result.stdout).values()]
-    except (OSError, subprocess.SubprocessError, json.JSONDecodeError):
+        installed = [Path(pth) for pth in json.loads(intro.read_text()).values()]
+    except (OSError, json.JSONDecodeError):
         return
 
     if len(installed) != 1:
