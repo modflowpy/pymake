@@ -463,12 +463,14 @@ class Pymake:
         return
 
     def _set_mesondir(self):
-        """Set mesondir to a downloaded meson build file. Default is unchanged.
+        """Set mesondir to the directory a target was downloaded to.
 
-        A number of the distributed source releases provide their own meson
-        build file, which is preferred over the one pymake generates. The
-        directory is only changed when mesondir is still the default, so that
-        a mesondir set by the user is respected.
+        A meson build reads the build file a target provides, where there is
+        one, and writes a generated build file where there is not, so both
+        belong with the source. The default is the current directory, which
+        two builds of different targets would share. The directory is only
+        changed when mesondir is still the default, so that a mesondir set by
+        the user is respected.
 
         Returns
         -------
@@ -483,10 +485,11 @@ class Pymake:
         if self.download_dir is None:
             return
 
-        if (Path(self.download_dir) / "meson.build").is_file():
-            self.mesondir = self.download_dir
-            if self.verbose:
-                print(f"using the meson build file in...'{self.mesondir}'")
+        self.mesondir = self.download_dir
+        if self.verbose:
+            provided = (Path(self.download_dir) / "meson.build").is_file()
+            action = "using" if provided else "writing"
+            print(f"{action} the meson build file in...'{self.mesondir}'")
 
     def _set_include_subdirs(self):
         """Determine if sub-directories in the source directory should be
