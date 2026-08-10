@@ -714,15 +714,20 @@ def _create_main_meson_build(
                 f.write(line)
 
         # add build command
+        # meson links a target that has both c and fortran sources with the
+        # c compiler, and a fortran main is left in the fortran runtime by
+        # some compilers, so the language that has the main program links
         if sharedobject:
             line = (
                 f"library('{target}', sources{include_text}"
                 ", install: true, name_prefix: '', "
+                f"link_language: '{linker_language}', "
                 f"install_dir: '{appdir}')\n\n"
             )
         else:
             line = (
                 f"executable('{target}', sources{include_text}"
+                f", link_language: '{linker_language}'"
                 f", install: true, install_dir: '{appdir}')\n\n"
             )
         f.write(line)
