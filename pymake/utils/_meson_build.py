@@ -1,3 +1,6 @@
+"""Private functions to build a target with the meson build system."""
+
+import json
 import os
 from contextlib import contextmanager
 from pathlib import Path
@@ -308,6 +311,50 @@ def meson_install(
     return returncode
 
 
+def _rename_provided_target(mesondir, target, build_dir="_build"):
+    """Rename the executable a provided meson build file installed.
+
+    A meson build file a target provides names the executable it builds, and
+    the name is not always the name of the target. mt3d-usgs builds mt3dusg
+    rather than mt3dusgs, so the target that was asked for is never produced.
+    The installed file is renamed when the target does not exist and the
+    build installed a single file, so that the file to rename is not in
+    doubt.
+
+    Parameters
+    ----------
+    mesondir : str
+        path to the main meson.build file
+    target : str
+        path for the executable that was asked for
+    build_dir : str
+        directory where meson build files are generated (default is _build)
+
+    Returns
+    -------
+
+    """
+    exe = Path(target)
+    if exe.is_file():
+        return
+
+    # meson writes what it installed to the build directory, so the file to
+    # rename does not have to be guessed from the directory it was put in
+    intro = Path(mesondir) / build_dir / "meson-info" / "intro-installed.json"
+    try:
+        installed = [Path(pth) for pth in json.loads(intro.read_text()).values()]
+    except (OSError, json.JSONDecodeError):
+        return
+
+    if len(installed) != 1:
+        return
+
+    built = installed[0]
+    if built.is_file() and built.name != exe.name:
+        print(f"renaming...'{built.name}' to '{exe.name}'")
+        built.replace(exe)
+
+
 def _meson_build(
     target,
     srcdir,
@@ -380,6 +427,7 @@ def _meson_build(
         syslibs=syslibs,
     )
     if returncode == 0:
+        _rename_provided_target(mesondir, target)
         return returncode
 
     # create meson files

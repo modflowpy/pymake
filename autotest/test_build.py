@@ -24,11 +24,6 @@ if "win" in test_ostag and test_fc_env in ("ifort",):
 targets = [t for t in targets if t not in targets_exclude]
 targets_meson = [t for t in targets if t not in meson_exclude]
 
-# a target whose meson build file names the executable something other than
-# the target, so the executable pymake asks for is not the one that is built.
-# mt3d-usgs names it mt3dusg
-meson_name_mismatch = ("mt3dusgs",)
-
 # a target whose meson build file cannot be read, so pymake falls back to a
 # generated one. each of these reads an option its build file does not
 # declare, and meson stops with 'Option double does not exist'
@@ -122,8 +117,6 @@ def test_meson_artifacts(function_tmpdir, target: str) -> None:
         prog_data = pymake.usgs_program_data.get_target(target)
         suffix = shared_ext if prog_data.shared_object else ext
         exe = Path(function_tmpdir) / f"{target}{suffix}"
-        if target in meson_name_mismatch and not exe.is_file():
-            pytest.xfail(f"{target} is built under another name by its build file")
         assert exe.is_file(), f"{exe.name} was not built by meson"
 
         if before is not None and target not in meson_provided_unusable:
