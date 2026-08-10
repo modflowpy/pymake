@@ -15,14 +15,8 @@ targets = pymake.usgs_program_data.get_keys(current=True)
 targets_exclude = []
 test_ostag = get_ostag()
 test_fc_env = os.environ.get("FC")
-if "win" in test_ostag:
-    meson_exclude = ["mt3dms", "vs2dt", "triangle", "gridgen"]
-elif "win" not in test_ostag and test_fc_env in ("ifort",):
-    meson_exclude = ["mf2000", "mf2005", "swtv4", "mflgr"]
-else:
-    meson_exclude = []
+meson_exclude = []
 if "win" in test_ostag and test_fc_env in ("ifort",):
-    meson_exclude += ["mf2000", "mf2005", "swtv4", "mflgr"]
     targets_exclude = ["gridgen"]
 
 targets = [t for t in targets if t not in targets_exclude]
