@@ -1,11 +1,13 @@
 import os
 import sys
 import time
+from pathlib import Path
 from platform import system
 
 import pytest
 from flaky import flaky
 from modflow_devtools.misc import get_ostag, set_dir
+from modflow_devtools.ostags import get_binary_suffixes
 
 import pymake
 
@@ -21,6 +23,16 @@ if "win" in test_ostag and test_fc_env in ("ifort",):
 
 targets = [t for t in targets if t not in targets_exclude]
 targets_meson = [t for t in targets if t not in meson_exclude]
+
+# a target whose meson build file names the executable something other than
+# the target, so the executable pymake asks for is not the one that is built.
+# mt3d-usgs names it mt3dusg
+meson_name_mismatch = ("mt3dusgs",)
+
+# a target whose meson build file cannot be read, so pymake falls back to a
+# generated one. each of these reads an option its build file does not
+# declare, and meson stops with 'Option double does not exist'
+meson_provided_unusable = ("zonbud", "zonbudusg", "mfusgt")
 
 make_exclude = ("libmf6", "gridgen", "mf2000", "swtv4", "mflgr")
 targets_make = [t for t in targets if t not in make_exclude]
@@ -76,6 +88,49 @@ def test_meson_build(function_tmpdir, target: str) -> None:
         assert pymake.build_apps(target, verbose=True, clean=False, meson=True) == 0, (
             f"could not compile {target}"
         )
+
+
+@pytest.mark.base
+@flaky(max_runs=RERUNS)
+@pytest.mark.parametrize("target", targets_meson)
+def test_meson_artifacts(function_tmpdir, target: str) -> None:
+    """Check what a meson build built, and which build file built it.
+
+    A build that returns zero says nothing about what it produced. The
+    executable a target is asked for has to exist, and a build file a target
+    provides has to be the one that was used, rather than being replaced by
+    a generated one when it could not be read.
+    """
+    fc = os.environ.get("FC", "gfortran")
+    cc = os.environ.get("CC", "gcc")
+    pymake.linker_update_environment(cc=cc, fc=fc)
+    with set_dir(function_tmpdir):
+        pm = pymake.Pymake(verbose=True)
+        pm.target = target
+        pm.meson = True
+        pm.appdir = "."
+        pm.download_target(target, download_path=".")
+
+        # a build file the target provides is read before the build, so that
+        # it can be compared with the build file that was used
+        provided = Path(pm.download_dir) / "meson.build"
+        before = provided.read_bytes() if provided.is_file() else None
+
+        assert pm.build() == 0, f"could not build {target}"
+
+        ext, shared_ext = get_binary_suffixes()
+        prog_data = pymake.usgs_program_data.get_target(target)
+        suffix = shared_ext if prog_data.shared_object else ext
+        exe = Path(function_tmpdir) / f"{target}{suffix}"
+        if target in meson_name_mismatch and not exe.is_file():
+            pytest.xfail(f"{target} is built under another name by its build file")
+        assert exe.is_file(), f"{exe.name} was not built by meson"
+
+        if before is not None and target not in meson_provided_unusable:
+            assert provided.read_bytes() == before, (
+                f"the meson build file {target} provides was replaced by a "
+                "generated one, so the build fell back"
+            )
 
 
 @pytest.mark.base
