@@ -799,7 +799,11 @@ class Pymake:
             # those files and excludes them from the build itself, so they
             # are only removed when pymake defines the build
             external_only = self._get_base_target() in ("mf6", "libmf6", "zbud6")
-            provided_meson = self.meson and self.mesondir == self.download_dir
+            # a makefile is written from the source pymake finds, so the
+            # files are removed for a makefile whichever build file is used
+            provided_meson = (
+                self.meson and self.mesondir == self.download_dir and not self.makefile
+            )
 
             replace_function = _build_replace(self.target)
             if external_only and provided_meson:
