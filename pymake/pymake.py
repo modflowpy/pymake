@@ -790,8 +790,17 @@ class Pymake:
             if self.download is not None:
                 self.download_url()
 
-            # update source code, if necessary
+            # update source code, if necessary. the source update for the
+            # MODFLOW 6 targets only removes the files that need an external
+            # library, and the meson build file MODFLOW 6 provides lists
+            # those files and excludes them from the build itself, so they
+            # are only removed when pymake defines the build
+            external_only = self._get_base_target() in ("mf6", "libmf6", "zbud6")
+            provided_meson = self.meson and self.mesondir == self.download_dir
+
             replace_function = _build_replace(self.target)
+            if external_only and provided_meson:
+                replace_function = None
             if replace_function is not None:
                 if self.verbose:
                     msg = f"replacing select source files for {self.target}\n"
