@@ -301,10 +301,11 @@ def _get_standard_arg_dict():
         },
         "meson": {
             "tag": ("--meson",),
-            "help": """Use meson to build executable. (default is False)""",
-            "default": False,
+            "help": """Use meson to build executable. Use --no-meson to build
+                         with the pymake build engine. (default is True)""",
+            "default": True,
             "choices": None,
-            "action": "store_true",
+            "action": argparse.BooleanOptionalAction,
         },
         "mesondir": {
             "tag": ("--mesondir",),

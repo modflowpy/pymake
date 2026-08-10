@@ -66,6 +66,8 @@ def test_build(function_tmpdir, target: str) -> None:
         pm = pymake.Pymake(verbose=True)
         pm.target = target
         pm.inplace = True
+        # meson is the default, so the pymake build engine is asked for here
+        pm.meson = False
         fc = os.environ.get("FC", "gfortran")
         assert pymake.build_apps(target, pm, verbose=True, clean=False) == 0, (
             f"could not compile {target}"
