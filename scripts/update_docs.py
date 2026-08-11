@@ -14,6 +14,10 @@ import os
 import sys
 from pathlib import Path
 
+from pymake.cmds.build import build_parser as make_program_parser
+from pymake.cmds.mfpymakecli import examples
+from pymake.pymake_parser import build_parser as mfpymake_parser
+
 # the width the help is rendered at, so that the output does not depend on
 # the terminal the script is run in
 COLUMNS = "100"
@@ -52,14 +56,9 @@ def _help_text(prog):
 
     """
     if prog == "mfpymake":
-        from pymake.cmds.mfpymakecli import examples
-        from pymake.pymake_parser import build_parser
-
-        parser_obj = build_parser(examples=examples(prog), prog=prog)
+        parser_obj = mfpymake_parser(examples=examples(prog), prog=prog)
     elif prog == "make-program":
-        from pymake.cmds.build import build_parser
-
-        parser_obj = build_parser(prog=prog)
+        parser_obj = make_program_parser(prog=prog)
     else:
         raise ValueError(f"unknown program ({prog})")
 
