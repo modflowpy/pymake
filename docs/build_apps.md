@@ -8,7 +8,7 @@ and options can be determined by executing:
 $ make-program --help
 
 usage: make-program [-h] [--exclude EXCLUDE] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dbl] [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep] [--zip ZIP]
-                    [--meson]
+                    [--meson | --no-meson]
                     targets
 
 Download and build USGS MODFLOW and related programs.
@@ -37,7 +37,8 @@ options:
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)
   --zip ZIP             Zip built executable. (default is None)
-  --meson               Use meson to build executable. (default is False)
+  --meson, --no-meson   Use meson to build executable. Use --no-meson to
+                        build with the pymake build engine. (default is True)
 
 Examples:
 

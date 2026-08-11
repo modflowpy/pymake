@@ -31,7 +31,7 @@ usage: mfpymake [-h] [-fc {ifort,mpiifort,gfortran,none}]
                 [-dr] [-sd] [-ff FFLAGS] [-cf CFLAGS] [-sl {-lc,-lm}] [-mf]
                 [-md] [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES]
                 [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace]
-                [--networkx] [--meson] [--mesondir]
+                [--networkx] [--meson | --no-meson] [--mesondir MESONDIR]
                 srcdir target
 
 This is the pymake program for compiling fortran, c, and c++ source
@@ -107,7 +107,8 @@ optional arguments:
   --networkx            Use networkx package to build Directed Acyclic Graph
                         use to determine the order source files are compiled
                         in. (default is False)
-  --meson               Use meson to build executable. (default is False)
+  --meson, --no-meson   Use meson to build executable. Use --no-meson to
+                        build with the pymake build engine. (default is True)
   --mesondir            meson directory. (default is '.')
 
 Note that the source directory should not contain any bad 
