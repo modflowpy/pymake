@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 from platform import system
 from textwrap import dedent
@@ -117,13 +118,12 @@ def test_mfpymake(function_tmpdir, meson: bool) -> None:
 @pytest.mark.base
 def test_docs_current():
     """The command line help in the documentation must match the parsers."""
-    import importlib.util
-
     root = Path(__file__).parent.parent
-    script = root / "scripts" / "update_docs.py"
-    spec = importlib.util.spec_from_file_location("update_docs", script)
-    update_docs = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(update_docs)
+    sys.path.insert(0, str(root / "scripts"))
+    try:
+        import update_docs
+    finally:
+        sys.path.pop(0)
 
     stale = []
     for path, prog, fence in update_docs._blocks():
