@@ -56,7 +56,7 @@ default values.
 
 ```
 usage: mfpymake [-h] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e] [-dr] [-sd] [-ff FFLAGS]
-                [-cf CFLAGS] [-sl {-lc,-lm}] [-mf] [-md] [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace] [--networkx] [--meson] [--mesondir]
+                [-cf CFLAGS] [-sl {-lc,-lm}] [-mf] [-md] [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace] [--networkx] [--meson | --no-meson] [--mesondir MESONDIR]
                 srcdir target
 
 This is the pymake program for compiling fortran, c, and c++ source
@@ -107,7 +107,7 @@ options:
   --zip ZIP             Zip built executable. (default is None)
   --inplace             Source files in srcdir are used directly. (default is False)
   --networkx            Use networkx package to build Directed Acyclic Graph use to determine the order source files are compiled in. (default is False)
-  --meson               Use meson to build executable. (default is False)
+  --meson, --no-meson   Use meson to build executable. Use --no-meson to build with the pymake build engine. (default is True)
   --mesondir            meson directory. (default is '.')
 
 Note that the source directory should not contain any bad 
