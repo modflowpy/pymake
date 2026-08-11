@@ -119,6 +119,8 @@ class Pymake:
         self.networkx = None
         self.meson = None
         self.mesondir = None
+        # the mesondir pymake set, so that one the user set is not replaced
+        self._set_mesondir_value = None
 
         # set class variables with default values from arg_dict
         for key, value in _get_standard_arg_dict().items():
@@ -479,13 +481,21 @@ class Pymake:
         if not self.meson:
             return
 
-        if self.mesondir != _get_standard_arg_dict()["mesondir"]["default"]:
+        # a mesondir pymake set for a target it built before is replaced,
+        # since that download directory is removed when the target is done,
+        # and a mesondir the user set is respected
+        pymake_set = (
+            _get_standard_arg_dict()["mesondir"]["default"],
+            self._set_mesondir_value,
+        )
+        if self.mesondir not in pymake_set:
             return
 
         if self.download_dir is None:
             return
 
         self.mesondir = self.download_dir
+        self._set_mesondir_value = self.download_dir
         if self.verbose:
             provided = (Path(self.download_dir) / "meson.build").is_file()
             action = "using" if provided else "writing"
@@ -801,8 +811,14 @@ class Pymake:
             external_only = self._get_base_target() in ("mf6", "libmf6", "zbud6")
             # a makefile is written from the source pymake finds, so the
             # files are removed for a makefile whichever build file is used
+            # the files are only kept for a build file the target provides,
+            # which has to be there. a generated build file lists the source
+            # files pymake finds, so it cannot build them either
             provided_meson = (
-                self.meson and self.mesondir == self.download_dir and not self.makefile
+                self.meson
+                and self.mesondir == self.download_dir
+                and not self.makefile
+                and (Path(self.mesondir) / "meson.build").is_file()
             )
 
             replace_function = _build_replace(self.target)
