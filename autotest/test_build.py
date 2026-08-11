@@ -24,11 +24,6 @@ if "win" in test_ostag and test_fc_env in ("ifort",):
 targets = [t for t in targets if t not in targets_exclude]
 targets_meson = [t for t in targets if t not in meson_exclude]
 
-# a target whose meson build file cannot be read, so pymake falls back to a
-# generated one. each of these reads an option its build file does not
-# declare, and meson stops with 'Option double does not exist'
-meson_provided_unusable = ("zonbud", "zonbudusg", "mfusgt")
-
 make_exclude = ("libmf6", "gridgen", "mf2000", "swtv4", "mflgr")
 targets_make = [t for t in targets if t not in make_exclude]
 
@@ -121,7 +116,7 @@ def test_meson_artifacts(function_tmpdir, target: str) -> None:
         exe = Path(function_tmpdir) / f"{target}{suffix}"
         assert exe.is_file(), f"{exe.name} was not built by meson"
 
-        if before is not None and target not in meson_provided_unusable:
+        if before is not None:
             assert provided.read_bytes() == before, (
                 f"the meson build file {target} provides was replaced by a "
                 "generated one, so the build fell back"
