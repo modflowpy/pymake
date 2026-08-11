@@ -14,6 +14,7 @@ Available functionality includes:
 """
 
 import os
+import platform as _platform
 import shutil
 import sys
 import tarfile
@@ -551,8 +552,8 @@ def _get_zipname(platform):
     ----------
     platform : str
         Platform that will run the executables.  Valid values include mac,
-        linux, win32 and win64.  If platform is None, then routine will
-        download the latest asset from the github repository.
+        macarm, linux, win32 and win64.  If platform is None, then routine
+        will download the latest asset from the github repository.
 
     Returns
     -------
@@ -562,7 +563,11 @@ def _get_zipname(platform):
     """
     if platform is None:
         if sys.platform.lower() == "darwin":
-            platform = "mac"
+            # only arm64 assets are built for macOS
+            if _platform.machine().lower() in ("arm64", "aarch64"):
+                platform = "macarm"
+            else:
+                platform = "mac"
         elif sys.platform.lower().startswith("linux"):
             platform = "linux"
         elif "win" in sys.platform.lower():
@@ -576,7 +581,7 @@ def _get_zipname(platform):
             raise Exception(errmsg)
     else:
         msg = f"unknown platform detected ({platform})"
-        success = platform in ["mac", "linux", "win32", "win64"]
+        success = platform in ["mac", "macarm", "linux", "win32", "win64"]
         if not success:
             raise ValueError(msg)
     return f"{platform}.zip"
@@ -631,7 +636,7 @@ def _get_default_json(tag_name=None):
         url += f"{tag_name}/"
 
     # define asset names and paths for assets
-    names = ["mac.zip", "linux.zip", "win32.zip", "win64.zip"]
+    names = ["mac.zip", "macarm.zip", "linux.zip", "win32.zip", "win64.zip"]
     paths = [url + p for p in names]
 
     assets_list = []
@@ -869,8 +874,8 @@ def getmfexes(
         None the github repo will be queried for the version number.
     platform : str
         Platform that will run the executables.  Valid values include mac,
-        linux, win32 and win64.  If platform is None, then routine will
-        download the latest asset from the github repository.
+        macarm, linux, win32 and win64.  If platform is None, then routine
+        will download the latest asset from the github repository.
     exes : str or list of strings
         executable or list of executables to retain
     verbose : bool
@@ -951,8 +956,8 @@ def getmfnightly(
         Location to put the executables (default is current working directory)
     platform : str
         Platform that will run the executables.  Valid values include mac,
-        linux, win32 and win64.  If platform is None, then routine will
-        download the latest asset from the github repository.
+        macarm, linux, win32 and win64.  If platform is None, then routine
+        will download the latest asset from the github repository.
     exes : str or list of strings
         executable or list of executables to retain
     verbose : bool
