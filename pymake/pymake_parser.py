@@ -357,17 +357,20 @@ def _parser_setup(parser_obj, value, reset_default=False):
     return parser_obj
 
 
-def parser(examples=None):
-    """Construct the parser and return argument values.
+def build_parser(examples=None, prog=None):
+    """Construct the mfpymake parser.
 
     Parameters
     ----------
     examples : str
+    prog : str
+        program name shown in the usage message (default is the command
+        that was run)
 
     Returns
     -------
-    args : Namespace object
-        Namespace with command line arguments
+    parser_obj : ArgumentParser object
+        parser for the mfpymake command line arguments
 
     """
     epilog = dedent("""\
@@ -383,12 +386,28 @@ def parser(examples=None):
         epilog += examples
     description = __description__
     parser_obj = argparse.ArgumentParser(
+        prog=prog,
         description=description,
         epilog=epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     for _, value in _get_standard_arg_dict().items():
-        my_parser = _parser_setup(parser_obj, value)
-    parser_args = my_parser.parse_args()
-    return parser_args
+        parser_obj = _parser_setup(parser_obj, value)
+    return parser_obj
+
+
+def parser(examples=None):
+    """Construct the parser and return argument values.
+
+    Parameters
+    ----------
+    examples : str
+
+    Returns
+    -------
+    args : Namespace object
+        Namespace with command line arguments
+
+    """
+    return build_parser(examples=examples).parse_args()

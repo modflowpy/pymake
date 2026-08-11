@@ -55,8 +55,11 @@ The help message identifies required positional arguments and optional arguments
 default values.
 
 ```
-usage: mfpymake [-h] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e] [-dr] [-sd] [-ff FFLAGS]
-                [-cf CFLAGS] [-sl {-lc,-lm}] [-mf] [-md] [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace] [--networkx] [--meson | --no-meson] [--mesondir MESONDIR]
+usage: mfpymake [-h] [-fc FC] [-cc CC] [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e]
+                [-dr] [-sd] [-ff FFLAGS] [-cf CFLAGS] [-sl {-lc,-lm}] [-mf] [-md MAKEFILEDIR]
+                [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v]
+                [--keep] [--zip ZIP] [--inplace] [--networkx] [--meson | --no-meson]
+                [--mesondir MESONDIR]
                 srcdir target
 
 This is the pymake program for compiling fortran, c, and c++ source
@@ -70,35 +73,49 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -fc {ifort,mpiifort,gfortran,none}
-                        Fortran compiler to use. (default is gfortran)
-  -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
-                        C/C++ compiler to use. (default is gcc)
+  -fc FC                Fortran compiler to use. A version suffix, for example gfortran-13, can be
+                        included. Valid compilers are ifort, mpiifort, gfortran, and none.
+                        (default is gfortran)
+  -cc CC                C/C++ compiler to use. A version suffix, for example gcc-13, can be
+                        included. Valid compilers are gcc, clang, clang++, icc, icl, mpiicc, g++,
+                        cl, and none. (default is gcc)
   -ar {ia32,ia32_intel64,intel64}, --arch {ia32,ia32_intel64,intel64}
-                        Architecture to use for Intel and Microsoft compilers on Windows. (default is intel64)
-  -mc, --makeclean      Clean temporary object, module, and source files when done. (default is False)
+                        Architecture to use for Intel and Microsoft compilers on Windows. (default
+                        is intel64)
+  -mc, --makeclean      Clean temporary object, module, and source files when done. (default is
+                        False)
   -dbl, --double        Force double precision. (default is False)
   -dbg, --debug         Create debug version. (default is False)
-  -e, --expedite        Only compile out of date source files. Clean must not have been used on previous build. (default is False)
-  -dr, --dryrun         Do not actually compile. Files will be deleted, if --makeclean is used. Does not work yet for ifort. (default is False)
+  -e, --expedite        Only compile out of date source files. Clean must not have been used on
+                        previous build. (default is False)
+  -dr, --dryrun         Do not actually compile. Files will be deleted, if --makeclean is used.
+                        Does not work yet for ifort. (default is False)
   -sd, --subdirs        Include source files in srcdir subdirectories. (default is None)
   -ff FFLAGS, --fflags FFLAGS
-                        Additional Fortran compiler flags. Fortran compiler flags should be enclosed in quotes and start with a blank space or separated from the name (-ff or --fflags) with a equal sign
-                        (-ff='-O3'). (default is None)
+                        Additional Fortran compiler flags. Fortran compiler flags should be
+                        enclosed in quotes and start with a blank space or separated from the name
+                        (-ff or --fflags) with a equal sign (-ff='-O3'). (default is None)
   -cf CFLAGS, --cflags CFLAGS
-                        Additional C/C++ compiler flags. C/C++ compiler flags should be enclosed in quotes and start with a blank space or separated from the name (-cf or --cflags) with a equal sign
-                        (-cf='-O3'). (default is None)
+                        Additional C/C++ compiler flags. C/C++ compiler flags should be enclosed
+                        in quotes and start with a blank space or separated from the name (-cf or
+                        --cflags) with a equal sign (-cf='-O3'). (default is None)
   -sl {-lc,-lm}, --syslibs {-lc,-lm}
-                        Linker system libraries. Linker libraries should be enclosed in quotes and start with a blank space or separated from the name (-sl or --syslibs) with a equal sign (-sl='-libgcc').
-                        (default is None)
+                        Linker system libraries. Linker libraries should be enclosed in quotes and
+                        start with a blank space or separated from the name (-sl or --syslibs)
+                        with a equal sign (-sl='-libgcc'). (default is None)
   -mf, --makefile       Create a GNU make makefile. (default is False)
-  -md, --makefiledir    GNU make makefile directory. (default is '.')
+  -md MAKEFILEDIR, --makefiledir MAKEFILEDIR
+                        GNU make makefile directory. (default is '.')
   -cs COMMONSRC, --commonsrc COMMONSRC
                         Additional directory with common source files. (default is None)
   -ef EXTRAFILES, --extrafiles EXTRAFILES
-                        List of extra source files to include in the compilation. extrafiles can be either a list of files or the name of a text file that contains a list of files. (default is None)
+                        List of extra source files to include in the compilation. extrafiles can
+                        be either a list of files or the name of a text file that contains a list
+                        of files. (default is None)
   -exf EXCLUDEFILES, --excludefiles EXCLUDEFILES
-                        List of extra source files to exclude from the compilation. excludefiles can be either a list of files or the name of a text file that contains a list of files. (default is None)
+                        List of extra source files to exclude from the compilation. excludefiles
+                        can be either a list of files or the name of a text file that contains a
+                        list of files. (default is None)
   -so, --sharedobject   Create shared object or dll on Windows. (default is False)
   -ad APPDIR, --appdir APPDIR
                         Target path that overrides path defined target path (default is None)
@@ -106,26 +123,28 @@ options:
   --keep                Keep existing executable. (default is False)
   --zip ZIP             Zip built executable. (default is None)
   --inplace             Source files in srcdir are used directly. (default is False)
-  --networkx            Use networkx package to build Directed Acyclic Graph use to determine the order source files are compiled in. (default is False)
-  --meson, --no-meson   Use meson to build executable. Use --no-meson to build with the pymake build engine. (default is True)
-  --mesondir            meson directory. (default is '.')
+  --networkx            Use networkx package to build Directed Acyclic Graph use to determine the
+                        order source files are compiled in. (default is False)
+  --meson, --no-meson   Use meson to build executable. Use --no-meson to build with the pymake
+                        build engine. (default is True) (default: True)
+  --mesondir MESONDIR   meson directory. (default is '.')
 
-Note that the source directory should not contain any bad 
-or duplicate source files as all source files in the source 
-directory, the common source file directory (srcdir2), and 
-the extra files (extrafiles) will be built and linked. 
-Files can be excluded by using the excludefiles command 
+Note that the source directory should not contain any bad
+or duplicate source files as all source files in the source
+directory, the common source file directory (srcdir2), and
+the extra files (extrafiles) will be built and linked.
+Files can be excluded by using the excludefiles command
 line switch.
 
 Examples:
 
-Compile MODFLOW 6 from the root directory containing the 
+Compile MODFLOW 6 from the root directory containing the
 source files in subdirectories in the src/ subdirectory:
 
 $ mfpymake src/ mf6 --subdirs
 
-Compile MODFLOW 6 in the bin subdirectory using the Intel 
-Fortran compiler from the root directory containing the source 
+Compile MODFLOW 6 in the bin subdirectory using the Intel
+Fortran compiler from the root directory containing the source
 files in subdirectories in the the src/ subdirectory:
 
 $ mfpymake src/ mf6 --subdirs -fc ifort --appdir bin
