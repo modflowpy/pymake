@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 from platform import system
 from textwrap import dedent
@@ -112,3 +113,28 @@ def test_mfpymake(function_tmpdir, meson: bool) -> None:
         run_cli_cmd(cmd)
         cmd = [function_tmpdir / "hello"]
         run_cli_cmd(cmd)
+
+
+@pytest.mark.base
+def test_docs_current():
+    """The command line help in the documentation must match the parsers."""
+    root = Path(__file__).parent.parent
+    sys.path.insert(0, str(root / "scripts"))
+    try:
+        import update_docs
+    finally:
+        sys.path.pop(0)
+
+    stale = []
+    for path, prog, fence in update_docs._blocks():
+        current = path.read_text()
+        updated = update_docs._replace_block(
+            current, fence, update_docs._help_text(prog)
+        )
+        if current != updated:
+            stale.append(str(path.relative_to(root)))
+
+    assert not stale, (
+        f"the command line help in {', '.join(stale)} is out of date, "
+        "run 'pixi run update-docs' to write it"
+    )

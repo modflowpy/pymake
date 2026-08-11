@@ -16,17 +16,21 @@ __all__ = ["main"]
 __license__ = "CC0"
 
 
-def main() -> None:
-    """Mfpymake command line interface.
+def examples(prog) -> str:
+    """Return the examples shown at the bottom of the help.
+
+    Parameters
+    ----------
+    prog : str
+        program name shown in the examples
 
     Returns
     -------
-    None
+    examples : str
+        examples for the mfpymake help
 
     """
-    # Show meaningful examples at bottom of help
-    prog = Path(sys.argv[0]).stem
-    examples = dedent(f"""\
+    return dedent(f"""\
         Examples:
 
         Compile MODFLOW 6 from the root directory containing the
@@ -41,8 +45,17 @@ def main() -> None:
         $ {prog} src/ mf6 --subdirs -fc ifort --appdir bin
         """)
 
+
+def main() -> None:
+    """Mfpymake command line interface.
+
+    Returns
+    -------
+    None
+
+    """
     # get the arguments
-    args = parser(examples=examples)
+    args = parser(examples=examples(Path(sys.argv[0]).stem))
 
     # run pymake main
     try:

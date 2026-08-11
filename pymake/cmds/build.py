@@ -47,18 +47,26 @@ COM_ARG_KEYS = (
 KEEP_ARG_KEYS = "double"
 
 
-def main() -> None:
-    """Command line interface.
+def build_parser(prog=None):
+    """Construct the make-program parser.
+
+    Parameters
+    ----------
+    prog : str
+        program name shown in the usage message (default is the command
+        that was run)
 
     Returns
     -------
-    None
+    parser_obj : ArgumentParser object
+        parser for the make-program command line arguments
 
     """
     import argparse
 
     # Show meaningful examples at bottom of help
-    prog = Path(sys.argv[0]).stem
+    if prog is None:
+        prog = Path(sys.argv[0]).stem
     examples = f"""\
 Examples:
 
@@ -76,6 +84,7 @@ Examples:
     """
 
     parser_obj = argparse.ArgumentParser(
+        prog=prog,
         description=__doc__.split("\n")[0],
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=examples,
@@ -115,11 +124,20 @@ Examples:
 
     # setup parser for make-program
     for _, value in parser_dict.items():
-        my_parser = _parser_setup(parser_obj, value)
-    parser_args = my_parser.parse_args()
+        parser_obj = _parser_setup(parser_obj, value)
+    return parser_obj
 
+
+def main() -> None:
+    """Command line interface.
+
+    Returns
+    -------
+    None
+
+    """
     # define args
-    args = vars(parser_args)
+    args = vars(build_parser().parse_args())
 
     # filter parser arguments into args and command line arguments
     # com_arg_var = {}

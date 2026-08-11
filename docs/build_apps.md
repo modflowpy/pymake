@@ -7,38 +7,46 @@ and options can be determined by executing:
 ```console
 $ make-program --help
 
-usage: make-program [-h] [--exclude EXCLUDE] [-fc {ifort,mpiifort,gfortran,none}] [-cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}] [-dbl] [-dr] [-ff FFLAGS] [-cf CFLAGS] [-ad APPDIR] [-v] [--keep] [--zip ZIP]
-                    [--meson | --no-meson]
+usage: make-program [-h] [--exclude EXCLUDE] [-fc FC] [-cc CC] [-dbl] [-dr] [-ff FFLAGS]
+                    [-cf CFLAGS] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--meson | --no-meson]
                     targets
 
 Download and build USGS MODFLOW and related programs.
 
 positional arguments:
-  targets               Program(s) to build. Options: crt, gridgen, libmf6, mf2000, mf2005, mf6, mflgr, mfnwt, mfusg, mfusgt, mp6, mp7, mt3dms, mt3dusgs, sutra, swtv4, triangle, vs2dt, zbud6, zonbud3,
-                        zonbudusg, :. Specifying the target to be ':' will build all of the programs. Multiple targets can be specified by separating individual targets by a comma (i.e., mf6,zbud6).
+  targets               Program(s) to build. Options: crt, gridgen, libmf6, mf2000, mf2005, mf6,
+                        mflgr, mfnwt, mfusg, mfusgt, mp6, mp7, mt3dms, mt3dusgs, sutra, swtv4,
+                        triangle, vs2dt, zbud6, zonbud, zonbudusg, :. Specifying the target to be
+                        ':' will build all of the programs. Multiple targets can be specified by
+                        separating individual targets by a comma (i.e., mf6,zbud6).
 
 options:
   -h, --help            show this help message and exit
   --exclude EXCLUDE     exclude specific target(s) from build
-  -fc {ifort,mpiifort,gfortran,none}
-                        Fortran compiler to use. (default is gfortran)
-  -cc {gcc,clang,clang++,icc,icl,mpiicc,g++,cl,none}
-                        C/C++ compiler to use. (default is gcc)
+  -fc FC                Fortran compiler to use. A version suffix, for example gfortran-13, can be
+                        included. Valid compilers are ifort, mpiifort, gfortran, and none.
+                        (default is gfortran)
+  -cc CC                C/C++ compiler to use. A version suffix, for example gcc-13, can be
+                        included. Valid compilers are gcc, clang, clang++, icc, icl, mpiicc, g++,
+                        cl, and none. (default is gcc)
   -dbl, --double        Force double precision. (default is False)
-  -dr, --dryrun         Do not actually compile. Files will be deleted, if --makeclean is used. Does not work yet for ifort. (default is False)
+  -dr, --dryrun         Do not actually compile. Files will be deleted, if --makeclean is used.
+                        Does not work yet for ifort. (default is False)
   -ff FFLAGS, --fflags FFLAGS
-                        Additional Fortran compiler flags. Fortran compiler flags should be enclosed in quotes and start with a blank space or separated from the name (-ff or --fflags) with a equal sign
-                        (-ff='-O3'). (default is None)
+                        Additional Fortran compiler flags. Fortran compiler flags should be
+                        enclosed in quotes and start with a blank space or separated from the name
+                        (-ff or --fflags) with a equal sign (-ff='-O3'). (default is None)
   -cf CFLAGS, --cflags CFLAGS
-                        Additional C/C++ compiler flags. C/C++ compiler flags should be enclosed in quotes and start with a blank space or separated from the name (-cf or --cflags) with a equal sign
-                        (-cf='-O3'). (default is None)
+                        Additional C/C++ compiler flags. C/C++ compiler flags should be enclosed
+                        in quotes and start with a blank space or separated from the name (-cf or
+                        --cflags) with a equal sign (-cf='-O3'). (default is None)
   -ad APPDIR, --appdir APPDIR
                         Target path that overrides path defined target path (default is None)
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)
   --zip ZIP             Zip built executable. (default is None)
-  --meson, --no-meson   Use meson to build executable. Use --no-meson to
-                        build with the pymake build engine. (default is True)
+  --meson, --no-meson   Use meson to build executable. Use --no-meson to build with the pymake
+                        build engine. (default is True) (default: True)
 
 Examples:
 
@@ -53,7 +61,6 @@ Examples:
 
   Download and compile all programs in the ./temp subdirectory:
     $ make-program : --appdir temp
-    
 ```
 
 `make-program` can be used to build MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000,
