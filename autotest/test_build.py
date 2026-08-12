@@ -82,7 +82,6 @@ def test_meson_build(function_tmpdir, target: str) -> None:
         )
 
 
-
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
 @pytest.mark.parametrize("verbose", (True, False))
@@ -117,6 +116,7 @@ def test_meson_provided_kept(function_tmpdir, verbose: bool) -> None:
         assert provided.read_bytes() == before, (
             "the meson build file zonbud provides was replaced"
         )
+
 
 @pytest.mark.base
 @flaky(max_runs=RERUNS)

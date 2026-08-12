@@ -295,9 +295,7 @@ def main(
 
         # a meson build file that is already there was provided by the
         # target rather than written by pymake, so it is not a temporary file
-        meson_provided = meson and os.path.isfile(
-            os.path.join(mesondir, "meson.build")
-        )
+        meson_provided = meson and os.path.isfile(os.path.join(mesondir, "meson.build"))
 
         # compile the executable
         if meson:
