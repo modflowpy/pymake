@@ -112,6 +112,15 @@ jobs:
         run: |
           pixi run autotest-schedule --exclude gridgen
 
+      # the scheduled tests build every program in one call, which is how a
+      # build that works for one program on its own but not alongside another
+      # is caught. they are run on one job for a pull request, since what they
+      # catch is the build itself rather than the platform or the compiler
+      - name: Run scheduled tests on a pull request
+        if: ${{ github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc' && matrix.version == 13 }}
+        run: |
+          pixi run autotest-schedule
+
       - name: Upload failed test output
         if: failure()
         uses: actions/upload-artifact@v7
