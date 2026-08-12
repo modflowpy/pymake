@@ -82,6 +82,36 @@ def test_meson_build(function_tmpdir, target: str) -> None:
         )
 
 
+
+@pytest.mark.base
+@flaky(max_runs=RERUNS)
+def test_meson_mesondir(function_tmpdir) -> None:
+    """A mesondir that was asked for is used rather than the download directory.
+
+    The default was the current directory, so a mesondir of '.' could not be
+    told apart from one that was not set and was replaced.
+    """
+    fc = os.environ.get("FC", "gfortran")
+    cc = os.environ.get("CC", "gcc")
+    pymake.linker_update_environment(cc=cc, fc=fc)
+    with set_dir(function_tmpdir):
+        pm = pymake.Pymake(verbose=True)
+        pm.target = "triangle"
+        pm.meson = True
+        pm.mesondir = "."
+        pm.appdir = "."
+        pm.download_target("triangle", download_path="temp")
+
+        assert pm.build() == 0, "could not build triangle"
+        assert pm.mesondir == ".", (
+            f"the mesondir that was asked for ('.') was replaced by "
+            f"'{pm.mesondir}'"
+        )
+
+        ext, _ = get_binary_suffixes()
+        exe = Path(function_tmpdir) / f"triangle{ext}"
+        assert exe.is_file(), f"{exe.name} was not built by meson"
+
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
 @pytest.mark.parametrize("target", targets_meson)
