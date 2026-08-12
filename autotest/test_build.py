@@ -82,7 +82,6 @@ def test_meson_build(function_tmpdir, target: str) -> None:
         )
 
 
-
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
 def test_meson_mesondir(function_tmpdir) -> None:
@@ -104,13 +103,13 @@ def test_meson_mesondir(function_tmpdir) -> None:
 
         assert pm.build() == 0, "could not build triangle"
         assert pm.mesondir == ".", (
-            f"the mesondir that was asked for ('.') was replaced by "
-            f"'{pm.mesondir}'"
+            f"the mesondir that was asked for ('.') was replaced by '{pm.mesondir}'"
         )
 
         ext, _ = get_binary_suffixes()
         exe = Path(function_tmpdir) / f"triangle{ext}"
         assert exe.is_file(), f"{exe.name} was not built by meson"
+
 
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
