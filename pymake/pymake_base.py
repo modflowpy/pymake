@@ -293,6 +293,12 @@ def main(
         if not intelwin:
             _create_openspec(intelwin, srcfiles, verbose)
 
+        # a meson build file that is already there was provided by the
+        # target rather than written by pymake, so it is not a temporary file
+        meson_provided = meson and os.path.isfile(
+            os.path.join(mesondir, "meson.build")
+        )
+
         # compile the executable
         if meson:
             returncode = _meson_build(
@@ -363,6 +369,7 @@ def main(
                 meson,
                 mesondir,
                 verbose,
+                meson_provided=meson_provided,
             )
     else:
         msg = (
@@ -564,6 +571,7 @@ def _clean_temp_files(
     meson,
     mesondir,
     verbose=False,
+    meson_provided=False,
 ):
     """Cleanup intermediate files. Remove mod and object files, and remove the
     temporary source directory.
@@ -596,6 +604,9 @@ def _clean_temp_files(
         mesondir is None (default is None)
     verbose : bool
         boolean indicating if output will be printed to the terminal
+    meson_provided : bool
+        boolean indicating that the meson build file was provided by the
+        target, in which case it is not removed (default is False)
 
     Returns
     -------
@@ -656,10 +667,12 @@ def _clean_temp_files(
             if verbose:
                 print(f"removing...'{meson_builddir}'")
             shutil.rmtree(meson_builddir)
-        main_meson_file = os.path.join(mesondir, "meson.build")
-        if os.path.isfile(main_meson_file):
-            if verbose:
-                print(f"removing...'{main_meson_file}'")
+        # a build file the target provides is not a file pymake wrote
+        if not meson_provided:
+            main_meson_file = os.path.join(mesondir, "meson.build")
+            if os.path.isfile(main_meson_file):
+                if verbose:
+                    print(f"removing...'{main_meson_file}'")
                 os.remove(main_meson_file)
 
     # remove the windows batchfile
