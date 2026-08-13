@@ -29,15 +29,15 @@ jobs:
       matrix:
         include:
           # test latest gcc and python
-          - {os: ubuntu-latest, compiler: gcc, version: 13, shell: bash}
-          - {os: macos-latest, compiler: gcc, version: 13, shell: bash}
-          - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh}
+          - {os: ubuntu-latest, compiler: gcc, version: 13, shell: bash, pixienv: default}
+          - {os: macos-latest, compiler: gcc, version: 13, shell: bash, pixienv: default}
+          - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh, pixienv: build}
           # test latest python and intel-classic
-          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash}
-          - {os: windows-2022, compiler: intel-classic, version: 2021.7, shell: pwsh}
+          - {os: ubuntu-22.04, compiler: intel-classic, version: 2021.7, shell: bash, pixienv: default}
+          - {os: windows-2022, compiler: intel-classic, version: 2021.7, shell: pwsh, pixienv: default}
           # test latest python and previous gcc
-          - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash}
-          - {os: ubuntu-latest, compiler: gcc, version: 11, shell: bash}
+          - {os: ubuntu-latest, compiler: gcc, version: 12, shell: bash, pixienv: default}
+          - {os: ubuntu-latest, compiler: gcc, version: 11, shell: bash, pixienv: default}
     defaults:
       run:
         shell: ${{ matrix.shell }}
@@ -71,9 +71,12 @@ jobs:
       - name: pixi post-install
         working-directory: pymake
         run: |
-          pixi run postinstall
+          pixi run -e ${{ matrix.pixienv }} postinstall
 
+      # the windows gcc job takes its compilers from the build environment,
+      # since setup-fortran downloads mingw from chocolatey on every run
       - name: Setup ${{ matrix.compiler }} ${{ matrix.version }} on ${{ matrix.os }}
+        if: ${{ matrix.pixienv != 'build' }}
         uses: fortran-lang/setup-fortran@v1
         with:
           compiler: ${{ matrix.compiler }}
@@ -81,36 +84,38 @@ jobs:
 
       - name: Download examples for pytest runs
         run: |
-          pixi run download-examples 
+          pixi run -e ${{ matrix.pixienv }} download-examples 
       
+      # the build environment provides make, so it is only installed for a
+      # job that does not use it
       - name: Install make
-        if: runner.os == 'Windows'
+        if: ${{ runner.os == 'Windows' && matrix.pixienv != 'build' }}
         run: choco install make
 
       - name: test on Linux
         if: runner.os == 'Linux'
         run: |
-          pixi run autotest
+          pixi run -e ${{ matrix.pixienv }} autotest
 
       - name: test on MacOS
         if: runner.os == 'macOS'
         run: |
-          pixi run autotest-base
+          pixi run -e ${{ matrix.pixienv }} autotest-base
 
       - name: test on Windows
         if: runner.os == 'Windows'
         run: |
-          pixi run autotest-base
+          pixi run -e ${{ matrix.pixienv }} autotest-base
 
       - name: Run scheduled tests on MacOS and Linux with all compilers but intel-classic
         if: ${{ github.event_name == 'schedule' && (runner.os != 'Windows' || matrix.compiler != 'intel-classic') }}
         run: |
-          pixi run autotest-schedule
+          pixi run -e ${{ matrix.pixienv }} autotest-schedule
 
       - name: Run scheduled tests on Windows with intel-classic compiler
         if: ${{ github.event_name == 'schedule' && runner.os == 'Windows' && matrix.compiler == 'intel-classic' }}
         run: |
-          pixi run autotest-schedule --exclude gridgen
+          pixi run -e ${{ matrix.pixienv }} autotest-schedule --exclude gridgen
 
       # the scheduled tests build every program in one call, which is how a
       # build that works for one program on its own but not alongside another
@@ -119,7 +124,7 @@ jobs:
       - name: Run scheduled tests on a pull request
         if: ${{ github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc' && matrix.version == 13 }}
         run: |
-          pixi run autotest-schedule
+          pixi run -e ${{ matrix.pixienv }} autotest-schedule
 
       - name: Upload failed test output
         if: failure()
@@ -130,7 +135,7 @@ jobs:
 
       - name: Print coverage report before upload
         run: |
-          pixi run coverage-report
+          pixi run -e ${{ matrix.pixienv }} coverage-report
   
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
