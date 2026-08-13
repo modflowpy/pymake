@@ -101,7 +101,7 @@ def main(
     inplace=False,
     networkx=False,
     meson=False,
-    mesondir=".",
+    mesondir=None,
 ):
     """Main pymake function.
 
@@ -173,7 +173,8 @@ def main(
         boolean indicating that the executable should be built using the
         meson build system. (default is False)
     mesondir : str
-        Main meson.build file path
+        Main meson.build file path. the current directory is used when
+        mesondir is None (default is None)
 
     Returns
     -------
@@ -239,6 +240,11 @@ def main(
             if srcdir2 is not None:
                 msg = "additional source files are in:\n" + f"     {srcdir2}\n"
                 print(msg)
+
+        # a meson build file belongs with the source, and the current
+        # directory is used when a directory was not asked for
+        if mesondir is None:
+            mesondir = "."
 
         # make sure the path for the target exists
         pth = os.path.dirname(target)
@@ -586,7 +592,8 @@ def _clean_temp_files(
         boolean indicating that the executable should be built using the
         meson build system. (default is False)
     mesondir : str
-        Main meson.build file path
+        Main meson.build file path. the current directory is used when
+        mesondir is None (default is None)
     verbose : bool
         boolean indicating if output will be printed to the terminal
 

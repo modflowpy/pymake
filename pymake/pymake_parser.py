@@ -309,8 +309,9 @@ def _get_standard_arg_dict():
         },
         "mesondir": {
             "tag": ("--mesondir",),
-            "help": "meson directory. (default is '.')",
-            "default": ".",
+            "help": """meson directory. (default is the directory the
+                         target is downloaded to)""",
+            "default": None,
             "choices": None,
             "action": None,
         },

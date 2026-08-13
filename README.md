@@ -127,7 +127,7 @@ options:
                         order source files are compiled in. (default is False)
   --meson, --no-meson   Use meson to build executable. Use --no-meson to build with the pymake
                         build engine. (default is True) (default: True)
-  --mesondir MESONDIR   meson directory. (default is '.')
+  --mesondir MESONDIR   meson directory. (default is the directory the target is downloaded to)
 
 Note that the source directory should not contain any bad
 or duplicate source files as all source files in the source

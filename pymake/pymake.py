@@ -484,20 +484,15 @@ class Pymake:
         # a mesondir pymake set for a target it built before is replaced,
         # since that download directory is removed when the target is done,
         # and a mesondir the user set is respected
-        pymake_set = (
-            _get_standard_arg_dict()["mesondir"]["default"],
-            self._set_mesondir_value,
-        )
-        if self.mesondir not in pymake_set:
+        if self.mesondir is not None and self.mesondir != self._set_mesondir_value:
             return
 
-        if self.download_dir is None:
-            return
-
-        self.mesondir = self.download_dir
-        self._set_mesondir_value = self.download_dir
+        # the build file belongs with the source, which is the directory a
+        # downloaded target was extracted to
+        self.mesondir = "." if self.download_dir is None else self.download_dir
+        self._set_mesondir_value = self.mesondir
         if self.verbose:
-            provided = (Path(self.download_dir) / "meson.build").is_file()
+            provided = (Path(self.mesondir) / "meson.build").is_file()
             action = "using" if provided else "writing"
             print(f"{action} the meson build file in...'{self.mesondir}'")
 

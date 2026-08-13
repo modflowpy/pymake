@@ -48,7 +48,7 @@ def build_apps(
     verbose=None,
     double=False,
     meson=False,
-    mesondir=".",
+    mesondir=None,
     exclude=None,
     clean=True,
 ):
@@ -71,7 +71,8 @@ def build_apps(
         boolean indicating that the executable should be built using the
         meson build system. (default is False)
     mesondir : str
-        Main meson.build file path
+        Main meson.build file path. the directory a target is downloaded to
+        is used when mesondir is None (default is None)
     exclude : str or list of str
         list of targets to exclude from build
     clean : bool
