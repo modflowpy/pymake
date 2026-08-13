@@ -84,6 +84,42 @@ def test_meson_build(function_tmpdir, target: str) -> None:
 
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
+@pytest.mark.parametrize("verbose", (True, False))
+def test_meson_provided_kept(function_tmpdir, verbose: bool) -> None:
+    """A meson build file a target provides is kept when temporary files are
+    cleaned up.
+
+    The build file was removed with the files pymake writes, and only when
+    verbose was set, so a clean build of a target that provides one left it
+    without the build file it came with.
+    """
+    fc = os.environ.get("FC", "gfortran")
+    cc = os.environ.get("CC", "gcc")
+    pymake.linker_update_environment(cc=cc, fc=fc)
+    with set_dir(function_tmpdir):
+        pm = pymake.Pymake(verbose=verbose)
+        pm.target = "zonbud"
+        pm.meson = True
+        pm.makeclean = True
+        pm.appdir = "."
+        pm.download_target("zonbud", download_path="temp")
+
+        provided = Path(pm.download_dir) / "meson.build"
+        assert provided.is_file(), "zonbud does not provide a meson build file"
+        before = provided.read_bytes()
+
+        assert pm.build() == 0, "could not build zonbud"
+        assert provided.is_file(), (
+            "the meson build file zonbud provides was removed when the "
+            "temporary files were cleaned up"
+        )
+        assert provided.read_bytes() == before, (
+            "the meson build file zonbud provides was replaced"
+        )
+
+
+@pytest.mark.base
+@flaky(max_runs=RERUNS)
 def test_meson_mesondir(function_tmpdir) -> None:
     """A mesondir that was asked for is used rather than the download directory.
 
