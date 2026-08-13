@@ -82,6 +82,15 @@ jobs:
           compiler: ${{ matrix.compiler }}
           version: ${{ matrix.version }}
 
+      # the compilers have to be the ones the build environment provides
+      # rather than the ones the runner image preinstalls
+      - name: Report the compilers the build environment provides
+        if: ${{ matrix.pixienv == 'build' }}
+        run: |
+          pixi run -e ${{ matrix.pixienv }} gfortran --version
+          pixi run -e ${{ matrix.pixienv }} gcc --version
+          pixi run -e ${{ matrix.pixienv }} g++ --version
+
       - name: Download examples for pytest runs
         run: |
           pixi run -e ${{ matrix.pixienv }} download-examples 
