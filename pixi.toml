@@ -62,12 +62,21 @@ create-codejson = { cmd = "make-code-json" }
 build = { features = ["build"] }
 
 [feature.build]
-platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
+platforms = ["win-64", "linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
 
 [feature.build.dependencies]
 gcc = "*"
 gxx = "*"
 gfortran = "*"
+
+# continuous integration builds the targets on Windows with these compilers
+# rather than the ones setup-fortran installs, which are downloaded from
+# chocolatey on every run. the version is the one setup-fortran was asked for
+[feature.build.target.win-64.dependencies]
+gcc = "13.2.*"
+gxx = "13.2.*"
+gfortran = "13.2.*"
+make = "*"
 
 # gcc uses libc++ on macOS, and the libc++ 22 headers need a c++ standard
 # newer than the one gcc defaults to, which breaks the c++ targets
