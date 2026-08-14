@@ -177,7 +177,7 @@ def test_makefile_build(function_tmpdir, target: str) -> None:
     with set_dir(function_tmpdir):
         pm = pymake.Pymake(verbose=True)
         pm.target = target
-        pm.makefile = True
+        pm.makefile_only = True
         pm.makefiledir = "."
         pm.inplace = True
         pm.makeclean = False

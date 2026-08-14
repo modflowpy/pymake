@@ -100,6 +100,7 @@ class Pymake:
         self.cflags = None
         self.syslibs = None
         self.makefile = None
+        self.makefile_only = None
         self.makefiledir = None
         self.srcdir2 = None
         self.extrafiles = None
@@ -743,6 +744,11 @@ class Pymake:
             # library, and the meson build file MODFLOW 6 provides lists
             # those files and excludes them from the build itself, so they
             # are only removed when pymake defines the build
+            # a makefile is written when only a makefile is asked for, so the
+            # source files it lists are the ones a makefile can build
+            if self.makefile_only:
+                self.makefile = True
+
             external_only = self._get_base_target() in ("mf6", "libmf6", "zbud6")
             # a makefile is written from the source pymake finds, so the
             # files are removed for a makefile whichever build file is used
@@ -788,6 +794,7 @@ class Pymake:
                 cflags=self.cflags,
                 syslibs=self.syslibs,
                 makefile=self.makefile,
+                makefile_only=self.makefile_only,
                 makefiledir=self.makefiledir,
                 srcdir2=self.srcdir2,
                 extrafiles=self.extrafiles,

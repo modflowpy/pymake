@@ -74,6 +74,7 @@ def main(
     cflags=None,
     syslibs=None,
     makefile=False,
+    makefile_only=False,
     makefiledir=".",
     srcdir2=None,
     extrafiles=None,
@@ -116,6 +117,9 @@ def main(
         user provided syslibs
     makefile : bool
         boolean indicating if a GNU make makefile should be created
+    makefile_only : bool
+        boolean indicating if a GNU make makefile should be created without
+        building the target (default is False)
     makefiledir : str
         GNU make makefile path
     srcdir2 : str
@@ -153,8 +157,13 @@ def main(
         return code
 
     """
+    # a makefile is written from the source files pymake finds, so the
+    # source is still processed when only a makefile is asked for
+    if makefile_only:
+        makefile = True
+
     # meson builds the source where it is
-    if not inplace:
+    if not inplace and not makefile_only:
         inplace = True
         print(
             f"Using meson to build {os.path.basename(target)}, "
@@ -248,24 +257,27 @@ def main(
         # target rather than written by pymake, so it is not a temporary file
         meson_provided = os.path.isfile(os.path.join(mesondir, "meson.build"))
 
-        # compile the executable
-        returncode = _meson_build(
-            target,
-            srcdir,
-            srcdir2,
-            extrafiles,
-            srcfiles,
-            debug,
-            double,
-            fc,
-            cc,
-            fflags,
-            cflags,
-            syslibs,
-            sharedobject,
-            mesondir,
-            verbose,
-        )
+        # compile the executable, unless only a makefile was asked for
+        if makefile_only:
+            returncode = 0
+        else:
+            returncode = _meson_build(
+                target,
+                srcdir,
+                srcdir2,
+                extrafiles,
+                srcfiles,
+                debug,
+                double,
+                fc,
+                cc,
+                fflags,
+                cflags,
+                syslibs,
+                sharedobject,
+                mesondir,
+                verbose,
+            )
 
         # create makefile
         if makefile:

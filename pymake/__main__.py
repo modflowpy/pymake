@@ -19,6 +19,7 @@ main(
     fflags=args.fflags,
     cflags=args.cflags,
     makefile=args.makefile,
+    makefile_only=args.makefile_only,
     srcdir2=args.commonsrc,
     extrafiles=args.extrafiles,
     excludefiles=args.excludefiles,

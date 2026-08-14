@@ -2,7 +2,7 @@
 
 Python package for building MODFLOW-based programs from source files.
 
-### Version 1.6.0.dev0
+### Version 2.0.0.dev0
 
 [![PyPI Version](https://img.shields.io/pypi/v/mfpymake.png)](https://pypi.python.org/pypi/mfpymake)
 [![Anaconda Version](https://anaconda.org/conda-forge/mfpymake/badges/version.svg)](https://anaconda.org/conda-forge/mfpymake)  
@@ -56,7 +56,7 @@ default values.
 
 ```
 usage: mfpymake [-h] [-fc FC] [-cc CC] [-mc] [-dbl] [-dbg] [-sd] [-ff FFLAGS] [-cf CFLAGS]
-                [-sl {-lc,-lm}] [-mf] [-md MAKEFILEDIR] [-cs COMMONSRC] [-ef EXTRAFILES]
+                [-sl {-lc,-lm}] [-mf] [-mfo] [-md MAKEFILEDIR] [-cs COMMONSRC] [-ef EXTRAFILES]
                 [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace]
                 [--networkx] [--mesondir MESONDIR]
                 srcdir target
@@ -96,6 +96,8 @@ options:
                         start with a blank space or separated from the name (-sl or --syslibs)
                         with a equal sign (-sl='-libgcc'). (default is None)
   -mf, --makefile       Create a GNU make makefile. (default is False)
+  -mfo, --makefile-only
+                        Create a GNU make makefile without building the target. (default is False)
   -md MAKEFILEDIR, --makefiledir MAKEFILEDIR
                         GNU make makefile directory. (default is '.')
   -cs COMMONSRC, --commonsrc COMMONSRC

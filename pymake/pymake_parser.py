@@ -184,6 +184,14 @@ def _get_standard_arg_dict():
             "choices": None,
             "action": "store_true",
         },
+        "makefile_only": {
+            "tag": ("-mfo", "--makefile-only"),
+            "help": """Create a GNU make makefile without building the
+                         target. (default is False)""",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
+        },
         "makefiledir": {
             "tag": ("-md", "--makefiledir"),
             "help": "GNU make makefile directory. (default is '.')",
