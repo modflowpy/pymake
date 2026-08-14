@@ -1,0 +1,260 @@
+# Programs pymake can download and build.
+#
+# version            release the url points at
+# current            the release pymake builds by default
+# url                archive the source is downloaded from
+# dirname            directory the archive extracts to, "." for the root
+# srcdir             source directory within the extracted archive
+# standard_precision a single precision executable is built
+# double_precision   a double precision executable is built
+# shared_object      a shared library is built rather than an executable
+
+[program."mf6"]
+version = "6.7.0"
+current = true
+url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.7.0/mf6.7.0_linux.zip"
+dirname = "mf6.7.0_linux"
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."zbud6"]
+version = "6.7.0"
+current = true
+url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.7.0/mf6.7.0_linux.zip"
+dirname = "mf6.7.0_linux"
+srcdir = "utils/zonebudget/src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."libmf6"]
+version = "6.7.0"
+current = true
+url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.7.0/mf6.7.0_linux.zip"
+dirname = "mf6.7.0_linux"
+srcdir = "srcbmi"
+standard_precision = true
+double_precision = false
+shared_object = true
+
+[program."mp7"]
+version = "7.2.001"
+current = true
+url = "https://water.usgs.gov/water-resources/software/MODPATH/modpath_7_2_001.zip"
+dirname = "modpath_7_2_001"
+srcdir = "source"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."mt3dms"]
+version = "5.3.0"
+current = true
+url = "https://github.com/MODFLOW-ORG/mt3dms/releases/download/2.0/mt3dms-2.0.zip"
+dirname = "mt3dms-2.0"
+srcdir = "true-binary"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."mt3dusgs"]
+version = "1.1.1"
+current = true
+url = "https://github.com/MODFLOW-ORG/mt3d-usgs/archive/refs/tags/v1.1.1.zip"
+dirname = "mt3d-usgs-1.1.1"
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."vs2dt"]
+version = "3.3"
+current = true
+url = "https://water.usgs.gov/water-resources/software/VS2DI/vs2dt3_3.zip"
+dirname = "vs2dt3_3"
+srcdir = "include"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."triangle"]
+version = "1.6"
+current = true
+url = "https://github.com/MODFLOW-ORG/triangle/releases/download/v1.6/triangle_source.zip"
+dirname = "."
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."gridgen"]
+version = "1.0.02"
+current = true
+url = "https://github.com/MODFLOW-ORG/gridgen/releases/download/v1.0.02/gridgen_source.zip"
+dirname = "."
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."crt"]
+version = "1.3.1"
+current = true
+url = "https://water.usgs.gov/ogw/CRT/CRT_1.3.1.zip"
+dirname = "CRT_1.3.1"
+srcdir = "SOURCE"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."sutra"]
+version = "4.0"
+current = true
+url = "https://water.usgs.gov/water-resources/software/sutra/4.0/SUTRA_4_0_0.zip"
+dirname = "SutraSuite"
+srcdir = "SUTRA_4_0/source"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."mf2000"]
+version = "1.19.01"
+current = true
+url = "https://water.usgs.gov/nrp/gwsoftware/modflow2000/mf2k1_19_01.tar.gz"
+dirname = "mf2k.1_19"
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."mf2005"]
+version = "1.12.00"
+current = true
+url = "https://github.com/MODFLOW-ORG/mf2005/releases/download/v.1.12.00/MF2005.1_12u.zip"
+dirname = "MF2005.1_12u"
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."mfusg"]
+version = "1.5"
+current = true
+url = "https://github.com/MODFLOW-ORG/mfusg/releases/download/v1.5.00/mfusg1_5.zip"
+dirname = "mfusg1_5"
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."zonbudusg"]
+version = "1.01"
+current = true
+url = "https://github.com/MODFLOW-ORG/zonbudusg/releases/download/v1.01/zonbudusg_source.zip"
+dirname = "."
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."swtv4"]
+version = "4.00.05"
+current = true
+url = "https://water.usgs.gov/water-resources/software/SEAWAT/swt_v4_00_05.zip"
+dirname = "swt_v4_00_05"
+srcdir = "source"
+standard_precision = false
+double_precision = true
+shared_object = false
+
+[program."mp6"]
+version = "6.0.1"
+current = true
+url = "https://water.usgs.gov/water-resources/software/MODPATH/modpath.6_0_01.zip"
+dirname = "modpath.6_0"
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."mflgr"]
+version = "2.0.0"
+current = true
+url = "https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
+dirname = "mflgr.2_0"
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."zonbud"]
+version = "3.01"
+current = true
+url = "https://github.com/MODFLOW-ORG/zonbud/releases/download/v3.01/zonbud_source.zip"
+dirname = "."
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."mfnwt1.1.4"]
+version = "1.1.4"
+current = false
+url = "https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.1.4.zip"
+dirname = "MODFLOW-NWT_1.1.4"
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."mfnwt"]
+version = "1.3.0"
+current = true
+url = "https://water.usgs.gov/water-resources/software/MODFLOW-NWT/MODFLOW-NWT_1.3.0.zip"
+dirname = "MODFLOW-NWT"
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."mfusgt"]
+version = "2.6.2"
+current = true
+url = "https://github.com/MODFLOW-ORG/mfusgt/releases/download/v2.6.2/mfusgt_source.zip"
+dirname = "."
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."mf6dev"]
+version = "6.7.0.dev3"
+current = false
+url = "https://github.com/MODFLOW-ORG/modflow6/archive/refs/heads/develop.zip"
+dirname = "modflow6-develop"
+srcdir = "src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."zbud6dev"]
+version = "6.7.0.dev3"
+current = false
+url = "https://github.com/MODFLOW-ORG/modflow6/archive/refs/heads/develop.zip"
+dirname = "modflow6-develop"
+srcdir = "utils/zonebudget/src"
+standard_precision = true
+double_precision = false
+shared_object = false
+
+[program."libmf6dev"]
+version = "6.7.0.dev3"
+current = false
+url = "https://github.com/MODFLOW-ORG/modflow6/archive/refs/heads/develop.zip"
+dirname = "modflow6-develop"
+srcdir = "srcbmi"
+standard_precision = true
+double_precision = false
+shared_object = true

@@ -12,12 +12,8 @@ Available functionality includes:
 6. Functions to load, update, and export a USGS-style "code.json" json file
    containing information in the USGS application database
 
-A table listing the available pymake targets is included below:
-
-.. csv-table:: Available pymake targets
-   :file: ./usgsprograms.txt
-   :widths: 10, 10, 10, 20, 10, 10, 10, 10, 10
-   :header-rows: 1
+The available pymake targets are defined in ``usgsprograms.toml``, which is
+in this directory, and are listed by :code:`usgs_program_data.list_targets()`.
 
 """
 
@@ -26,6 +22,11 @@ import json
 import os
 import sys
 import warnings
+
+try:  # python 3.11 and later
+    import tomllib
+except ModuleNotFoundError:  # python 3.10
+    import tomli as tomllib
 from pathlib import Path
 
 from .download import _request_header, zip_all
@@ -77,7 +78,7 @@ class dotdict(dict):
 
 
 # data file containing the USGS program data
-program_data_file = "usgsprograms.txt"
+program_data_file = "usgsprograms.toml"
 
 # keys to create for each target
 target_keys = (
@@ -86,8 +87,8 @@ target_keys = (
     "url",
     "dirname",
     "srcdir",
-    "standard_switch",
-    "double_switch",
+    "standard_precision",
+    "double_precision",
     "shared_object",
     "url_download_asset_date",
 )
@@ -131,34 +132,17 @@ class usgs_program_data:
         # pth = os.path.dirname(os.path.abspath(pymake.__file__))
         pth = os.path.dirname(os.path.abspath(__file__))
         fpth = os.path.join(pth, program_data_file)
-        url_in = open(fpth, "r").read().split("\n")
+        with open(fpth, "rb") as f:
+            programs = tomllib.load(f)["program"]
 
         program_data = {}
-        for line in url_in[1:]:
-            # skip blank lines
-            if len(line.strip()) < 1:
-                continue
-            # parse comma separated line
-            t = [item.strip() for item in line.split(sep=",")]
-            # programmatically build a dictionary for each target
-            d = {}
-            for idx, key in enumerate(target_keys):
-                if key in ("url_download_asset_date",):
-                    value = None
-                else:
-                    value = t[idx + 1]
-                if key in (
-                    "current",
-                    "standard_switch",
-                    "double_switch",
-                    "shared_object",
-                ):
-                    value = _str_to_bool(value)
-                d[key] = value
+        for target, entry in programs.items():
+            # programmatically build a dictionary for each target, so that a
+            # target has every key whether the file defines it or not
+            d = {key: entry.get(key) for key in target_keys}
 
             # make it possible to access each key with a dot (.)
-            d = dotdict(d)
-            program_data[t[0]] = d
+            program_data[target] = dotdict(d)
 
         return dotdict(program_data)
 
@@ -287,9 +271,9 @@ class usgs_program_data:
         """
         target = usgs_program_data().get_target(key)
         precision = []
-        if target.standard_switch:
+        if target.standard_precision:
             precision.append("default")
-        if target.double_switch:
+        if target.double_precision:
             precision.append("double")
         return precision
 
@@ -477,13 +461,13 @@ class usgs_program_data:
             for target in pop_list:
                 del prog_data[target]
 
-        # update double_switch based on executables in appdir
+        # update double_precision based on executables in appdir
         for appdir_file in appdir.iterdir():
             temp_target = appdir_file.stem
             if temp_target.endswith("dbl"):
                 temp_target = temp_target.replace("dbl", "")
                 if temp_target in prog_data.keys():
-                    prog_data[temp_target]["double_switch"] = True
+                    prog_data[temp_target]["double_precision"] = True
 
         # write code.json to root directory - used by executables CI
         with open(file_name, "w") as file_obj:

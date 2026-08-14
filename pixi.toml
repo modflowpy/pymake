@@ -29,6 +29,7 @@ pytest-xdist = "*"
 python = "3.11.*"
 requests = "*"
 ruff = "*"
+tomli = "*"
 
 [tasks]
 postinstall = "pip install --no-build-isolation --no-deps --disable-pip-version-check -e ."
