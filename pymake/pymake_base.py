@@ -12,14 +12,11 @@ from a script in combination with :code:`pymake.parser()`.
         fc=args.fc,
         cc=args.cc,
         makeclean=args.makeclean,
-        expedite=args.expedite,
-        dryrun=args.dryrun,
         double=args.double,
         debug=args.debug,
         include_subdirs=args.subdirs,
         fflags=args.fflags,
         cflags=args.cflags,
-        arch=args.arch,
         syslibs=args.syslibs,
         makefile=args.makefile,
         srcdir2=args.commonsrc,
@@ -40,15 +37,13 @@ The script could be run from the command line using:
 
 """
 
-import inspect
 import os
 import shutil
 import sys
-import traceback
+import warnings
 from pathlib import Path
 from textwrap import dedent
 
-from .config import __version__
 from .utils._compiler_language_files import (
     _get_c_files,
     _get_fortran_files,
@@ -57,22 +52,14 @@ from .utils._compiler_language_files import (
     _preprocess_file,
 )
 from .utils._compiler_switches import (
-    _get_base_compiler_name,
     _get_c_flags,
     _get_fortran_flags,
     _get_linker_flags,
     _get_optlevel,
     _get_os_macro,
-    _get_osname,
 )
 from .utils._file_utils import _get_extra_exclude_files
 from .utils._meson_build import _meson_build
-from .utils._Popen_wrapper import (
-    _process_Popen_command,
-    _process_Popen_communicate,
-    _process_Popen_initialize,
-    _process_Popen_stdout,
-)
 
 
 def main(
@@ -81,16 +68,15 @@ def main(
     fc="gfortran",
     cc="gcc",
     makeclean=True,
-    expedite=False,
-    dryrun=False,
     double=False,
     debug=False,
     include_subdirs=False,
     fflags=None,
     cflags=None,
     syslibs=None,
-    arch="intel64",
     makefile=False,
+    makefile_only=False,
+    dryrun=None,
     makefiledir=".",
     srcdir2=None,
     extrafiles=None,
@@ -100,7 +86,6 @@ def main(
     verbose=False,
     inplace=False,
     networkx=False,
-    meson=False,
     mesondir=None,
 ):
     """Main pymake function.
@@ -118,12 +103,6 @@ def main(
     makeclean : bool
         boolean indicating if intermediate files should be cleaned up
         after successful build
-    expedite : bool
-        boolean indicating if only out of date source files will be compiled.
-        Clean must not have been used on previous build.
-    dryrun : bool
-        boolean indicating if source files should be compiled.  Files will be
-        deleted, if makeclean is True.
     double : bool
         boolean indicating a compiler switch will be used to create an
         executable with double precision real variables.
@@ -138,10 +117,14 @@ def main(
         user provided list of c or cpp compiler flags
     syslibs : list
         user provided syslibs
-    arch : str
-        Architecture to use for Intel Compilers on Windows (default is intel64)
     makefile : bool
         boolean indicating if a GNU make makefile should be created
+    makefile_only : bool
+        boolean indicating if a GNU make makefile should be created without
+        building the target (default is False)
+    dryrun : bool
+        deprecated name for makefile_only, which replaced it when the pymake
+        build engine was removed (default is None)
     makefiledir : str
         GNU make makefile path
     srcdir2 : str
@@ -169,9 +152,6 @@ def main(
         source files are compiled in. The NetworkX package tends to result in
         a unique DAG more often than the standard algorithm used in pymake.
         (default is False)
-    meson : bool
-        boolean indicating that the executable should be built using the
-        meson build system. (default is False)
     mesondir : str
         Main meson.build file path. the current directory is used when
         mesondir is None (default is None)
@@ -182,13 +162,29 @@ def main(
         return code
 
     """
-    if meson:
-        if not inplace:
-            inplace = True
-            print(
-                f"Using meson to build {os.path.basename(target)}, "
-                "resetting inplace to True"
-            )
+    # dryrun wrote a makefile without building the target, which is what
+    # makefile_only does, so it is still accepted
+    if dryrun is not None:
+        warnings.warn(
+            "dryrun is deprecated and will be removed in a future release, "
+            "use makefile_only instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        makefile_only = makefile_only or dryrun
+
+    # a makefile is written from the source files pymake finds, so the
+    # source is still processed when only a makefile is asked for
+    if makefile_only:
+        makefile = True
+
+    # meson builds the source where it is
+    if not inplace and not makefile_only:
+        inplace = True
+        print(
+            f"Using meson to build {os.path.basename(target)}, "
+            "resetting inplace to True"
+        )
 
     if srcdir is not None and target is not None:
         objdir_temp, moddir_temp, srcdir_temp = get_temporary_directories(
@@ -265,40 +261,22 @@ def main(
             objdir_temp,
             moddir_temp,
             srcdir_temp,
-            meson,
         )
 
         # get ordered list of files to compile
         srcfiles = _get_ordered_srcfiles(srcfiles, networkx)
 
-        # set intelwin flag to True in compiling on windows with
-        # Intel compilers
-        intelwin = False
-        if not meson:
-            if _get_osname() == "win32":
-                if fc is not None:
-                    if _get_base_compiler_name(fc) in (
-                        "ifort",
-                        "mpiifort",
-                    ):
-                        intelwin = True
-                if cc is not None:
-                    if _get_base_compiler_name(cc) in (
-                        "cl",
-                        "icl",
-                    ):
-                        intelwin = True
-
-        # update openspec files based on intelwin
-        if not intelwin:
-            _create_openspec(intelwin, srcfiles, verbose)
+        # update openspec files
+        _create_openspec(srcfiles, verbose)
 
         # a meson build file that is already there was provided by the
         # target rather than written by pymake, so it is not a temporary file
-        meson_provided = meson and os.path.isfile(os.path.join(mesondir, "meson.build"))
+        meson_provided = os.path.isfile(os.path.join(mesondir, "meson.build"))
 
-        # compile the executable
-        if meson:
+        # compile the executable, unless only a makefile was asked for
+        if makefile_only:
+            returncode = 0
+        else:
             returncode = _meson_build(
                 target,
                 srcdir,
@@ -314,24 +292,6 @@ def main(
                 syslibs,
                 sharedobject,
                 mesondir,
-                verbose,
-            )
-        else:
-            returncode = _pymake_compile(
-                srcfiles,
-                target,
-                fc,
-                cc,
-                expedite,
-                dryrun,
-                double,
-                debug,
-                fflags,
-                cflags,
-                syslibs,
-                arch,
-                intelwin,
-                sharedobject,
                 verbose,
             )
 
@@ -359,12 +319,10 @@ def main(
         if makeclean and returncode == 0:
             _clean_temp_files(
                 target,
-                intelwin,
                 inplace,
                 objdir_temp,
                 moddir_temp,
                 srcdir_temp,
-                meson,
                 mesondir,
                 verbose,
                 meson_provided=meson_provided,
@@ -389,7 +347,6 @@ def _pymake_initialize(
     objdir_temp,
     moddir_temp,
     srcdir_temp,
-    meson,
 ):
     """Remove temp source directory and target, and then copy source into
     source temp directory.
@@ -514,14 +471,6 @@ def _pymake_initialize(
         for fpth in remove_list:
             srcfiles.remove(fpth)
 
-    # if they don't exist and not compiling with meson,
-    # create directories for objects and module (*.mod) files.
-    if not meson:
-        if not os.path.exists(objdir_temp):
-            os.makedirs(objdir_temp)
-        if not os.path.exists(moddir_temp):
-            os.makedirs(moddir_temp)
-
     return srcfiles
 
 
@@ -561,12 +510,10 @@ def get_temporary_directories(appdir=None, target=None):
 
 def _clean_temp_files(
     target,
-    intelwin,
     inplace,
     objdir_temp,
     moddir_temp,
     srcdir_temp,
-    meson,
     mesondir,
     verbose=False,
     meson_provided=False,
@@ -578,9 +525,6 @@ def _clean_temp_files(
     ----------
     target : str
         path for executable to create
-    intelwin : bool
-        boolean indicating if pymake was used to compile source code on
-        Windows using Intel compilers
     inplace : bool
         boolean indicating that the source files in srcdir, srcdir2, and
         defined in extrafiles will be used directly. If inplace is True,
@@ -594,9 +538,6 @@ def _clean_temp_files(
         path for directory that will contain the source files. If
         srcdir_temp is the same as srcdir then the original source files
         will be used.
-    meson : bool
-        boolean indicating that the executable should be built using the
-        meson build system. (default is False)
     mesondir : str
         Main meson.build file path. the current directory is used when
         mesondir is None (default is None)
@@ -611,17 +552,11 @@ def _clean_temp_files(
     None
 
     """
-    # set object extension
-    if intelwin:
-        objext = ".obj"
-    else:
-        objext = ".o"
-
     # clean things up
     if verbose:
         print("\nCleaning up temporary source, object, and module files...")
     filelist = os.listdir(".")
-    delext = [".mod", objext]
+    delext = [".mod", ".o", ".obj"]
     for f in filelist:
         for ext in delext:
             if f.endswith(ext):
@@ -659,37 +594,28 @@ def _clean_temp_files(
         if verbose:
             print(f"removing...'{moddir_temp}'")
         shutil.rmtree(moddir_temp)
-    if meson:
-        meson_builddir = os.path.join(mesondir, "_build")
-        if os.path.isdir(meson_builddir):
+    meson_builddir = os.path.join(mesondir, "_build")
+    if os.path.isdir(meson_builddir):
+        if verbose:
+            print(f"removing...'{meson_builddir}'")
+        shutil.rmtree(meson_builddir)
+    # a build file the target provides is not a file pymake wrote
+    if not meson_provided:
+        main_meson_file = os.path.join(mesondir, "meson.build")
+        if os.path.isfile(main_meson_file):
             if verbose:
-                print(f"removing...'{meson_builddir}'")
-            shutil.rmtree(meson_builddir)
-        # a build file the target provides is not a file pymake wrote
-        if not meson_provided:
-            main_meson_file = os.path.join(mesondir, "meson.build")
-            if os.path.isfile(main_meson_file):
-                if verbose:
-                    print(f"removing...'{main_meson_file}'")
-                os.remove(main_meson_file)
-
-    # remove the windows batchfile
-    batch_file = "compile.bat"
-    if intelwin and os.path.isfile(batch_file):
-        os.remove(batch_file)
+                print(f"removing...'{main_meson_file}'")
+            os.remove(main_meson_file)
     return
 
 
-def _create_openspec(intelwin, srcfiles, verbose):
+def _create_openspec(srcfiles, verbose):
     """Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
     STREAM ACCESS. This is specific to MODFLOW and MT3D based targets. Source
     directories are scanned and files defining file access are replaced.
 
     Parameters
     ----------
-    intelwin : bool
-        boolean indicating if source files are being built on Windows using
-        intel compilers.
     srcfiles : list
         list of source files to be compiled
     verbose: bool
@@ -718,12 +644,8 @@ def _create_openspec(intelwin, srcfiles, verbose):
                 if verbose:
                     print(f'replacing..."{fpth}"')
                 f = open(fpth, "w")
-                if intelwin:
-                    data_access = "SEQUENTIAL"
-                    data_form = "BINARY"
-                else:
-                    data_access = "STREAM"
-                    data_form = "UNFORMATTED"
+                data_access = "STREAM"
+                data_form = "UNFORMATTED"
 
                 line = dedent(f"""\
                     c -- created by pymake_base.py
@@ -735,519 +657,6 @@ def _create_openspec(intelwin, srcfiles, verbose):
                 """)
                 f.write(line)
                 f.close()
-
-
-def _check_out_of_date(srcfile, objfile):
-    """Check if existing object files are current with the existing source
-    files.
-
-    Parameters
-    ----------
-    srcfile : str
-        source file path
-    objfile : str
-        object file path
-
-    Returns
-    -------
-    stale : bool
-        boolean indicating if the object file is current
-
-    """
-    stale = True
-    if os.path.exists(objfile):
-        t1 = os.path.getmtime(objfile)
-        t2 = os.path.getmtime(srcfile)
-        if t1 > t2:
-            stale = False
-    return stale
-
-
-def _pymake_compile(
-    srcfiles,
-    target,
-    fc,
-    cc,
-    expedite,
-    dryrun,
-    double,
-    debug,
-    fflags,
-    cflags,
-    syslibs,
-    arch,
-    intelwin,
-    sharedobject,
-    verbose,
-):
-    """Standard compile method.
-
-    Parameters
-    ----------
-    srcfiles : list
-        list of source file names
-    target : str
-        path for executable to create
-    fc : str
-        fortran compiler
-    cc : str
-        c or cpp compiler
-    expedite : bool
-        boolean indicating if only out of date source files will be compiled.
-        Clean must not have been used on previous build.
-    dryrun : bool
-        boolean indicating if source files should be compiled.  Files will be
-        deleted, if makeclean is True.
-    double : bool
-        boolean indicating a compiler switch will be used to create an
-        executable with double precision real variables.
-    debug : bool
-        boolean indicating is a debug executable will be built
-    fflags : list
-        user provided list of fortran compiler flags
-    cflags : list
-        user provided list of c or cpp compiler flags
-    syslibs : list
-        user provided syslibs
-    arch : str
-        architecture to use for Intel Compilers on Windows (default is intel64)
-    intelwin : bool
-        boolean indicating if pymake was used to compile source code on
-        Windows using Intel compilers
-    sharedobject : bool
-        boolean indicating a shared object will be built
-    verbose : bool
-        boolean indicating if output will be printed to the terminal
-
-    Returns
-    -------
-    returncode : int
-        returncode
-
-    """
-    # write pymake setting
-    if verbose:
-        msg = f"\nPymake settings in {_pymake_compile.__name__}\n" + 40 * "-"
-        print(msg)
-        frame = inspect.currentframe()
-        fnargs, _, _, values = inspect.getargvalues(frame)
-        for arg in fnargs:
-            value = values[arg]
-            if not value:
-                value = "None"
-            elif isinstance(value, list):
-                value = ", ".join(value)
-            print(f" {arg}={value}")
-
-    # initialize returncode
-    returncode = 0
-
-    # initialize ilink
-    ilink = 0
-
-    # get temporary object and module directories
-    objdir_temp, moddir_temp, _ = get_temporary_directories(
-        os.path.dirname(target), target=Path(target).stem
-    )
-
-    # set optimization levels
-    optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags)
-
-    # get fortran and c compiler switches
-    tfflags = _get_fortran_flags(
-        target,
-        fc,
-        fflags,
-        debug,
-        double,
-        sharedobject=sharedobject,
-        verbose=verbose,
-    )
-    tcflags = _get_c_flags(
-        target,
-        cc,
-        cflags,
-        debug,
-        srcfiles,
-        sharedobject=sharedobject,
-        verbose=verbose,
-    )
-
-    # get linker flags and syslibs
-    lc, tlflags = _get_linker_flags(
-        target,
-        fc,
-        cc,
-        syslibs,
-        srcfiles,
-        sharedobject=sharedobject,
-        verbose=verbose,
-    )
-
-    # clean exe prior to build so that test for exe below can return a
-    # non-zero error code
-    if os.path.isfile(target):
-        if verbose:
-            msg = f"removing existing target with same name: {target}"
-            print(msg)
-        os.remove(target)
-
-    if intelwin:
-        # update compiler names if necessary
-        ext = ".exe"
-        if fc is not None:
-            if ext not in fc:
-                fc += ext
-        if cc is not None:
-            if ext not in cc:
-                cc += ext
-        if ext not in lc:
-            lc += ext
-
-        # update target extension
-        if sharedobject:
-            program_path, ext = os.path.splitext(target)
-            if ext.lower() != ".dll":
-                target = program_path + ".dll"
-        else:
-            if ext not in target:
-                target += ext
-
-        # delete the batch file if it exists
-        batchfile = "compile.bat"
-        if os.path.isfile(batchfile):
-            try:
-                os.remove(batchfile)
-            except:
-                if verbose:
-                    print(f"could not remove '{batchfile}'")
-
-        # Create target using a batch file on Windows
-        try:
-            _create_win_batch(
-                batchfile,
-                fc,
-                cc,
-                lc,
-                optlevel,
-                tfflags,
-                tcflags,
-                tlflags,
-                objdir_temp,
-                moddir_temp,
-                srcfiles,
-                target,
-                arch,
-                sharedobject,
-            )
-
-            # build the command list for the Windows batch file
-            cmdlists = [
-                batchfile,
-            ]
-        except:
-            errmsg = f"Could not make x64 target: {target}\n"
-            errmsg += traceback.print_exc()
-            print(errmsg)
-
-    else:
-        if sharedobject:
-            program_path, ext = os.path.splitext(target)
-            if _get_osname() == "win32":
-                if ext.lower() != ".dll":
-                    target = program_path + ".dll"
-            elif _get_osname() == "darwin":
-                if ext.lower() != ".dylib":
-                    target = program_path + ".dylib"
-            else:
-                if ext.lower() != ".so":
-                    target = program_path + ".so"
-
-        # initialize the commands and object files list
-        cmdlists = []
-        objfiles = []
-
-        # assume that header files may be in other folders, so make a list
-        searchdir = []
-        for f in srcfiles:
-            dirname = os.path.dirname(f)
-            if dirname not in searchdir:
-                searchdir.append(dirname)
-
-        # build the command for each source file and add to the
-        # list of commands
-        for srcfile in srcfiles:
-            cmdlist = []
-            iscfile = False
-            ext = os.path.splitext(srcfile)[1].lower()
-            if ext in [".c", ".cpp"]:  # mja
-                iscfile = True
-                cmdlist.append(cc)  # mja
-                cmdlist.append(optlevel)
-                for switch in tcflags:  # mja
-                    cmdlist.append(switch)  # mja
-            else:  # mja
-                # build command list
-                cmdlist.append(fc)
-                cmdlist.append(optlevel)
-                for switch in tfflags:
-                    cmdlist.append(switch)
-                # add preprocessor option, if necessary
-                if _preprocess_file(srcfile):
-                    if _get_base_compiler_name(fc) == "gfortran":
-                        pp_tag = "-cpp"
-                    else:
-                        pp_tag = "-fpp"
-                    cmdlist.append(pp_tag)
-
-            # add search path for any c and c++ header files
-            if iscfile:
-                for sd in searchdir:
-                    cmdlist.append(f"-I{sd}")
-            # put object files and module files in objdir_temp and moddir_temp
-            else:
-                cmdlist.append(f"-I{objdir_temp}")
-                if _get_base_compiler_name(fc) in ["ifort", "mpiifort"]:
-                    cmdlist.append("-module")
-                    cmdlist.append(moddir_temp + "/")
-                else:
-                    cmdlist.append(f"-J{moddir_temp}")
-
-            cmdlist.append("-c")
-            cmdlist.append(srcfile)
-
-            # object file name and location
-            srcname, _ = os.path.splitext(srcfile)
-            srcname = srcname.split(os.path.sep)[-1]
-            objfile = os.path.join(objdir_temp, srcname + ".o")
-            cmdlist.append("-o")
-            cmdlist.append(objfile)
-
-            # Save the name of the object file for linker
-            objfiles.append(objfile)
-
-            # If expedited, then check if object file is out of date, if it
-            # exists. No need to compile if object file is newer.
-            compilefile = True
-            if expedite:
-                if not _check_out_of_date(srcfile, objfile):
-                    compilefile = False
-
-            if compilefile:
-                cmdlists.append(cmdlist)
-
-        # Build the link command and then link to create the executable
-        ilink = len(cmdlists)
-        if ilink > 0:
-            cmdlist = [lc, optlevel]
-            cmdlist.append("-o")
-            cmdlist.append(target)
-            for objfile in objfiles:
-                cmdlist.append(objfile)
-
-            # linker switches
-            for switch in tlflags:
-                cmdlist.append(switch)
-
-            # add linker command to the commands list
-            cmdlists.append(cmdlist)
-
-    # execute each command in cmdlists
-    if not dryrun:
-        target_str = os.path.basename(target)
-        for idx, cmdlist in enumerate(cmdlists):
-            if idx == 0:
-                if intelwin:
-                    msg = (
-                        f"\nCompiling '{target_str}' "
-                        "for Windows using Intel compilers..."
-                    )
-                else:
-                    msg = f"\nCompiling object files for '{target_str}'"
-                print(msg)
-            if idx > 0 and idx == ilink:
-                msg = f"\nLinking object files to make '{target_str}'..."
-                print(msg)
-
-            # write the command to the terminal
-            _process_Popen_command(False, cmdlist)
-
-            # run the command using Popen
-            proc = _process_Popen_initialize(cmdlist, intelwin)
-
-            # write batch file execution to terminal
-            if intelwin:
-                _process_Popen_stdout(proc)
-            # establish communicator to report errors
-            else:
-                _process_Popen_communicate(proc)
-
-            # evaluate return code
-            returncode = proc.returncode
-            if returncode != 0:
-                msg = f"compilation failed on '{' '.join(cmdlist)}'"
-                print(msg)
-                break
-
-    # print blank line separator after all commands in cmdlist are executed
-    print("")
-
-    # return
-    return returncode
-
-
-def _create_win_batch(
-    batchfile,
-    fc,
-    cc,
-    lc,
-    optlevel,
-    fflags,
-    cflags,
-    lflags,
-    objdir_temp,
-    moddir_temp,
-    srcfiles,
-    target,
-    arch,
-    sharedobject,
-):
-    """Make an intel compiler batch file for compiling on windows.
-
-    Parameters
-    ----------
-    batchfile : str
-        batch file name to create
-    fc : str
-        fortran compiler
-    cc : str
-        c or cpp compiler
-    lc : str
-        compiler to use for linking
-    optlevel : str
-        compiler optimization switch
-    fflags : list
-        user provided list of fortran compiler flags
-    cflags : list
-        user provided list of c or cpp compiler flags
-    lflags : list
-        linker compiler flags, which are a combination of user provided list
-        of compiler flags for the compiler to used for linking
-    objdir_temp : str
-        path for temporary directory that will contain the object files.
-    moddir_temp : str
-        path for temporary directory that will contain the module files.
-    srcfiles : list
-        list of source file names
-    target : str
-        path for executable to create
-    arch : str
-        architecture to use for Intel Compilers on Windows (default is intel64)
-
-    Returns
-    -------
-
-    """
-    # determine intel version
-    intel_setvars = None
-    # oneAPI
-    oneapi_list = ("LATEST_VERSION", "ONEAPI_ROOT")
-    for on_env_var in oneapi_list:
-        latest_version = os.environ.get(on_env_var)
-        if latest_version is not None:
-            if on_env_var == oneapi_list[0]:
-                cpvars = (
-                    "C:\\Program Files (x86)\\Intel\\oneAPI\\compiler\\"
-                    f"{latest_version}\\env\\vars.bat"
-                )
-            else:
-                cpvars = "C:\\Program Files (x86)\\Intel\\oneAPI\\setvars.bat"
-            if not os.path.isfile(cpvars):
-                raise Exception(f"Could not find cpvars: {cpvars}")
-            intel_setvars = f'"{cpvars}"'
-            break
-    # stand alone intel installation
-    if intel_setvars is None:
-        iflist = [f"IFORT_COMPILER{i}" for i in range(30, 12, -1)]
-        for ift in iflist:
-            stand_alone_intel = os.environ.get(ift)
-            if stand_alone_intel is not None:
-                cpvars = os.path.join(stand_alone_intel, "bin", "compilervars.bat")
-                if not os.path.isfile(cpvars):
-                    raise Exception(f"Could not find cpvars: {cpvars}")
-                intel_setvars = '"' + os.path.normpath(cpvars) + '" ' + arch
-                break
-    # check if either OneAPI or stand alone intel is installed
-    if intel_setvars is None:
-        err_msg = "OneAPI or stand alone version of Intel compilers is not installed"
-        raise ValueError(err_msg)
-
-    # open the batch file
-    f = open(batchfile, "w")
-
-    # only write the command to batchfile if env vars aren't already configured
-    if os.environ.get("SETVARS_COMPLETED") != "1":
-        line = "call " + intel_setvars + "\n"
-        f.write(line)
-
-    # assume that header files may be in other folders, so make a list
-    searchdir = []
-    for s in srcfiles:
-        dirname = os.path.dirname(s)
-        if dirname not in searchdir:
-            searchdir.append(dirname)
-
-    # write commands to build object files
-    target_str = os.path.basename(target)
-    line = f"echo Creating object files to create '{target_str}'\n"
-    f.write(line)
-    for srcfile in srcfiles:
-        if srcfile.endswith(".c") or srcfile.endswith(".cpp"):
-            cmd = cc + " " + optlevel + " "
-            for switch in cflags:
-                cmd += switch + " "
-            cmd += "/c" + " "
-
-            # add search path for any header files
-            for sd in searchdir:
-                cmd += f"/I{sd} "
-
-            obj = os.path.join(
-                objdir_temp, os.path.splitext(os.path.basename(srcfile))[0] + ".obj"
-            )
-            cmd += "/Fo:" + obj + " "
-            cmd += srcfile
-        else:
-            cmd = fc + " " + optlevel + " "
-            for switch in fflags:
-                cmd += switch + " "
-            # add preprocessor option, if necessary
-            if _preprocess_file(srcfile):
-                cmd += "/fpp" + " "
-            cmd += "/c" + " "
-            cmd += f"/module:{moddir_temp}\\ "
-            cmd += f"/object:{objdir_temp}\\ "
-            cmd += srcfile
-        f.write(f"echo {cmd}\n")
-        f.write(cmd + "\n")
-
-    # write commands to link
-    line = f"echo Linking object files to create '{target_str}'\n"
-    f.write(line)
-
-    # assemble the link command
-    cmd = lc + " " + optlevel
-    cmd += " " + "-o" + " " + target + " " + objdir_temp + "\\*.obj"
-    for switch in lflags:
-        cmd += " " + switch
-    cmd += "\n"
-    f.write(f"echo {cmd}\n")
-    f.write(cmd)
-
-    # close the batch file
-    f.close()
-
-    return
 
 
 def _makefile_compiler_ifeq(variable, compilers, indent="\t"):

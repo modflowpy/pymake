@@ -18,11 +18,6 @@ targets = (
     "crt",
 )
 
-meson_parm = (
-    True,
-    False,
-)
-
 
 @pytest.fixture
 def exclude(request) -> str:
@@ -78,8 +73,7 @@ def test_make_program_all(module_tmpdir, exclude) -> None:
 @flaky(max_runs=RERUNS)
 @pytest.mark.dependency(name="mfpymake")
 @pytest.mark.base
-@pytest.mark.parametrize("meson", meson_parm)
-def test_mfpymake(function_tmpdir, meson: bool) -> None:
+def test_mfpymake(function_tmpdir) -> None:
     with set_dir(function_tmpdir):
         src = dedent("""\
             program hello
@@ -108,8 +102,6 @@ def test_mfpymake(function_tmpdir, meson: bool) -> None:
 
         linker_update_environment(fc=fc)
 
-        if meson:
-            cmd.append("--meson")
         run_cli_cmd(cmd)
         cmd = [function_tmpdir / "hello"]
         run_cli_cmd(cmd)

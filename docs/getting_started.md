@@ -25,11 +25,10 @@ The help message identifies required positional arguments and optional
 arguments that can be provided to override default values.
 
 ```
-usage: mfpymake [-h] [-fc FC] [-cc CC] [-ar {ia32,ia32_intel64,intel64}] [-mc] [-dbl] [-dbg] [-e]
-                [-dr] [-sd] [-ff FFLAGS] [-cf CFLAGS] [-sl {-lc,-lm}] [-mf] [-md MAKEFILEDIR]
-                [-cs COMMONSRC] [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v]
-                [--keep] [--zip ZIP] [--inplace] [--networkx] [--meson | --no-meson]
-                [--mesondir MESONDIR]
+usage: mfpymake [-h] [-fc FC] [-cc CC] [-mc] [-dbl] [-dbg] [-sd] [-ff FFLAGS] [-cf CFLAGS]
+                [-sl {-lc,-lm}] [-mf] [-dr] [-mfo] [-md MAKEFILEDIR] [-cs COMMONSRC]
+                [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP]
+                [--inplace] [--networkx] [--mesondir MESONDIR]
                 srcdir target
 
 This is the pymake program for compiling fortran, c, and c++ source
@@ -49,17 +48,10 @@ options:
   -cc CC                C/C++ compiler to use. A version suffix, for example gcc-13, can be
                         included. Valid compilers are gcc, clang, clang++, icc, icl, mpiicc, g++,
                         cl, and none. (default is gcc)
-  -ar {ia32,ia32_intel64,intel64}, --arch {ia32,ia32_intel64,intel64}
-                        Architecture to use for Intel and Microsoft compilers on Windows. (default
-                        is intel64)
   -mc, --makeclean      Clean temporary object, module, and source files when done. (default is
                         False)
   -dbl, --double        Force double precision. (default is False)
   -dbg, --debug         Create debug version. (default is False)
-  -e, --expedite        Only compile out of date source files. Clean must not have been used on
-                        previous build. (default is False)
-  -dr, --dryrun         Do not actually compile. Files will be deleted, if --makeclean is used.
-                        Does not work yet for ifort. (default is False)
   -sd, --subdirs        Include source files in srcdir subdirectories. (default is None)
   -ff FFLAGS, --fflags FFLAGS
                         Additional Fortran compiler flags. Fortran compiler flags should be
@@ -74,6 +66,10 @@ options:
                         start with a blank space or separated from the name (-sl or --syslibs)
                         with a equal sign (-sl='-libgcc'). (default is None)
   -mf, --makefile       Create a GNU make makefile. (default is False)
+  -dr, --dryrun         Deprecated name for --makefile-only, which replaced it when the pymake
+                        build engine was removed. (default is False)
+  -mfo, --makefile-only
+                        Create a GNU make makefile without building the target. (default is False)
   -md MAKEFILEDIR, --makefiledir MAKEFILEDIR
                         GNU make makefile directory. (default is '.')
   -cs COMMONSRC, --commonsrc COMMONSRC
@@ -95,8 +91,6 @@ options:
   --inplace             Source files in srcdir are used directly. (default is False)
   --networkx            Use networkx package to build Directed Acyclic Graph use to determine the
                         order source files are compiled in. (default is False)
-  --meson, --no-meson   Use meson to build executable. Use --no-meson to build with the pymake
-                        build engine. (default is True) (default: True)
   --mesondir MESONDIR   meson directory. (default is the directory the target is downloaded to)
 
 Note that the source directory should not contain any bad

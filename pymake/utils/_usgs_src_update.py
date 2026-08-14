@@ -98,22 +98,15 @@ def _build_replace(targets):
 
 # routines for updating source files locations and to compile
 # with gfortran, gcc, and g++
-def _update_triangle_files(srcdir, fc, cc, arch, double):
+def _update_triangle_files(srcdir, cc, **kwargs):
     """Update triangle source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
     cc : str
         c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -139,25 +132,15 @@ def _update_triangle_files(srcdir, fc, cc, arch, double):
             with open(src, "w") as f:
                 for line in lines:
                     f.write(line)
-    return
 
 
-def _update_mt3dms_files(srcdir, fc, cc, arch, double):
+def _update_mt3dms_files(srcdir, **kwargs):
     """Update MT3DMS source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -206,25 +189,45 @@ def _update_mt3dms_files(srcdir, fc, cc, arch, double):
             f.write(line)
         f.close()
 
-    return
+
+def _gmg1_resprint_alias(srcdir, windows):
+    """Set the resprint alias in gmg1.f for the operating system.
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+    windows : bool
+        boolean indicating if the 64 bit alias windows needs is activated
+
+    Returns
+    -------
+
+    """
+    fpth = os.path.join(srcdir, "gmg1.f")
+    lines = [line.rstrip() for line in open(fpth)]
+    with open(fpth, "w") as f:
+        for line in lines:
+            # comment out the 32 bit one and activate the 64 bit line
+            if (
+                windows
+                and "C      !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT" in line
+            ):
+                line = "       !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
+            if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
+                line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
+            f.write(f"{line}\n")
 
 
-def _update_swtv4_files(srcdir, fc, cc, arch, double):
+def _update_swtv4_files(srcdir, cc, **kwargs):
     """Update SEAWAT source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
     cc : str
         c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -248,49 +251,20 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
             os.rename(src, dst)
 
     if "linux" in sys.platform.lower() or "darwin" in sys.platform.lower():
-        updfile = False
         if _get_base_compiler_name(cc) in ["icc", "clang", "gcc"]:
-            updfile = True
-        if updfile:
-            fpth = os.path.join(srcdir, "gmg1.f")
-            lines = [line.rstrip() for line in open(fpth)]
-            f = open(fpth, "w")
-            for line in lines:
-                if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
-                    line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                f.write(f"{line}\n")
-            f.close()
+            _gmg1_resprint_alias(srcdir, False)
     else:
-        # must be windows
-        if arch == "intel64":
-            fpth = os.path.join(srcdir, "gmg1.f")
-            lines = [line.rstrip() for line in open(fpth)]
-            f = open(fpth, "w")
-            for line in lines:
-                # comment out the 32 bit one and activate the 64 bit line
-                if "C      !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT" in line:
-                    line = "       !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
-                if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
-                    line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                f.write(f"{line}\n")
-            f.close()
-
-    return
+        # must be windows, where the 64 bit alias is used
+        _gmg1_resprint_alias(srcdir, True)
 
 
-def _update_mf2005_files(srcdir, fc, cc, arch, double):
+def _update_mf2005_files(srcdir, double, **kwargs):
     """Update MODFLOW2005 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
     double : bool
         boolean indicating if compiler switches are used to build a
         double precision target
@@ -391,22 +365,13 @@ def _mfusgt_deallocate(line):
     return line
 
 
-def _update_mfusgt_files(srcdir, fc, cc, arch, double):
+def _update_mfusgt_files(srcdir, **kwargs):
     """Update MODFLOW-USG Transport source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -449,19 +414,13 @@ def _update_mfusgt_files(srcdir, fc, cc, arch, double):
         os.rename(fpth, fpth_rename)
 
 
-def _update_mfnwt_files(srcdir, fc, cc, arch, double):
+def _update_mfnwt_files(srcdir, double, **kwargs):
     """Update MODFLOW-NWT source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
     double : bool
         boolean indicating if compiler switches are used to build a
         double precision target
@@ -485,22 +444,13 @@ def _update_mfnwt_files(srcdir, fc, cc, arch, double):
     _update_swi(srcdir, double)
 
 
-def _update_mf2000_files(srcdir, fc, cc, arch, double):
+def _update_mf2000_files(srcdir, **kwargs):
     """Update MODFLOW-2000 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -539,25 +489,15 @@ def _update_mf2000_files(srcdir, fc, cc, arch, double):
             if "C      DATA FORM/'BINARY'/" in line:
                 line = "       DATA FORM/'BINARY'/\n"
             f.write(line)
-    return
 
 
-def _update_mflgr_files(srcdir, fc, cc, arch, double):
+def _update_mflgr_files(srcdir, **kwargs):
     """Update MODFLOW-LGR source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -567,22 +507,13 @@ def _update_mflgr_files(srcdir, fc, cc, arch, double):
     _update_swt(srcdir)
 
 
-def _update_mp6_files(srcdir, fc, cc, arch, double):
+def _update_mp6_files(srcdir, **kwargs):
     """Update MODPATH 6 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -615,22 +546,13 @@ def _update_mp6_files(srcdir, fc, cc, arch, double):
     os.remove(fname1)
 
 
-def _update_mp7_files(srcdir, fc, cc, arch, double):
+def _update_mp7_files(srcdir, **kwargs):
     """Update MODPATH 7 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -647,22 +569,13 @@ def _update_mp7_files(srcdir, fc, cc, arch, double):
     f.close()
 
 
-def _update_sutra_files(srcdir, fc, cc, arch, double):
+def _update_sutra_files(srcdir, **kwargs):
     """Update SUTRA source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -685,25 +598,14 @@ def _update_sutra_files(srcdir, fc, cc, arch, double):
         if updated:
             fpth.write_text("\n".join(lines) + "\n")
 
-    return
 
-
-def _update_vs2dt_files(srcdir, fc, cc, arch, double):
+def _update_vs2dt_files(srcdir, **kwargs):
     """Update VS2DT source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -734,15 +636,10 @@ def _update_vs2dt_files(srcdir, fc, cc, arch, double):
         os.path.join(srcdir, "vs2dt3_3.f"),
     )
 
-    return
-
 
 def _update_mf6_files(
     srcdir: str | os.PathLike,
-    fc: str,
-    cc: str,
-    arch: str,
-    double: bool,
+    **kwargs,
 ) -> None:
     """Update MODFLOW 6 source files to remove files with external dependencies.
     This was required for releases >= 6.4.2.
@@ -751,30 +648,17 @@ def _update_mf6_files(
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
 
     """
     _update_mf6_external_dependencies(srcdir)
-    return
 
 
 def _update_libmf6_files(
     srcdir: str | os.PathLike,
-    fc: str,
-    cc: str,
-    arch: str,
-    double: bool,
+    **kwargs,
 ) -> None:
     """Update MODFLOW 6 shared object source files to remove files with external
     dependencies. This was required for releases >= 6.4.2.
@@ -783,22 +667,12 @@ def _update_libmf6_files(
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
 
     """
     _update_mf6_external_dependencies(srcdir, target="libmf6")
-    return
 
 
 # common source file replacement functions
@@ -852,7 +726,6 @@ def _update_mf6_external_dependencies(
         if path.is_file():
             print(f'Removing..."{path}"')
             os.remove(path)
-    return
 
 
 def _update_utl7(srcdir):
