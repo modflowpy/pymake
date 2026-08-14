@@ -98,7 +98,7 @@ def _build_replace(targets):
 
 # routines for updating source files locations and to compile
 # with gfortran, gcc, and g++
-def _update_triangle_files(srcdir, cc, double):
+def _update_triangle_files(srcdir, cc, **kwargs):
     """Update triangle source files.
 
     Parameters
@@ -107,9 +107,6 @@ def _update_triangle_files(srcdir, cc, double):
         path to directory with source files
     cc : str
         c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -137,18 +134,13 @@ def _update_triangle_files(srcdir, cc, double):
                     f.write(line)
 
 
-def _update_mt3dms_files(srcdir, cc, double):
+def _update_mt3dms_files(srcdir, **kwargs):
     """Update MT3DMS source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -227,7 +219,7 @@ def _gmg1_resprint_alias(srcdir, windows):
             f.write(f"{line}\n")
 
 
-def _update_swtv4_files(srcdir, cc, double):
+def _update_swtv4_files(srcdir, cc, **kwargs):
     """Update SEAWAT source files.
 
     Parameters
@@ -236,9 +228,6 @@ def _update_swtv4_files(srcdir, cc, double):
         path to directory with source files
     cc : str
         c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -269,15 +258,13 @@ def _update_swtv4_files(srcdir, cc, double):
         _gmg1_resprint_alias(srcdir, True)
 
 
-def _update_mf2005_files(srcdir, cc, double):
+def _update_mf2005_files(srcdir, double, **kwargs):
     """Update MODFLOW2005 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
     double : bool
         boolean indicating if compiler switches are used to build a
         double precision target
@@ -378,18 +365,13 @@ def _mfusgt_deallocate(line):
     return line
 
 
-def _update_mfusgt_files(srcdir, cc, double):
+def _update_mfusgt_files(srcdir, **kwargs):
     """Update MODFLOW-USG Transport source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -432,15 +414,13 @@ def _update_mfusgt_files(srcdir, cc, double):
         os.rename(fpth, fpth_rename)
 
 
-def _update_mfnwt_files(srcdir, cc, double):
+def _update_mfnwt_files(srcdir, double, **kwargs):
     """Update MODFLOW-NWT source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
     double : bool
         boolean indicating if compiler switches are used to build a
         double precision target
@@ -464,18 +444,13 @@ def _update_mfnwt_files(srcdir, cc, double):
     _update_swi(srcdir, double)
 
 
-def _update_mf2000_files(srcdir, cc, double):
+def _update_mf2000_files(srcdir, **kwargs):
     """Update MODFLOW-2000 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -516,18 +491,13 @@ def _update_mf2000_files(srcdir, cc, double):
             f.write(line)
 
 
-def _update_mflgr_files(srcdir, cc, double):
+def _update_mflgr_files(srcdir, **kwargs):
     """Update MODFLOW-LGR source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -537,18 +507,13 @@ def _update_mflgr_files(srcdir, cc, double):
     _update_swt(srcdir)
 
 
-def _update_mp6_files(srcdir, cc, double):
+def _update_mp6_files(srcdir, **kwargs):
     """Update MODPATH 6 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -581,18 +546,13 @@ def _update_mp6_files(srcdir, cc, double):
     os.remove(fname1)
 
 
-def _update_mp7_files(srcdir, cc, double):
+def _update_mp7_files(srcdir, **kwargs):
     """Update MODPATH 7 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -609,18 +569,13 @@ def _update_mp7_files(srcdir, cc, double):
     f.close()
 
 
-def _update_sutra_files(srcdir, cc, double):
+def _update_sutra_files(srcdir, **kwargs):
     """Update SUTRA source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -644,18 +599,13 @@ def _update_sutra_files(srcdir, cc, double):
             fpth.write_text("\n".join(lines) + "\n")
 
 
-def _update_vs2dt_files(srcdir, cc, double):
+def _update_vs2dt_files(srcdir, **kwargs):
     """Update VS2DT source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -689,8 +639,7 @@ def _update_vs2dt_files(srcdir, cc, double):
 
 def _update_mf6_files(
     srcdir: str | os.PathLike,
-    cc: str,
-    double: bool,
+    **kwargs,
 ) -> None:
     """Update MODFLOW 6 source files to remove files with external dependencies.
     This was required for releases >= 6.4.2.
@@ -699,11 +648,6 @@ def _update_mf6_files(
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -714,8 +658,7 @@ def _update_mf6_files(
 
 def _update_libmf6_files(
     srcdir: str | os.PathLike,
-    cc: str,
-    double: bool,
+    **kwargs,
 ) -> None:
     """Update MODFLOW 6 shared object source files to remove files with external
     dependencies. This was required for releases >= 6.4.2.
@@ -724,11 +667,6 @@ def _update_libmf6_files(
     ----------
     srcdir : str
         path to directory with source files
-    cc : str
-        c/c++ compiler
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------

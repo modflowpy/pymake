@@ -772,8 +772,8 @@ class Pymake:
                 # execute select replace function
                 replace_function(
                     self.srcdir,
-                    self.cc,
-                    self.double,
+                    cc=self.cc,
+                    double=self.double,
                 )
 
             # write message
