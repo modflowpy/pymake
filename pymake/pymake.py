@@ -772,7 +772,6 @@ class Pymake:
                 # execute select replace function
                 replace_function(
                     self.srcdir,
-                    self.fc,
                     self.cc,
                     self.double,
                 )

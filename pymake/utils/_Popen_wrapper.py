@@ -22,7 +22,9 @@ def _process_Popen_initialize(cmdlist, cwd=None):
         Popen instance
 
     """
-    return Popen(cmdlist, stdout=PIPE, stderr=PIPE, cwd=cwd)
+    # the command list is built by pymake from the compiler and the source
+    # files it was asked for, and is not read from an untrusted source
+    return Popen(cmdlist, stdout=PIPE, stderr=PIPE, cwd=cwd)  # nosec B603
 
 
 def _process_Popen_command(shellflg, cmdlist):
