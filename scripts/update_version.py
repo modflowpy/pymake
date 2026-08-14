@@ -125,8 +125,8 @@ def update_pixi_toml(version: Version) -> None:
 
 
 def update_version(
-    timestamp: datetime = None,
-    version: Version = None,
+    timestamp: datetime | None = None,
+    version: Version | None = None,
 ) -> None:
     """Main function for updating all of the files containing
        version information.
