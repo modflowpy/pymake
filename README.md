@@ -56,9 +56,9 @@ default values.
 
 ```
 usage: mfpymake [-h] [-fc FC] [-cc CC] [-mc] [-dbl] [-dbg] [-sd] [-ff FFLAGS] [-cf CFLAGS]
-                [-sl {-lc,-lm}] [-mf] [-mfo] [-md MAKEFILEDIR] [-cs COMMONSRC] [-ef EXTRAFILES]
-                [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--inplace]
-                [--networkx] [--mesondir MESONDIR]
+                [-sl {-lc,-lm}] [-mf] [-dr] [-mfo] [-md MAKEFILEDIR] [-cs COMMONSRC]
+                [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP]
+                [--inplace] [--networkx] [--mesondir MESONDIR]
                 srcdir target
 
 This is the pymake program for compiling fortran, c, and c++ source
@@ -96,6 +96,8 @@ options:
                         start with a blank space or separated from the name (-sl or --syslibs)
                         with a equal sign (-sl='-libgcc'). (default is None)
   -mf, --makefile       Create a GNU make makefile. (default is False)
+  -dr, --dryrun         Deprecated name for --makefile-only, which replaced it when the pymake
+                        build engine was removed. (default is False)
   -mfo, --makefile-only
                         Create a GNU make makefile without building the target. (default is False)
   -md MAKEFILEDIR, --makefiledir MAKEFILEDIR

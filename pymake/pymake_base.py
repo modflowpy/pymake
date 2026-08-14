@@ -40,6 +40,7 @@ The script could be run from the command line using:
 import os
 import shutil
 import sys
+import warnings
 from pathlib import Path
 from textwrap import dedent
 
@@ -75,6 +76,7 @@ def main(
     syslibs=None,
     makefile=False,
     makefile_only=False,
+    dryrun=None,
     makefiledir=".",
     srcdir2=None,
     extrafiles=None,
@@ -120,6 +122,9 @@ def main(
     makefile_only : bool
         boolean indicating if a GNU make makefile should be created without
         building the target (default is False)
+    dryrun : bool
+        deprecated name for makefile_only, which replaced it when the pymake
+        build engine was removed (default is None)
     makefiledir : str
         GNU make makefile path
     srcdir2 : str
@@ -157,6 +162,17 @@ def main(
         return code
 
     """
+    # dryrun wrote a makefile without building the target, which is what
+    # makefile_only does, so it is still accepted
+    if dryrun is not None:
+        warnings.warn(
+            "dryrun is deprecated and will be removed in a future release, "
+            "use makefile_only instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        makefile_only = makefile_only or dryrun
+
     # a makefile is written from the source files pymake finds, so the
     # source is still processed when only a makefile is asked for
     if makefile_only:

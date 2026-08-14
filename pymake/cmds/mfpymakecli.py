@@ -72,6 +72,7 @@ def main() -> None:
             cflags=args.cflags,
             makefile=args.makefile,
             makefile_only=args.makefile_only,
+            dryrun=args.dryrun or None,
             srcdir2=args.commonsrc,
             extrafiles=args.extrafiles,
             excludefiles=args.excludefiles,

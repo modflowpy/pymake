@@ -184,6 +184,15 @@ def _get_standard_arg_dict():
             "choices": None,
             "action": "store_true",
         },
+        "dryrun": {
+            "tag": ("-dr", "--dryrun"),
+            "help": """Deprecated name for --makefile-only, which replaced it
+                         when the pymake build engine was removed.
+                         (default is False)""",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
+        },
         "makefile_only": {
             "tag": ("-mfo", "--makefile-only"),
             "help": """Create a GNU make makefile without building the
