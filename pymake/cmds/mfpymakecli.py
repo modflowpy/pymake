@@ -65,14 +65,11 @@ def main() -> None:
             fc=args.fc,
             cc=args.cc,
             makeclean=args.makeclean,
-            expedite=args.expedite,
-            dryrun=args.dryrun,
             double=args.double,
             debug=args.debug,
             include_subdirs=args.subdirs,
             fflags=args.fflags,
             cflags=args.cflags,
-            arch=args.arch,
             makefile=args.makefile,
             srcdir2=args.commonsrc,
             extrafiles=args.extrafiles,
@@ -82,7 +79,6 @@ def main() -> None:
             verbose=args.verbose,
             inplace=args.inplace,
             networkx=args.networkx,
-            meson=args.meson,
             mesondir=args.mesondir,
         )
     except (EOFError, KeyboardInterrupt):

@@ -7,8 +7,8 @@ and options can be determined by executing:
 ```console
 $ make-program --help
 
-usage: make-program [-h] [--exclude EXCLUDE] [-fc FC] [-cc CC] [-dbl] [-dr] [-ff FFLAGS]
-                    [-cf CFLAGS] [-ad APPDIR] [-v] [--keep] [--zip ZIP] [--meson | --no-meson]
+usage: make-program [-h] [--exclude EXCLUDE] [-fc FC] [-cc CC] [-dbl] [-ff FFLAGS] [-cf CFLAGS]
+                    [-ad APPDIR] [-v] [--keep] [--zip ZIP]
                     targets
 
 Download and build USGS MODFLOW and related programs.
@@ -30,8 +30,6 @@ options:
                         included. Valid compilers are gcc, clang, clang++, icc, icl, mpiicc, g++,
                         cl, and none. (default is gcc)
   -dbl, --double        Force double precision. (default is False)
-  -dr, --dryrun         Do not actually compile. Files will be deleted, if --makeclean is used.
-                        Does not work yet for ifort. (default is False)
   -ff FFLAGS, --fflags FFLAGS
                         Additional Fortran compiler flags. Fortran compiler flags should be
                         enclosed in quotes and start with a blank space or separated from the name
@@ -45,8 +43,6 @@ options:
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)
   --zip ZIP             Zip built executable. (default is None)
-  --meson, --no-meson   Use meson to build executable. Use --no-meson to build with the pymake
-                        build engine. (default is True) (default: True)
 
 Examples:
 

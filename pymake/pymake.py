@@ -64,10 +64,6 @@ from .config import __description__
 from .pymake_base import main
 from .pymake_parser import _get_standard_arg_dict, _parser_setup
 from .utils._compiler_switches import (
-    _get_c_flags,
-    _get_fortran_flags,
-    _get_linker_flags,
-    _get_optlevel,
     _get_osname,
 )
 from .utils._usgs_src_update import _build_replace
@@ -96,12 +92,9 @@ class Pymake:
         self.srcdir = None
         self.fc = None
         self.cc = None
-        self.arch = None
         self.makeclean = None
         self.double = None
         self.debug = None
-        self.expedite = None
-        self.dryrun = None
         self.include_subdirs = None
         self.fflags = None
         self.cflags = None
@@ -117,7 +110,6 @@ class Pymake:
         self.zip = None
         self.inplace = None
         self.networkx = None
-        self.meson = None
         self.mesondir = None
         # the mesondir pymake set, so that one the user set is not replaced
         self._set_mesondir_value = None
@@ -478,9 +470,6 @@ class Pymake:
         -------
 
         """
-        if not self.meson:
-            return
-
         # a mesondir pymake set for a target it built before is replaced,
         # since that download directory is removed when the target is done,
         # and a mesondir the user set is respected
@@ -736,55 +725,6 @@ class Pymake:
         # set sharedobject for known targets
         self._set_sharedobject()
 
-        # set compiler flags. a meson build determines its own flags,
-        # either in the build file the target provides or in the one
-        # pymake generates, so only user flags are passed on for meson
-        if not self.meson:
-            if self.fc != "none":
-                if self.fflags is None:
-                    optlevel = (
-                        _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
-                        + " "
-                    )
-
-                    self.fflags = optlevel + " ".join(
-                        _get_fortran_flags(
-                            self.target,
-                            self.fc,
-                            [],
-                            self.debug,
-                            double=self.double,
-                            sharedobject=self.sharedobject,
-                        )
-                    )
-            if self.cc != "none":
-                if self.cflags is None:
-                    optlevel = (
-                        _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
-                        + " "
-                    )
-
-                    self.cflags = optlevel + " ".join(
-                        _get_c_flags(
-                            self.target,
-                            self.cc,
-                            [],
-                            self.debug,
-                            sharedobject=self.sharedobject,
-                        )
-                    )
-            if self.syslibs is None:
-                self.syslibs = " ".join(
-                    _get_linker_flags(
-                        self.target,
-                        self.fc,
-                        self.cc,
-                        [],
-                        [],
-                        sharedobject=self.sharedobject,
-                    )[1]
-                )
-
         self.target = self.update_target(self.target, modify_target=modify_exe_name)
 
         build_target = self.set_build_target_bool()
@@ -810,8 +750,7 @@ class Pymake:
             # which has to be there. a generated build file lists the source
             # files pymake finds, so it cannot build them either
             provided_meson = (
-                self.meson
-                and self.mesondir == self.download_dir
+                self.mesondir == self.download_dir
                 and not self.makefile
                 and (Path(self.mesondir) / "meson.build").is_file()
             )
@@ -829,7 +768,6 @@ class Pymake:
                     self.srcdir,
                     self.fc,
                     self.cc,
-                    self.arch,
                     self.double,
                 )
 
@@ -843,15 +781,12 @@ class Pymake:
                 fc=self.fc,
                 cc=self.cc,
                 makeclean=self.makeclean,
-                expedite=self.expedite,
-                dryrun=self.dryrun,
                 double=self.double,
                 debug=self.debug,
                 include_subdirs=self.include_subdirs,
                 fflags=self.fflags,
                 cflags=self.cflags,
                 syslibs=self.syslibs,
-                arch=self.arch,
                 makefile=self.makefile,
                 makefiledir=self.makefiledir,
                 srcdir2=self.srcdir2,
@@ -862,7 +797,6 @@ class Pymake:
                 verbose=self.verbose,
                 inplace=self.inplace,
                 networkx=self.networkx,
-                meson=self.meson,
                 mesondir=self.mesondir,
             )
 

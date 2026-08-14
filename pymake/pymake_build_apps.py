@@ -47,7 +47,6 @@ def build_apps(
     appdir=None,
     verbose=None,
     double=False,
-    meson=False,
     mesondir=None,
     exclude=None,
     clean=True,
@@ -67,9 +66,6 @@ def build_apps(
         target path
     double : bool
         force double precision. (default is False)
-    meson : bool
-        boolean indicating that the executable should be built using the
-        meson build system. (default is False)
     mesondir : str
         Main meson.build file path. the directory a target is downloaded to
         is used when mesondir is None (default is None)
@@ -123,15 +119,11 @@ def build_apps(
     else:
         base_pth = os.path.dirname(appdir)
 
-    # set meson variable if a pymake object was not passed in
+    # set the meson directory if a pymake object was not passed in
     if pymake_object is None:
-        pmobj.meson = meson
         pmobj.mesondir = mesondir
-    else:
-        if pmobj.meson != meson:
-            pmobj.meson = meson
-        if pmobj.mesondir != mesondir:
-            pmobj.mesondir = mesondir
+    elif pmobj.mesondir != mesondir:
+        pmobj.mesondir = mesondir
 
     # clean any existing temporary directories
     temp_pths = get_temporary_directories(base_pth)

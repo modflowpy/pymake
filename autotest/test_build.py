@@ -55,29 +55,13 @@ def build_with_makefile(target):
 
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
-@pytest.mark.parametrize("target", targets)
-def test_build(function_tmpdir, target: str) -> None:
-    with set_dir(function_tmpdir):
-        pm = pymake.Pymake(verbose=True)
-        pm.target = target
-        pm.inplace = True
-        # meson is the default, so the pymake build engine is asked for here
-        pm.meson = False
-        fc = os.environ.get("FC", "gfortran")
-        assert pymake.build_apps(target, pm, verbose=True, clean=False) == 0, (
-            f"could not compile {target}"
-        )
-
-
-@pytest.mark.base
-@flaky(max_runs=RERUNS)
 @pytest.mark.parametrize("target", targets_meson)
 def test_meson_build(function_tmpdir, target: str) -> None:
     fc = os.environ.get("FC", "gfortran")
     cc = os.environ.get("CC", "gcc")
     pymake.linker_update_environment(cc=cc, fc=fc)
     with set_dir(function_tmpdir):
-        assert pymake.build_apps(target, verbose=True, clean=False, meson=True) == 0, (
+        assert pymake.build_apps(target, verbose=True, clean=False) == 0, (
             f"could not compile {target}"
         )
 
@@ -99,7 +83,6 @@ def test_meson_provided_kept(function_tmpdir, verbose: bool) -> None:
     with set_dir(function_tmpdir):
         pm = pymake.Pymake(verbose=verbose)
         pm.target = "zonbud"
-        pm.meson = True
         pm.makeclean = True
         pm.appdir = "."
         pm.download_target("zonbud", download_path="temp")
@@ -132,7 +115,6 @@ def test_meson_mesondir(function_tmpdir) -> None:
     with set_dir(function_tmpdir):
         pm = pymake.Pymake(verbose=True)
         pm.target = "triangle"
-        pm.meson = True
         pm.mesondir = "."
         pm.appdir = "."
         pm.download_target("triangle", download_path="temp")
@@ -164,7 +146,6 @@ def test_meson_artifacts(function_tmpdir, target: str) -> None:
     with set_dir(function_tmpdir):
         pm = pymake.Pymake(verbose=True)
         pm.target = target
-        pm.meson = True
         pm.appdir = "."
         pm.download_target(target, download_path=".")
 
@@ -199,7 +180,6 @@ def test_makefile_build(function_tmpdir, target: str) -> None:
         pm.makefile = True
         pm.makefiledir = "."
         pm.inplace = True
-        pm.dryrun = True
         pm.makeclean = False
 
         pm.download_target(target)

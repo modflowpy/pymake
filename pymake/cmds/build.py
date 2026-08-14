@@ -26,8 +26,6 @@ DICT_KEYS = (
     "verbose",
     "zip",
     "keep",
-    "dryrun",
-    "meson",
     "exclude",
 )
 
@@ -40,7 +38,6 @@ COM_ARG_KEYS = (
     "double",
     "zip",
     "keep",
-    "dryrun",
 )
 
 # ARGS to keep and pass to build_apps()

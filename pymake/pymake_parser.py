@@ -115,14 +115,6 @@ def _get_standard_arg_dict():
             ),
             "action": None,
         },
-        "arch": {
-            "tag": ("-ar", "--arch"),
-            "help": """Architecture to use for Intel and Microsoft
-                         compilers on Windows. (default is intel64)""",
-            "default": "intel64",
-            "choices": ["ia32", "ia32_intel64", "intel64"],
-            "action": None,
-        },
         "makeclean": {
             "tag": ("-mc", "--makeclean"),
             "help": """Clean temporary object, module, and source files when
@@ -141,24 +133,6 @@ def _get_standard_arg_dict():
         "debug": {
             "tag": ("-dbg", "--debug"),
             "help": "Create debug version. (default is False)",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "expedite": {
-            "tag": ("-e", "--expedite"),
-            "help": """Only compile out of date source files.
-                         Clean must not have been used on previous build.
-                         (default is False)""",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "dryrun": {
-            "tag": ("-dr", "--dryrun"),
-            "help": """Do not actually compile.  Files will be
-                         deleted, if --makeclean is used.
-                         Does not work yet for ifort. (default is False)""",
             "default": False,
             "choices": None,
             "action": "store_true",
@@ -298,14 +272,6 @@ def _get_standard_arg_dict():
             "default": False,
             "choices": None,
             "action": "store_true",
-        },
-        "meson": {
-            "tag": ("--meson",),
-            "help": """Use meson to build executable. Use --no-meson to build
-                         with the pymake build engine. (default is True)""",
-            "default": True,
-            "choices": None,
-            "action": argparse.BooleanOptionalAction,
         },
         "mesondir": {
             "tag": ("--mesondir",),
