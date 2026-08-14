@@ -94,27 +94,6 @@ target_keys = (
 )
 
 
-def _str_to_bool(s):
-    """Convert "True" and "False" strings to a boolean.
-
-    Parameters
-    ----------
-    s : str
-        String representation of boolean
-
-    Returns
-    -------
-
-    """
-    if s == "True":
-        return True
-    elif s == "False":
-        return False
-    else:
-        msg = f'Invalid string passed - "{s}"'
-        raise ValueError(msg)
-
-
 class usgs_program_data:
     """USGS program database class."""
 
