@@ -688,6 +688,27 @@ def _makefile_compiler_ifeq(variable, compilers, indent="\t"):
     )
 
 
+def _makefile_path(pth):
+    """Format a path so that it can be written to a makefile.
+
+    A makefile pymake writes is used on every operating system pymake builds
+    on, so a path in one is written with a forward slash separator whichever
+    separator the operating system it was written on uses.
+
+    Parameters
+    ----------
+    pth : str or Path
+        path to format
+
+    Returns
+    -------
+    pth : str
+        path with a forward slash separator
+
+    """
+    return Path(pth).as_posix()
+
+
 def _create_makefile(
     target,
     srcdir,
@@ -905,7 +926,7 @@ def _write_makefile(
     f.write(line)
     vpaths = []
     for idx, source_dir in enumerate(dirs):
-        rel_source_dir = os.path.relpath(source_dir, make_dir).replace("\\", "/")
+        rel_source_dir = _makefile_path(os.path.relpath(source_dir, make_dir))
         vpaths.append(f"SOURCEDIR{idx + 1}")
         line = f"{vpaths[idx]}={rel_source_dir}\n"
         f.write(line)
@@ -1038,11 +1059,11 @@ def _write_makedefaults(
         "# Define the directories for the object and module files\n"
         "# and the executable and its path.\n"
     )
-    tpth = dpth.replace("\\", "/")
+    tpth = _makefile_path(dpth)
     line += f"BINDIR = {tpth}\n"
-    tpth = os.path.relpath(objdir_temp.replace("\\", "/"), make_dir)
+    tpth = _makefile_path(os.path.relpath(objdir_temp, make_dir))
     line += f"OBJDIR = {tpth}\n"
-    tpth = os.path.relpath(moddir_temp.replace("\\", "/"), make_dir)
+    tpth = _makefile_path(os.path.relpath(moddir_temp, make_dir))
     line += f"MODDIR = {tpth}\n"
     line += "INCSWITCH = -I $(OBJDIR)\n"
     line += "MODSWITCH = -J $(MODDIR)\n\n"
