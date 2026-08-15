@@ -9,7 +9,6 @@ import shutil
 import sys
 import types
 from pathlib import Path
-from typing import Union
 
 from ..utils._compiler_switches import _get_base_compiler_name
 from ..utils.usgsprograms import renamed_targets, usgs_program_data

@@ -2,7 +2,6 @@ import os
 import sys
 import time
 from pathlib import Path
-from platform import system
 
 import pytest
 from flaky import flaky

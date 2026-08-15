@@ -1,7 +1,6 @@
 import os
 import sys
 from pathlib import Path
-from platform import system
 
 import pytest
 from modflow_devtools.misc import set_dir

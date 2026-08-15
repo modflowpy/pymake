@@ -1,5 +1,3 @@
-import contextlib
-import os
 import re
 from importlib import metadata
 from pathlib import Path
