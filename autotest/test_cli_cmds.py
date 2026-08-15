@@ -2,12 +2,11 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from platform import system
 from textwrap import dedent
 
 import pytest
 from flaky import flaky
-from modflow_devtools.misc import set_dir, set_env
+from modflow_devtools.misc import set_dir
 
 from pymake import linker_update_environment
 

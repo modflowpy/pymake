@@ -39,17 +39,31 @@ from .utils.usgsprograms import usgs_program_data
 # define public interfaces
 __all__ = [
     "Pymake",
-    "__version__",
     "main",
     "parser",
     "build_apps",
+    "get_temporary_directories",
+    # package metadata
+    "__author__",
+    "__date__",
+    "__description__",
+    "__email__",
+    "__maintainer__",
+    "__status__",
+    "__version__",
     # utilities
     "usgs_program_data",
     "download_and_unzip",
     "getmfexes",
+    "getmfnightly",
     "repo_latest_version",
     "get_repo_assets",
     "zip_all",
+    "linker_update_environment",
+    # meson
+    "meson_build",
+    "meson_install",
+    "meson_setup",
     # plot
     "make_plots",
     "to_pydot",

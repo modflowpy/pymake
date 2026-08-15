@@ -101,7 +101,6 @@ select = [
 ignore = [
     "E722", # do not use bare `except`
     "E741", # ambiguous variable name
-    "F401", # unused import
     "F841", # local variable assigned but never used
     "RUF005", # collection literal concatenation
     "RUF022", # Apply an isort-style sorting to `__all__`
