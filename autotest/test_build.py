@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -23,6 +24,18 @@ if "win" in test_ostag and test_fc_env in ("ifort",):
 targets = [t for t in targets if t not in targets_exclude]
 targets_meson = [t for t in targets if t not in meson_exclude]
 
+# a makefile pymake writes stops on Windows with the Intel compilers, which is
+# what it is written to do, so there is nothing for the test to build there
+_no_make = shutil.which("make") is None
+_windows_error_compiler = test_ostag.startswith("win") and (
+    test_fc_env in ("ifort", "mpiifort") or os.environ.get("CC") == "icl"
+)
+_makefile_skip_reason = (
+    "make is not available"
+    if _no_make
+    else "a makefile cannot be used on Windows with the Intel compilers"
+)
+
 make_exclude = ("libmf6", "gridgen", "mf2000", "swtv4", "mflgr")
 targets_make = [t for t in targets if t not in make_exclude]
 
@@ -41,11 +54,15 @@ def build_with_makefile(target):
         print(f"build {target} with makefile")
         return_code = os.system("make")
 
-        success = os.path.isfile(target)
+        # the executable a makefile builds has the extension the operating
+        # system it was built on uses
+        ext, _ = get_binary_suffixes()
+        exe = f"{target}{ext}"
+        success = os.path.isfile(exe)
         if success:
             errmsg = ""
         else:
-            errmsg = f"{target} created by makefile does not exist."
+            errmsg = f"{exe} created by makefile does not exist."
     else:
         errmsg = "makefile does not exist"
 
@@ -193,7 +210,7 @@ def test_makefile_path() -> None:
 
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
-@pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
+@pytest.mark.skipif(_no_make or _windows_error_compiler, reason=_makefile_skip_reason)
 @pytest.mark.parametrize("target", targets_make)
 def test_makefile_build(function_tmpdir, target: str) -> None:
     with set_dir(function_tmpdir):
