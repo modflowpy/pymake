@@ -688,6 +688,27 @@ def _makefile_compiler_ifeq(variable, compilers, indent="\t"):
     )
 
 
+def _makefile_path(pth):
+    """Format a path so that it can be written to a makefile.
+
+    A makefile pymake writes is used on every operating system pymake builds
+    on, so a path in one is written with a forward slash separator whichever
+    separator the operating system it was written on uses.
+
+    Parameters
+    ----------
+    pth : str or Path
+        path to format
+
+    Returns
+    -------
+    pth : str
+        path with a forward slash separator
+
+    """
+    return Path(pth).as_posix()
+
+
 def _create_makefile(
     target,
     srcdir,
@@ -791,6 +812,90 @@ def _create_makefile(
     heading = f"# makefile created by pymake for the '{exe_name}' executable.\n"
 
     # open makefile
+
+    _write_makefile(
+        make_dir,
+        heading,
+        makedefaults,
+        srcdir,
+        srcdir2,
+        extrafiles,
+        srcfiles,
+        fext,
+        cext,
+        objext,
+    )
+
+    _write_makedefaults(
+        make_dir,
+        heading,
+        makedefaults,
+        target,
+        exe_name,
+        fc,
+        cc,
+        fflags,
+        cflags,
+        debug,
+        double,
+        sharedobject,
+        preprocess,
+        objdir_temp,
+        moddir_temp,
+        fext,
+        cext,
+        win_ext,
+        linux_ext,
+        macos_ext,
+        srcfiles,
+        verbose,
+    )
+
+    # replace windows line endings
+    if sys.platform == "win32":
+        windows_line_ending = b"\r\n"
+        unix_line_ending = b"\n"
+        for file in (
+            os.path.join(make_dir, "makefile"),
+            os.path.join(make_dir, makedefaults),
+        ):
+            with open(file, "rb") as f:
+                content = f.read()
+
+            # replace windows line endings
+            content = content.replace(windows_line_ending, unix_line_ending)
+
+            # rewrite the file
+            with open(file, "wb") as f:
+                f.write(content)
+
+    return
+
+
+def _write_makefile(
+    make_dir,
+    heading,
+    makedefaults,
+    srcdir,
+    srcdir2,
+    extrafiles,
+    srcfiles,
+    fext,
+    cext,
+    objext,
+):
+    """Write the makefile, which lists the source files and the rules.
+
+    Returns
+    -------
+    None
+
+    """
+    # the file is written a line at a time, so the function is long and
+    # takes what every line it writes needs
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    # pylint: disable=too-complex
     f = open(os.path.join(make_dir, "makefile"), "w")
 
     # write header
@@ -823,7 +928,7 @@ def _create_makefile(
     f.write(line)
     vpaths = []
     for idx, source_dir in enumerate(dirs):
-        rel_source_dir = os.path.relpath(source_dir, make_dir).replace("\\", "/")
+        rel_source_dir = _makefile_path(os.path.relpath(source_dir, make_dir))
         vpaths.append(f"SOURCEDIR{idx + 1}")
         line = f"{vpaths[idx]}={rel_source_dir}\n"
         f.write(line)
@@ -887,6 +992,43 @@ def _create_makefile(
     # close the makefile
     f.close()
 
+
+def _write_makedefaults(
+    make_dir,
+    heading,
+    makedefaults,
+    target,
+    exe_name,
+    fc,
+    cc,
+    fflags,
+    cflags,
+    debug,
+    double,
+    sharedobject,
+    preprocess,
+    objdir_temp,
+    moddir_temp,
+    fext,
+    cext,
+    win_ext,
+    linux_ext,
+    macos_ext,
+    srcfiles,
+    verbose,
+):
+    """Write the makedefaults file, which sets the compilers and the flags.
+
+    Returns
+    -------
+    None
+
+    """
+    # the file is written a line at a time, so the function is long and
+    # takes what every line it writes needs
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    # pylint: disable=too-complex
     # open makedefaults
     f = open(os.path.join(make_dir, makedefaults), "w")
 
@@ -923,11 +1065,11 @@ def _create_makefile(
         "# Define the directories for the object and module files\n"
         "# and the executable and its path.\n"
     )
-    tpth = dpth.replace("\\", "/")
+    tpth = _makefile_path(dpth)
     line += f"BINDIR = {tpth}\n"
-    tpth = os.path.relpath(objdir_temp.replace("\\", "/"), make_dir)
+    tpth = _makefile_path(os.path.relpath(objdir_temp, make_dir))
     line += f"OBJDIR = {tpth}\n"
-    tpth = os.path.relpath(moddir_temp.replace("\\", "/"), make_dir)
+    tpth = _makefile_path(os.path.relpath(moddir_temp, make_dir))
     line += f"MODDIR = {tpth}\n"
     line += "INCSWITCH = -I $(OBJDIR)\n"
     line += "MODSWITCH = -J $(MODDIR)\n\n"
@@ -1298,23 +1440,3 @@ def _create_makefile(
 
     # close the makedefaults
     f.close()
-
-    # replace windows line endings
-    if sys.platform == "win32":
-        windows_line_ending = b"\r\n"
-        unix_line_ending = b"\n"
-        for file in (
-            os.path.join(make_dir, "makefile"),
-            os.path.join(make_dir, makedefaults),
-        ):
-            with open(file, "rb") as f:
-                content = f.read()
-
-            # replace windows line endings
-            content = content.replace(windows_line_ending, unix_line_ending)
-
-            # rewrite the file
-            with open(file, "wb") as f:
-                f.write(content)
-
-    return
