@@ -791,6 +791,88 @@ def _create_makefile(
     heading = f"# makefile created by pymake for the '{exe_name}' executable.\n"
 
     # open makefile
+
+    _write_makefile(
+        make_dir,
+        heading,
+        makedefaults,
+        srcdir,
+        srcdir2,
+        extrafiles,
+        srcfiles,
+        fext,
+        cext,
+        objext,
+        verbose,
+    )
+
+    _write_makedefaults(
+        make_dir,
+        heading,
+        makedefaults,
+        target,
+        exe_name,
+        fc,
+        cc,
+        fflags,
+        cflags,
+        syslibs,
+        debug,
+        double,
+        sharedobject,
+        preprocess,
+        objdir_temp,
+        moddir_temp,
+        fext,
+        cext,
+        win_ext,
+        linux_ext,
+        macos_ext,
+        srcfiles,
+        verbose,
+    )
+
+    # replace windows line endings
+    if sys.platform == "win32":
+        windows_line_ending = b"\r\n"
+        unix_line_ending = b"\n"
+        for file in (
+            os.path.join(make_dir, "makefile"),
+            os.path.join(make_dir, makedefaults),
+        ):
+            with open(file, "rb") as f:
+                content = f.read()
+
+            # replace windows line endings
+            content = content.replace(windows_line_ending, unix_line_ending)
+
+            # rewrite the file
+            with open(file, "wb") as f:
+                f.write(content)
+
+    return
+
+
+def _write_makefile(
+    make_dir,
+    heading,
+    makedefaults,
+    srcdir,
+    srcdir2,
+    extrafiles,
+    srcfiles,
+    fext,
+    cext,
+    objext,
+    verbose,
+):
+    """Write the makefile, which lists the source files and the rules.
+
+    Returns
+    -------
+    None
+
+    """
     f = open(os.path.join(make_dir, "makefile"), "w")
 
     # write header
@@ -887,6 +969,39 @@ def _create_makefile(
     # close the makefile
     f.close()
 
+
+def _write_makedefaults(
+    make_dir,
+    heading,
+    makedefaults,
+    target,
+    exe_name,
+    fc,
+    cc,
+    fflags,
+    cflags,
+    syslibs,
+    debug,
+    double,
+    sharedobject,
+    preprocess,
+    objdir_temp,
+    moddir_temp,
+    fext,
+    cext,
+    win_ext,
+    linux_ext,
+    macos_ext,
+    srcfiles,
+    verbose,
+):
+    """Write the makedefaults file, which sets the compilers and the flags.
+
+    Returns
+    -------
+    None
+
+    """
     # open makedefaults
     f = open(os.path.join(make_dir, makedefaults), "w")
 
@@ -1298,23 +1413,3 @@ def _create_makefile(
 
     # close the makedefaults
     f.close()
-
-    # replace windows line endings
-    if sys.platform == "win32":
-        windows_line_ending = b"\r\n"
-        unix_line_ending = b"\n"
-        for file in (
-            os.path.join(make_dir, "makefile"),
-            os.path.join(make_dir, makedefaults),
-        ):
-            with open(file, "rb") as f:
-                content = f.read()
-
-            # replace windows line endings
-            content = content.replace(windows_line_ending, unix_line_ending)
-
-            # rewrite the file
-            with open(file, "wb") as f:
-                f.write(content)
-
-    return
