@@ -1123,11 +1123,70 @@ def _write_makedefaults(
         line += "endif\n\n"
         f.write(line)
 
+    line = _makedefaults_flags(
+        target,
+        fc,
+        cc,
+        fflags,
+        cflags,
+        debug,
+        double,
+        sharedobject,
+        preprocess,
+        fext,
+        cext,
+        srcfiles,
+        verbose,
+    )
+    f.write(line)
+
+    line = _makedefaults_syslibs(
+        target,
+        fc,
+        cc,
+        sharedobject,
+        fext,
+        cext,
+        srcfiles,
+        verbose,
+    )
+    f.write(line)
+
+    line = _makedefaults_tasks(fext, cext)
+    f.write(line)
+
+    f.close()
+
+
+def _makedefaults_flags(
+    target,
+    fc,
+    cc,
+    fflags,
+    cflags,
+    debug,
+    double,
+    sharedobject,
+    preprocess,
+    fext,
+    cext,
+    srcfiles,
+    verbose,
+):
+    """Return the optimization level and the compiler flags for makedefaults.
+
+    Returns
+    -------
+    line : str
+        the lines that set the flags
+
+    """
+    text = ""
     # optimization level
     optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags)
     line = "# set the optimization level (OPTLEVEL) if not defined\n"
     line += f"OPTLEVEL ?= {optlevel.replace('/', '-')}\n\n"
-    f.write(line)
+    text += line
 
     # fortran flags
     if fext is not None:
@@ -1197,7 +1256,7 @@ def _write_makedefaults(
         line += "\t\tMODSWITCH = -module $(MODDIR)\n"
         line += "\tendif\n"
         line += "endif\n\n"
-        f.write(line)
+        text += line
 
     # c/c++ flags
     if cext is not None:
@@ -1270,8 +1329,30 @@ def _write_makedefaults(
         line += f"\t\tCFLAGS ?= {' '.join(tcflags)}\n"
         line += "\tendif\n"
         line += "endif\n\n"
-        f.write(line)
+        text += line
 
+    return text
+
+
+def _makedefaults_syslibs(
+    target,
+    fc,
+    cc,
+    sharedobject,
+    fext,
+    cext,
+    srcfiles,
+    verbose,
+):
+    """Return the linker flags and the link commands for makedefaults.
+
+    Returns
+    -------
+    line : str
+        the lines that set the linker flags
+
+    """
+    text = ""
     # syslibs
     line = "# set the ldflgs\n"
     # windows - gfortran only
@@ -1381,8 +1462,21 @@ def _write_makedefaults(
         line += "\tendif\n"
 
     line += "endif\n\n"
-    f.write(line)
+    text += line
 
+    return text
+
+
+def _makedefaults_tasks(fext, cext):
+    """Return the windows check and the task functions for makedefaults.
+
+    Returns
+    -------
+    line : str
+        the lines that define the tasks
+
+    """
+    text = ""
     # check for windows error condition
     line = "# check for Windows error condition\n"
     line += "ifeq ($(detected_OS), Windows)\n"
@@ -1395,7 +1489,7 @@ def _write_makedefaults(
         line += "\t\tWINDOWSERROR = $(CC)\n"
         line += "\tendif\n"
     line += "endif\n\n"
-    f.write(line)
+    text += line
 
     # task functions
     line = "# Define task functions\n"
@@ -1436,7 +1530,7 @@ def _write_makedefaults(
     line += "cleanobj:\n"
     line += "\t-rm -rf $(OBJDIR)\n"
     line += "\t-rm -rf $(MODDIR)\n\n"
-    f.write(line)
+    text += line
 
     # close the makedefaults
-    f.close()
+    return text
