@@ -42,11 +42,15 @@ def build_with_makefile(target):
         print(f"build {target} with makefile")
         return_code = os.system("make")
 
-        success = os.path.isfile(target)
+        # the executable a makefile builds has the extension the operating
+        # system it was built on uses
+        ext, _ = get_binary_suffixes()
+        exe = f"{target}{ext}"
+        success = os.path.isfile(exe)
         if success:
             errmsg = ""
         else:
-            errmsg = f"{target} created by makefile does not exist."
+            errmsg = f"{exe} created by makefile does not exist."
     else:
         errmsg = "makefile does not exist"
 
