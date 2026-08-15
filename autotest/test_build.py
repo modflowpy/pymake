@@ -169,6 +169,29 @@ def test_meson_artifacts(function_tmpdir, target: str) -> None:
 
 
 @pytest.mark.base
+def test_makefile_path() -> None:
+    """A path written to a makefile uses a forward slash separator.
+
+    The conversion only does anything on Windows, where a path is separated
+    by a backslash, so the windows flavour of Path is used to check it rather
+    than the one for the operating system the test runs on.
+    """
+    from pathlib import PureWindowsPath
+
+    from pymake.pymake_base import _makefile_path
+
+    for pth, expected in (
+        (PureWindowsPath(r"temp\obj_temp"), "temp/obj_temp"),
+        (PureWindowsPath(r"..\..\bin"), "../../bin"),
+        (PureWindowsPath("."), "."),
+        ("a/b", "a/b"),
+    ):
+        assert _makefile_path(pth) == expected, (
+            f"{pth} was written as {_makefile_path(pth)} rather than {expected}"
+        )
+
+
+@pytest.mark.base
 @flaky(max_runs=RERUNS)
 @pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
 @pytest.mark.parametrize("target", targets_make)
