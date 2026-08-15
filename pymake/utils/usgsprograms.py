@@ -23,10 +23,12 @@ import os
 import sys
 import warnings
 
-try:  # python 3.11 and later
+# tomllib is in the standard library from python 3.11, and tomli is the same
+# reader for python 3.10, which is still supported
+try:
     import tomllib
-except ModuleNotFoundError:  # python 3.10
-    import tomli as tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib  # pylint: disable=import-error
 from pathlib import Path
 
 from .download import _request_header, zip_all

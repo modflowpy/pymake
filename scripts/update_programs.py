@@ -5,10 +5,12 @@ import re
 import textwrap
 from pathlib import Path
 
-try:  # python 3.11 and later
+# tomllib is in the standard library from python 3.11, and tomli is the same
+# reader for python 3.10, which is still supported
+try:
     import tomllib
-except ModuleNotFoundError:  # python 3.10
-    import tomli as tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib  # pylint: disable=import-error
 
 from pymake.utils.download import get_repo_assets, repo_latest_version
 
