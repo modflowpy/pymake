@@ -824,7 +824,6 @@ def _create_makefile(
         fext,
         cext,
         objext,
-        verbose,
     )
 
     _write_makedefaults(
@@ -837,7 +836,6 @@ def _create_makefile(
         cc,
         fflags,
         cflags,
-        syslibs,
         debug,
         double,
         sharedobject,
@@ -885,7 +883,6 @@ def _write_makefile(
     fext,
     cext,
     objext,
-    verbose,
 ):
     """Write the makefile, which lists the source files and the rules.
 
@@ -894,6 +891,11 @@ def _write_makefile(
     None
 
     """
+    # the file is written a line at a time, so the function is long and
+    # takes what every line it writes needs
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    # pylint: disable=too-complex
     f = open(os.path.join(make_dir, "makefile"), "w")
 
     # write header
@@ -1001,7 +1003,6 @@ def _write_makedefaults(
     cc,
     fflags,
     cflags,
-    syslibs,
     debug,
     double,
     sharedobject,
@@ -1023,6 +1024,11 @@ def _write_makedefaults(
     None
 
     """
+    # the file is written a line at a time, so the function is long and
+    # takes what every line it writes needs
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    # pylint: disable=too-complex
     # open makedefaults
     f = open(os.path.join(make_dir, makedefaults), "w")
 
