@@ -1142,11 +1142,8 @@ def _write_makedefaults(
 
     line = _makedefaults_syslibs(
         target,
-        fc,
-        cc,
         sharedobject,
         fext,
-        cext,
         srcfiles,
         verbose,
     )
@@ -1177,8 +1174,54 @@ def _makedefaults_flags(
 
     Returns
     -------
-    line : str
+    text : str
         the lines that set the flags
+
+    """
+    text = _makedefaults_fortran_flags(
+        target,
+        fc,
+        cc,
+        fflags,
+        cflags,
+        debug,
+        double,
+        sharedobject,
+        preprocess,
+        fext,
+        verbose,
+    )
+    text += _makedefaults_c_flags(
+        target,
+        fflags,
+        debug,
+        sharedobject,
+        cext,
+        srcfiles,
+        verbose,
+    )
+    return text
+
+
+def _makedefaults_fortran_flags(
+    target,
+    fc,
+    cc,
+    fflags,
+    cflags,
+    debug,
+    double,
+    sharedobject,
+    preprocess,
+    fext,
+    verbose,
+):
+    """Return the optimization level and the fortran flags for makedefaults.
+
+    Returns
+    -------
+    text : str
+        the lines that set the optimization level and the fortran flags
 
     """
     text = ""
@@ -1258,6 +1301,27 @@ def _makedefaults_flags(
         line += "endif\n\n"
         text += line
 
+    return text
+
+
+def _makedefaults_c_flags(
+    target,
+    fflags,
+    debug,
+    sharedobject,
+    cext,
+    srcfiles,
+    verbose,
+):
+    """Return the c and c++ flags for makedefaults.
+
+    Returns
+    -------
+    text : str
+        the lines that set the c and c++ flags
+
+    """
+    text = ""
     # c/c++ flags
     if cext is not None:
         line = "# set the c/c++ flags\n"
@@ -1333,14 +1397,13 @@ def _makedefaults_flags(
 
     return text
 
+    return text
+
 
 def _makedefaults_syslibs(
     target,
-    fc,
-    cc,
     sharedobject,
     fext,
-    cext,
     srcfiles,
     verbose,
 ):
