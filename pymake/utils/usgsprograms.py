@@ -27,8 +27,8 @@ import warnings
 # reader for python 3.10, which is still supported
 try:
     import tomllib
-except ModuleNotFoundError:  # pragma: no cover
-    import tomli as tomllib  # pylint: disable=import-error
+except ModuleNotFoundError:
+    import tomli as tomllib
 from pathlib import Path
 
 from .download import _request_header, zip_all
@@ -80,10 +80,10 @@ class dotdict(dict):
 
 
 # data file containing the USGS program data
-program_data_file = "usgsprograms.toml"
+PROGRAM_DATA_FILE = "usgsprograms.toml"
 
 # keys to create for each target
-target_keys = (
+TARGET_KEYS = (
     "version",
     "current",
     "url",
@@ -112,7 +112,7 @@ class usgs_program_data:
         """
         # pth = os.path.dirname(os.path.abspath(pymake.__file__))
         pth = os.path.dirname(os.path.abspath(__file__))
-        fpth = os.path.join(pth, program_data_file)
+        fpth = os.path.join(pth, PROGRAM_DATA_FILE)
         with open(fpth, "rb") as f:
             programs = tomllib.load(f)["program"]
 
@@ -120,7 +120,7 @@ class usgs_program_data:
         for target, entry in programs.items():
             # programmatically build a dictionary for each target, so that a
             # target has every key whether the file defines it or not
-            d = {key: entry.get(key) for key in target_keys}
+            d = {key: entry.get(key) for key in TARGET_KEYS}
 
             # make it possible to access each key with a dot (.)
             program_data[target] = dotdict(d)
@@ -358,7 +358,7 @@ class usgs_program_data:
             sel = "the current"
         print(
             f'writing a json file ("{fpth}") of {sel} USGS programs\n'
-            f'in the "{program_data_file}" database.\n'
+            f'in the "{PROGRAM_DATA_FILE}" database.\n'
         )
         if prog_data is not None:
             for idx, key in enumerate(prog_data.keys()):
@@ -519,7 +519,7 @@ class usgs_program_data:
             for key, value in json_dict.items():
                 try:
                     for kk in value.keys():
-                        if kk not in target_keys:
+                        if kk not in TARGET_KEYS:
                             raise KeyError(msg + f' - key ("{kk}")')
                 except:
                     raise KeyError(msg)

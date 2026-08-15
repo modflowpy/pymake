@@ -9,8 +9,8 @@ from pathlib import Path
 # reader for python 3.10, which is still supported
 try:
     import tomllib
-except ModuleNotFoundError:  # pragma: no cover
-    import tomli as tomllib  # pylint: disable=import-error
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 from pymake.utils.download import get_repo_assets, repo_latest_version
 
