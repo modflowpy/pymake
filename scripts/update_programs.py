@@ -1,22 +1,29 @@
-"""Update usgsprograms.txt targets to the latest GitHub release."""
+"""Update usgsprograms.toml targets to the latest GitHub release."""
 
 import argparse
 import re
 import textwrap
 from pathlib import Path
 
+# tomllib is in the standard library from python 3.11, and tomli is the same
+# reader for python 3.10, which is still supported
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 from pymake.utils.download import get_repo_assets, repo_latest_version
 
 _epilog = """\
-Report the latest GitHub release for each target in usgsprograms.txt that is
+Report the latest GitHub release for each target in usgsprograms.toml that is
 downloaded from a GitHub repository, and optionally update the target to that
 release. Targets that are not downloaded from GitHub, and targets downloaded
-from a branch archive, are skipped. Use --apply to rewrite usgsprograms.txt.
+from a branch archive, are skipped. Use --apply to rewrite usgsprograms.toml.
 """
 _project_root_path = Path(__file__).parent.parent
-_programs_path = _project_root_path / "pymake" / "utils" / "usgsprograms.txt"
+_programs_path = _project_root_path / "pymake" / "utils" / "usgsprograms.toml"
 
-# usgsprograms.txt column order
+# the field order written for each target
 _columns = (
     "target",
     "version",
@@ -24,8 +31,8 @@ _columns = (
     "url",
     "dirname",
     "srcdir",
-    "standard_switch",
-    "double_switch",
+    "standard_precision",
+    "double_precision",
     "shared_object",
 )
 
@@ -89,65 +96,63 @@ def version_from_tag(tag):
 
 
 def parse_programs(path):
-    """Read usgsprograms.txt into a list of dictionaries.
+    """Read usgsprograms.toml into the leading comments and a list of targets.
 
     Parameters
     ----------
     path : Path
-        path to usgsprograms.txt
+        path to usgsprograms.toml
 
     Returns
     -------
     header : str
-        the header line
+        the comments the file opens with
     rows : list
-        list of dictionaries keyed on the column names
+        list of dictionaries keyed on the field names
 
     """
-    lines = path.read_text().splitlines()
-    header, rows = lines[0], []
-    for line in lines[1:]:
-        if not line.strip():
-            continue
-        values = [value.strip() for value in line.split(",")]
-        rows.append(dict(zip(_columns, values)))
+    text = path.read_text()
+    with open(path, "rb") as f:
+        programs = tomllib.load(f)["program"]
+
+    # the comments the file opens with are kept, so a note added by hand is
+    # not lost when the file is written back
+    header = text[: text.index("[program.")]
+    rows = [{"target": target, **entry} for target, entry in programs.items()]
 
     return header, rows
 
 
 def format_programs(header, rows):
-    """Format the header and rows as aligned usgsprograms.txt content.
-
-    Column widths are taken from the header so that an updated file keeps the
-    alignment of the original.
+    """Format the header and rows as usgsprograms.toml content.
 
     Parameters
     ----------
     header : str
-        the header line
+        the comments the file opens with
     rows : list
-        list of dictionaries keyed on the column names
+        list of dictionaries keyed on the field names
 
     Returns
     -------
     content : str
-        usgsprograms.txt content
+        usgsprograms.toml content
 
     """
-    # each column is padded to the width of its header field, keeping the
-    # leading spaces the header uses for that column
-    fields = header.split(",")
-    layout = [(len(f) - len(f.lstrip(" ")), len(f)) for f in fields]
-
-    lines = [header]
+    lines = [header.rstrip("\n"), ""]
     for row in rows:
-        values = []
-        for idx, name in enumerate(_columns):
-            lead, width = layout[idx]
-            values.append(" " * lead + row[name].ljust(width - lead))
-        lines.append(",".join(values).rstrip())
+        # a target name may contain a dot, which is a table separator
+        lines.append(f'[program."{row["target"]}"]')
+        for name in _columns[1:]:
+            value = row[name]
+            if isinstance(value, bool):
+                lines.append(f"{name} = {str(value).lower()}")
+            else:
+                lines.append(f'{name} = "{value}"')
+        lines.append("")
 
-    return "\n".join(lines) + "\n"
+    # the file ends with a single newline after the last field
+    return "\n".join(lines)
 
 
 def _substitute_tag(value, tag, latest):
@@ -182,7 +187,7 @@ def _resolve_asset(row, match, latest, verbose=False):
     Parameters
     ----------
     row : dict
-        a usgsprograms.txt row
+        a usgsprograms.toml row
     match : re.Match
         the match of the row url against the release asset pattern
     latest : str
@@ -239,7 +244,7 @@ def resolve_target(row, verbose=False):
     Parameters
     ----------
     row : dict
-        a usgsprograms.txt row
+        a usgsprograms.toml row
     verbose : bool
         boolean indicating if output will be printed to the terminal
 
@@ -306,7 +311,7 @@ def main():
     parser.add_argument(
         "--apply",
         action="store_true",
-        help="rewrite usgsprograms.txt with the latest releases",
+        help="rewrite usgsprograms.toml with the latest releases",
     )
     parser.add_argument(
         "-t",

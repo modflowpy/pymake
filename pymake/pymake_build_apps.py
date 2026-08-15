@@ -1,6 +1,6 @@
 """Build MODFLOW-based models and other utility software.
 
-Targets are defined in the usgsprograms database (usgsprograms.txt), which can
+Targets are defined in the usgsprograms database (usgsprograms.toml), which can
 be queried using functions in the usgsprograms module. An example of using
 :code:`pymake.build_apps()` to build MODFLOW 6 is:
 
