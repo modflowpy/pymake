@@ -451,9 +451,7 @@ class usgs_program_data:
                         url_data_obj = datetime.datetime.strptime(
                             url_date, "%a, %d %b %Y %H:%M:%S %Z"
                         )
-                        datetime_obj_utc = url_data_obj.replace(
-                            tzinfo=datetime.timezone.utc
-                        )
+                        datetime_obj_utc = url_data_obj.replace(tzinfo=datetime.UTC)
                         datetime_str = datetime_obj_utc.strftime("%m/%d/%Y")
                         prog_data[target]["url_download_asset_date"] = datetime_str
                         break
