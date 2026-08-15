@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -193,7 +194,7 @@ def test_makefile_path() -> None:
 
 @pytest.mark.base
 @flaky(max_runs=RERUNS)
-@pytest.mark.skipif(sys.platform == "win32", reason="do not run on Windows")
+@pytest.mark.skipif(shutil.which("make") is None, reason="make is not available")
 @pytest.mark.parametrize("target", targets_make)
 def test_makefile_build(function_tmpdir, target: str) -> None:
     with set_dir(function_tmpdir):
