@@ -8,21 +8,14 @@ on:
     types:
       - published
   # a release can also be started from the Actions tab, which creates the
-  # release branch rather than the release branch being pushed by hand
+  # release branch from develop rather than the release branch being pushed
+  # by hand. a release from anywhere else is started by pushing the branch
   workflow_dispatch:
     inputs:
       version:
         description: 'Version number to release, for example 2.0.0.'
         required: true
         type: string
-      branch:
-        description: 'Branch to release from.'
-        required: true
-        default: 'develop'
-        type: choice
-        options:
-          - develop
-          - master
 jobs:
   prep:
     name: Prepare release
@@ -40,7 +33,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: ${{ inputs.branch || github.ref_name }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'develop' || github.ref_name }}
 
       - name: Setup Python
         uses: actions/setup-python@v7
