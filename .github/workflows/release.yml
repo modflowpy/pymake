@@ -7,11 +7,27 @@ on:
   release:
     types:
       - published
+  # a release can also be started from the Actions tab, which creates the
+  # release branch rather than the release branch being pushed by hand
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number to release, for example 2.0.0.'
+        required: true
+        type: string
+      branch:
+        description: 'Branch to release from.'
+        required: true
+        default: 'develop'
+        type: choice
+        options:
+          - develop
+          - master
 jobs:
   prep:
     name: Prepare release
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && github.ref_name != 'master' }}
+    if: ${{ (github.event_name == 'push' && github.ref_name != 'master') || github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: write
       pull-requests: write
@@ -24,6 +40,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ inputs.branch || github.ref_name }}
 
       - name: Setup Python
         uses: actions/setup-python@v7
@@ -55,11 +72,18 @@ jobs:
       - name: Update version
         id: version
         run: |
-          ref="${{ github.ref_name }}"
-          version="${ref#"v"}"
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            version="${{ inputs.version }}"
+            branch="v$version"
+          else
+            ref="${{ github.ref_name }}"
+            version="${ref#"v"}"
+            branch="$ref"
+          fi
           python scripts/update_version.py -v "$version"
           python -c "import pymake; print('Version: ', pymake.__version__)"
           echo "version=$version" >> $GITHUB_OUTPUT
+          echo "branch=$branch" >> $GITHUB_OUTPUT
 
       - name: Lint
         run: ruff check .
@@ -72,6 +96,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           ver="${{ steps.version.outputs.version }}"
+          branch="${{ steps.version.outputs.branch }}"
 
           # remove metadata files
           rm code.json
@@ -81,9 +106,16 @@ jobs:
           git config core.sharedRepository true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # the release branch is created when the release is started from the
+          # Actions tab, and already exists when it was pushed
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            git switch -c "$branch"
+          fi
+
           git add -A
-          git commit -m "ci(release): set version to ${{ steps.version.outputs.version }}"
-          git push origin "${{ github.ref_name }}"
+          git commit -m "ci(release): set version to $ver"
+          git push origin "$branch"
 
           title="Release $ver"
           body='
@@ -91,7 +123,7 @@ jobs:
           
           The release can be approved by merging this pull request into `master`. This will trigger a job to publish the release to PyPI.
           '
-          gh pr create -B "master" -H "${{ github.ref_name }}" --title "$title" --draft --body "$body"
+          gh pr create -B "master" -H "$branch" --title "$title" --draft --body "$body"
 
   release:
     name: Draft release
