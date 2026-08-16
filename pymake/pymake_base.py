@@ -1178,6 +1178,10 @@ def _makedefaults_flags(
         the lines that set the flags
 
     """
+    # the lines are built one at a time from what every line needs, so
+    # the function takes more than the analysis expects
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    # pylint: disable=too-many-locals,too-many-statements
     text = _makedefaults_fortran_flags(
         target,
         fc,
@@ -1224,6 +1228,10 @@ def _makedefaults_fortran_flags(
         the lines that set the optimization level and the fortran flags
 
     """
+    # the lines are built one at a time from what every line needs, so
+    # the function takes more than the analysis expects
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    # pylint: disable=too-many-locals,too-many-statements
     text = ""
     # optimization level
     optlevel = _get_optlevel(target, fc, cc, debug, fflags, cflags)
@@ -1321,6 +1329,10 @@ def _makedefaults_c_flags(
         the lines that set the c and c++ flags
 
     """
+    # the lines are built one at a time from what every line needs, so
+    # the function takes more than the analysis expects
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    # pylint: disable=too-many-locals,too-many-statements
     text = ""
     # c/c++ flags
     if cext is not None:
@@ -1394,8 +1406,6 @@ def _makedefaults_c_flags(
         line += "\tendif\n"
         line += "endif\n\n"
         text += line
-
-    return text
 
     return text
 
@@ -1539,6 +1549,10 @@ def _makedefaults_tasks(fext, cext):
         the lines that define the tasks
 
     """
+    # the lines are built one at a time from what every line needs, so
+    # the function takes more than the analysis expects
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    # pylint: disable=too-many-locals,too-many-statements
     text = ""
     # check for windows error condition
     line = "# check for Windows error condition\n"
