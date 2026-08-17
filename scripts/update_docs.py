@@ -38,6 +38,8 @@ def _blocks():
         (ROOT / "README.md", "mfpymake", "```"),
         (ROOT / "docs" / "getting_started.md", "mfpymake", "```"),
         (ROOT / "docs" / "build_apps.md", "make-program", "```console"),
+        (ROOT / "README.md", "openspec", "```"),
+        (ROOT / "docs" / "getting_started.md", "openspec", "```"),
     ]
 
 
@@ -55,6 +57,11 @@ def _help_text(prog):
         help output for the program
 
     """
+    if prog == "openspec":
+        from pymake.pymake_base import _openspec_content
+
+        return _openspec_content().rstrip()
+
     if prog == "mfpymake":
         parser_obj = mfpymake_parser(examples=examples(prog), prog=prog)
     elif prog == "make-program":
@@ -75,7 +82,7 @@ def _help_text(prog):
             os.environ["COLUMNS"] = columns
 
 
-def _replace_block(text, fence, help_text):
+def _replace_block(text, fence, help_text, marker="usage: "):
     """Replace the fenced block that holds the help output.
 
     Parameters
@@ -102,11 +109,33 @@ def _replace_block(text, fence, help_text):
         elif start is None:
             # a line the block opens with, such as the command that was run,
             # is kept
-            if line.startswith("usage: "):
+            if line.startswith(marker):
                 start = idx
         elif line.rstrip() == "```":
             return "".join(lines[:start]) + help_text + "\n" + "".join(lines[idx:])
-    raise ValueError(f"no block opened by {fence} with a usage message was found")
+    raise ValueError(f"no block opened by {fence} starting with {marker!r} was found")
+
+
+def _updated(path, prog, fence):
+    """Return the contents of a documentation file with its block written.
+
+    Parameters
+    ----------
+    path : Path
+        path to the documentation file
+    prog : str
+        what the block shows
+    fence : str
+        fence that opens the block
+
+    Returns
+    -------
+    updated : str
+        contents with the block written
+
+    """
+    marker = "c -- created by" if prog == "openspec" else "usage: "
+    return _replace_block(path.read_text(), fence, _help_text(prog), marker=marker)
 
 
 def main():
@@ -122,7 +151,7 @@ def main():
     stale = []
     for path, prog, fence in _blocks():
         before = path.read_text()
-        after = _replace_block(before, fence, _help_text(prog))
+        after = _updated(path, prog, fence)
         name = path.relative_to(ROOT)
         if before == after:
             print(f"  {name} current ({prog})")

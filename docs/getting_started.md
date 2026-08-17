@@ -167,11 +167,11 @@ and `FILESPEC.inc` (MT3DMS) files will automatically be changed to the
 following so that binary files are created properly using standard Fortran:
 
 ```
-c -- created by pymake.py
-CHARACTER*20 ACCESS,FORM,ACTION(2)
-DATA ACCESS/'STREAM'/
-DATA FORM/'UNFORMATTED'/
-DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
+c -- created by pymake_base.py
+      CHARACTER*20 ACCESS,FORM,ACTION(2)
+      DATA ACCESS/'STREAM'/
+      DATA FORM/'UNFORMATTED'/
+      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
 c -- end of include file
 ```
 
