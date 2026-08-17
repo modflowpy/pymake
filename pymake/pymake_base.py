@@ -662,7 +662,7 @@ def _create_openspec(srcfiles, verbose):
             if os.path.isfile(fpth):
                 if verbose:
                     print(f'replacing..."{fpth}"')
-                with open(fpth, "w") as f:
+                with open(fpth, "w", encoding="utf8") as f:
                     f.write(_openspec_content())
 
 
