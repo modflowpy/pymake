@@ -11,11 +11,17 @@ Python package for building MODFLOW-based programs from source files.
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/fe4275a3cfb84acf9c84aba7b4ae2086)](https://www.codacy.com/gh/modflowpy/pymake/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/pymake&amp;utm_campaign=Badge_Grade)
 [![Documentation Status](https://readthedocs.org/projects/mfpymake/badge/?version=latest)](https://mfpymake.readthedocs.io/en/latest/?badge=latest)  
 
-This is a python package for compiling MODFLOW-based and other Fortran, C, and
-C++ programs. The package determines the build order using a directed acyclic
-graph and then compiles the source files using GNU compilers (`gcc`, `g++`,
-`gfortran`), Clang compilers (`clang`, `clang++`), or the Intel compilers (`ifort`,
-`icl`, `icc`, `mpiifort`).
+This is a python package for building MODFLOW-based and other Fortran, C, and
+C++ programs. The package downloads the source files a target is released with
+and builds it with the [meson](https://mesonbuild.com/) build system, using GNU
+compilers (`gcc`, `g++`, `gfortran`), Clang compilers (`clang`, `clang++`), or
+the Intel compilers (`ifort`, `icl`, `icc`, `mpiifort`).
+
+A target that is released with a meson build file is built with the build file
+it provides. A target that is not is built with a build file pymake writes from
+the source files it finds, which are ordered with a directed acyclic graph of
+the module dependencies. A GNU makefile can be written for a target as well, or
+instead of building it, with `--makefile` and `--makefile-only`.
 
 pymake can be run from the command line or it can be called from within python.
 By default, pymake sets the optimization level, Fortran flags, C/C++ flags, and
@@ -27,11 +33,11 @@ and `FILESPEC.inc` (MT3DMS) files will automatically be changed to the
 following so that binary files are created properly using standard Fortran:
 
 ```
-c -- created by pymake.py
-CHARACTER*20 ACCESS,FORM,ACTION(2)
-DATA ACCESS/'STREAM'/
-DATA FORM/'UNFORMATTED'/
-DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
+c -- created by pymake_base.py
+      CHARACTER*20 ACCESS,FORM,ACTION(2)
+      DATA ACCESS/'STREAM'/
+      DATA FORM/'UNFORMATTED'/
+      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
 c -- end of include file
 ```
 
@@ -61,10 +67,12 @@ usage: mfpymake [-h] [-fc FC] [-cc CC] [-mc] [-dbl] [-dbg] [-sd] [-ff FFLAGS] [-
                 [--inplace] [--networkx] [--mesondir MESONDIR]
                 srcdir target
 
-This is the pymake program for compiling fortran, c, and c++ source
+This is the pymake program for building fortran, c, and c++ source
 files, such as the source files that come with MODFLOW. The program
-works by building a directed acyclic graph of the module dependencies
-and then compiling the source files in the proper order.
+builds a target with the meson build system, using the build file the
+target provides where there is one and writing one from the source
+files it finds where there is not. A GNU makefile can be written for
+the target as well, or instead of building it.
 
 positional arguments:
   srcdir                Path source directory.

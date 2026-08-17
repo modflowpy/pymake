@@ -118,12 +118,8 @@ def test_docs_current():
 
     stale = []
     for path, prog, fence in update_docs._blocks():
-        current = path.read_text()
-        updated = update_docs._replace_block(
-            current, fence, update_docs._help_text(prog)
-        )
-        if current != updated:
-            stale.append(str(path.relative_to(root)))
+        if path.read_text() != update_docs._updated(path, prog, fence):
+            stale.append(f"{path.relative_to(root)} ({prog})")
 
     assert not stale, (
         f"the command line help in {', '.join(stale)} is out of date, "

@@ -31,10 +31,12 @@ usage: mfpymake [-h] [-fc FC] [-cc CC] [-mc] [-dbl] [-dbg] [-sd] [-ff FFLAGS] [-
                 [--inplace] [--networkx] [--mesondir MESONDIR]
                 srcdir target
 
-This is the pymake program for compiling fortran, c, and c++ source
+This is the pymake program for building fortran, c, and c++ source
 files, such as the source files that come with MODFLOW. The program
-works by building a directed acyclic graph of the module dependencies
-and then compiling the source files in the proper order.
+builds a target with the meson build system, using the build file the
+target provides where there is one and writing one from the source
+files it finds where there is not. A GNU makefile can be written for
+the target as well, or instead of building it.
 
 positional arguments:
   srcdir                Path source directory.
@@ -165,11 +167,11 @@ and `FILESPEC.inc` (MT3DMS) files will automatically be changed to the
 following so that binary files are created properly using standard Fortran:
 
 ```
-c -- created by pymake.py
-CHARACTER*20 ACCESS,FORM,ACTION(2)
-DATA ACCESS/'STREAM'/
-DATA FORM/'UNFORMATTED'/
-DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
+c -- created by pymake_base.py
+      CHARACTER*20 ACCESS,FORM,ACTION(2)
+      DATA ACCESS/'STREAM'/
+      DATA FORM/'UNFORMATTED'/
+      DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
 c -- end of include file
 ```
 

@@ -609,6 +609,25 @@ def _clean_temp_files(
     return
 
 
+def _openspec_content():
+    """Return the contents of the openspec include file pymake writes.
+
+    Returns
+    -------
+    content : str
+        the include file contents
+
+    """
+    return dedent("""\
+        c -- created by pymake_base.py
+              CHARACTER*20 ACCESS,FORM,ACTION(2)
+              DATA ACCESS/'STREAM'/
+              DATA FORM/'UNFORMATTED'/
+              DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
+        c -- end of include file
+    """)
+
+
 def _create_openspec(srcfiles, verbose):
     """Create new openspec.inc, FILESPEC.INC, and filespec.inc files that uses
     STREAM ACCESS. This is specific to MODFLOW and MT3D based targets. Source
@@ -643,20 +662,8 @@ def _create_openspec(srcfiles, verbose):
             if os.path.isfile(fpth):
                 if verbose:
                     print(f'replacing..."{fpth}"')
-                f = open(fpth, "w")
-                data_access = "STREAM"
-                data_form = "UNFORMATTED"
-
-                line = dedent(f"""\
-                    c -- created by pymake_base.py
-                          CHARACTER*20 ACCESS,FORM,ACTION(2)
-                          DATA ACCESS/'{data_access}'/
-                          DATA FORM/'{data_form}'/
-                          DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
-                    c -- end of include file
-                """)
-                f.write(line)
-                f.close()
+                with open(fpth, "w", encoding="utf8") as f:
+                    f.write(_openspec_content())
 
 
 def _makefile_compiler_ifeq(variable, compilers, indent="\t"):
