@@ -1,8 +1,9 @@
-"""pymake is a python package for compiling MODFLOW-based and other Fortran, C,
-and  C++ programs. The package determines the build order using a directed
-acyclic graph and then compiles the source files using GNU compilers
-(:code:`gcc`, :code:`g++`, :code:`gfortran`) or Intel compilers
-(:code:`ifort`, :code:`icc`).
+"""pymake is a python package for building MODFLOW-based and other Fortran, C,
+and C++ programs. The package downloads the source files a target is released
+with and builds it with the meson build system, using the build file the target
+provides where there is one and writing one where there is not. The source
+files a generated build file lists are ordered with a directed acyclic graph of
+the module dependencies. A GNU makefile can be written for a target as well.
 """
 
 # pymake
