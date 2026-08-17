@@ -221,6 +221,9 @@ def _order_c_source_files(srcfiles):
         DAG ordered list of c/c++ source files
 
     """
+    # the c and c++ files are searched for what each one includes, which is
+    # done a file at a time and a line at a time
+    # pylint: disable=too-many-locals,too-many-branches,too-complex
     # create a dictionary that has module name and source file name
     # create a dictionary that has a list of modules used within each source
     # create a list of Nodes for later ordering
@@ -293,24 +296,3 @@ def _order_c_source_files(srcfiles):
         osrcfiles.append(node.name)
 
     return osrcfiles
-
-
-if __name__ == "__main__":
-    a = Node("a")
-    b = Node("b")
-    c = Node("c")
-    d = Node("d")
-
-    a.add_dependency(b)
-    a.add_dependency(c)
-    c.add_dependency(d)
-    d.add_dependency(b)
-
-    nodelist = [a, b, c, d]
-
-    dag = DirectedAcyclicGraph(nodelist)
-    ordered = dag.toposort()
-    print("length of output: ", len(ordered))
-
-    for n in ordered:
-        print(n.name)
