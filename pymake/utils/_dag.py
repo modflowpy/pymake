@@ -33,7 +33,17 @@ class Node:
 
 
 class DirectedAcyclicGraph:
+    """A graph of the source files and what each one depends on."""
+
     def __init__(self, nodelist):
+        """Build the graph from a list of nodes.
+
+        Parameters
+        ----------
+        nodelist : list
+            list of Node objects with their dependencies
+
+        """
         self.nodelist = nodelist
 
     def toposort(self):
