@@ -110,7 +110,6 @@ class Pymake:
         self.keep = None
         self.zip = None
         self.inplace = None
-        self.networkx = None
         self.mesondir = None
         # the mesondir pymake set, so that one the user set is not replaced
         self._set_mesondir_value = None
@@ -802,7 +801,6 @@ class Pymake:
                 appdir=self.appdir,
                 verbose=self.verbose,
                 inplace=self.inplace,
-                networkx=self.networkx,
                 mesondir=self.mesondir,
             )
 

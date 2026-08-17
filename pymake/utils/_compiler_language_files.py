@@ -273,10 +273,13 @@ def _get_srcfiles(srcdir, include_subdir):
         list of fortran and c/c++ file in srcdir
 
     """
-    # create a list of all c(pp), f and f90 source files
+    # create a list of all c(pp), f and f90 source files. the walk is sorted
+    # because the order a directory is read in depends on the file system,
+    # and the order the source files are found in decides the order they are
+    # compiled in, which is written to a makefile
     templist = []
-    for path, _, files in os.walk(srcdir):
-        for file in files:
+    for path, _, files in sorted(os.walk(srcdir)):
+        for file in sorted(files):
             if not include_subdir:
                 if path != srcdir:
                     continue
@@ -296,7 +299,7 @@ def _get_srcfiles(srcdir, include_subdir):
     return sorted(srcfiles)
 
 
-def _get_ordered_srcfiles(all_srcfiles, networkx):
+def _get_ordered_srcfiles(all_srcfiles):
     """Create a list of ordered source files (both fortran and c). Ordering is
     build using a directed acyclic graph to determine module dependencies.
 
@@ -304,9 +307,6 @@ def _get_ordered_srcfiles(all_srcfiles, networkx):
     ----------
     all_srcfiles : list
         list of all fortran and c/c++ source files
-    networkx : bool
-        boolean indicating if the NetworkX python package should be used
-        to determine the DAG.
 
     Returns
     -------
@@ -330,9 +330,9 @@ def _get_ordered_srcfiles(all_srcfiles, networkx):
     # order the source files using the directed acyclic graph in _dag.py
     ordered_srcfiles = []
     if ffiles:
-        ordered_srcfiles += _order_f_source_files(ffiles, networkx)
+        ordered_srcfiles += _order_f_source_files(ffiles)
 
     if cfiles:
-        ordered_srcfiles += _order_c_source_files(cfiles, networkx)
+        ordered_srcfiles += _order_c_source_files(cfiles)
 
     return ordered_srcfiles
