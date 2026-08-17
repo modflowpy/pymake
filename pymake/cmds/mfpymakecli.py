@@ -80,7 +80,6 @@ def main() -> None:
             appdir=args.appdir,
             verbose=args.verbose,
             inplace=args.inplace,
-            networkx=args.networkx,
             mesondir=args.mesondir,
         )
     except (EOFError, KeyboardInterrupt):

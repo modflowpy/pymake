@@ -28,7 +28,7 @@ arguments that can be provided to override default values.
 usage: mfpymake [-h] [-fc FC] [-cc CC] [-mc] [-dbl] [-dbg] [-sd] [-ff FFLAGS] [-cf CFLAGS]
                 [-sl {-lc,-lm}] [-mf] [-dr] [-mfo] [-md MAKEFILEDIR] [-cs COMMONSRC]
                 [-ef EXTRAFILES] [-exf EXCLUDEFILES] [-so] [-ad APPDIR] [-v] [--keep] [--zip ZIP]
-                [--inplace] [--networkx] [--mesondir MESONDIR]
+                [--inplace] [--mesondir MESONDIR]
                 srcdir target
 
 This is the pymake program for building fortran, c, and c++ source
@@ -91,8 +91,6 @@ options:
   --keep                Keep existing executable. (default is False)
   --zip ZIP             Zip built executable. (default is None)
   --inplace             Source files in srcdir are used directly. (default is False)
-  --networkx            Use networkx package to build Directed Acyclic Graph use to determine the
-                        order source files are compiled in. (default is False)
   --mesondir MESONDIR   meson directory. (default is the directory the target is downloaded to)
 
 Note that the source directory should not contain any bad

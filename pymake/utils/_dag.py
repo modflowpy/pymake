@@ -16,6 +16,8 @@ __status__ = "Production"
 import os
 import re
 
+import networkx as nx
+
 
 class Node:
     def __init__(self, name):
@@ -31,81 +33,47 @@ class Node:
 
 
 class DirectedAcyclicGraph:
-    def __init__(self, nodelist, networkx=False):
+    def __init__(self, nodelist):
         self.nodelist = nodelist
-        self.networkx = networkx
-        return
 
     def toposort(self):
-        """Perform topological sort."""
-        sort_list = []  # empty list that will contain sorted elements
+        """Perform topological sort.
 
-        # use the NetworkX python package to generate the DAG
-        if self.networkx:
-            try:
-                import networkx as nx
-            except ModuleNotFoundError:
-                raise ModuleNotFoundError(
-                    "install networkx using `pip install networkx"
-                )
+        Returns
+        -------
+        sort_list : list
+            the nodes in the order they are compiled in
 
-            # create a simple dictionary with the node as the key and
-            # the dependencies for each node
-            node_dict = {}
-            for node in self.nodelist:
-                node_dict[node.name] = node.dependencies
+        """
+        # a dictionary with the node as the key and its dependencies
+        node_dict = {node.name: node.dependencies for node in self.nodelist}
 
-            # build the graph
-            ts = nx.DiGraph()
-            for node in self.nodelist:
-                ts.add_node(node.name)
-                if len(node.dependencies) > 0:
-                    for nn in node.dependencies:
-                        ts.add_edge(node.name, nn.name)
+        # build the graph. the nodes and the dependencies are sorted because
+        # a topological sort is not unique and the one networkx returns
+        # depends on the order the graph was built in
+        ts = nx.DiGraph()
+        for node in sorted(self.nodelist, key=lambda n: n.name):
+            ts.add_node(node.name)
+            for nn in sorted(node.dependencies, key=lambda n: n.name):
+                ts.add_edge(node.name, nn.name)
 
-            # test if the graph is acyclic
-            if not nx.is_directed_acyclic_graph(ts):
-                raise ValueError(
-                    "Circular dependencies are present. Cannot determine "
-                    "source file compilation order."
-                )
+        # test if the graph is acyclic
+        if not nx.is_directed_acyclic_graph(ts):
+            raise ValueError(
+                "Circular dependencies are present. Cannot determine "
+                "source file compilation order."
+            )
 
-            # generate the DAG
-            order = tuple(reversed(tuple(nx.topological_sort(ts))))
+        # generate the DAG
+        order = tuple(reversed(tuple(nx.topological_sort(ts))))
 
-            # build sort_list from the DAG and add dependencies from node_dict
-            for name in order:
-                node = Node(name)
-                for dependency in node_dict[name]:
-                    node.add_dependency(dependency)
-                sort_list.append(node)
-
-        # use the original pymake DAG algorithm
-        else:
-            # build a list of nodes with no dependencies
-            tset = set([])
-            for node in self.nodelist:
-                if len(node.dependencies) == 0:
-                    tset.add(node)
-            if len(tset) == 0:
-                for node in self.nodelist:
-                    print(node.name, [nn.name for nn in node.dependencies])
-                raise Exception("All nodes have dependencies")
-
-            # build up the list
-            while len(tset) > 0:
-                node = tset.pop()
-                sort_list.append(node)
-                for mnode in self.nodelist:
-                    if node in mnode.dependencies:
-                        mnode.dependencies.remove(node)
-                        if len(mnode.dependencies) == 0:
-                            tset.add(mnode)
-
-            # check to make sure no remaining dependencies
-            for node in sort_list:
-                if len(node.dependencies) > 0:
-                    raise Exception("Graph has at least one cycle")
+        # build sort_list from the DAG and add dependencies from node_dict
+        sort_list = []
+        for name in order:
+            node = Node(name)
+            for dependency in node_dict[name]:
+                node.add_dependency(dependency)
+            sort_list.append(node)
 
         return sort_list
 
@@ -187,16 +155,13 @@ def _get_f_nodelist(srcfiles):
     return nodelist
 
 
-def _get_dag(nodelist, networkx):
+def _get_dag(nodelist):
     """Create a DAG from the nodelist.
 
     Parameters
     ----------
     nodelist : list
         list of DAG nodes
-    networkx : bool
-        boolean indicating if the NetworkX python package should be used
-        to determine the DAG.
 
     Returns
     -------
@@ -204,20 +169,17 @@ def _get_dag(nodelist, networkx):
         DAG object
 
     """
-    dag = DirectedAcyclicGraph(nodelist, networkx=networkx)
+    dag = DirectedAcyclicGraph(nodelist)
     return dag
 
 
-def _order_f_source_files(srcfiles, networkx):
+def _order_f_source_files(srcfiles):
     """Use a dag and a nodelist to order the fortran source files.
 
     Parameters
     ----------
     srcfiles : list
         list of source file paths
-    networkx : bool
-        boolean indicating if the NetworkX python package should be used
-        to determine the DAG.
 
     Returns
     -------
@@ -226,7 +188,7 @@ def _order_f_source_files(srcfiles, networkx):
 
     """
     nodelist = _get_f_nodelist(srcfiles)
-    dag = _get_dag(nodelist, networkx=networkx)
+    dag = _get_dag(nodelist)
     orderednodes = dag.toposort()
     osrcfiles = []
     for node in orderednodes:
@@ -235,16 +197,13 @@ def _order_f_source_files(srcfiles, networkx):
     return osrcfiles
 
 
-def _order_c_source_files(srcfiles, networkx):
+def _order_c_source_files(srcfiles):
     """Create a ordered list of c/c++ source files.
 
     Parameters
     ----------
     srcfiles : list
         list of source file paths
-    networkx : bool
-        boolean indicating if the NetworkX python package should be used
-        to determine the DAG.
 
     Returns
     -------
@@ -317,7 +276,7 @@ def _order_c_source_files(srcfiles, networkx):
             msg = "order_c_source_files: " + f"{srcfile} key does not exist"
             print(msg)
 
-    dag = _get_dag(nodelist, networkx=networkx)
+    dag = _get_dag(nodelist)
     orderednodes = dag.toposort()
     osrcfiles = []
     for node in orderednodes:

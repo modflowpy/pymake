@@ -62,7 +62,6 @@ def pm(module_tmpdir, target) -> pymake.Pymake:
     pm.makeclean = True
     pm.makefiledir = module_tmpdir
     pm.inplace = True
-    pm.networkx = True
     pm.verbose = True
     yield pm
     pm.finalize()

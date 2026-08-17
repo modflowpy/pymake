@@ -281,15 +281,6 @@ def _get_standard_arg_dict():
             "choices": None,
             "action": "store_true",
         },
-        "networkx": {
-            "tag": ("--networkx",),
-            "help": """Use networkx package to build Directed Acyclic Graph
-                     use to determine the order source files are compiled
-                     in. (default is False)""",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
         "mesondir": {
             "tag": ("--mesondir",),
             "help": """meson directory. (default is the directory the

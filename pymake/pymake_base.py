@@ -85,7 +85,6 @@ def main(
     appdir=None,
     verbose=False,
     inplace=False,
-    networkx=False,
     mesondir=None,
 ):
     """Main pymake function.
@@ -145,12 +144,6 @@ def main(
         boolean indicating that the source files in srcdir, srcdir2, and
         defined in extrafiles will be used directly. If inplace is False,
         source files will be copied to a directory named srcdir_temp.
-        (default is False)
-    networkx : bool
-        boolean indicating that the NetworkX python package will be used to
-        create the Directed Acyclic Graph (DAG) used to determine the order
-        source files are compiled in. The NetworkX package tends to result in
-        a unique DAG more often than the standard algorithm used in pymake.
         (default is False)
     mesondir : str
         Main meson.build file path. the current directory is used when
@@ -264,7 +257,7 @@ def main(
         )
 
         # get ordered list of files to compile
-        srcfiles = _get_ordered_srcfiles(srcfiles, networkx)
+        srcfiles = _get_ordered_srcfiles(srcfiles)
 
         # update openspec files
         _create_openspec(srcfiles, verbose)
