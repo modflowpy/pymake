@@ -207,6 +207,46 @@ def _order_f_source_files(srcfiles):
     return osrcfiles
 
 
+def _c_include_names(srcfile, lines):
+    """Return the names a c or c++ file includes.
+
+    Parameters
+    ----------
+    srcfile : str
+        path to the source file the lines were read from
+    lines : list
+        the lines of the source file
+
+    Returns
+    -------
+    modulelist : list
+        the names the file includes
+    own : str or None
+        the name that matches the source file, which the file defines
+
+    """
+    modulelist = []
+    own = None
+    basename = os.path.splitext(os.path.basename(srcfile))[0].upper()
+    for line in lines:
+        linelist = line.strip().split()
+        if len(linelist) == 0:
+            continue
+        if linelist[0].upper() != "#INCLUDE":
+            continue
+
+        modulename = linelist[1].upper()
+        for cval in ['"', "'", "<", ">"]:
+            modulename = modulename.replace(cval, "")
+
+        if os.path.splitext(modulename)[0] == basename:
+            own = modulename
+        if modulename not in modulelist:
+            modulelist.append(modulename)
+
+    return modulelist, own
+
+
 def _order_c_source_files(srcfiles):
     """Create a ordered list of c/c++ source files.
 
@@ -221,9 +261,8 @@ def _order_c_source_files(srcfiles):
         DAG ordered list of c/c++ source files
 
     """
-    # the c and c++ files are searched for what each one includes, which is
-    # done a file at a time and a line at a time
-    # pylint: disable=too-many-locals,too-many-branches,too-complex
+    # a name is tracked for every source file and every include it uses
+    # pylint: disable=too-many-locals
     # create a dictionary that has module name and source file name
     # create a dictionary that has a list of modules used within each source
     # create a list of Nodes for later ordering
@@ -248,25 +287,12 @@ def _order_c_source_files(srcfiles):
         lines = lines.decode("ascii", "replace").splitlines()
 
         # develop a list of modules in the file
-        modulelist = []  # list of modules used by this source file
-        for idx, line in enumerate(lines):
-            linelist = line.strip().split()
-            if len(linelist) == 0:
-                continue
-            if linelist[0].upper() == "#INCLUDE":
-                modulename = linelist[1].upper()
-                for cval in ['"', "'", "<", ">"]:
-                    modulename = modulename.replace(cval, "")
+        modulelist, own = _c_include_names(srcfile, lines)
 
-                # add source file for this c(pp) file if it is the same
-                # as the include file without the extension
-                bn = os.path.basename(srcfile)
-                if os.path.splitext(modulename)[0] == os.path.splitext(bn)[0].upper():
-                    module_dict[modulename] = srcfile
-
-                # add include file name
-                if modulename not in modulelist:
-                    modulelist.append(modulename)
+        # add source file for this c(pp) file if it is the same
+        # as the include file without the extension
+        if own is not None:
+            module_dict[own] = srcfile
 
         # update the dictionary if any entries have been found
         sourcefile_module_dict[srcfile] = modulelist
