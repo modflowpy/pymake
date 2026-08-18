@@ -116,7 +116,7 @@ def _update_triangle_files(srcdir, cc, **kwargs):
         "icl",
         "cl",
     ):
-        src = os.path.join(srcdir, "triangle.c")
+        src = Path(srcdir) / "triangle.c"
         updateSource = True
         with open(src, "r") as f:
             lines = f.readlines()
@@ -146,39 +146,39 @@ def _update_mt3dms_files(srcdir, **kwargs):
 
     """
     # Replace the getcl command with getarg
-    f1 = open(os.path.join(srcdir, "mt3dms5.for"), "r")
-    f2 = open(os.path.join(srcdir, "mt3dms5.for.tmp"), "w")
+    f1 = open(Path(srcdir) / "mt3dms5.for", "r")
+    f2 = open(Path(srcdir) / "mt3dms5.for.tmp", "w")
     for line in f1:
         f2.write(line.replace("CALL GETCL(FLNAME)", "CALL GETARG(1,FLNAME)"))
     f1.close()
     f2.close()
-    os.remove(os.path.join(srcdir, "mt3dms5.for"))
+    Path(Path(srcdir) / "mt3dms5.for").unlink()
     shutil.move(
-        os.path.join(srcdir, "mt3dms5.for.tmp"),
-        os.path.join(srcdir, "mt3dms5.for"),
+        Path(srcdir) / "mt3dms5.for.tmp",
+        Path(srcdir) / "mt3dms5.for",
     )
 
     # Need to initialize the V array in SADV5B
     # see here: https://github.com/MODFLOW-USGS/mt3d-usgs/pull/46
-    f1 = open(os.path.join(srcdir, "mt_adv5.for"), "r")
-    f2 = open(os.path.join(srcdir, "mt_adv5.for.tmp"), "w")
+    f1 = open(Path(srcdir) / "mt_adv5.for", "r")
+    f2 = open(Path(srcdir) / "mt_adv5.for.tmp", "w")
     sfind = "C--SET DT TO NEGATIVE FOR BACKWARD TRACKING"
     sreplace = "C--INITIALIZE\n      V(:)=0.\nC\n" + sfind
     for line in f1:
         f2.write(line.replace(sfind, sreplace))
     f1.close()
     f2.close()
-    os.remove(os.path.join(srcdir, "mt_adv5.for"))
+    Path(Path(srcdir) / "mt_adv5.for").unlink()
     shutil.move(
-        os.path.join(srcdir, "mt_adv5.for.tmp"),
-        os.path.join(srcdir, "mt_adv5.for"),
+        Path(srcdir) / "mt_adv5.for.tmp",
+        Path(srcdir) / "mt_adv5.for",
     )
 
     for file_list in (
         "mt_btn5.for",
         "mt_utl5.for",
     ):
-        fpth = os.path.join(srcdir, file_list)
+        fpth = Path(srcdir) / file_list
         with open(fpth) as f:
             lines = f.readlines()
         f = open(fpth, "w")
@@ -203,7 +203,7 @@ def _gmg1_resprint_alias(srcdir, windows):
     -------
 
     """
-    fpth = os.path.join(srcdir, "gmg1.f")
+    fpth = Path(srcdir) / "gmg1.f"
     lines = [line.rstrip() for line in open(fpth)]
     with open(fpth, "w") as f:
         for line in lines:
@@ -235,19 +235,19 @@ def _update_swtv4_files(srcdir, cc, **kwargs):
     # Remove the parallel and serial folders from the source directory
     dlist = ["parallel", "serial"]
     for d in dlist:
-        dname = os.path.join(srcdir, d)
-        if os.path.isdir(dname):
+        dname = Path(srcdir) / d
+        if Path(dname).is_dir():
             print(f'Removing..."{dname}"')
-            shutil.rmtree(os.path.join(srcdir, d))
+            shutil.rmtree(Path(srcdir) / d)
 
     # rename all source files to lower case so compilation doesn't
     # bomb on case-sensitive operating systems
     srcfiles = os.listdir(srcdir)
     for filename in srcfiles:
-        src = os.path.join(srcdir, filename)
-        dst = os.path.join(srcdir, filename.lower())
+        src = Path(srcdir) / filename
+        dst = Path(srcdir) / filename.lower()
         if "linux" in sys.platform.lower() or "darwin" in sys.platform.lower():
-            os.rename(src, dst)
+            Path(src).rename(dst)
 
     if "linux" in sys.platform.lower() or "darwin" in sys.platform.lower():
         if _get_base_compiler_name(cc) in ["icc", "clang", "gcc"]:
@@ -409,8 +409,8 @@ def _update_mfusgt_files(srcdir, **kwargs):
     if fpth.exists():
         fpth_rename = srcdir / "utl7u1_RD.f"
         if fpth_rename.exists():
-            os.remove(fpth_rename)
-        os.rename(fpth, fpth_rename)
+            Path(fpth_rename).unlink()
+        Path(fpth).rename(fpth_rename)
 
 
 def _update_mfnwt_files(srcdir, double, **kwargs):
@@ -429,9 +429,9 @@ def _update_mfnwt_files(srcdir, double, **kwargs):
 
     """
     # remove lrestart.f
-    fpth = os.path.join(srcdir, "Irestart.f")
-    if os.path.exists(fpth):
-        os.remove(fpth)
+    fpth = Path(srcdir) / "Irestart.f"
+    if Path(fpth).exists():
+        Path(fpth).unlink()
 
     # update utl7.f
     _update_utl7(srcdir)
@@ -458,27 +458,27 @@ def _update_mf2000_files(srcdir, **kwargs):
     # Remove six src folders
     dlist = ["beale2k", "hydprgm", "mf96to2k", "mfpto2k", "resan2k", "ycint2k"]
     for d in dlist:
-        dname = os.path.join(srcdir, d)
-        if os.path.isdir(dname):
+        dname = Path(srcdir) / d
+        if Path(dname).is_dir():
             print(f'Removing..."{dname}"')
-            shutil.rmtree(os.path.join(srcdir, d))
+            shutil.rmtree(Path(srcdir) / d)
 
     # Move src files and serial src file to src directory
-    tpth = os.path.join(srcdir, "mf2k")
-    files = [f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))]
+    tpth = Path(srcdir) / "mf2k"
+    files = [f for f in os.listdir(tpth) if (Path(tpth) / f).is_file()]
     for f in files:
-        shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
-    tpth = os.path.join(srcdir, "mf2k", "serial")
-    files = [f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))]
+        shutil.move(Path(tpth) / f, Path(srcdir) / f)
+    tpth = Path(srcdir) / "mf2k" / "serial"
+    files = [f for f in os.listdir(tpth) if (Path(tpth) / f).is_file()]
     for f in files:
-        shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
+        shutil.move(Path(tpth) / f, Path(srcdir) / f)
 
     # Remove mf2k directory in source directory
-    tpth = os.path.join(srcdir, "mf2k")
+    tpth = Path(srcdir) / "mf2k"
     shutil.rmtree(tpth)
 
     # modify the openspec.inc file to use binary instead of unformatted
-    fname = os.path.join(srcdir, "openspec.inc")
+    fname = Path(srcdir) / "openspec.inc"
     with open(fname) as f:
         lines = f.readlines()
     with open(fname, "w") as f:
@@ -518,22 +518,22 @@ def _update_mp6_files(srcdir, **kwargs):
     -------
 
     """
-    fname1 = os.path.join(srcdir, "MP6Flowdata.for")
+    fname1 = Path(srcdir) / "MP6Flowdata.for"
     f = open(fname1, "r")
 
-    fname2 = os.path.join(srcdir, "MP6Flowdata_mod.for")
+    fname2 = Path(srcdir) / "MP6Flowdata_mod.for"
     f2 = open(fname2, "w")
     for line in f:
         line = line.replace("CD.QX2", "CD%QX2")
         f2.write(line)
     f.close()
     f2.close()
-    os.remove(fname1)
+    Path(fname1).unlink()
 
-    fname1 = os.path.join(srcdir, "MP6MPBAS1.for")
+    fname1 = Path(srcdir) / "MP6MPBAS1.for"
     f = open(fname1, "r")
 
-    fname2 = os.path.join(srcdir, "MP6MPBAS1_mod.for")
+    fname2 = Path(srcdir) / "MP6MPBAS1_mod.for"
     f2 = open(fname2, "w")
     for line in f:
         line = line.replace(
@@ -542,7 +542,7 @@ def _update_mp6_files(srcdir, **kwargs):
         f2.write(line)
     f.close()
     f2.close()
-    os.remove(fname1)
+    Path(fname1).unlink()
 
 
 def _update_mp7_files(srcdir, **kwargs):
@@ -557,7 +557,7 @@ def _update_mp7_files(srcdir, **kwargs):
     -------
 
     """
-    fpth = os.path.join(srcdir, "StartingLocationReader.f90")
+    fpth = Path(srcdir) / "StartingLocationReader.f90"
     with open(fpth) as f:
         lines = f.readlines()
     f = open(fpth, "w")
@@ -611,28 +611,28 @@ def _update_vs2dt_files(srcdir, **kwargs):
 
     """
     # move the main source into the source directory
-    f1 = os.path.join(srcdir, "..", "vs2dt3_3.f")
+    f1 = Path(srcdir) / ".." / "vs2dt3_3.f"
     f1 = os.path.abspath(f1)
-    if not os.path.isfile(f1):
+    if not Path(f1).is_file():
         raise OSError(f"{f1} does not exist")
-    f2 = os.path.join(srcdir, "vs2dt3_3.f")
+    f2 = Path(srcdir) / "vs2dt3_3.f"
     f2 = os.path.abspath(f2)
     shutil.move(f1, f2)
-    if not os.path.isfile(f2):
+    if not Path(f2).is_file():
         raise OSError(f"{f2} does not exist")
 
-    f1 = open(os.path.join(srcdir, "vs2dt3_3.f"), "r")
-    f2 = open(os.path.join(srcdir, "vs2dt3_3.f.tmp"), "w")
+    f1 = open(Path(srcdir) / "vs2dt3_3.f", "r")
+    f2 = open(Path(srcdir) / "vs2dt3_3.f.tmp", "w")
     for line in f1:
         srctxt = "     `POSITION='REWIND')"
         rpctxt = "     `POSITION='REWIND',ACCESS='STREAM')"
         f2.write(line.replace(srctxt, rpctxt))
     f1.close()
     f2.close()
-    os.remove(os.path.join(srcdir, "vs2dt3_3.f"))
+    Path(Path(srcdir) / "vs2dt3_3.f").unlink()
     shutil.move(
-        os.path.join(srcdir, "vs2dt3_3.f.tmp"),
-        os.path.join(srcdir, "vs2dt3_3.f"),
+        Path(srcdir) / "vs2dt3_3.f.tmp",
+        Path(srcdir) / "vs2dt3_3.f",
     )
 
 
@@ -724,7 +724,7 @@ def _update_mf6_external_dependencies(
         path = srcdir / file
         if path.is_file():
             print(f'Removing..."{path}"')
-            os.remove(path)
+            Path(path).unlink()
 
 
 def _update_utl7(srcdir):
@@ -740,8 +740,8 @@ def _update_utl7(srcdir):
 
     """
     tag = "IBINARY=0"
-    fpth = os.path.join(srcdir, "utl7.f")
-    if os.path.isfile(fpth):
+    fpth = Path(srcdir) / "utl7.f"
+    if Path(fpth).is_file():
         with open(fpth) as f:
             lines = f.readlines()
         f = open(fpth, "w")
@@ -769,8 +769,8 @@ def _update_swt(srcdir):
     """
     # update gwf2swt7.f
     tag = "EST(J,I,N)=0.0"
-    fpth = os.path.join(srcdir, "gwf2swt7.f")
-    if os.path.isfile(fpth):
+    fpth = Path(srcdir) / "gwf2swt7.f"
+    if Path(fpth).is_file():
         with open(fpth) as f:
             lines = f.readlines()
         f = open(fpth, "w")
@@ -811,8 +811,8 @@ def _update_swi(srcdir, double):
         "(i,csolver(i),i=1,2)",
     )
     for file_name in ("gwf2swi27.f", "gwf2swi27.fpp"):
-        fpth = os.path.join(srcdir, file_name)
-        if os.path.isfile(fpth):
+        fpth = Path(srcdir) / file_name
+        if Path(fpth).is_file():
             with open(fpth) as f:
                 lines = f.readlines()
             f = open(fpth, "w")
@@ -881,8 +881,8 @@ C                 MODIFIED FROM HILL(1990) 9/27/90: 2 REPLACES 1
                   ENDIF
                 ENDIF
     """
-    fpth = os.path.join(srcdir, "pcg7.f")
-    if os.path.isfile(fpth):
+    fpth = Path(srcdir) / "pcg7.f"
+    if Path(fpth).is_file():
         with open(fpth) as f:
             input_str = f.read()
         input_str = input_str.replace(find_block, replace_block)
