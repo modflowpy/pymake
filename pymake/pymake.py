@@ -231,7 +231,7 @@ class Pymake:
             # list of applications build at this time
             if len(self.build_targets) > 0:
                 for target in self.build_targets:
-                    targets.append(os.path.basename(target))
+                    targets.append(Path(target).name)
 
                     # set appdir based on first target, assumes that the path
                     # for all of the targets are the same
@@ -252,7 +252,7 @@ class Pymake:
 
             # delete the zip file if it exists
             zip_str = str(Path(zip_pth).resolve())
-            if os.path.exists(zip_pth):
+            if Path(zip_pth).exists():
                 if self.keep:
                     if self.verbose:
                         print(f"Appending files to existing zipfile '{zip_str}'")
@@ -269,7 +269,7 @@ class Pymake:
                 else:
                     if self.verbose:
                         print(f"Deleting existing zipfile '{zip_str}'")
-                    os.remove(zip_pth)
+                    Path(zip_pth).unlink()
 
             # print a message describing the zip process
             if self.verbose:
@@ -295,9 +295,9 @@ class Pymake:
 
         """
         for target in self.build_targets:
-            if os.path.exists(target):
+            if Path(target).exists():
                 msg = f"removing '{target}'"
-                os.remove(target)
+                Path(target).unlink()
             else:
                 msg = f"'{target}' does not exist"
             if self.verbose:
@@ -353,7 +353,7 @@ class Pymake:
             self.verify = verify
             self.timeout = timeout
             self.download_path = download_path
-            self.download_dir = os.path.join(download_path, prog_dict.dirname)
+            self.download_dir = str(Path(download_path) / prog_dict.dirname)
 
         return
 
@@ -530,10 +530,10 @@ class Pymake:
 
         if self.appdir is not None:
             if os.path.dirname(self.target) != self.appdir:
-                target = os.path.join(self.appdir, os.path.basename(target))
+                target = str(Path(self.appdir) / Path(target).name)
 
         build_target = True
-        if os.path.exists(target):
+        if Path(target).exists():
             if self.keep:
                 build_target = False
 
@@ -548,7 +548,7 @@ class Pymake:
             target name without path and extension
 
         """
-        target = os.path.basename(self.target)
+        target = Path(self.target).name
         if target.lower().endswith(".exe"):
             target = target[:-4]
         elif target.lower().endswith(".dll"):
@@ -571,7 +571,7 @@ class Pymake:
         """
         if self.srcdir2 is None:
             if self._get_base_target() in ("libmf6",):
-                self.srcdir2 = os.path.join(self.download_dir, "src")
+                self.srcdir2 = str(Path(self.download_dir) / "src")
         return
 
     def _set_sharedobject(self):
@@ -649,10 +649,10 @@ class Pymake:
                 srcdir = os.path.abspath(self.srcdir)
                 if isinstance(extrafiles, list):
                     for idx, value in enumerate(extrafiles):
-                        fpth = os.path.join(srcdir, value)
+                        fpth = str(Path(srcdir) / value)
                         extrafiles[idx] = os.path.normpath(fpth)
                 elif isinstance(extrafiles, str):
-                    fpth = os.path.join(srcdir, extrafiles)
+                    fpth = str(Path(srcdir) / extrafiles)
                     extrafiles = os.path.normpath(fpth)
                 else:
                     msg = "invalid extrafiles format - must be a list or string"
@@ -675,7 +675,7 @@ class Pymake:
         """
         if self.excludefiles is None:
             if self._get_base_target() in ("libmf6",):
-                self.excludefiles = [os.path.join(self.download_dir, "src", "mf6.f90")]
+                self.excludefiles = [str(Path(self.download_dir) / "src" / "mf6.f90")]
         return
 
     def build(self, target=None, srcdir=None, modify_exe_name=False):
@@ -705,7 +705,7 @@ class Pymake:
 
         prog_dict = usgs_program_data.get_target(self.target)
         if self.srcdir is None:
-            self.srcdir = os.path.join(self.download_dir, prog_dict.srcdir)
+            self.srcdir = str(Path(self.download_dir) / prog_dict.srcdir)
 
         # set mesondir for a downloaded target that provides a meson build file
         self._set_mesondir()
