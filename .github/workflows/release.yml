@@ -145,7 +145,7 @@ jobs:
           pip install ".[test]"
 
       - name: Download artifacts
-        uses: dawidd6/action-download-artifact@v21
+        uses: dawidd6/action-download-artifact@v23
 
       - name: Draft release
         env:
