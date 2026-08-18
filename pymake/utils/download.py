@@ -64,7 +64,7 @@ class pymakeZipFile(ZipFile):
         ret_val = self._extract_member(member, path, pwd)
         attr = member.external_attr >> 16
         if attr != 0:
-            os.chmod(ret_val, attr)
+            Path(ret_val).chmod(attr)
 
         return ret_val
 
@@ -141,7 +141,7 @@ class pymakeZipFile(ZipFile):
 
         # remove directories from the file list
         if len(file_pths) > 0:
-            file_pths = [e for e in file_pths if os.path.isfile(e)]
+            file_pths = [e for e in file_pths if Path(e).is_file()]
 
         # convert dirs to a list if a str (a tuple is allowed)
         if dir_pths is None:
@@ -159,7 +159,7 @@ class pymakeZipFile(ZipFile):
         for dir_pth in dir_pths:
             for dirname, subdirs, files in os.walk(dir_pth):
                 for filename in files:
-                    fpth = os.path.join(dirname, filename)
+                    fpth = str(Path(dirname) / filename)
                     # add the file if it does not exist in file_pths
                     if fpth not in file_pths:
                         file_pths.append(fpth)
@@ -168,7 +168,7 @@ class pymakeZipFile(ZipFile):
         if patterns is not None:
             tlist = []
             for file_pth in file_pths:
-                if any(p in os.path.basename(file_pth) for p in patterns):
+                if any(p in Path(file_pth).name for p in patterns):
                     tlist.append(file_pth)
             file_pths = tlist
 
@@ -181,7 +181,7 @@ class pymakeZipFile(ZipFile):
         if len(file_pths) > 0:
             with ZipFile(path, mode=mode, compression=ZIP_DEFLATED) as zf:
                 for file_pth in file_pths:
-                    arcname = os.path.basename(file_pth)
+                    arcname = Path(file_pth).name
                     zf.write(file_pth, arcname=arcname)
         else:
             print("No files to add to the zip file")
@@ -362,16 +362,16 @@ def download_and_unzip(
 
     """
     # create download directory
-    if not os.path.exists(pth):
+    if not Path(pth).exists():
         if verbose:
             print(f"Creating the directory:\n    {pth}")
-        os.makedirs(pth)
+        Path(pth).mkdir(parents=True)
 
     if verbose:
         print(f"Attempting to download the file:\n    {url}")
 
     # define the filename
-    file_name = os.path.join(pth, url.split("/")[-1])
+    file_name = str(Path(pth) / url.split("/")[-1])
 
     # download the file
     success = False
@@ -475,7 +475,7 @@ def download_and_unzip(
         raise ConnectionError(msg)
 
     # Unzip the file, and delete zip file if successful.
-    if "zip" in os.path.basename(file_name) or "exe" in os.path.basename(file_name):
+    if "zip" in Path(file_name).name or "exe" in Path(file_name).name:
         z = pymakeZipFile(file_name)
         try:
             # write a message
@@ -489,7 +489,7 @@ def download_and_unzip(
             p = f"Could not unzip '{file_name}'.  Stopping."
             raise Exception(p) from exc
         z.close()
-    elif "tar" in os.path.basename(file_name):
+    elif "tar" in Path(file_name).name:
         ar = tarfile.open(file_name)
         ar.extractall(path=pth)
         ar.close()
@@ -498,7 +498,7 @@ def download_and_unzip(
     if delete_zip:
         if verbose:
             print("Deleting the zipfile...")
-        os.remove(file_name)
+        Path(file_name).unlink()
 
     if verbose:
         print("Done downloading and extracting...\n")
@@ -892,7 +892,7 @@ def getmfexes(
 
     # Evaluate exes keyword
     if exes is not None:
-        download_dir = os.path.join(".", "download_dir")
+        download_dir = str(Path(".") / "download_dir")
         if isinstance(exes, str):
             exes = tuple(exes)
         elif isinstance(exes, int | float):
@@ -916,22 +916,22 @@ def getmfexes(
 
     if exes is not None:
         # make sure pth exists
-        if not os.path.exists(pth):
+        if not Path(pth).exists():
             if verbose:
                 print(f"Creating the directory:\n    {pth}")
-            os.makedirs(pth)
+            Path(pth).mkdir(parents=True)
 
         # move select files to pth
         for f in os.listdir(download_dir):
-            src = os.path.join(download_dir, f)
-            dst = os.path.join(pth, f)
+            src = Path(download_dir) / f
+            dst = Path(pth) / f
             for exe in exes:
                 if exe in f:
                     shutil.move(src, dst)
                     break
 
         # remove the download directory
-        if os.path.isdir(download_dir):
+        if Path(download_dir).is_dir():
             if verbose:
                 print("Removing folder " + download_dir)
             shutil.rmtree(download_dir)
@@ -974,7 +974,7 @@ def getmfnightly(
 
     # Evaluate exes keyword
     if exes is not None:
-        download_dir = os.path.join(".", "download_dir")
+        download_dir = str(Path(".") / "download_dir")
         if isinstance(exes, str):
             exes = tuple(exes)
         elif isinstance(exes, int | float):
@@ -996,22 +996,22 @@ def getmfnightly(
 
     if exes is not None:
         # make sure pth exists
-        if not os.path.exists(pth):
+        if not Path(pth).exists():
             if verbose:
                 print(f"Creating the directory:\n    {pth}")
-            os.makedirs(pth)
+            Path(pth).mkdir(parents=True)
 
         # move select files to pth
         for f in os.listdir(download_dir):
-            src = os.path.join(download_dir, f)
-            dst = os.path.join(pth, f)
+            src = Path(download_dir) / f
+            dst = Path(pth) / f
             for exe in exes:
                 if exe in f:
                     shutil.move(src, dst)
                     break
 
         # remove the download directory
-        if os.path.isdir(download_dir):
+        if Path(download_dir).is_dir():
             if verbose:
                 print("Removing folder " + download_dir)
             shutil.rmtree(download_dir)
