@@ -59,14 +59,17 @@ Examples:
     $ make-program : --appdir temp
 ```
 
-`make-program` can be used to build MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-LGR, MODFLOW-2000,
-MODPATH 6, MODPATH 7, GSFLOW, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, and SUTRA. Utility programs CRT, Triangle,
-and GRIDGEN can also be built. `make-program` downloads the distribution file from the USGS (requires internet
-connection), unzips the distribution file, sets the pymake settings required to build the program, and compiles the
-source files to build the program. MT3DMS will be downloaded from the University of Alabama and Triangle will be
-downloaded from [netlib.org](http://www.netlib.org/voronoi/triangle.zip). Optional command line arguments can be used to
-customize the build (`-fc`, `-cc`, `--fflags`, etc.). For example, MODFLOW 6 could be built using intel compilers and
-an `O3` optimization level by specifying:
+`make-program` can be used to build MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODFLOW-USG Transport,
+MODFLOW-LGR, MODFLOW-2000, MODPATH 6, MODPATH 7, VS2DT, MT3DMS, MT3D-USGS, SEAWAT, and SUTRA. The MODFLOW 6 shared
+library and the ZONEBUDGET programs for MODFLOW 6, MODFLOW-2005 and MODFLOW-USG can be built as well, and the utility
+programs CRT, Triangle and GRIDGEN can also be built.
+`make-program` downloads the distribution file from the USGS (requires internet connection), unzips
+the distribution file, sets the pymake settings required to build the program, and builds the program with the
+[meson](https://mesonbuild.com/) build system, using the meson build file the program is distributed with where there is
+one and one pymake writes from the source files it finds where there is not. MT3DMS will be downloaded from the
+University of Alabama and Triangle will be downloaded from [netlib.org](http://www.netlib.org/voronoi/triangle.zip).
+Optional command line arguments can be used to customize the build (`-fc`, `-cc`, `--fflags`, etc.). For example,
+MODFLOW 6 could be built using intel compilers and an `O3` optimization level by specifying:
 
 ```console
 make-program mf6 -fc=ifort --fflags='-O3'
