@@ -13,8 +13,8 @@ __maintainer__ = "Christian D. Langevin"
 __email__ = "langevin@usgs.gov"
 __status__ = "Production"
 
-import os
 import re
+from pathlib import Path
 
 import networkx as nx
 
@@ -118,7 +118,7 @@ def _get_f_nodelist(srcfiles):
         try:
             f = open(srcfile, "rb")
         except:
-            print(f"get_f_nodelist: could not open {os.path.basename(srcfile)}")
+            print(f"get_f_nodelist: could not open {Path(srcfile).name}")
             sourcefile_module_dict[srcfile] = []
             continue
         lines = f.read()
@@ -227,7 +227,7 @@ def _c_include_names(srcfile, lines):
     """
     modulelist = []
     own = None
-    basename = os.path.splitext(os.path.basename(srcfile))[0].upper()
+    basename = Path(srcfile).stem.upper()
     for line in lines:
         linelist = line.strip().split()
         if len(linelist) == 0:
@@ -239,7 +239,7 @@ def _c_include_names(srcfile, lines):
         for cval in ['"', "'", "<", ">"]:
             modulename = modulename.replace(cval, "")
 
-        if os.path.splitext(modulename)[0] == basename:
+        if Path(modulename).stem == basename:
             own = modulename
         if modulename not in modulelist:
             modulelist.append(modulename)
@@ -278,9 +278,7 @@ def _order_c_source_files(srcfiles):
         try:
             f = open(srcfile, "rb")
         except:
-            print(
-                "order_c_source_files: could not open " + f"{os.path.basename(srcfile)}"
-            )
+            print("order_c_source_files: could not open " + f"{Path(srcfile).name}")
             sourcefile_module_dict[srcfile] = []
             continue
         lines = f.read()
