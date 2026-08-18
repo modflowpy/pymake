@@ -19,7 +19,6 @@ in this directory, and are listed by :code:`usgs_program_data.list_targets()`.
 
 import datetime
 import json
-import os
 import sys
 import warnings
 
@@ -111,8 +110,7 @@ class usgs_program_data:
 
         """
         # pth = os.path.dirname(os.path.abspath(pymake.__file__))
-        pth = os.path.dirname(os.path.abspath(__file__))
-        fpth = os.path.join(pth, PROGRAM_DATA_FILE)
+        fpth = Path(__file__).parent / PROGRAM_DATA_FILE
         with open(fpth, "rb") as f:
             programs = tomllib.load(f)["program"]
 
@@ -192,14 +190,14 @@ class usgs_program_data:
 
         """
         # remove path and extension from key
-        key = os.path.basename(key)
+        key = Path(key).name
         if (
             key.endswith(".exe")
             or key.endswith(".dll")
             or key.endswith(".so")
             or key.endswith(".dylib")
         ):
-            key = os.path.splitext(key)[0]
+            key = Path(key).stem
 
         # return program attributes
         return usgs_program_data()._target_data(key)
@@ -573,7 +571,7 @@ class usgs_program_data:
 
         """
         if temp_dict is not None:
-            if os.path.isfile(fpth):
+            if Path(fpth).is_file():
                 json_dict = usgs_program_data.load_json(fpth=fpth)
                 if json_dict is not None:
                     for key, value in temp_dict.items():
