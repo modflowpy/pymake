@@ -7,6 +7,7 @@ flags and appropriate linker flags for defined targets.
 import os
 import re
 import sys
+from pathlib import Path
 from subprocess import check_output
 
 from ._compiler_language_files import (
@@ -127,14 +128,14 @@ def _get_base_app_name(value):
         application name base name with out directory path and extension
 
     """
-    value = os.path.basename(value)
+    value = Path(value).name
     if (
         value.endswith(".exe")
         or value.endswith(".dll")
         or value.endswith(".dylib")
         or value.endswith(".so")
     ):
-        value = os.path.splitext(value)[0]
+        value = Path(value).stem
 
     return value
 
@@ -175,11 +176,11 @@ def _replace_base_compiler_name(value, name):
         compiler name with the base name replaced, for example 'g++-13'
 
     """
-    head, tail = os.path.split(value)
-    suffix = re.search(r"-\d+(\.\d+)*$", _get_base_app_name(tail))
+    pth = Path(value)
+    suffix = re.search(r"-\d+(\.\d+)*$", _get_base_app_name(pth.name))
     tail = name if suffix is None else name + suffix.group(0)
 
-    return os.path.join(head, tail)
+    return str(pth.with_name(tail))
 
 
 def _get_prepend(compiler, osname):

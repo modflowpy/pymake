@@ -59,7 +59,7 @@ class pymakeZipFile(ZipFile):
             member = self.getinfo(member)
 
         if path is None:
-            path = os.getcwd()
+            path = Path.cwd()
 
         ret_val = self._extract_member(member, path, pwd)
         attr = member.external_attr >> 16
@@ -90,11 +90,9 @@ class pymakeZipFile(ZipFile):
             members = self.namelist()
 
         if path is None:
-            path = os.getcwd()
+            path = Path.cwd()
         else:
-            if hasattr(os, "fspath"):
-                # introduced in python 3.6 and above
-                path = os.fspath(path)
+            path = Path(path)
 
         for zipinfo in members:
             self.extract(zipinfo, path, pwd)
@@ -922,11 +920,10 @@ def getmfexes(
             Path(pth).mkdir(parents=True)
 
         # move select files to pth
-        for f in os.listdir(download_dir):
-            src = Path(download_dir) / f
-            dst = Path(pth) / f
+        for src in sorted(Path(download_dir).iterdir()):
+            dst = Path(pth) / src.name
             for exe in exes:
-                if exe in f:
+                if exe in src.name:
                     shutil.move(src, dst)
                     break
 
@@ -1002,11 +999,10 @@ def getmfnightly(
             Path(pth).mkdir(parents=True)
 
         # move select files to pth
-        for f in os.listdir(download_dir):
-            src = Path(download_dir) / f
-            dst = Path(pth) / f
+        for src in sorted(Path(download_dir).iterdir()):
+            dst = Path(pth) / src.name
             for exe in exes:
-                if exe in f:
+                if exe in src.name:
                     shutil.move(src, dst)
                     break
 
