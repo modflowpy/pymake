@@ -1060,7 +1060,9 @@ def _write_makedefaults(
         line += "endif\n\n"
         f.write(line)
 
-        # get path to executable
+        # get path to executable. os.path.dirname rather than
+        # Path.parent, because a target with no directory has to give
+        # the empty string here rather than "."
         dpth = os.path.dirname(target)
         if len(dpth) > 0:
             dpth = os.path.relpath(dpth, make_dir)

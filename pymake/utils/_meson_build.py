@@ -229,6 +229,8 @@ def meson_setup(
         else:
             command_list.append("--prefix=$(pwd)")
 
+        # os.path, because the install directory is relative to the build
+        # file and Path.relative_to cannot walk up before python 3.12
         libdir = os.path.relpath(os.path.abspath(appdir), os.path.abspath(mesondir))
         command_list.append(f"--libdir={libdir}")
         command_list.append(f"--bindir={libdir}")

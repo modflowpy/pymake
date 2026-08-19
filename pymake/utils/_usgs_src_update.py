@@ -596,12 +596,10 @@ def _update_vs2dt_files(srcdir, **kwargs):
 
     """
     # move the main source into the source directory
-    f1 = Path(srcdir) / ".." / "vs2dt3_3.f"
-    f1 = os.path.abspath(f1)
+    f1 = (Path(srcdir).parent / "vs2dt3_3.f").absolute()
     if not Path(f1).is_file():
         raise OSError(f"{f1} does not exist")
-    f2 = Path(srcdir) / "vs2dt3_3.f"
-    f2 = os.path.abspath(f2)
+    f2 = (Path(srcdir) / "vs2dt3_3.f").absolute()
     shutil.move(f1, f2)
     if not Path(f2).is_file():
         raise OSError(f"{f2} does not exist")

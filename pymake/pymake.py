@@ -236,7 +236,7 @@ class Pymake:
                     # set appdir based on first target, assumes that the path
                     # for all of the targets are the same
                     if appdir is None:
-                        appdir = os.path.dirname(target)
+                        appdir = str(Path(target).parent)
             # determine files in appdir if no applications build at this
             # time (--keep command line argument)
             else:
@@ -529,6 +529,8 @@ class Pymake:
             target = self.target
 
         if self.appdir is not None:
+            # os.path.dirname rather than Path.parent, because a target
+            # with no directory has to compare unequal to an appdir of "."
             if os.path.dirname(self.target) != self.appdir:
                 target = str(Path(self.appdir) / Path(target).name)
 
@@ -646,7 +648,7 @@ class Pymake:
 
             # evaluate extrafiles type
             if extrafiles:
-                srcdir = os.path.abspath(self.srcdir)
+                srcdir = Path(self.srcdir).absolute()
                 if isinstance(extrafiles, list):
                     for idx, value in enumerate(extrafiles):
                         fpth = str(Path(srcdir) / value)
@@ -820,6 +822,8 @@ class Pymake:
         -------
 
         """
+        # os.path.abspath rather than Path.absolute, because it removes the
+        # ".." segments and so two spellings of a target count as one
         if os.path.abspath(self.target) not in self.build_targets:
             if self.verbose:
                 print(f"adding {self.target} to build_targets list")
