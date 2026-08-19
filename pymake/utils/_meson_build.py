@@ -490,6 +490,42 @@ def _meson_path(pth):
     return Path(pth).as_posix()
 
 
+def _get_include_dirs(source_path_dict, mesondir):
+    """Get the directories that contain c or c++ header files.
+
+    Parameters
+    ----------
+    source_path_dict : dict
+        dictionary with root directories containing source files. keys
+        can be 'main', 'additional_srcdir', and 'extra' which correspond
+        to the three possible locations of source files.
+    mesondir : str
+        Main meson.build file path
+
+    Returns
+    -------
+    include_dirs : list
+        paths of the directories that contain a header file, relative to
+        mesondir
+
+    """
+    include_dirs = []
+    for value in source_path_dict.values():
+        header_dirs = {
+            header.parent
+            for pattern in ("*.h", "*.hpp")
+            for header in Path(value).rglob(pattern)
+            if header.is_file()
+        }
+        # sorted so the include directories are written to the meson build
+        # file in the same order on every run, rather than the order the
+        # file system happens to return them in
+        for header_dir in sorted(header_dirs):
+            include_dirs.append(_meson_path(os.path.relpath(header_dir, mesondir)))
+
+    return include_dirs
+
+
 def _create_main_meson_build(
     mesondir,
     target,
@@ -745,20 +781,7 @@ def _create_main_meson_build(
         # get list of include directories
         include_text = ""
         if "cpp" in languages or "c" in languages:
-            include_dirs = []
-            for value in source_path_dict.values():
-                # sorted so the include directories are written in the same
-                # order on every run, since rglob returns them in the order
-                # the file system happens to provide
-                header_dirs = {
-                    header.parent
-                    for pattern in ("*.h", "*.hpp")
-                    for header in Path(value).rglob(pattern)
-                    if header.is_file()
-                }
-                for header_dir in sorted(header_dirs):
-                    pth = _meson_path(os.path.relpath(header_dir, mesondir))
-                    include_dirs.append(pth)
+            include_dirs = _get_include_dirs(source_path_dict, mesondir)
             if len(include_dirs) > 0:
                 include_text = ", include_directories : incdir"
                 line = "incdir = include_directories(\n"
