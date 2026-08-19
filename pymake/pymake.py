@@ -242,8 +242,8 @@ class Pymake:
             else:
                 if appdir is None:
                     appdir = "."
-                for target in os.listdir(appdir):
-                    targets.append(target)
+                for pth in sorted(Path(appdir).iterdir()):
+                    targets.append(pth.name)
 
             # add code.json
             if Path("code.json").exists():

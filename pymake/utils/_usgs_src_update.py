@@ -242,12 +242,10 @@ def _update_swtv4_files(srcdir, cc, **kwargs):
 
     # rename all source files to lower case so compilation doesn't
     # bomb on case-sensitive operating systems
-    srcfiles = os.listdir(srcdir)
-    for filename in srcfiles:
-        src = Path(srcdir) / filename
-        dst = Path(srcdir) / filename.lower()
+    for src in sorted(Path(srcdir).iterdir()):
+        dst = Path(srcdir) / src.name.lower()
         if "linux" in sys.platform.lower() or "darwin" in sys.platform.lower():
-            Path(src).rename(dst)
+            src.rename(dst)
 
     if "linux" in sys.platform.lower() or "darwin" in sys.platform.lower():
         if _get_base_compiler_name(cc) in ["icc", "clang", "gcc"]:
@@ -272,14 +270,6 @@ def _update_mf2005_files(srcdir, double, **kwargs):
     -------
 
     """
-    # # Remove six src folders
-    # dlist = ("hydprograms",)
-    # for d in dlist:
-    #     dname = os.path.join(srcdir, d)
-    #     if os.path.isdir(dname):
-    #         print('Removing..."{}"'.format(dname))
-    #         shutil.rmtree(os.path.join(srcdir, d))
-
     # update utl7.f
     _update_utl7(srcdir)
 
@@ -464,14 +454,9 @@ def _update_mf2000_files(srcdir, **kwargs):
             shutil.rmtree(Path(srcdir) / d)
 
     # Move src files and serial src file to src directory
-    tpth = Path(srcdir) / "mf2k"
-    files = [f for f in os.listdir(tpth) if (Path(tpth) / f).is_file()]
-    for f in files:
-        shutil.move(Path(tpth) / f, Path(srcdir) / f)
-    tpth = Path(srcdir) / "mf2k" / "serial"
-    files = [f for f in os.listdir(tpth) if (Path(tpth) / f).is_file()]
-    for f in files:
-        shutil.move(Path(tpth) / f, Path(srcdir) / f)
+    for tpth in (Path(srcdir) / "mf2k", Path(srcdir) / "mf2k" / "serial"):
+        for f in sorted(pth for pth in tpth.iterdir() if pth.is_file()):
+            shutil.move(f, Path(srcdir) / f.name)
 
     # Remove mf2k directory in source directory
     tpth = Path(srcdir) / "mf2k"
