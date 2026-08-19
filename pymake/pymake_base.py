@@ -428,7 +428,7 @@ def _pymake_initialize(
             # check if fpp file has been replaced by a free format file
             if fpth.endswith(".fpp"):
                 fpth2 = fpth.replace(".fpp", ".f90")
-                if Path(fpth).is_file():
+                if Path(fpth2).is_file():
                     fpth = fpth2
                 else:
                     msg = f"Current working directory: {Path.cwd()}\n"
