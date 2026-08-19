@@ -174,10 +174,7 @@ def main(
     # meson builds the source where it is
     if not inplace and not makefile_only:
         inplace = True
-        print(
-            f"Using meson to build {os.path.basename(target)}, "
-            "resetting inplace to True"
-        )
+        print(f"Using meson to build {Path(target).name}, resetting inplace to True")
 
     if srcdir is not None and target is not None:
         objdir_temp, moddir_temp, srcdir_temp = get_temporary_directories(
@@ -188,11 +185,13 @@ def main(
 
         # process appdir
         if appdir is not None:
+            # os.path.join rather than Path, which drops a "." directory
+            # that the callers taking os.path.dirname of the target rely on
             target = os.path.join(appdir, target)
 
             # make appdir if it does not exist
-            if not os.path.isdir(appdir):
-                os.makedirs(appdir)
+            if not Path(appdir).is_dir():
+                Path(appdir).mkdir(parents=True)
         else:
             target = os.path.join(".", target)
 
@@ -236,12 +235,10 @@ def main(
             mesondir = "."
 
         # make sure the path for the target exists
-        pth = os.path.dirname(target)
-        if pth == "":
-            pth = "."
-        if not os.path.exists(pth):
+        pth = Path(target).parent
+        if not pth.exists():
             print(f"creating target path - {pth}\n")
-            os.makedirs(pth)
+            pth.mkdir(parents=True)
 
         # initialize
         srcfiles = _pymake_initialize(
@@ -264,7 +261,7 @@ def main(
 
         # a meson build file that is already there was provided by the
         # target rather than written by pymake, so it is not a temporary file
-        meson_provided = os.path.isfile(os.path.join(mesondir, "meson.build"))
+        meson_provided = (Path(mesondir) / "meson.build").is_file()
 
         # compile the executable, unless only a makefile was asked for
         if makefile_only:
@@ -377,8 +374,8 @@ def _pymake_initialize(
 
     """
     # remove the target if it already exists
-    if os.path.isfile(target):
-        os.remove(target)
+    if Path(target).is_file():
+        Path(target).unlink()
 
     inplace = False
     if srcdir == srcdir_temp:
@@ -389,11 +386,11 @@ def _pymake_initialize(
     excludefiles = _get_extra_exclude_files(excludefiles)
     if excludefiles:
         for idx, exclude_file in enumerate(excludefiles):
-            excludefiles[idx] = os.path.basename(exclude_file)
+            excludefiles[idx] = Path(exclude_file).name
 
     # remove srcdir_temp and copy in srcdir
     if not inplace:
-        if os.path.isdir(srcdir_temp):
+        if Path(srcdir_temp).is_dir():
             shutil.rmtree(srcdir_temp)
         if excludefiles:
             shutil.copytree(
@@ -409,16 +406,14 @@ def _pymake_initialize(
     # commonsrc is not None
     if commonsrc is not None:
         if not inplace:
-            src = os.path.relpath(commonsrc, os.getcwd())
-            dst = os.path.join(
-                srcdir_temp, os.path.basename(os.path.normpath(commonsrc))
-            )
+            src = os.path.relpath(commonsrc, Path.cwd())
+            dst = str(Path(srcdir_temp) / Path(commonsrc).name)
             if excludefiles:
                 shutil.copytree(src, dst, ignore=shutil.ignore_patterns(*excludefiles))
             else:
                 shutil.copytree(src, dst)
         else:
-            dst = os.path.relpath(os.path.abspath(os.path.abspath(commonsrc)))
+            dst = os.path.relpath(Path(commonsrc).absolute())
 
         srcfiles += _get_srcfiles(dst, include_subdirs)
 
@@ -429,22 +424,22 @@ def _pymake_initialize(
     if files is None:
         files = []
     for fpth in files:
-        if not os.path.isfile(fpth):
+        if not Path(fpth).is_file():
             # check if fpp file has been replaced by a free format file
             if fpth.endswith(".fpp"):
                 fpth2 = fpth.replace(".fpp", ".f90")
-                if os.path.isfile(fpth):
+                if Path(fpth).is_file():
                     fpth = fpth2
                 else:
-                    msg = f"Current working directory: {os.getcwd()}\n"
+                    msg = f"Current working directory: {Path.cwd()}\n"
                     msg += f"Error in extrafiles: {extrafiles}\n"
                     msg += f"Could not find file: {fpth}"
                     raise FileNotFoundError(msg)
         if inplace:
-            dst = os.path.normpath(os.path.relpath(fpth, os.getcwd()))
+            dst = os.path.normpath(os.path.relpath(fpth, Path.cwd()))
         else:
-            dst = os.path.join(srcdir_temp, os.path.basename(fpth))
-            if os.path.isfile(dst):
+            dst = str(Path(srcdir_temp) / Path(fpth).name)
+            if Path(dst).is_file():
                 raise ValueError(
                     "Error with extrafile.  Name conflicts with "
                     f"an existing source file: {dst}"
@@ -459,7 +454,7 @@ def _pymake_initialize(
     if excludefiles:
         remove_list = []
         for fpth in srcfiles:
-            if os.path.basename(fpth) in excludefiles:
+            if Path(fpth).name in excludefiles:
                 remove_list.append(fpth)
         for fpth in remove_list:
             srcfiles.remove(fpth)
@@ -495,9 +490,9 @@ def get_temporary_directories(appdir=None, target=None):
     if target is None:
         target = "temp"
     return (
-        os.path.join(base_pth, f"obj_{target}"),
-        os.path.join(base_pth, f"mod_{target}"),
-        os.path.join(base_pth, f"src_{target}"),
+        str(Path(base_pth) / f"obj_{target}"),
+        str(Path(base_pth) / f"mod_{target}"),
+        str(Path(base_pth) / f"src_{target}"),
     )
 
 
@@ -548,57 +543,53 @@ def _clean_temp_files(
     # clean things up
     if verbose:
         print("\nCleaning up temporary source, object, and module files...")
-    filelist = os.listdir(".")
     delext = [".mod", ".o", ".obj"]
-    for f in filelist:
-        for ext in delext:
-            if f.endswith(ext):
-                if verbose:
-                    print(f"    removing...{f}")
-                os.remove(f)
+    for f in sorted(Path().iterdir()):
+        if f.suffix in delext:
+            if verbose:
+                print(f"    removing...{f.name}")
+            f.unlink()
 
     # shared object intermediate files
     if verbose:
         print("\nCleaning up intermediate shared object files...")
     delext = [".exp", ".lib"]
-    dpth = os.path.dirname(os.path.abspath(target))
-    for f in os.listdir(dpth):
-        fpth = os.path.join(dpth, f)
-        for ext in delext:
-            if fpth.endswith(ext):
-                if verbose:
-                    print(f"    removing...'{fpth}'")
-                os.remove(fpth)
+    dpth = Path(target).absolute().parent
+    for fpth in sorted(dpth.iterdir()):
+        if fpth.suffix in delext:
+            if verbose:
+                print(f"    removing...'{fpth}'")
+            fpth.unlink()
 
     # remove temporary directories
     if verbose:
         msg = "\nCleaning up temporary source, object, and module directories..."
         print(msg)
     if not inplace:
-        if os.path.isdir(srcdir_temp):
+        if Path(srcdir_temp).is_dir():
             if verbose:
                 print(f"removing...'{srcdir_temp}'")
             shutil.rmtree(srcdir_temp)
-    if os.path.isdir(objdir_temp):
+    if Path(objdir_temp).is_dir():
         if verbose:
             print(f"removing...'{objdir_temp}'")
         shutil.rmtree(objdir_temp)
-    if os.path.isdir(moddir_temp):
+    if Path(moddir_temp).is_dir():
         if verbose:
             print(f"removing...'{moddir_temp}'")
         shutil.rmtree(moddir_temp)
-    meson_builddir = os.path.join(mesondir, "_build")
-    if os.path.isdir(meson_builddir):
+    meson_builddir = Path(mesondir) / "_build"
+    if meson_builddir.is_dir():
         if verbose:
             print(f"removing...'{meson_builddir}'")
         shutil.rmtree(meson_builddir)
     # a build file the target provides is not a file pymake wrote
     if not meson_provided:
-        main_meson_file = os.path.join(mesondir, "meson.build")
-        if os.path.isfile(main_meson_file):
+        main_meson_file = Path(mesondir) / "meson.build"
+        if main_meson_file.is_file():
             if verbose:
                 print(f"removing...'{main_meson_file}'")
-            os.remove(main_meson_file)
+            main_meson_file.unlink()
     return
 
 
@@ -644,15 +635,15 @@ def _create_openspec(srcfiles, verbose):
     # build list of directory paths from srcfiles
     dpths = []
     for fpth in srcfiles:
-        dpth = os.path.dirname(fpth)
+        dpth = Path(fpth).parent
         if dpth not in dpths:
             dpths.append(dpth)
 
     # replace files in directory paths if they exist
     for dpth in dpths:
         for file in files:
-            fpth = os.path.join(dpth, file)
-            if os.path.isfile(fpth):
+            fpth = dpth / file
+            if fpth.is_file():
                 if verbose:
                     print(f'replacing..."{fpth}"')
                 with open(fpth, "w", encoding="utf8") as f:
@@ -686,6 +677,26 @@ def _makefile_compiler_ifeq(variable, compilers, indent="\t"):
     return (
         f"{indent}ifeq ($({variable}), $(filter {' '.join(patterns)}, $({variable})))\n"
     )
+
+
+def _source_dirs(srcdir):
+    """Get a source directory and every directory below it.
+
+    Parameters
+    ----------
+    srcdir : str
+        path for directory containing source files
+
+    Returns
+    -------
+    dirs : list
+        paths of srcdir and the directories below it, with a forward slash
+        separator so they can be written to a makefile
+
+    """
+    dirs = [Path(srcdir)] + [pth for pth in Path(srcdir).rglob("*") if pth.is_dir()]
+
+    return [_makefile_path(pth) for pth in dirs]
 
 
 def _makefile_path(pth):
@@ -806,7 +817,7 @@ def _create_makefile(
         preprocess = _preprocess_file(_get_fortran_files(srcfiles))
 
     # set exe_name
-    exe_name = os.path.splitext(os.path.basename(target))[0]
+    exe_name = Path(target).stem
 
     # build heading
     heading = f"# makefile created by pymake for the '{exe_name}' executable.\n"
@@ -856,8 +867,8 @@ def _create_makefile(
         windows_line_ending = b"\r\n"
         unix_line_ending = b"\n"
         for file in (
-            os.path.join(make_dir, "makefile"),
-            os.path.join(make_dir, makedefaults),
+            Path(make_dir) / "makefile",
+            Path(make_dir) / makedefaults,
         ):
             with open(file, "rb") as f:
                 content = f.read()
@@ -907,18 +918,17 @@ def _write_makefile(
 
     # determine the directories with source files
     # source files in sdir and sdir2
-    dirs = [d[0].replace("\\", "/") for d in os.walk(srcdir)]
+    dirs = _source_dirs(srcdir)
     if srcdir2 is not None:
-        dirs2 = [d[0].replace("\\", "/") for d in os.walk(srcdir2)]
-        dirs = dirs + dirs2
+        dirs = dirs + _source_dirs(srcdir2)
     dirs = sorted(dirs)
 
     # source files in extrafiles
     files = _get_extra_exclude_files(extrafiles)
     if files is not None:
         for ef in files:
-            fdir = os.path.dirname(ef)
-            rdir = os.path.relpath(fdir, os.getcwd())
+            fdir = Path(ef).parent
+            rdir = os.path.relpath(fdir, Path.cwd())
             rdir = rdir.replace("\\", "/")
             if rdir not in dirs:
                 dirs.append(rdir)
@@ -957,7 +967,7 @@ def _write_makefile(
 
     f.write("OBJECTS = \\\n")
     for idx, srcfile in enumerate(srcfiles):
-        objpth = os.path.splitext(os.path.basename(srcfile))[0] + objext
+        objpth = Path(srcfile).stem + objext
         f.write(f"$(OBJDIR)/{objpth}")
         if idx + 1 < len(srcfiles):
             f.write(" \\")
