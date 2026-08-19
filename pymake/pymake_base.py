@@ -847,6 +847,7 @@ def _create_makefile(
         cc,
         fflags,
         cflags,
+        syslibs,
         debug,
         double,
         sharedobject,
@@ -1009,6 +1010,7 @@ def _write_makedefaults(
     cc,
     fflags,
     cflags,
+    syslibs,
     debug,
     double,
     sharedobject,
@@ -1147,6 +1149,7 @@ def _write_makedefaults(
 
         line = _makedefaults_syslibs(
             target,
+            syslibs,
             sharedobject,
             fext,
             srcfiles,
@@ -1200,7 +1203,7 @@ def _makedefaults_flags(
     )
     text += _makedefaults_c_flags(
         target,
-        fflags,
+        cflags,
         debug,
         sharedobject,
         cext,
@@ -1257,7 +1260,7 @@ def _makedefaults_fortran_flags(
         tfflags = _get_fortran_flags(
             target,
             "gfortran",
-            [],
+            fflags,
             debug,
             double,
             osname="win32",
@@ -1276,7 +1279,7 @@ def _makedefaults_fortran_flags(
         tfflags = _get_fortran_flags(
             target,
             "gfortran",
-            [],
+            fflags,
             debug,
             double,
             osname="linux",
@@ -1294,7 +1297,7 @@ def _makedefaults_fortran_flags(
         tfflags = _get_fortran_flags(
             target,
             "ifort",
-            [],
+            fflags,
             debug,
             double,
             osname="linux",
@@ -1317,7 +1320,7 @@ def _makedefaults_fortran_flags(
 
 def _makedefaults_c_flags(
     target,
-    fflags,
+    cflags,
     debug,
     sharedobject,
     cext,
@@ -1345,7 +1348,7 @@ def _makedefaults_c_flags(
         tcflags = _get_c_flags(
             target,
             "gcc",
-            fflags,
+            cflags,
             debug,
             srcfiles,
             osname="win32",
@@ -1358,7 +1361,7 @@ def _makedefaults_c_flags(
         tcflags = _get_c_flags(
             target,
             "clang",
-            fflags,
+            cflags,
             debug,
             srcfiles,
             osname="win32",
@@ -1372,7 +1375,7 @@ def _makedefaults_c_flags(
         tcflags = _get_c_flags(
             target,
             "gcc",
-            fflags,
+            cflags,
             debug,
             srcfiles,
             osname="linux",
@@ -1385,7 +1388,7 @@ def _makedefaults_c_flags(
         tcflags = _get_c_flags(
             target,
             "clang",
-            fflags,
+            cflags,
             debug,
             srcfiles,
             osname="linux",
@@ -1398,7 +1401,7 @@ def _makedefaults_c_flags(
         tcflags = _get_c_flags(
             target,
             "icc",
-            fflags,
+            cflags,
             debug,
             srcfiles,
             osname="linux",
@@ -1415,6 +1418,7 @@ def _makedefaults_c_flags(
 
 def _makedefaults_syslibs(
     target,
+    syslibs,
     sharedobject,
     fext,
     srcfiles,
@@ -1439,7 +1443,7 @@ def _makedefaults_syslibs(
             target,
             None,
             "gcc",
-            [],
+            syslibs,
             srcfiles,
             osname="win32",
             sharedobject=sharedobject,
@@ -1452,7 +1456,7 @@ def _makedefaults_syslibs(
             target,
             None,
             "clang",
-            [],
+            syslibs,
             srcfiles,
             osname="win32",
             sharedobject=sharedobject,
@@ -1467,7 +1471,7 @@ def _makedefaults_syslibs(
             target,
             "gfortran",
             "gcc",
-            [],
+            syslibs,
             srcfiles,
             osname="win32",
             sharedobject=sharedobject,
@@ -1484,7 +1488,7 @@ def _makedefaults_syslibs(
             target,
             None,
             "gcc",
-            [],
+            syslibs,
             srcfiles,
             osname="linux",
             sharedobject=sharedobject,
@@ -1497,7 +1501,7 @@ def _makedefaults_syslibs(
             target,
             None,
             "clang",
-            [],
+            syslibs,
             srcfiles,
             osname="linux",
             sharedobject=sharedobject,
@@ -1514,7 +1518,7 @@ def _makedefaults_syslibs(
             target,
             "gfortran",
             "gcc",
-            [],
+            syslibs,
             srcfiles,
             osname="linux",
             sharedobject=sharedobject,
@@ -1528,7 +1532,7 @@ def _makedefaults_syslibs(
             target,
             "ifort",
             "icc",
-            [],
+            syslibs,
             srcfiles,
             osname="linux",
             sharedobject=sharedobject,
