@@ -18,9 +18,8 @@ from pymake.utils._meson_build import _get_include_dirs
 _HEADER_DIRS = ("tools", "basic", "vpass", "grid", "intersection", "shapelib")
 
 
-@pytest.fixture
-def srcdir(tmp_path):
-    """A source tree with a header in each of several directories."""
+def _srcdir(tmp_path):
+    """Build a source tree with a header in each of several directories."""
     for name in _HEADER_DIRS:
         pth = tmp_path / "src" / name
         pth.mkdir(parents=True)
@@ -35,8 +34,9 @@ def srcdir(tmp_path):
 
 
 @pytest.mark.base
-def test_include_dirs_found(srcdir) -> None:
+def test_include_dirs_found(tmp_path) -> None:
     """A directory is an include directory when it holds a header file."""
+    srcdir = _srcdir(tmp_path)
     include_dirs = _get_include_dirs({"main": srcdir / "src"}, srcdir)
 
     assert sorted(include_dirs) == sorted(f"src/{name}" for name in _HEADER_DIRS), (
@@ -45,7 +45,7 @@ def test_include_dirs_found(srcdir) -> None:
 
 
 @pytest.mark.base
-def test_include_dirs_sorted(srcdir) -> None:
+def test_include_dirs_sorted(tmp_path) -> None:
     """The include directories are sorted.
 
     The directories are found by walking the source tree, which is read in the
@@ -53,6 +53,7 @@ def test_include_dirs_sorted(srcdir) -> None:
     operating system to another and the generated meson.build file cannot be
     reproduced.
     """
+    srcdir = _srcdir(tmp_path)
     include_dirs = _get_include_dirs({"main": srcdir / "src"}, srcdir)
 
     assert include_dirs == sorted(include_dirs), (
