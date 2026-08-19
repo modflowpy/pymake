@@ -252,7 +252,7 @@ def meson_setup(
                     flags = flags.split()
                 command_list.append(f"-D{option}={' '.join(flags)}")
 
-        if os.path.isdir(build_dir):
+        if Path(build_dir).is_dir():
             command_list.append("--wipe")
 
         command = " ".join(command_list)
@@ -420,7 +420,7 @@ def _meson_build(
         mesondir,
         fc=fc,
         cc=cc,
-        appdir=os.path.dirname(target),
+        appdir=Path(target).parent,
         debug=debug,
         fflags=fflags,
         cflags=cflags,
@@ -465,7 +465,7 @@ def _meson_build(
         mesondir,
         fc=fc_meson,
         cc=cc_meson,
-        appdir=os.path.dirname(target),
+        appdir=Path(target).parent,
     )
 
 
@@ -488,6 +488,42 @@ def _meson_path(pth):
 
     """
     return Path(pth).as_posix()
+
+
+def _get_include_dirs(source_path_dict, mesondir):
+    """Get the directories that contain c or c++ header files.
+
+    Parameters
+    ----------
+    source_path_dict : dict
+        dictionary with root directories containing source files. keys
+        can be 'main', 'additional_srcdir', and 'extra' which correspond
+        to the three possible locations of source files.
+    mesondir : str
+        Main meson.build file path
+
+    Returns
+    -------
+    include_dirs : list
+        paths of the directories that contain a header file, relative to
+        mesondir
+
+    """
+    include_dirs = []
+    for value in source_path_dict.values():
+        header_dirs = {
+            header.parent
+            for pattern in ("*.h", "*.hpp")
+            for header in Path(value).rglob(pattern)
+            if header.is_file()
+        }
+        # sorted so the include directories are written to the meson build
+        # file in the same order on every run, rather than the order the
+        # file system happens to return them in
+        for header_dir in sorted(header_dirs):
+            include_dirs.append(_meson_path(os.path.relpath(header_dir, mesondir)))
+
+    return include_dirs
 
 
 def _create_main_meson_build(
@@ -565,8 +601,8 @@ def _create_main_meson_build(
         c/cpp compiler that meson will use. None if no c/cpp source files
 
     """
-    appdir = _meson_path(os.path.relpath(os.path.dirname(target), mesondir))
-    target = os.path.splitext(os.path.basename(target))[0]
+    appdir = _meson_path(os.path.relpath(Path(target).parent, mesondir))
+    target = Path(target).stem
     osname = _get_osname()
 
     # get target version number
@@ -587,7 +623,7 @@ def _create_main_meson_build(
     if mainfile is None:
         linker_language = "fortran"
     else:
-        main_ext = os.path.splitext(os.path.basename(mainfile))[1].lower()
+        main_ext = Path(mainfile).suffix.lower()
         if fext is not None:
             if main_ext in fext:
                 linker_language = "fortran"
@@ -662,7 +698,7 @@ def _create_main_meson_build(
     main_meson_file = Path(mesondir) / "meson.build"
     if verbose:
         print(f"Creating main meson.build file {main_meson_file}")
-    with open(main_meson_file, "w") as f:
+    with open(main_meson_file, "w", encoding="utf-8") as f:
         line = f"project(\n\t'{target}',\n"
         for language in languages:
             line += f"\t'{language}',\n"
@@ -745,14 +781,7 @@ def _create_main_meson_build(
         # get list of include directories
         include_text = ""
         if "cpp" in languages or "c" in languages:
-            include_dirs = []
-            for key, value in source_path_dict.items():
-                for root, dirs, files in os.walk(value):
-                    for file in files:
-                        if file.endswith(".h") or file.endswith(".hpp"):
-                            pth = _meson_path(os.path.relpath(root, mesondir))
-                            include_dirs.append(pth)
-                            break
+            include_dirs = _get_include_dirs(source_path_dict, mesondir)
             if len(include_dirs) > 0:
                 include_text = ", include_directories : incdir"
                 line = "incdir = include_directories(\n"
@@ -806,13 +835,13 @@ def _create_source_meson_build(source_path_dict, srcfiles):
 
     # iterate over the files in each source directory
     for key, value in source_path_dict.items():
-        with open(os.path.join(value, "meson.build"), "w") as f:
+        with open(Path(value) / "meson.build", "w", encoding="utf-8") as f:
             f.write("sources += files(\n")
             pop_list = []
             for source_file in srcfiles_copy:
                 if os.path.relpath(value) in source_file:
                     pth = os.path.relpath(source_file, start=value)
-                    temp_list = pth.split(os.path.sep)
+                    temp_list = Path(pth).parts
                     line = f"\t\t'{temp_list[0]}'"
                     for temp in temp_list[1:]:
                         line += f" / '{temp}'"
