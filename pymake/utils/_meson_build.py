@@ -698,7 +698,7 @@ def _create_main_meson_build(
     main_meson_file = Path(mesondir) / "meson.build"
     if verbose:
         print(f"Creating main meson.build file {main_meson_file}")
-    with open(main_meson_file, "w") as f:
+    with open(main_meson_file, "w", encoding="utf-8") as f:
         line = f"project(\n\t'{target}',\n"
         for language in languages:
             line += f"\t'{language}',\n"
@@ -835,7 +835,7 @@ def _create_source_meson_build(source_path_dict, srcfiles):
 
     # iterate over the files in each source directory
     for key, value in source_path_dict.items():
-        with open(Path(value) / "meson.build", "w") as f:
+        with open(Path(value) / "meson.build", "w", encoding="utf-8") as f:
             f.write("sources += files(\n")
             pop_list = []
             for source_file in srcfiles_copy:
