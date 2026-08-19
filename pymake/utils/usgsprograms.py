@@ -103,7 +103,6 @@ class usgs_program_data:
         -------
 
         """
-        # pth = os.path.dirname(os.path.abspath(pymake.__file__))
         fpth = Path(__file__).parent / PROGRAM_DATA_FILE
         with open(fpth, "rb") as f:
             programs = tomllib.load(f)["program"]

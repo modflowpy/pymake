@@ -26,7 +26,6 @@ USGS applications are built if no list is passed to
 
 """
 
-import os
 import shutil
 import sys
 from datetime import datetime
@@ -118,7 +117,7 @@ def build_apps(
     if appdir is None:
         base_pth = "."
     else:
-        base_pth = os.path.dirname(appdir)
+        base_pth = str(Path(appdir).parent)
 
     # set the meson directory if a pymake object was not passed in
     if pymake_object is None:
