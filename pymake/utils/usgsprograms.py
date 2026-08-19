@@ -20,14 +20,8 @@ in this directory, and are listed by :code:`usgs_program_data.list_targets()`.
 import datetime
 import json
 import sys
+import tomllib
 import warnings
-
-# tomllib is in the standard library from python 3.11, and tomli is the same
-# reader for python 3.10, which is still supported
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
 from pathlib import Path
 
 from .download import _request_header, zip_all
