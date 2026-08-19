@@ -907,100 +907,96 @@ def _write_makefile(
     # pylint: disable=too-many-arguments,too-many-positional-arguments
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     # pylint: disable=too-complex
-    f = open(os.path.join(make_dir, "makefile"), "w")
+    with open(Path(make_dir) / "makefile", "w", encoding="utf-8") as f:
+        # write header
+        f.write(heading + "\n")
 
-    # write header
-    f.write(heading + "\n")
-
-    #  write include file
-    line = f"\ninclude ./{makedefaults}\n\n"
-    f.write(line)
-
-    # determine the directories with source files
-    # source files in sdir and sdir2
-    dirs = _source_dirs(srcdir)
-    if srcdir2 is not None:
-        dirs = dirs + _source_dirs(srcdir2)
-    dirs = sorted(dirs)
-
-    # source files in extrafiles
-    files = _get_extra_exclude_files(extrafiles)
-    if files is not None:
-        for ef in files:
-            fdir = Path(ef).parent
-            rdir = os.path.relpath(fdir, Path.cwd())
-            rdir = rdir.replace("\\", "/")
-            if rdir not in dirs:
-                dirs.append(rdir)
-
-    # write directories with source files and create vpath data
-    line = "# Define the source file directories\n"
-    f.write(line)
-    vpaths = []
-    for idx, source_dir in enumerate(dirs):
-        rel_source_dir = _makefile_path(os.path.relpath(source_dir, make_dir))
-        vpaths.append(f"SOURCEDIR{idx + 1}")
-        line = f"{vpaths[idx]}={rel_source_dir}\n"
+        #  write include file
+        line = f"\ninclude ./{makedefaults}\n\n"
         f.write(line)
-    f.write("\n")
 
-    # write vpath
-    f.write("VPATH = \\\n")
-    for idx, sd in enumerate(vpaths):
-        f.write("${" + f"{sd}" + "} ")
-        if idx + 1 < len(vpaths):
-            f.write("\\")
-        f.write("\n")
-    f.write("\n")
+        # determine the directories with source files
+        # source files in sdir and sdir2
+        dirs = _source_dirs(srcdir)
+        if srcdir2 is not None:
+            dirs = dirs + _source_dirs(srcdir2)
+        dirs = sorted(dirs)
 
-    # write file extensions
-    line = ".SUFFIXES: "
-    if fext is not None:
-        for ext in fext:
-            line += f"{ext} "
-    if cext is not None:
-        for ext in cext:
-            line += f"{ext} "
-    line += objext
-    f.write(line)
-    f.write("\n\n")
+        # source files in extrafiles
+        files = _get_extra_exclude_files(extrafiles)
+        if files is not None:
+            for ef in files:
+                fdir = Path(ef).parent
+                rdir = os.path.relpath(fdir, Path.cwd())
+                rdir = rdir.replace("\\", "/")
+                if rdir not in dirs:
+                    dirs.append(rdir)
 
-    f.write("OBJECTS = \\\n")
-    for idx, srcfile in enumerate(srcfiles):
-        objpth = Path(srcfile).stem + objext
-        f.write(f"$(OBJDIR)/{objpth}")
-        if idx + 1 < len(srcfiles):
-            f.write(" \\")
-        f.write("\n")
-    f.write("\n")
-
-    f.write("# Define the objects that make up the program\n")
-    f.write("$(PROGRAM) : $(OBJECTS)\n")
-    if fext is None:
-        line = "\t-$(CC) $(OPTLEVEL) -o $@ $(OBJECTS) $(LDFLAGS)\n"
-    else:
-        line = "\t-$(FC) $(OPTLEVEL) -o $@ $(OBJECTS) $(LDFLAGS)\n"
-    f.write(f"{line}\n")
-
-    if fext is not None:
-        for ext in fext:
-            f.write(f"$(OBJDIR)/%{objext} : %{ext}\n")
-            f.write("\t@mkdir -p $(@D)\n")
-            line = (
-                "\t$(FC) $(OPTLEVEL) $(FFLAGS) -c $< -o $@ "
-                "$(INCSWITCH) $(MODSWITCH)\n\n"
-            )
+        # write directories with source files and create vpath data
+        line = "# Define the source file directories\n"
+        f.write(line)
+        vpaths = []
+        for idx, source_dir in enumerate(dirs):
+            rel_source_dir = _makefile_path(os.path.relpath(source_dir, make_dir))
+            vpaths.append(f"SOURCEDIR{idx + 1}")
+            line = f"{vpaths[idx]}={rel_source_dir}\n"
             f.write(line)
+        f.write("\n")
 
-    if cext is not None:
-        for ext in cext:
-            f.write(f"$(OBJDIR)/%{objext} : %{ext}\n")
-            f.write("\t@mkdir -p $(@D)\n")
-            line = "\t$(CC) $(OPTLEVEL) $(CFLAGS) -c $< -o $@ $(INCSWITCH)\n\n"
-            f.write(line)
+        # write vpath
+        f.write("VPATH = \\\n")
+        for idx, sd in enumerate(vpaths):
+            f.write("${" + f"{sd}" + "} ")
+            if idx + 1 < len(vpaths):
+                f.write("\\")
+            f.write("\n")
+        f.write("\n")
 
-    # close the makefile
-    f.close()
+        # write file extensions
+        line = ".SUFFIXES: "
+        if fext is not None:
+            for ext in fext:
+                line += f"{ext} "
+        if cext is not None:
+            for ext in cext:
+                line += f"{ext} "
+        line += objext
+        f.write(line)
+        f.write("\n\n")
+
+        f.write("OBJECTS = \\\n")
+        for idx, srcfile in enumerate(srcfiles):
+            objpth = Path(srcfile).stem + objext
+            f.write(f"$(OBJDIR)/{objpth}")
+            if idx + 1 < len(srcfiles):
+                f.write(" \\")
+            f.write("\n")
+        f.write("\n")
+
+        f.write("# Define the objects that make up the program\n")
+        f.write("$(PROGRAM) : $(OBJECTS)\n")
+        if fext is None:
+            line = "\t-$(CC) $(OPTLEVEL) -o $@ $(OBJECTS) $(LDFLAGS)\n"
+        else:
+            line = "\t-$(FC) $(OPTLEVEL) -o $@ $(OBJECTS) $(LDFLAGS)\n"
+        f.write(f"{line}\n")
+
+        if fext is not None:
+            for ext in fext:
+                f.write(f"$(OBJDIR)/%{objext} : %{ext}\n")
+                f.write("\t@mkdir -p $(@D)\n")
+                line = (
+                    "\t$(FC) $(OPTLEVEL) $(FFLAGS) -c $< -o $@ "
+                    "$(INCSWITCH) $(MODSWITCH)\n\n"
+                )
+                f.write(line)
+
+        if cext is not None:
+            for ext in cext:
+                f.write(f"$(OBJDIR)/%{objext} : %{ext}\n")
+                f.write("\t@mkdir -p $(@D)\n")
+                line = "\t$(CC) $(OPTLEVEL) $(CFLAGS) -c $< -o $@ $(INCSWITCH)\n\n"
+                f.write(line)
 
 
 def _write_makedefaults(
@@ -1040,129 +1036,126 @@ def _write_makedefaults(
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     # pylint: disable=too-complex
     # open makedefaults
-    f = open(os.path.join(make_dir, makedefaults), "w")
+    with open(Path(make_dir) / makedefaults, "w", encoding="utf-8") as f:
+        # replace makefile in heading with makedefaults
+        heading = heading.replace("makefile", makedefaults)
 
-    # replace makefile in heading with makedefaults
-    heading = heading.replace("makefile", makedefaults)
+        # write header
+        f.write(heading + "\n")
 
-    # write header
-    f.write(heading + "\n")
-
-    # write OS evaluation
-    line = "# determine OS\n"
-    line += "ifeq ($(OS), Windows_NT)\n"
-    line += "\tdetected_OS = Windows\n"
-    line += "\tOS_macro = -D_WIN32\n"
-    line += "else\n"
-    line += "\tdetected_OS = $(shell sh -c 'uname 2>/dev/null || echo Unknown')\n"
-    line += "\tifeq ($(detected_OS), Darwin)\n"
-    line += "\t\tOS_macro = -D__APPLE__\n"
-    line += "\telse\n"
-    line += "\t\tOS_macro = -D__LINUX__\n"
-    line += "\tendif\n"
-    line += "endif\n\n"
-    f.write(line)
-
-    # get path to executable
-    dpth = os.path.dirname(target)
-    if len(dpth) > 0:
-        dpth = os.path.relpath(dpth, make_dir)
-    else:
-        dpth = "."
-
-    # write header
-    line = (
-        "# Define the directories for the object and module files\n"
-        "# and the executable and its path.\n"
-    )
-    tpth = _makefile_path(dpth)
-    line += f"BINDIR = {tpth}\n"
-    tpth = _makefile_path(os.path.relpath(objdir_temp, make_dir))
-    line += f"OBJDIR = {tpth}\n"
-    tpth = _makefile_path(os.path.relpath(moddir_temp, make_dir))
-    line += f"MODDIR = {tpth}\n"
-    line += "INCSWITCH = -I $(OBJDIR)\n"
-    line += "MODSWITCH = -J $(MODDIR)\n\n"
-    f.write(line)
-
-    line = "# define os dependent program name\n"
-    line += "ifeq ($(detected_OS), Windows)\n"
-    line += f"\tPROGRAM = $(BINDIR)/{exe_name}{win_ext}\n"
-    line += "else ifeq ($(detected_OS), Darwin)\n"
-    line += f"\tPROGRAM = $(BINDIR)/{exe_name}{macos_ext}\n"
-    line += "else\n"
-    line += f"\tPROGRAM = $(BINDIR)/{exe_name}{linux_ext}\n"
-    line += "endif\n\n"
-    f.write(line)
-
-    # reassign compilers if the defined compilers do not exist
-    line = "# use GNU compilers if defined compilers do not exist\n"
-    line += "ifeq ($(detected_OS), Windows)\n"
-    line += "\tWHICH = where\n"
-    line += "else\n"
-    line += "\tWHICH = which\n"
-    line += "endif\n"
-    if fext is not None:
-        line += "ifeq (, $(shell $(WHICH) $(FC)))\n"
-        line += "\tFC = gfortran\n"
-        line += "endif\n"
-    if cext is not None:
-        line += "ifeq (, $(shell $(WHICH) $(CC)))\n"
-        line += "\tCC = gcc\n"
-        line += "endif\n"
-    line += "\n"
-    f.write(line)
-
-    # set gfortran as fortran compiler if it is f77
-    if fext is not None:
-        line = "# set fortran compiler to gfortran if it is f77\n"
-        line += "ifeq ($(FC), f77)\n"
-        line += "\tFC = gfortran\n"
-        line += "\t# set c compiler to gcc if not passed on the command line\n"
-        line += '\tifneq ($(origin CC), "command line")\n'
-        line += "\t\tifneq ($(CC), gcc)\n"
-        line += "\t\t\tCC = gcc\n"
-        line += "\t\tendif\n"
+        # write OS evaluation
+        line = "# determine OS\n"
+        line += "ifeq ($(OS), Windows_NT)\n"
+        line += "\tdetected_OS = Windows\n"
+        line += "\tOS_macro = -D_WIN32\n"
+        line += "else\n"
+        line += "\tdetected_OS = $(shell sh -c 'uname 2>/dev/null || echo Unknown')\n"
+        line += "\tifeq ($(detected_OS), Darwin)\n"
+        line += "\t\tOS_macro = -D__APPLE__\n"
+        line += "\telse\n"
+        line += "\t\tOS_macro = -D__LINUX__\n"
         line += "\tendif\n"
         line += "endif\n\n"
         f.write(line)
-    else:
-        line = "# set cc compiler to gcc if it is cc\n"
-        line += "ifeq ($(CC), cc)\n"
-        line += "\tCC = gcc\n"
+
+        # get path to executable
+        dpth = os.path.dirname(target)
+        if len(dpth) > 0:
+            dpth = os.path.relpath(dpth, make_dir)
+        else:
+            dpth = "."
+
+        # write header
+        line = (
+            "# Define the directories for the object and module files\n"
+            "# and the executable and its path.\n"
+        )
+        tpth = _makefile_path(dpth)
+        line += f"BINDIR = {tpth}\n"
+        tpth = _makefile_path(os.path.relpath(objdir_temp, make_dir))
+        line += f"OBJDIR = {tpth}\n"
+        tpth = _makefile_path(os.path.relpath(moddir_temp, make_dir))
+        line += f"MODDIR = {tpth}\n"
+        line += "INCSWITCH = -I $(OBJDIR)\n"
+        line += "MODSWITCH = -J $(MODDIR)\n\n"
+        f.write(line)
+
+        line = "# define os dependent program name\n"
+        line += "ifeq ($(detected_OS), Windows)\n"
+        line += f"\tPROGRAM = $(BINDIR)/{exe_name}{win_ext}\n"
+        line += "else ifeq ($(detected_OS), Darwin)\n"
+        line += f"\tPROGRAM = $(BINDIR)/{exe_name}{macos_ext}\n"
+        line += "else\n"
+        line += f"\tPROGRAM = $(BINDIR)/{exe_name}{linux_ext}\n"
         line += "endif\n\n"
         f.write(line)
 
-    line = _makedefaults_flags(
-        target,
-        fc,
-        cc,
-        fflags,
-        cflags,
-        debug,
-        double,
-        sharedobject,
-        preprocess,
-        fext,
-        cext,
-        srcfiles,
-        verbose,
-    )
-    f.write(line)
+        # reassign compilers if the defined compilers do not exist
+        line = "# use GNU compilers if defined compilers do not exist\n"
+        line += "ifeq ($(detected_OS), Windows)\n"
+        line += "\tWHICH = where\n"
+        line += "else\n"
+        line += "\tWHICH = which\n"
+        line += "endif\n"
+        if fext is not None:
+            line += "ifeq (, $(shell $(WHICH) $(FC)))\n"
+            line += "\tFC = gfortran\n"
+            line += "endif\n"
+        if cext is not None:
+            line += "ifeq (, $(shell $(WHICH) $(CC)))\n"
+            line += "\tCC = gcc\n"
+            line += "endif\n"
+        line += "\n"
+        f.write(line)
 
-    line = _makedefaults_syslibs(
-        target,
-        sharedobject,
-        fext,
-        srcfiles,
-        verbose,
-    )
-    f.write(line)
+        # set gfortran as fortran compiler if it is f77
+        if fext is not None:
+            line = "# set fortran compiler to gfortran if it is f77\n"
+            line += "ifeq ($(FC), f77)\n"
+            line += "\tFC = gfortran\n"
+            line += "\t# set c compiler to gcc if not passed on the command line\n"
+            line += '\tifneq ($(origin CC), "command line")\n'
+            line += "\t\tifneq ($(CC), gcc)\n"
+            line += "\t\t\tCC = gcc\n"
+            line += "\t\tendif\n"
+            line += "\tendif\n"
+            line += "endif\n\n"
+            f.write(line)
+        else:
+            line = "# set cc compiler to gcc if it is cc\n"
+            line += "ifeq ($(CC), cc)\n"
+            line += "\tCC = gcc\n"
+            line += "endif\n\n"
+            f.write(line)
 
-    line = _makedefaults_tasks(fext, cext)
-    f.write(line)
+        line = _makedefaults_flags(
+            target,
+            fc,
+            cc,
+            fflags,
+            cflags,
+            debug,
+            double,
+            sharedobject,
+            preprocess,
+            fext,
+            cext,
+            srcfiles,
+            verbose,
+        )
+        f.write(line)
 
-    f.close()
+        line = _makedefaults_syslibs(
+            target,
+            sharedobject,
+            fext,
+            srcfiles,
+            verbose,
+        )
+        f.write(line)
+
+        line = _makedefaults_tasks(fext, cext)
+        f.write(line)
 
 
 def _makedefaults_flags(
@@ -1619,5 +1612,4 @@ def _makedefaults_tasks(fext, cext):
     line += "\t-rm -rf $(MODDIR)\n\n"
     text += line
 
-    # close the makedefaults
     return text
