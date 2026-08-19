@@ -30,6 +30,7 @@ import os
 import shutil
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from .pymake import Pymake
 from .pymake_base import get_temporary_directories
@@ -128,7 +129,7 @@ def build_apps(
     # clean any existing temporary directories
     temp_pths = get_temporary_directories(base_pth)
     for pth in temp_pths:
-        if os.path.isdir(pth):
+        if Path(pth).is_dir():
             shutil.rmtree(pth)
 
     # set object to clean after each build
@@ -212,8 +213,8 @@ def build_apps(
 
         # set target and srcdir
         pmobj.target = target.replace("dev", "")
-        pmobj.srcdir = os.path.join(
-            download_dir, code_dict[target].dirname, code_dict[target].srcdir
+        pmobj.srcdir = str(
+            Path(download_dir) / code_dict[target].dirname / code_dict[target].srcdir
         )
 
         # determine if single, double, or both should be built

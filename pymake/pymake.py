@@ -863,18 +863,19 @@ class Pymake:
                 ext = None
 
         if ext is not None:
-            filename, file_extension = os.path.splitext(target)
-            if file_extension.lower() != ext:
+            if Path(target).suffix.lower() != ext:
                 target += ext
 
         # add double and debug to target name
         if modify_target:
             if self.double:
-                filename, file_extension = os.path.splitext(target)
+                pth = Path(target)
+                filename, file_extension = str(pth.with_suffix("")), pth.suffix
                 if "dbl" not in filename.lower():
                     target = filename + "dbl" + file_extension
             if self.debug:
-                filename, file_extension = os.path.splitext(target)
+                pth = Path(target)
+                filename, file_extension = str(pth.with_suffix("")), pth.suffix
                 if filename.lower()[-1] != "d":
                     target = filename + "d" + file_extension
         return target
