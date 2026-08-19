@@ -3,14 +3,8 @@
 import argparse
 import re
 import textwrap
+import tomllib
 from pathlib import Path
-
-# tomllib is in the standard library from python 3.11, and tomli is the same
-# reader for python 3.10, which is still supported
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
 
 from pymake.utils.download import get_repo_assets, repo_latest_version
 
