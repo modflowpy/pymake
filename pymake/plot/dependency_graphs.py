@@ -21,7 +21,7 @@ Dependency graphs can be created using:
 
 from pathlib import Path
 
-import pydotplus.graphviz as pydot
+import pydot
 
 from ..utils._compiler_language_files import (
     _get_ordered_srcfiles,
