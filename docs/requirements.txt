@@ -3,7 +3,7 @@ requests
 networkx
 meson
 ninja
-pydotplus
+pydot
 nbsphinx
 nbsphinx_link
 Ipython
