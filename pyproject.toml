@@ -65,7 +65,7 @@ make-code-json = "pymake.cmds.createjson:main"
 
 [project.urls]
 Documentation = "https://mfpymake.readthedocs.io"
-"Release Notes" = "https://github.com/modflowpy/flopy/blob/develop/docs/version_changes.md"
+"Release Notes" = "https://github.com/modflowpy/pymake/releases"
 "Bug Tracker" = "https://github.com/modflowpy/pymake/issues"
 "Source Code" = "https://github.com/modflowpy/pymake"
 
