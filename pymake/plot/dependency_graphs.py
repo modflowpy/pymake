@@ -21,13 +21,25 @@ Dependency graphs can be created using:
 
 from pathlib import Path
 
-import pydot
-
 from ..utils._compiler_language_files import (
     _get_ordered_srcfiles,
     _get_srcfiles,
 )
 from ..utils._dag import _get_f_nodelist
+
+try:
+    import pydot
+except ImportError:
+    pydot = None
+
+
+def _check_pydot():
+    """Raise an error if pydot, which is an optional dependency, is missing."""
+    if pydot is None:
+        raise ImportError(
+            "pydot is required to plot dependency graphs, install it with "
+            "'pip install mfpymake[plot]'"
+        )
 
 
 def to_pydot(dag, filename="mygraph.png"):
@@ -44,6 +56,8 @@ def to_pydot(dag, filename="mygraph.png"):
     -------
 
     """
+    _check_pydot()
+
     # Create the graph
     graph = pydot.Dot(graph_type="digraph")
 
@@ -156,6 +170,8 @@ def make_plots(
     -------
 
     """
+    _check_pydot()
+
     srcfiles = _get_ordered_srcfiles(_get_srcfiles(srcdir, include_subdir))
     nodelist = _get_f_nodelist(srcfiles)
     for idx, n in enumerate(nodelist):
