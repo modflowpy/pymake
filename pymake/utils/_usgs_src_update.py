@@ -692,6 +692,7 @@ def _update_mf6_external_dependencies(
         "Distributed/MpiRunControl.F90",
         "Distributed/MpiWorld.f90",
         "Solution/ParallelSolution.f90",
+        "Timing/ParallelAts.f90",
         "Distributed/MpiUnitCache.f90",
         "Distributed/MpiMessageCache.f90",
         "Utilities/Export/DisNCMesh.f90",

@@ -10,30 +10,30 @@
 # shared_object      a shared library is built rather than an executable
 
 [program."mf6"]
-version = "6.7.0"
+version = "6.8.0"
 current = true
-url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.7.0/mf6.7.0_linux.zip"
-dirname = "mf6.7.0_linux"
+url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.8.0/mf6.8.0_linux.zip"
+dirname = "mf6.8.0_linux"
 srcdir = "src"
 standard_precision = true
 double_precision = false
 shared_object = false
 
 [program."zbud6"]
-version = "6.7.0"
+version = "6.8.0"
 current = true
-url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.7.0/mf6.7.0_linux.zip"
-dirname = "mf6.7.0_linux"
+url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.8.0/mf6.8.0_linux.zip"
+dirname = "mf6.8.0_linux"
 srcdir = "utils/zonebudget/src"
 standard_precision = true
 double_precision = false
 shared_object = false
 
 [program."libmf6"]
-version = "6.7.0"
+version = "6.8.0"
 current = true
-url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.7.0/mf6.7.0_linux.zip"
-dirname = "mf6.7.0_linux"
+url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.8.0/mf6.8.0_linux.zip"
+dirname = "mf6.8.0_linux"
 srcdir = "srcbmi"
 standard_precision = true
 double_precision = false
@@ -230,7 +230,7 @@ double_precision = false
 shared_object = false
 
 [program."mf6dev"]
-version = "6.7.0.dev3"
+version = "6.9.0.dev0"
 current = false
 url = "https://github.com/MODFLOW-ORG/modflow6/archive/refs/heads/develop.zip"
 dirname = "modflow6-develop"
@@ -240,7 +240,7 @@ double_precision = false
 shared_object = false
 
 [program."zbud6dev"]
-version = "6.7.0.dev3"
+version = "6.9.0.dev0"
 current = false
 url = "https://github.com/MODFLOW-ORG/modflow6/archive/refs/heads/develop.zip"
 dirname = "modflow6-develop"
@@ -250,7 +250,7 @@ double_precision = false
 shared_object = false
 
 [program."libmf6dev"]
-version = "6.7.0.dev3"
+version = "6.9.0.dev0"
 current = false
 url = "https://github.com/MODFLOW-ORG/modflow6/archive/refs/heads/develop.zip"
 dirname = "modflow6-develop"
