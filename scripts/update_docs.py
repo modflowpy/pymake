@@ -26,6 +26,36 @@ COLUMNS = "100"
 ROOT = Path(__file__).parent.parent
 
 
+def _formatter_class(base):
+    """Return a formatter that writes an option the way python 3.13 does.
+
+    Parameters
+    ----------
+    base : type
+        formatter class the parser was built with
+
+    Returns
+    -------
+    formatter_class : type
+        formatter class that does not depend on the python version
+
+    """
+
+    class Formatter(base):
+        def _format_action_invocation(self, action):
+            # python 3.13 stopped repeating the metavar for every option
+            # string, and the newer form is written on older pythons too
+            if not action.option_strings:
+                return super()._format_action_invocation(action)
+            if action.nargs == 0:
+                return ", ".join(action.option_strings)
+            default = self._get_default_metavar_for_optional(action)
+            args_string = self._format_args(action, default)
+            return ", ".join(action.option_strings) + " " + args_string
+
+    return Formatter
+
+
 def _blocks():
     """Return the documentation blocks and the command each one shows.
 
@@ -67,6 +97,8 @@ def _help_text(prog):
         parser_obj = make_program_parser(prog=prog)
     else:
         raise ValueError(f"unknown program ({prog})")
+
+    parser_obj.formatter_class = _formatter_class(parser_obj.formatter_class)
 
     # argparse wraps to the terminal width, so it is fixed here and the
     # environment is put back so that the width is not changed for a caller
