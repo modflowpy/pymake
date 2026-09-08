@@ -30,16 +30,13 @@ options:
                         included. Valid compilers are gcc, clang, clang++, icc, icl, mpiicc, g++,
                         cl, and none. (default is gcc)
   -dbl, --double        Force double precision. (default is False)
-  -ff FFLAGS, --fflags FFLAGS
-                        Additional Fortran compiler flags. Fortran compiler flags should be
+  -ff, --fflags FFLAGS  Additional Fortran compiler flags. Fortran compiler flags should be
                         enclosed in quotes and start with a blank space or separated from the name
                         (-ff or --fflags) with a equal sign (-ff='-O3'). (default is None)
-  -cf CFLAGS, --cflags CFLAGS
-                        Additional C/C++ compiler flags. C/C++ compiler flags should be enclosed
+  -cf, --cflags CFLAGS  Additional C/C++ compiler flags. C/C++ compiler flags should be enclosed
                         in quotes and start with a blank space or separated from the name (-cf or
                         --cflags) with a equal sign (-cf='-O3'). (default is None)
-  -ad APPDIR, --appdir APPDIR
-                        Target path that overrides path defined target path (default is None)
+  -ad, --appdir APPDIR  Target path that overrides path defined target path (default is None)
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)
   --zip ZIP             Zip built executable. (default is None)

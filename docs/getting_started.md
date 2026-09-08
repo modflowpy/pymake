@@ -55,15 +55,13 @@ options:
   -dbl, --double        Force double precision. (default is False)
   -dbg, --debug         Create debug version. (default is False)
   -sd, --subdirs        Include source files in srcdir subdirectories. (default is None)
-  -ff FFLAGS, --fflags FFLAGS
-                        Additional Fortran compiler flags. Fortran compiler flags should be
+  -ff, --fflags FFLAGS  Additional Fortran compiler flags. Fortran compiler flags should be
                         enclosed in quotes and start with a blank space or separated from the name
                         (-ff or --fflags) with a equal sign (-ff='-O3'). (default is None)
-  -cf CFLAGS, --cflags CFLAGS
-                        Additional C/C++ compiler flags. C/C++ compiler flags should be enclosed
+  -cf, --cflags CFLAGS  Additional C/C++ compiler flags. C/C++ compiler flags should be enclosed
                         in quotes and start with a blank space or separated from the name (-cf or
                         --cflags) with a equal sign (-cf='-O3'). (default is None)
-  -sl {-lc,-lm}, --syslibs {-lc,-lm}
+  -sl, --syslibs {-lc,-lm}
                         Linker system libraries. Linker libraries should be enclosed in quotes and
                         start with a blank space or separated from the name (-sl or --syslibs)
                         with a equal sign (-sl='-libgcc'). (default is None)
@@ -72,21 +70,20 @@ options:
                         build engine was removed. (default is False)
   -mfo, --makefile-only
                         Create a GNU make makefile without building the target. (default is False)
-  -md MAKEFILEDIR, --makefiledir MAKEFILEDIR
+  -md, --makefiledir MAKEFILEDIR
                         GNU make makefile directory. (default is '.')
-  -cs COMMONSRC, --commonsrc COMMONSRC
+  -cs, --commonsrc COMMONSRC
                         Additional directory with common source files. (default is None)
-  -ef EXTRAFILES, --extrafiles EXTRAFILES
+  -ef, --extrafiles EXTRAFILES
                         List of extra source files to include in the compilation. extrafiles can
                         be either a list of files or the name of a text file that contains a list
                         of files. (default is None)
-  -exf EXCLUDEFILES, --excludefiles EXCLUDEFILES
+  -exf, --excludefiles EXCLUDEFILES
                         List of extra source files to exclude from the compilation. excludefiles
                         can be either a list of files or the name of a text file that contains a
                         list of files. (default is None)
   -so, --sharedobject   Create shared object or dll on Windows. (default is False)
-  -ad APPDIR, --appdir APPDIR
-                        Target path that overrides path defined target path (default is None)
+  -ad, --appdir APPDIR  Target path that overrides path defined target path (default is None)
   -v, --verbose         Verbose output to terminal. (default is False)
   --keep                Keep existing executable. (default is False)
   --zip ZIP             Zip built executable. (default is None)

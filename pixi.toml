@@ -27,7 +27,6 @@ pytest-cov = "*"
 pytest-dotenv = "*"
 pytest-order = "*"
 pytest-xdist = "*"
-python = "3.11.*"
 requests = "*"
 ruff = "*"
 
@@ -60,7 +59,18 @@ create-codejson = { cmd = "make-code-json" }
 # for example 'pixi run -e build autotest-base'. the compilers are not in the
 # default environment because continuous integration installs its own
 [environments]
-build = { features = ["build"] }
+default = { features = ["py311"] }
+build = { features = ["py311", "build"] }
+py314 = { features = ["py314"] }
+
+# the default environment is the oldest supported python and the py314
+# environment is the newest, so continuous integration covers both ends of the
+# range of supported python versions
+[feature.py311.dependencies]
+python = "3.11.*"
+
+[feature.py314.dependencies]
+python = "3.14.*"
 
 [feature.build]
 platforms = ["win-64", "linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
