@@ -30,6 +30,8 @@ jobs:
         include:
           # test latest gcc and python
           - {os: ubuntu-latest, compiler: gcc, version: 13, shell: bash, pixienv: default}
+          # test the newest supported python
+          - {os: ubuntu-latest, compiler: gcc, version: 13, shell: bash, pixienv: py314}
           - {os: macos-latest, compiler: gcc, version: 13, shell: bash, pixienv: default}
           - {os: windows-latest, compiler: gcc, version: 13, shell: pwsh, pixienv: build}
           # test latest python and intel-classic
@@ -135,7 +137,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: failed-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.version }}
+          name: failed-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.version }}-${{ matrix.pixienv }}
           path: ./autotest/.failed
 
       - name: Print coverage report before upload
