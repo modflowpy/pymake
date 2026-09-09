@@ -2,7 +2,7 @@
 name = "pymake"
 channels = ["conda-forge"]
 platforms = ["win-64", "linux-64", "linux-aarch64", "osx-arm64"]
-version = "2.0.0"
+version = "2.1.0.dev0"
 
 [dependencies]
 appdirs = "*"

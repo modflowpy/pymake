@@ -2,7 +2,7 @@
 
 Python package for building MODFLOW-based programs from source files.
 
-### Version 2.0.0
+### Version 2.1.0.dev0
 
 [![PyPI Version](https://img.shields.io/pypi/v/mfpymake.png)](https://pypi.python.org/pypi/mfpymake)
 [![Anaconda Version](https://anaconda.org/conda-forge/mfpymake/badges/version.svg)](https://anaconda.org/conda-forge/mfpymake)  
