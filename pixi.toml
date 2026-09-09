@@ -1,7 +1,7 @@
 [workspace]
 name = "pymake"
 channels = ["conda-forge"]
-platforms = ["win-64", "linux-64", "linux-aarch64", "osx-arm64", "osx-64"]
+platforms = ["win-64", "linux-64", "linux-aarch64", "osx-arm64"]
 version = "2.0.0"
 
 [dependencies]
@@ -73,7 +73,7 @@ python = "3.11.*"
 python = "3.14.*"
 
 [feature.build]
-platforms = ["win-64", "linux-64", "linux-aarch64", "osx-64", "osx-arm64"]
+platforms = ["win-64", "linux-64", "linux-aarch64", "osx-arm64"]
 
 [feature.build.dependencies]
 gcc = "*"
@@ -91,8 +91,5 @@ make = "*"
 
 # gcc uses libc++ on macOS, and the libc++ 22 headers need a c++ standard
 # newer than the one gcc defaults to, which breaks the c++ targets
-[feature.build.target.osx-64.dependencies]
-libcxx = "<22"
-
 [feature.build.target.osx-arm64.dependencies]
 libcxx = "<22"
