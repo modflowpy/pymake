@@ -1,5 +1,7 @@
-"""Utility functions to extract information for a target from the USGS
-application database. Available functionality includes:
+"""Utility functions to extract target information from the USGS database.
+
+Information for a target is extracted from the USGS application database.
+Available functionality includes:
 
 1. Get a list of available targets
 2. Get data for a specific target
@@ -10,22 +12,56 @@ application database. Available functionality includes:
 6. Functions to load, update, and export a USGS-style "code.json" json file
    containing information in the USGS application database
 
-A table listing the available pymake targets is included below:
-
-.. csv-table:: Available pymake targets
-   :file: ./usgsprograms.txt
-   :widths: 10, 10, 10, 20, 10, 10, 10, 10, 10
-   :header-rows: 1
+The available pymake targets are defined in ``usgsprograms.toml``, which is
+in this directory, and are listed by :code:`usgs_program_data.list_targets()`.
 
 """
 
 import datetime
 import json
-import os
 import sys
+import tomllib
+import warnings
 from pathlib import Path
 
 from .download import _request_header, zip_all
+
+# target names that have been renamed, mapped to the current name
+renamed_targets = {
+    "mfusg_gsi": "mfusgt",
+}
+
+# renamed targets that have already been warned about, so that a build does
+# not repeat the warning for every internal lookup
+_warned_targets = set()
+
+
+def _resolve_target(key):
+    """Resolve a renamed target to its current name.
+
+    Parameters
+    ----------
+    key : str
+        program key (name), which may be a name that has been renamed
+
+    Returns
+    -------
+    key : str
+        current program key (name)
+
+    """
+    if key in renamed_targets:
+        current = renamed_targets[key]
+        if key not in _warned_targets:
+            _warned_targets.add(key)
+            warnings.warn(
+                f"target '{key}' has been renamed to '{current}'",
+                DeprecationWarning,
+                stacklevel=4,
+            )
+        key = current
+
+    return key
 
 
 class dotdict(dict):
@@ -37,41 +73,20 @@ class dotdict(dict):
 
 
 # data file containing the USGS program data
-program_data_file = "usgsprograms.txt"
+PROGRAM_DATA_FILE = "usgsprograms.toml"
 
 # keys to create for each target
-target_keys = (
+TARGET_KEYS = (
     "version",
     "current",
     "url",
     "dirname",
     "srcdir",
-    "standard_switch",
-    "double_switch",
+    "standard_precision",
+    "double_precision",
     "shared_object",
     "url_download_asset_date",
 )
-
-
-def _str_to_bool(s):
-    """Convert "True" and "False" strings to a boolean.
-
-    Parameters
-    ----------
-    s : str
-        String representation of boolean
-
-    Returns
-    -------
-
-    """
-    if s == "True":
-        return True
-    elif s == "False":
-        return False
-    else:
-        msg = f'Invalid string passed - "{s}"'
-        raise ValueError(msg)
 
 
 class usgs_program_data:
@@ -88,37 +103,18 @@ class usgs_program_data:
         -------
 
         """
-        # pth = os.path.dirname(os.path.abspath(pymake.__file__))
-        pth = os.path.dirname(os.path.abspath(__file__))
-        fpth = os.path.join(pth, program_data_file)
-        url_in = open(fpth, "r").read().split("\n")
+        fpth = Path(__file__).parent / PROGRAM_DATA_FILE
+        with open(fpth, "rb") as f:
+            programs = tomllib.load(f)["program"]
 
         program_data = {}
-        for line in url_in[1:]:
-            # skip blank lines
-            if len(line.strip()) < 1:
-                continue
-            # parse comma separated line
-            t = [item.strip() for item in line.split(sep=",")]
-            # programmatically build a dictionary for each target
-            d = {}
-            for idx, key in enumerate(target_keys):
-                if key in ("url_download_asset_date",):
-                    value = None
-                else:
-                    value = t[idx + 1]
-                if key in (
-                    "current",
-                    "standard_switch",
-                    "double_switch",
-                    "shared_object",
-                ):
-                    value = _str_to_bool(value)
-                d[key] = value
+        for target, entry in programs.items():
+            # programmatically build a dictionary for each target, so that a
+            # target has every key whether the file defines it or not
+            d = {key: entry.get(key) for key in TARGET_KEYS}
 
             # make it possible to access each key with a dot (.)
-            d = dotdict(d)
-            program_data[t[0]] = d
+            program_data[target] = dotdict(d)
 
         return dotdict(program_data)
 
@@ -136,6 +132,7 @@ class usgs_program_data:
             dictionary with attributes for program key (name)
 
         """
+        key = _resolve_target(key)
         if key not in self._program_dict:
             msg = f'"{key}" key does not exist. Available keys: '
             for idx, k in enumerate(self._program_dict.keys()):
@@ -186,14 +183,14 @@ class usgs_program_data:
 
         """
         # remove path and extension from key
-        key = os.path.basename(key)
+        key = Path(key).name
         if (
             key.endswith(".exe")
             or key.endswith(".dll")
             or key.endswith(".so")
             or key.endswith(".dylib")
         ):
-            key = os.path.splitext(key)[0]
+            key = Path(key).stem
 
         # return program attributes
         return usgs_program_data()._target_data(key)
@@ -215,7 +212,6 @@ class usgs_program_data:
             list of USGS program targets
 
         """
-
         return usgs_program_data()._target_keys(current=current)
 
     @staticmethod
@@ -247,9 +243,9 @@ class usgs_program_data:
         """
         target = usgs_program_data().get_target(key)
         precision = []
-        if target.standard_switch:
+        if target.standard_precision:
             precision.append("default")
-        if target.double_switch:
+        if target.double_precision:
             precision.append("double")
         return precision
 
@@ -353,7 +349,7 @@ class usgs_program_data:
             sel = "the current"
         print(
             f'writing a json file ("{fpth}") of {sel} USGS programs\n'
-            f'in the "{program_data_file}" database.\n'
+            f'in the "{PROGRAM_DATA_FILE}" database.\n'
         )
         if prog_data is not None:
             for idx, key in enumerate(prog_data.keys()):
@@ -411,9 +407,7 @@ class usgs_program_data:
                         url_data_obj = datetime.datetime.strptime(
                             url_date, "%a, %d %b %Y %H:%M:%S %Z"
                         )
-                        datetime_obj_utc = url_data_obj.replace(
-                            tzinfo=datetime.timezone.utc
-                        )
+                        datetime_obj_utc = url_data_obj.replace(tzinfo=datetime.UTC)
                         datetime_str = datetime_obj_utc.strftime("%m/%d/%Y")
                         prog_data[target]["url_download_asset_date"] = datetime_str
                         break
@@ -439,13 +433,13 @@ class usgs_program_data:
             for target in pop_list:
                 del prog_data[target]
 
-        # update double_switch based on executables in appdir
+        # update double_precision based on executables in appdir
         for appdir_file in appdir.iterdir():
             temp_target = appdir_file.stem
             if temp_target.endswith("dbl"):
                 temp_target = temp_target.replace("dbl", "")
                 if temp_target in prog_data.keys():
-                    prog_data[temp_target]["double_switch"] = True
+                    prog_data[temp_target]["double_precision"] = True
 
         # write code.json to root directory - used by executables CI
         with open(file_name, "w") as file_obj:
@@ -516,7 +510,7 @@ class usgs_program_data:
             for key, value in json_dict.items():
                 try:
                     for kk in value.keys():
-                        if kk not in target_keys:
+                        if kk not in TARGET_KEYS:
                             raise KeyError(msg + f' - key ("{kk}")')
                 except:
                     raise KeyError(msg)
@@ -570,7 +564,7 @@ class usgs_program_data:
 
         """
         if temp_dict is not None:
-            if os.path.isfile(fpth):
+            if Path(fpth).is_file():
                 json_dict = usgs_program_data.load_json(fpth=fpth)
                 if json_dict is not None:
                     for key, value in temp_dict.items():

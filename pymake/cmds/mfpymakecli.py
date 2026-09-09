@@ -16,17 +16,21 @@ __all__ = ["main"]
 __license__ = "CC0"
 
 
-def main() -> None:
-    """mfpymake command line interface
+def examples(prog) -> str:
+    """Return the examples shown at the bottom of the help.
+
+    Parameters
+    ----------
+    prog : str
+        program name shown in the examples
 
     Returns
     -------
-    None
+    examples : str
+        examples for the mfpymake help
 
     """
-    # Show meaningful examples at bottom of help
-    prog = Path(sys.argv[0]).stem
-    examples = dedent(f"""\
+    return dedent(f"""\
         Examples:
 
         Compile MODFLOW 6 from the root directory containing the
@@ -41,8 +45,17 @@ def main() -> None:
         $ {prog} src/ mf6 --subdirs -fc ifort --appdir bin
         """)
 
+
+def main() -> None:
+    """Mfpymake command line interface.
+
+    Returns
+    -------
+    None
+
+    """
     # get the arguments
-    args = parser(examples=examples)
+    args = parser(examples=examples(Path(sys.argv[0]).stem))
 
     # run pymake main
     try:
@@ -52,15 +65,14 @@ def main() -> None:
             fc=args.fc,
             cc=args.cc,
             makeclean=args.makeclean,
-            expedite=args.expedite,
-            dryrun=args.dryrun,
             double=args.double,
             debug=args.debug,
             include_subdirs=args.subdirs,
             fflags=args.fflags,
             cflags=args.cflags,
-            arch=args.arch,
             makefile=args.makefile,
+            makefile_only=args.makefile_only,
+            dryrun=args.dryrun or None,
             srcdir2=args.commonsrc,
             extrafiles=args.extrafiles,
             excludefiles=args.excludefiles,
@@ -68,8 +80,6 @@ def main() -> None:
             appdir=args.appdir,
             verbose=args.verbose,
             inplace=args.inplace,
-            networkx=args.networkx,
-            meson=args.meson,
             mesondir=args.mesondir,
         )
     except (EOFError, KeyboardInterrupt):

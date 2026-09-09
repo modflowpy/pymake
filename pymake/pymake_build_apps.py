@@ -1,7 +1,8 @@
-"""Function to build MODFLOW-based models and other utility software based on
-targets defined in the usgsprograms database (usgsprograms.txt). The
-usgsprograms database can be queried using functions in the usgsprograms
-module. An example of using :code:`pymake.build_apps()` to build MODFLOW 6 is:
+"""Build MODFLOW-based models and other utility software.
+
+Targets are defined in the usgsprograms database (usgsprograms.toml), which can
+be queried using functions in the usgsprograms module. An example of using
+:code:`pymake.build_apps()` to build MODFLOW 6 is:
 
 .. code-block:: python
 
@@ -25,13 +26,17 @@ USGS applications are built if no list is passed to
 
 """
 
-import os
 import shutil
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from .pymake import Pymake
 from .pymake_base import get_temporary_directories
+from .utils._compiler_switches import (
+    _get_base_compiler_name,
+    _replace_base_compiler_name,
+)
 from .utils.usgsprograms import usgs_program_data
 
 
@@ -42,8 +47,8 @@ def build_apps(
     appdir=None,
     verbose=None,
     double=False,
-    meson=False,
-    mesondir=".",
+    mesondir=None,
+    exclude=None,
     clean=True,
 ):
     """Build all of the current targets or a subset of targets.
@@ -61,11 +66,11 @@ def build_apps(
         target path
     double : bool
         force double precision. (default is False)
-    meson : bool
-        boolean indicating that the executable should be built using the
-        meson build system. (default is False)
     mesondir : str
-        Main meson.build file path
+        Main meson.build file path. the directory a target is downloaded to
+        is used when mesondir is None (default is None)
+    exclude : str or list of str
+        list of targets to exclude from build
     clean : bool
         boolean determining of final download should be removed
 
@@ -75,7 +80,6 @@ def build_apps(
         integer value indicating successful completion (0) or failure (>0)
 
     """
-
     start_time = datetime.now()
 
     # intercept all string (":") from make-program
@@ -89,6 +93,12 @@ def build_apps(
     else:
         if isinstance(targets, str):
             targets = targets.split(",")
+
+    # exclude targets
+    if exclude is not None:
+        if isinstance(exclude, str):
+            exclude = exclude.split(",")
+        targets = [t for t in targets if t not in exclude]
 
     code_dict = {}
 
@@ -107,22 +117,18 @@ def build_apps(
     if appdir is None:
         base_pth = "."
     else:
-        base_pth = os.path.dirname(appdir)
+        base_pth = str(Path(appdir).parent)
 
-    # set meson variable if a pymake object was not passed in
+    # set the meson directory if a pymake object was not passed in
     if pymake_object is None:
-        pmobj.meson = meson
         pmobj.mesondir = mesondir
-    else:
-        if pmobj.meson != meson:
-            pmobj.meson = meson
-        if pmobj.mesondir != mesondir:
-            pmobj.mesondir = mesondir
+    elif pmobj.mesondir != mesondir:
+        pmobj.mesondir = mesondir
 
     # clean any existing temporary directories
     temp_pths = get_temporary_directories(base_pth)
     for pth in temp_pths:
-        if os.path.isdir(pth):
+        if Path(pth).is_dir():
             shutil.rmtree(pth)
 
     # set object to clean after each build
@@ -165,10 +171,10 @@ def build_apps(
         # reset compilers
         if target in ("gridgen",):
             pmobj.fc = "none"
-            if pmobj.cc in ("gcc",):
-                pmobj.cc = "g++"
-            elif pmobj.cc in ("clang",):
-                pmobj.cc = "clang++"
+            if _get_base_compiler_name(pmobj.cc) in ("gcc",):
+                pmobj.cc = _replace_base_compiler_name(pmobj.cc, "g++")
+            elif _get_base_compiler_name(pmobj.cc) in ("clang",):
+                pmobj.cc = _replace_base_compiler_name(pmobj.cc, "clang++")
         elif target in ("triangle",):
             pmobj.fc = "none"
         elif target in ("mf6", "libmf6"):
@@ -206,8 +212,8 @@ def build_apps(
 
         # set target and srcdir
         pmobj.target = target.replace("dev", "")
-        pmobj.srcdir = os.path.join(
-            download_dir, code_dict[target].dirname, code_dict[target].srcdir
+        pmobj.srcdir = str(
+            Path(download_dir) / code_dict[target].dirname / code_dict[target].srcdir
         )
 
         # determine if single, double, or both should be built

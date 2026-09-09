@@ -1,12 +1,14 @@
 __author__ = "Joseph D. Hughes"
-__date__ = "May 23, 2025"
-__version__ = "1.5.0"
+__date__ = "September 09, 2026"
+__version__ = "2.0.0"
 __maintainer__ = "Joseph D. Hughes"
 __email__ = "jdhughes@usgs.gov"
 __status__ = "Production"
 __description__ = """\
-This is the pymake program for compiling fortran, c, and c++ source
+This is the pymake program for building fortran, c, and c++ source
 files, such as the source files that come with MODFLOW. The program
-works by building a directed acyclic graph of the module dependencies
-and then compiling the source files in the proper order.
+builds a target with the meson build system, using the build file the
+target provides where there is one and writing one from the source
+files it finds where there is not. A GNU makefile can be written for
+the target as well, or instead of building it.
 """

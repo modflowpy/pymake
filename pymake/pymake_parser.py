@@ -1,8 +1,9 @@
-"""Parser used to process command line arguments when running pymake directly
-from the command line or in a script. The standard argparse module is used
-to parse command line arguments. Available command line arguments are
-programmatically developed by a protected dictionary. The parser can be
-accessed using:
+"""Parser for pymake command line arguments.
+
+Command line arguments are processed when running pymake directly from the
+command line or in a script. The standard argparse module is used to parse
+command line arguments. Available command line arguments are programmatically
+developed by a protected dictionary. The parser can be accessed using:
 
 .. code-block:: python
 
@@ -16,10 +17,41 @@ import argparse
 from textwrap import dedent
 
 from .config import __description__
+from .utils._compiler_switches import _get_base_compiler_name
+
+
+def _compiler_type(choices):
+    """Build an argparse type that validates a compiler name.
+
+    A version suffix, for example 'gfortran-13', is accepted and returned
+    unmodified.
+
+    Parameters
+    ----------
+    choices : list
+        valid base compiler names
+
+    Returns
+    -------
+    _validate : function
+        argparse type function
+
+    """
+
+    def _validate(value):
+        if _get_base_compiler_name(value) not in choices:
+            valid = ", ".join(f"'{choice}'" for choice in choices)
+            raise argparse.ArgumentTypeError(
+                f"invalid choice: '{value}' (choose from {valid}, "
+                "optionally with a version suffix such as '-13')"
+            )
+        return value
+
+    return _validate
 
 
 def _get_standard_arg_dict():
-    """Get command line argument dictionary
+    """Get command line argument dictionary.
 
     Returns
     -------
@@ -44,39 +76,43 @@ def _get_standard_arg_dict():
         },
         "fc": {
             "tag": ("-fc",),
-            "help": "Fortran compiler to use. (default is gfortran)",
+            "help": """Fortran compiler to use. A version suffix, for example
+                         gfortran-13, can be included. Valid compilers are
+                         ifort, mpiifort, gfortran, and none.
+                         (default is gfortran)""",
             "default": "gfortran",
-            "choices": [
-                "ifort",
-                "mpiifort",
-                "gfortran",
-                "none",
-            ],
+            "choices": None,
+            "validator": _compiler_type(
+                [
+                    "ifort",
+                    "mpiifort",
+                    "gfortran",
+                    "none",
+                ]
+            ),
             "action": None,
         },
         "cc": {
             "tag": ("-cc",),
-            "help": "C/C++ compiler to use. (default is gcc)",
+            "help": """C/C++ compiler to use. A version suffix, for example
+                         gcc-13, can be included. Valid compilers are gcc,
+                         clang, clang++, icc, icl, mpiicc, g++, cl, and none.
+                         (default is gcc)""",
             "default": "gcc",
-            "choices": [
-                "gcc",
-                "clang",
-                "clang++",
-                "icc",
-                "icl",
-                "mpiicc",
-                "g++",
-                "cl",
-                "none",
-            ],
-            "action": None,
-        },
-        "arch": {
-            "tag": ("-ar", "--arch"),
-            "help": """Architecture to use for Intel and Microsoft
-                         compilers on Windows. (default is intel64)""",
-            "default": "intel64",
-            "choices": ["ia32", "ia32_intel64", "intel64"],
+            "choices": None,
+            "validator": _compiler_type(
+                [
+                    "gcc",
+                    "clang",
+                    "clang++",
+                    "icc",
+                    "icl",
+                    "mpiicc",
+                    "g++",
+                    "cl",
+                    "none",
+                ]
+            ),
             "action": None,
         },
         "makeclean": {
@@ -97,24 +133,6 @@ def _get_standard_arg_dict():
         "debug": {
             "tag": ("-dbg", "--debug"),
             "help": "Create debug version. (default is False)",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "expedite": {
-            "tag": ("-e", "--expedite"),
-            "help": """Only compile out of date source files.
-                         Clean must not have been used on previous build.
-                         (default is False)""",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "dryrun": {
-            "tag": ("-dr", "--dryrun"),
-            "help": """Do not actually compile.  Files will be
-                         deleted, if --makeclean is used.
-                         Does not work yet for ifort. (default is False)""",
             "default": False,
             "choices": None,
             "action": "store_true",
@@ -166,12 +184,29 @@ def _get_standard_arg_dict():
             "choices": None,
             "action": "store_true",
         },
+        "dryrun": {
+            "tag": ("-dr", "--dryrun"),
+            "help": """Deprecated name for --makefile-only, which replaced it
+                         when the pymake build engine was removed.
+                         (default is False)""",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
+        },
+        "makefile_only": {
+            "tag": ("-mfo", "--makefile-only"),
+            "help": """Create a GNU make makefile without building the
+                         target. (default is False)""",
+            "default": False,
+            "choices": None,
+            "action": "store_true",
+        },
         "makefiledir": {
             "tag": ("-md", "--makefiledir"),
             "help": "GNU make makefile directory. (default is '.')",
             "default": ".",
             "choices": None,
-            "action": "store_true",
+            "action": None,
         },
         "srcdir2": {
             "tag": ("-cs", "--commonsrc"),
@@ -246,34 +281,19 @@ def _get_standard_arg_dict():
             "choices": None,
             "action": "store_true",
         },
-        "networkx": {
-            "tag": ("--networkx",),
-            "help": """Use networkx package to build Directed Acyclic Graph
-                     use to determine the order source files are compiled
-                     in. (default is False)""",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
-        "meson": {
-            "tag": ("--meson",),
-            "help": """Use meson to build executable. (default is False)""",
-            "default": False,
-            "choices": None,
-            "action": "store_true",
-        },
         "mesondir": {
             "tag": ("--mesondir",),
-            "help": "meson directory. (default is '.')",
-            "default": ".",
+            "help": """meson directory. (default is the directory the
+                         target is downloaded to)""",
+            "default": None,
             "choices": None,
-            "action": "store_true",
+            "action": None,
         },
     }
 
 
 def _parser_setup(parser_obj, value, reset_default=False):
-    """Add argument to argparse object
+    """Add argument to argparse object.
 
     Parameters
     ----------
@@ -300,6 +320,7 @@ def _parser_setup(parser_obj, value, reset_default=False):
             help=value["help"],
             default=default,
             choices=value["choices"],
+            type=value.get("validator"),
         )
     else:
         parser_obj.add_argument(
@@ -308,6 +329,46 @@ def _parser_setup(parser_obj, value, reset_default=False):
             default=default,
             action=value["action"],
         )
+    return parser_obj
+
+
+def build_parser(examples=None, prog=None):
+    """Construct the mfpymake parser.
+
+    Parameters
+    ----------
+    examples : str
+    prog : str
+        program name shown in the usage message (default is the command
+        that was run)
+
+    Returns
+    -------
+    parser_obj : ArgumentParser object
+        parser for the mfpymake command line arguments
+
+    """
+    epilog = dedent("""\
+        Note that the source directory should not contain any bad
+        or duplicate source files as all source files in the source
+        directory, the common source file directory (srcdir2), and
+        the extra files (extrafiles) will be built and linked.
+        Files can be excluded by using the excludefiles command
+        line switch.
+
+    """)
+    if examples is not None:
+        epilog += examples
+    description = __description__
+    parser_obj = argparse.ArgumentParser(
+        prog=prog,
+        description=description,
+        epilog=epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    for _, value in _get_standard_arg_dict().items():
+        parser_obj = _parser_setup(parser_obj, value)
     return parser_obj
 
 
@@ -324,25 +385,4 @@ def parser(examples=None):
         Namespace with command line arguments
 
     """
-    epilog = dedent("""\
-        Note that the source directory should not contain any bad
-        or duplicate source files as all source files in the source
-        directory, the common source file directory (srcdir2), and
-        the extra files (extrafiles) will be built and linked.
-        Files can be excluded by using the excludefiles command
-        line switch.
-
-    """)
-    if examples is not None:
-        epilog += examples
-    description = __description__
-    parser_obj = argparse.ArgumentParser(
-        description=description,
-        epilog=epilog,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-
-    for _, value in _get_standard_arg_dict().items():
-        my_parser = _parser_setup(parser_obj, value)
-    parser_args = my_parser.parse_args()
-    return parser_args
+    return build_parser(examples=examples).parse_args()

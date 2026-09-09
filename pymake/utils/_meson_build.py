@@ -1,3 +1,6 @@
+"""Private functions to build a target with the meson build system."""
+
+import json
 import os
 from contextlib import contextmanager
 from pathlib import Path
@@ -9,6 +12,7 @@ from ._compiler_language_files import (
     _preprocess_file,
 )
 from ._compiler_switches import (
+    _get_base_compiler_name,
     _get_c_flags,
     _get_fortran_flags,
     _get_linker_flags,
@@ -22,7 +26,7 @@ from .usgsprograms import usgs_program_data
 
 @contextmanager
 def _set_directory(path: Path):
-    """Sets the cwd within the context
+    """Sets the cwd within the context.
 
     Parameters
     ----------
@@ -49,8 +53,12 @@ def meson_build(
     cc=None,
     appdir=".",
     build_dir="_build",
+    debug=None,
+    fflags=None,
+    cflags=None,
+    syslibs=None,
 ):
-    """Build executable(s) using the meson build system
+    """Build executable(s) using the meson build system.
 
     Parameters
     ----------
@@ -67,6 +75,15 @@ def meson_build(
         current working directory)
     build_dir : str
         directory where meson build files are generated (default is _build)
+    debug : bool
+        boolean indicating if a debug executable will be built. the build
+        type is left to the meson build file when None (default is None)
+    fflags : list
+        user provided list of fortran compiler flags (default is None)
+    cflags : list
+        user provided list of c or cpp compiler flags (default is None)
+    syslibs : list
+        user provided list of linker flags (default is None)
 
     Returns
     -------
@@ -77,7 +94,16 @@ def meson_build(
     meson_test_path = Path(mesondir) / "meson.build"
     if meson_test_path.is_file():
         # setup meson
-        returncode = meson_setup(mesondir, fc=fc, cc=cc, appdir=appdir)
+        returncode = meson_setup(
+            mesondir,
+            fc=fc,
+            cc=cc,
+            appdir=appdir,
+            debug=debug,
+            fflags=fflags,
+            cflags=cflags,
+            syslibs=syslibs,
+        )
         # build and install executable(s) using meson
         if returncode == 0:
             returncode = meson_install(mesondir)
@@ -110,8 +136,12 @@ def meson_setup(
     cc="gcc",
     appdir=".",
     build_dir="_build",
+    debug=None,
+    fflags=None,
+    cflags=None,
+    syslibs=None,
 ):
-    """Run meson setup command
+    """Run meson setup command.
 
     Parameters
     ----------
@@ -128,6 +158,15 @@ def meson_setup(
         current working directory)
     build_dir : str
         directory where meson build files are generated (default is _build)
+    debug : bool
+        boolean indicating if a debug executable will be built. the build
+        type is left to the meson build file when None (default is None)
+    fflags : list
+        user provided list of fortran compiler flags (default is None)
+    cflags : list
+        user provided list of c or cpp compiler flags (default is None)
+    syslibs : list
+        user provided list of linker flags (default is None)
 
     Returns
     -------
@@ -154,7 +193,7 @@ def meson_setup(
                 else:
                     command_list.append(f"FC={fc}")
         if cc is not None:
-            if cc in ("g++", "clang++"):
+            if _get_base_compiler_name(cc) in ("g++", "clang++"):
                 cc_env = os.environ.get("CXX")
                 if cc_env is not None:
                     if cc_env != cc:
@@ -190,11 +229,32 @@ def meson_setup(
         else:
             command_list.append("--prefix=$(pwd)")
 
+        # os.path, because the install directory is relative to the build
+        # file and Path.relative_to cannot walk up before python 3.12
         libdir = os.path.relpath(os.path.abspath(appdir), os.path.abspath(mesondir))
         command_list.append(f"--libdir={libdir}")
         command_list.append(f"--bindir={libdir}")
 
-        if os.path.isdir(build_dir):
+        # the build type is only set for a meson build file pymake did not
+        # generate, because a generated one sets the optimization and debug
+        # options itself and a build type on the command line overrides them
+        if debug is not None:
+            command_list.append(f"--buildtype={'debug' if debug else 'release'}")
+
+        # pass the flags the user asked for to the meson build file. the
+        # flags for a language the build file does not use are ignored
+        for option, flags in (
+            ("fortran_args", fflags),
+            ("c_args", cflags),
+            ("fortran_link_args", syslibs),
+            ("c_link_args", syslibs),
+        ):
+            if flags:
+                if isinstance(flags, str):
+                    flags = flags.split()
+                command_list.append(f"-D{option}={' '.join(flags)}")
+
+        if Path(build_dir).is_dir():
             command_list.append("--wipe")
 
         command = " ".join(command_list)
@@ -213,7 +273,7 @@ def meson_install(
     mesondir,
     build_dir="_build",
 ):
-    """Run meson install command
+    """Run meson install command.
 
     Parameters
     ----------
@@ -221,6 +281,15 @@ def meson_install(
         path to the main meson.build file
     build_dir : str
         directory where meson build files are generated (default is _build)
+    debug : bool
+        boolean indicating if a debug executable will be built. the build
+        type is left to the meson build file when None (default is None)
+    fflags : list
+        user provided list of fortran compiler flags (default is None)
+    cflags : list
+        user provided list of c or cpp compiler flags (default is None)
+    syslibs : list
+        user provided list of linker flags (default is None)
 
     Returns
     -------
@@ -244,6 +313,50 @@ def meson_install(
     return returncode
 
 
+def _rename_provided_target(mesondir, target, build_dir="_build"):
+    """Rename the executable a provided meson build file installed.
+
+    A meson build file a target provides names the executable it builds, and
+    the name is not always the name of the target. mt3d-usgs builds mt3dusg
+    rather than mt3dusgs, so the target that was asked for is never produced.
+    The installed file is renamed when the target does not exist and the
+    build installed a single file, so that the file to rename is not in
+    doubt.
+
+    Parameters
+    ----------
+    mesondir : str
+        path to the main meson.build file
+    target : str
+        path for the executable that was asked for
+    build_dir : str
+        directory where meson build files are generated (default is _build)
+
+    Returns
+    -------
+
+    """
+    exe = Path(target)
+    if exe.is_file():
+        return
+
+    # meson writes what it installed to the build directory, so the file to
+    # rename does not have to be guessed from the directory it was put in
+    intro = Path(mesondir) / build_dir / "meson-info" / "intro-installed.json"
+    try:
+        installed = [Path(pth) for pth in json.loads(intro.read_text()).values()]
+    except (OSError, json.JSONDecodeError):
+        return
+
+    if len(installed) != 1:
+        return
+
+    built = installed[0]
+    if built.is_file() and built.name != exe.name:
+        print(f"renaming...'{built.name}' to '{exe.name}'")
+        built.replace(exe)
+
+
 def _meson_build(
     target,
     srcdir,
@@ -261,7 +374,7 @@ def _meson_build(
     mesondir,
     verbose,
 ):
-    """Build the target using meson
+    """Build the target using meson.
 
     Parameters
     ----------
@@ -305,8 +418,18 @@ def _meson_build(
 
     """
     # use existing build file if it already exists
-    returncode = meson_build(mesondir, fc=fc, cc=cc, appdir=os.path.dirname(target))
+    returncode = meson_build(
+        mesondir,
+        fc=fc,
+        cc=cc,
+        appdir=Path(target).parent,
+        debug=debug,
+        fflags=fflags,
+        cflags=cflags,
+        syslibs=syslibs,
+    )
     if returncode == 0:
+        _rename_provided_target(mesondir, target)
         return returncode
 
     # create meson files
@@ -323,7 +446,7 @@ def _meson_build(
     _create_source_meson_build(source_path_dict, srcfiles)
 
     # write main meson.build file
-    main_meson_file, fc_meson, cc_meson = _create_main_meson_build(
+    _, fc_meson, cc_meson = _create_main_meson_build(
         mesondir,
         target,
         srcfiles,
@@ -344,8 +467,65 @@ def _meson_build(
         mesondir,
         fc=fc_meson,
         cc=cc_meson,
-        appdir=os.path.dirname(target),
+        appdir=Path(target).parent,
     )
+
+
+def _meson_path(pth):
+    """Format a path so that it can be written to a meson build file.
+
+    A meson build file is read as text, so a Windows separator starts an
+    escape sequence, and a source directory such as 'true-binary' becomes a
+    tab. Meson accepts a forward slash on every platform.
+
+    Parameters
+    ----------
+    pth : str or Path
+        path to format
+
+    Returns
+    -------
+    pth : str
+        path with a forward slash separator
+
+    """
+    return Path(pth).as_posix()
+
+
+def _get_include_dirs(source_path_dict, mesondir):
+    """Get the directories that contain c or c++ header files.
+
+    Parameters
+    ----------
+    source_path_dict : dict
+        dictionary with root directories containing source files. keys
+        can be 'main', 'additional_srcdir', and 'extra' which correspond
+        to the three possible locations of source files.
+    mesondir : str
+        Main meson.build file path
+
+    Returns
+    -------
+    include_dirs : list
+        paths of the directories that contain a header file, relative to
+        mesondir
+
+    """
+    include_dirs = []
+    for value in source_path_dict.values():
+        header_dirs = {
+            header.parent
+            for pattern in ("*.h", "*.hpp")
+            for header in Path(value).rglob(pattern)
+            if header.is_file()
+        }
+        # sorted so the include directories are written to the meson build
+        # file in the same order on every run, rather than the order the
+        # file system happens to return them in
+        for header_dir in sorted(header_dirs):
+            include_dirs.append(_meson_path(os.path.relpath(header_dir, mesondir)))
+
+    return include_dirs
 
 
 def _create_main_meson_build(
@@ -363,7 +543,7 @@ def _create_main_meson_build(
     source_path_dict,
     verbose,
 ):
-    """Create the main meson build file
+    """Create the main meson build file.
 
     Parameters
     ----------
@@ -380,6 +560,7 @@ def _create_main_meson_build(
     sharedobject
     source_path_dict
     verbose
+
     Parameters
     ----------
     mesondir : str
@@ -422,8 +603,8 @@ def _create_main_meson_build(
         c/cpp compiler that meson will use. None if no c/cpp source files
 
     """
-    appdir = os.path.relpath(os.path.dirname(target), mesondir)
-    target = os.path.splitext(os.path.basename(target))[0]
+    appdir = _meson_path(os.path.relpath(Path(target).parent, mesondir))
+    target = Path(target).stem
     osname = _get_osname()
 
     # get target version number
@@ -444,7 +625,7 @@ def _create_main_meson_build(
     if mainfile is None:
         linker_language = "fortran"
     else:
-        main_ext = os.path.splitext(os.path.basename(mainfile))[1].lower()
+        main_ext = Path(mainfile).suffix.lower()
         if fext is not None:
             if main_ext in fext:
                 linker_language = "fortran"
@@ -483,16 +664,17 @@ def _create_main_meson_build(
             sharedobject=sharedobject,
             verbose=verbose,
         )
-        if osname == "win32" and fc in ("ifort",):
+        if osname == "win32" and _get_base_compiler_name(fc) in ("ifort",):
             meson_ext_flag = False
         else:
             meson_ext_flag = True
         preprocess = _preprocess_file(srcfiles, meson=meson_ext_flag)
         if preprocess:
-            if fc == "gfortran":
+            if _get_base_compiler_name(fc) == "gfortran":
                 fflags_meson.append("-cpp")
             else:
-                fflags_meson.append(f"{_get_prepend(fc, _get_osname())}fpp")
+                prepend = _get_prepend(_get_base_compiler_name(fc), _get_osname())
+                fflags_meson.append(f"{prepend}fpp")
     cc_meson = None
     cflags_meson = None
     if cext is not None:
@@ -518,7 +700,7 @@ def _create_main_meson_build(
     main_meson_file = Path(mesondir) / "meson.build"
     if verbose:
         print(f"Creating main meson.build file {main_meson_file}")
-    with open(main_meson_file, "w") as f:
+    with open(main_meson_file, "w", encoding="utf-8") as f:
         line = f"project(\n\t'{target}',\n"
         for language in languages:
             line += f"\t'{language}',\n"
@@ -593,7 +775,7 @@ def _create_main_meson_build(
         # add source directories
         line = ""
         for key, value in source_path_dict.items():
-            pth = os.path.relpath(value, mesondir)
+            pth = _meson_path(os.path.relpath(value, mesondir))
             line += f"subdir('{pth}')\n"
         line += "\n"
         f.write(line)
@@ -601,14 +783,7 @@ def _create_main_meson_build(
         # get list of include directories
         include_text = ""
         if "cpp" in languages or "c" in languages:
-            include_dirs = []
-            for key, value in source_path_dict.items():
-                for root, dirs, files in os.walk(value):
-                    for file in files:
-                        if file.endswith(".h") or file.endswith(".hpp"):
-                            pth = os.path.relpath(root, mesondir)
-                            include_dirs.append(pth)
-                            break
+            include_dirs = _get_include_dirs(source_path_dict, mesondir)
             if len(include_dirs) > 0:
                 include_text = ", include_directories : incdir"
                 line = "incdir = include_directories(\n"
@@ -618,15 +793,20 @@ def _create_main_meson_build(
                 f.write(line)
 
         # add build command
+        # meson links a target that has both c and fortran sources with the
+        # c compiler, and a fortran main is left in the fortran runtime by
+        # some compilers, so the language that has the main program links
         if sharedobject:
             line = (
                 f"library('{target}', sources{include_text}"
                 ", install: true, name_prefix: '', "
+                f"link_language: '{linker_language}', "
                 f"install_dir: '{appdir}')\n\n"
             )
         else:
             line = (
                 f"executable('{target}', sources{include_text}"
+                f", link_language: '{linker_language}'"
                 f", install: true, install_dir: '{appdir}')\n\n"
             )
         f.write(line)
@@ -657,13 +837,13 @@ def _create_source_meson_build(source_path_dict, srcfiles):
 
     # iterate over the files in each source directory
     for key, value in source_path_dict.items():
-        with open(os.path.join(value, "meson.build"), "w") as f:
+        with open(Path(value) / "meson.build", "w", encoding="utf-8") as f:
             f.write("sources += files(\n")
             pop_list = []
             for source_file in srcfiles_copy:
                 if os.path.relpath(value) in source_file:
                     pth = os.path.relpath(source_file, start=value)
-                    temp_list = pth.split(os.path.sep)
+                    temp_list = Path(pth).parts
                     line = f"\t\t'{temp_list[0]}'"
                     for temp in temp_list[1:]:
                         line += f" / '{temp}'"

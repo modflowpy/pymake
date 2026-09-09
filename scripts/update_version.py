@@ -23,6 +23,7 @@ _version_py_path = _project_root_path / "pymake" / "config.py"
 file_paths_list = [
     _project_root_path / "README.md",
     _project_root_path / "version.txt",
+    _project_root_path / "pixi.toml",
     _project_root_path / "pymake" / "config.py",
 ]
 file_paths = {pth.name: pth for pth in file_paths_list}  # keys for each file
@@ -37,12 +38,13 @@ _current_version = Version(_version_txt_path.read_text().strip())
 
 
 def update_version_txt(version: Version) -> None:
-    """Update version number in version.txt
+    """Update version number in version.txt.
 
     Parameters
     ----------
     version : Version
         version number
+
     """
     with open(_version_txt_path, "w", encoding="utf8") as f:
         f.write(str(version))
@@ -50,7 +52,7 @@ def update_version_txt(version: Version) -> None:
 
 
 def update_version_py(timestamp: datetime, version: Version) -> None:
-    """Update version number in config.py
+    """Update version number in config.py.
 
     Parameters
     ----------
@@ -58,6 +60,7 @@ def update_version_py(timestamp: datetime, version: Version) -> None:
         current datetime
     version : Version
         version number
+
     """
     lines = file_paths["config.py"].read_text().rstrip().split("\n")
 
@@ -72,12 +75,13 @@ def update_version_py(timestamp: datetime, version: Version) -> None:
 
 
 def update_readme_markdown(version: Version) -> None:
-    """Update README.md
+    """Update README.md.
 
     Parameters
     ----------
     version : Version
         version number
+
     """
     fpth = file_paths["README.md"]
 
@@ -97,33 +101,58 @@ def update_readme_markdown(version: Version) -> None:
     print(f"Updated {fpth} to version {version}")
 
 
+def update_pixi_toml(version: Version) -> None:
+    """Update the version in pixi.toml.
+
+    Parameters
+    ----------
+    version : Version
+        version number
+
+    """
+    fpth = file_paths["pixi.toml"]
+
+    lines = fpth.read_text().rstrip().split("\n")
+    with open(fpth, "w", encoding="utf8") as f:
+        for line in lines:
+            # only the version of the project itself, which is written before
+            # the tables that a dependency version is written in
+            if line.startswith("version = ") and "[" not in line:
+                line = f'version = "{version}"'
+            f.write(f"{line}\n")
+
+    print(f"Updated {fpth} to version {version}")
+
+
 def update_version(
-    timestamp: datetime = datetime.now(),
-    version: Version = None,
+    timestamp: datetime | None = None,
+    version: Version | None = None,
 ) -> None:
     """Main function for updating all of the files containing
-       version information
+       version information.
 
     Parameters
     ----------
     timestamp : datetime, optional
-        datetime object, by default datetime.now()
+        datetime object, the current time when None (default is None)
     version : Version, optional
         version number, by default None
+
     """
+    if timestamp is None:
+        timestamp = datetime.now()
+
     lock_path = Path(_version_txt_path.name + ".lock")
     try:
         lock = FileLock(lock_path)
         previous = Version(_version_txt_path.read_text().strip())
-        version = (
-            version
-            if version
-            else Version(previous.major, previous.minor, previous.micro)
-        )
+        if version is None:
+            version = previous
 
         with lock:
             update_version_txt(version)
             update_version_py(timestamp, version)
+            update_pixi_toml(version)
             update_readme_markdown(version)
     finally:
         try:

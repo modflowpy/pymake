@@ -1,12 +1,12 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
-from platform import system
 from textwrap import dedent
 
 import pytest
 from flaky import flaky
-from modflow_devtools.misc import set_dir, set_env
+from modflow_devtools.misc import set_dir
 
 from pymake import linker_update_environment
 
@@ -17,10 +17,10 @@ targets = (
     "crt",
 )
 
-meson_parm = (
-    True,
-    False,
-)
+
+@pytest.fixture
+def exclude(request) -> str:
+    return request.config.getoption("--exclude")
 
 
 def run_cli_cmd(cmd: list) -> None:
@@ -63,17 +63,16 @@ def test_make_program_double(function_tmpdir) -> None:
 
 @pytest.mark.dependency(name="make_program_all")
 @pytest.mark.schedule
-def test_make_program_all(module_tmpdir) -> None:
+def test_make_program_all(module_tmpdir, exclude) -> None:
     with set_dir(module_tmpdir):
-        cmd = ["make-program", ":", "--appdir", ".", "--verbose"]
+        cmd = ["make-program", ":", "--appdir", ".", "--verbose", "--exclude", exclude]
         run_cli_cmd(cmd)
 
 
 @flaky(max_runs=RERUNS)
 @pytest.mark.dependency(name="mfpymake")
 @pytest.mark.base
-@pytest.mark.parametrize("meson", meson_parm)
-def test_mfpymake(function_tmpdir, meson: bool) -> None:
+def test_mfpymake(function_tmpdir) -> None:
     with set_dir(function_tmpdir):
         src = dedent("""\
             program hello
@@ -102,8 +101,27 @@ def test_mfpymake(function_tmpdir, meson: bool) -> None:
 
         linker_update_environment(fc=fc)
 
-        if meson:
-            cmd.append("--meson")
         run_cli_cmd(cmd)
         cmd = [function_tmpdir / "hello"]
         run_cli_cmd(cmd)
+
+
+@pytest.mark.base
+def test_docs_current():
+    """The command line help in the documentation must match the parsers."""
+    root = Path(__file__).parent.parent
+    sys.path.insert(0, str(root / "scripts"))
+    try:
+        import update_docs
+    finally:
+        sys.path.pop(0)
+
+    stale = []
+    for path, prog, fence in update_docs._blocks():
+        if path.read_text() != update_docs._updated(path, prog, fence):
+            stale.append(f"{path.relative_to(root)} ({prog})")
+
+    assert not stale, (
+        f"the command line help in {', '.join(stale)} is out of date, "
+        "run 'pixi run update-docs' to write it"
+    )

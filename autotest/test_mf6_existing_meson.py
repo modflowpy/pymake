@@ -1,7 +1,6 @@
 import os
 import sys
 from pathlib import Path
-from platform import system
 
 import pytest
 from modflow_devtools.misc import set_dir
@@ -40,7 +39,6 @@ def pm(workspace, targets) -> pymake.Pymake:
     pm.target = str(targets[0])
     pm.appdir = str(workspace / "bin")
     pm.fc = os.environ.get("FC", "gfortran")
-    pm.meson = True
     pm.makeclean = True
     pm.mesondir = str(workspace)
     pm.verbose = True

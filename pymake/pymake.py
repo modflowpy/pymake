@@ -64,10 +64,6 @@ from .config import __description__
 from .pymake_base import main
 from .pymake_parser import _get_standard_arg_dict, _parser_setup
 from .utils._compiler_switches import (
-    _get_c_flags,
-    _get_fortran_flags,
-    _get_linker_flags,
-    _get_optlevel,
     _get_osname,
 )
 from .utils._usgs_src_update import _build_replace
@@ -76,8 +72,7 @@ from .utils.usgsprograms import usgs_program_data
 
 
 class Pymake:
-    """
-    Pymake class for interacting with pymake functionality. This is essentially
+    """Pymake class for interacting with pymake functionality. This is essentially
     a wrapper for all of the pymake functions needed to download and build
     a target.
 
@@ -97,17 +92,15 @@ class Pymake:
         self.srcdir = None
         self.fc = None
         self.cc = None
-        self.arch = None
         self.makeclean = None
         self.double = None
         self.debug = None
-        self.expedite = None
-        self.dryrun = None
         self.include_subdirs = None
         self.fflags = None
         self.cflags = None
         self.syslibs = None
         self.makefile = None
+        self.makefile_only = None
         self.makefiledir = None
         self.srcdir2 = None
         self.extrafiles = None
@@ -117,9 +110,9 @@ class Pymake:
         self.keep = None
         self.zip = None
         self.inplace = None
-        self.networkx = None
-        self.meson = None
         self.mesondir = None
+        # the mesondir pymake set, so that one the user set is not replaced
+        self._set_mesondir_value = None
 
         # set class variables with default values from arg_dict
         for key, value in _get_standard_arg_dict().items():
@@ -144,7 +137,7 @@ class Pymake:
                 self.cc = env_var
 
     def reset(self, target):
-        """Reset PyMake object variables for a target
+        """Reset PyMake object variables for a target.
 
         Parameters
         ----------
@@ -161,7 +154,7 @@ class Pymake:
         self.srcdir = None
 
     def finalize(self):
-        """Finalize Pymake class
+        """Finalize Pymake class.
 
         Returns
         -------
@@ -171,7 +164,7 @@ class Pymake:
             self._download_cleanup()
 
     def _print_settings(self):
-        """Print settings defined by command line arguments
+        """Print settings defined by command line arguments.
 
         Returns
         -------
@@ -186,7 +179,7 @@ class Pymake:
         print("\n")
 
     def argv_reset_settings(self, args):
-        """Reset settings using command line arguments
+        """Reset settings using command line arguments.
 
         Parameters
         ----------
@@ -238,19 +231,19 @@ class Pymake:
             # list of applications build at this time
             if len(self.build_targets) > 0:
                 for target in self.build_targets:
-                    targets.append(os.path.basename(target))
+                    targets.append(Path(target).name)
 
                     # set appdir based on first target, assumes that the path
                     # for all of the targets are the same
                     if appdir is None:
-                        appdir = os.path.dirname(target)
+                        appdir = str(Path(target).parent)
             # determine files in appdir if no applications build at this
             # time (--keep command line argument)
             else:
                 if appdir is None:
                     appdir = "."
-                for target in os.listdir(appdir):
-                    targets.append(target)
+                for pth in sorted(Path(appdir).iterdir()):
+                    targets.append(pth.name)
 
             # add code.json
             if Path("code.json").exists():
@@ -259,7 +252,7 @@ class Pymake:
 
             # delete the zip file if it exists
             zip_str = str(Path(zip_pth).resolve())
-            if os.path.exists(zip_pth):
+            if Path(zip_pth).exists():
                 if self.keep:
                     if self.verbose:
                         print(f"Appending files to existing zipfile '{zip_str}'")
@@ -276,7 +269,7 @@ class Pymake:
                 else:
                     if self.verbose:
                         print(f"Deleting existing zipfile '{zip_str}'")
-                    os.remove(zip_pth)
+                    Path(zip_pth).unlink()
 
             # print a message describing the zip process
             if self.verbose:
@@ -295,16 +288,16 @@ class Pymake:
         return
 
     def _clean_targets(self):
-        """Clean up list of targets
+        """Clean up list of targets.
 
         Returns
         -------
 
         """
         for target in self.build_targets:
-            if os.path.exists(target):
+            if Path(target).exists():
                 msg = f"removing '{target}'"
-                os.remove(target)
+                Path(target).unlink()
             else:
                 msg = f"'{target}' does not exist"
             if self.verbose:
@@ -318,7 +311,7 @@ class Pymake:
     def download_setup(
         self, target, url=None, download_path=".", verify=True, timeout=30
     ):
-        """Setup download
+        """Setup download.
 
         Parameters
         ----------
@@ -360,14 +353,14 @@ class Pymake:
             self.verify = verify
             self.timeout = timeout
             self.download_path = download_path
-            self.download_dir = os.path.join(download_path, prog_dict.dirname)
+            self.download_dir = str(Path(download_path) / prog_dict.dirname)
 
         return
 
     def download_target(
         self, target, url=None, download_path=".", verify=True, timeout=30
     ):
-        """Setup and download url
+        """Setup and download url.
 
         Parameters
         ----------
@@ -396,7 +389,7 @@ class Pymake:
         return self.download_url()
 
     def download_url(self):
-        """Download files from the url
+        """Download files from the url.
 
         Returns
         -------
@@ -420,7 +413,7 @@ class Pymake:
         return self.download
 
     def _download_cleanup(self):
-        """
+        """Remove the temporary download directory.
 
         Returns
         -------
@@ -435,7 +428,8 @@ class Pymake:
                 # reset self.download
                 self.download = None
 
-                if os.path.exists(self.download_dir):
+                download_dir = Path(self.download_dir)
+                if download_dir.is_dir():
                     ntries = 10
                     for itries in range(ntries):
                         # wait to delete on windows
@@ -444,12 +438,9 @@ class Pymake:
 
                         # remove the directory
                         try:
-                            shutil.rmtree(self.download_dir)
+                            shutil.rmtree(download_dir)
                             if self.verbose:
-                                print(
-                                    "removing download "
-                                    f"directory...'{self.download_dir}'"
-                                )
+                                print(f"removing download directory...'{download_dir}'")
                             break
                         except:
                             if self.verbose:
@@ -464,6 +455,35 @@ class Pymake:
                         time.sleep(6)
 
         return
+
+    def _set_mesondir(self):
+        """Set mesondir to the directory a target was downloaded to.
+
+        A meson build reads the build file a target provides, where there is
+        one, and writes a generated build file where there is not, so both
+        belong with the source. The default is the current directory, which
+        two builds of different targets would share. The directory is only
+        changed when mesondir is still the default, so that a mesondir set by
+        the user is respected.
+
+        Returns
+        -------
+
+        """
+        # a mesondir pymake set for a target it built before is replaced,
+        # since that download directory is removed when the target is done,
+        # and a mesondir the user set is respected
+        if self.mesondir is not None and self.mesondir != self._set_mesondir_value:
+            return
+
+        # the build file belongs with the source, which is the directory a
+        # downloaded target was extracted to
+        self.mesondir = "." if self.download_dir is None else self.download_dir
+        self._set_mesondir_value = self.mesondir
+        if self.verbose:
+            provided = (Path(self.mesondir) / "meson.build").is_file()
+            action = "using" if provided else "writing"
+            print(f"{action} the meson build file in...'{self.mesondir}'")
 
     def _set_include_subdirs(self):
         """Determine if sub-directories in the source directory should be
@@ -509,18 +529,20 @@ class Pymake:
             target = self.target
 
         if self.appdir is not None:
+            # os.path.dirname rather than Path.parent, because a target
+            # with no directory has to compare unequal to an appdir of "."
             if os.path.dirname(self.target) != self.appdir:
-                target = os.path.join(self.appdir, os.path.basename(target))
+                target = str(Path(self.appdir) / Path(target).name)
 
         build_target = True
-        if os.path.exists(target):
+        if Path(target).exists():
             if self.keep:
                 build_target = False
 
         return build_target
 
     def _get_base_target(self):
-        """Get base target name without path and extension
+        """Get base target name without path and extension.
 
         Returns
         -------
@@ -528,7 +550,7 @@ class Pymake:
             target name without path and extension
 
         """
-        target = os.path.basename(self.target)
+        target = Path(self.target).name
         if target.lower().endswith(".exe"):
             target = target[:-4]
         elif target.lower().endswith(".dll"):
@@ -551,7 +573,7 @@ class Pymake:
         """
         if self.srcdir2 is None:
             if self._get_base_target() in ("libmf6",):
-                self.srcdir2 = os.path.join(self.download_dir, "src")
+                self.srcdir2 = str(Path(self.download_dir) / "src")
         return
 
     def _set_sharedobject(self):
@@ -607,6 +629,7 @@ class Pymake:
                     "../../../src/Utilities/Constants.f90",
                     "../../../src/Utilities/compilerversion.F90",
                     "../../../src/Utilities/ErrorUtil.f90",
+                    "../../../src/Utilities/FeatureFlags.f90",
                     "../../../src/Utilities/GeomUtil.f90",
                     "../../../src/Utilities/MathUtil.f90",
                     "../../../src/Utilities/InputOutput.f90",
@@ -618,7 +641,6 @@ class Pymake:
                     "../../../src/Utilities/Sim.f90",
                     "../../../src/Utilities/SimVariables.f90",
                     "../../../src/Utilities/version.f90",
-                    "../../../src/Utilities/DevFeature.f90",
                     "../../../src/Utilities/Message.f90",
                     "../../../src/Utilities/GridFileReader.f90",
                     "../../../src/Utilities/HashTable.f90",
@@ -626,13 +648,13 @@ class Pymake:
 
             # evaluate extrafiles type
             if extrafiles:
-                srcdir = os.path.abspath(self.srcdir)
+                srcdir = Path(self.srcdir).absolute()
                 if isinstance(extrafiles, list):
                     for idx, value in enumerate(extrafiles):
-                        fpth = os.path.join(srcdir, value)
+                        fpth = str(Path(srcdir) / value)
                         extrafiles[idx] = os.path.normpath(fpth)
                 elif isinstance(extrafiles, str):
-                    fpth = os.path.join(srcdir, extrafiles)
+                    fpth = str(Path(srcdir) / extrafiles)
                     extrafiles = os.path.normpath(fpth)
                 else:
                     msg = "invalid extrafiles format - must be a list or string"
@@ -655,11 +677,11 @@ class Pymake:
         """
         if self.excludefiles is None:
             if self._get_base_target() in ("libmf6",):
-                self.excludefiles = [os.path.join(self.download_dir, "src", "mf6.f90")]
+                self.excludefiles = [str(Path(self.download_dir) / "src" / "mf6.f90")]
         return
 
     def build(self, target=None, srcdir=None, modify_exe_name=False):
-        """Build the target
+        """Build the target.
 
         Parameters
         ----------
@@ -685,7 +707,10 @@ class Pymake:
 
         prog_dict = usgs_program_data.get_target(self.target)
         if self.srcdir is None:
-            self.srcdir = os.path.join(self.download_dir, prog_dict.srcdir)
+            self.srcdir = str(Path(self.download_dir) / prog_dict.srcdir)
+
+        # set mesondir for a downloaded target that provides a meson build file
+        self._set_mesondir()
 
         # set include_subdirs for known targets
         self._set_include_subdirs()
@@ -702,52 +727,6 @@ class Pymake:
         # set sharedobject for known targets
         self._set_sharedobject()
 
-        # set compiler flags
-        if self.fc != "none":
-            if self.fflags is None:
-                optlevel = (
-                    _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
-                    + " "
-                )
-
-                self.fflags = optlevel + " ".join(
-                    _get_fortran_flags(
-                        self.target,
-                        self.fc,
-                        [],
-                        self.debug,
-                        double=self.double,
-                        sharedobject=self.sharedobject,
-                    )
-                )
-        if self.cc != "none":
-            if self.cflags is None:
-                optlevel = (
-                    _get_optlevel(self.target, self.fc, self.cc, self.debug, [], [])
-                    + " "
-                )
-
-                self.cflags = optlevel + " ".join(
-                    _get_c_flags(
-                        self.target,
-                        self.cc,
-                        [],
-                        self.debug,
-                        sharedobject=self.sharedobject,
-                    )
-                )
-        if self.syslibs is None:
-            self.syslibs = " ".join(
-                _get_linker_flags(
-                    self.target,
-                    self.fc,
-                    self.cc,
-                    [],
-                    [],
-                    sharedobject=self.sharedobject,
-                )[1]
-            )
-
         self.target = self.update_target(self.target, modify_target=modify_exe_name)
 
         build_target = self.set_build_target_bool()
@@ -761,8 +740,31 @@ class Pymake:
             if self.download is not None:
                 self.download_url()
 
-            # update source code, if necessary
+            # update source code, if necessary. the source update for the
+            # MODFLOW 6 targets only removes the files that need an external
+            # library, and the meson build file MODFLOW 6 provides lists
+            # those files and excludes them from the build itself, so they
+            # are only removed when pymake defines the build
+            # a makefile is written when only a makefile is asked for, so the
+            # source files it lists are the ones a makefile can build
+            if self.makefile_only:
+                self.makefile = True
+
+            external_only = self._get_base_target() in ("mf6", "libmf6", "zbud6")
+            # a makefile is written from the source pymake finds, so the
+            # files are removed for a makefile whichever build file is used
+            # the files are only kept for a build file the target provides,
+            # which has to be there. a generated build file lists the source
+            # files pymake finds, so it cannot build them either
+            provided_meson = (
+                self.mesondir == self.download_dir
+                and not self.makefile
+                and (Path(self.mesondir) / "meson.build").is_file()
+            )
+
             replace_function = _build_replace(self.target)
+            if external_only and provided_meson:
+                replace_function = None
             if replace_function is not None:
                 if self.verbose:
                     msg = f"replacing select source files for {self.target}\n"
@@ -771,10 +773,8 @@ class Pymake:
                 # execute select replace function
                 replace_function(
                     self.srcdir,
-                    self.fc,
-                    self.cc,
-                    self.arch,
-                    self.double,
+                    cc=self.cc,
+                    double=self.double,
                 )
 
             # write message
@@ -787,16 +787,14 @@ class Pymake:
                 fc=self.fc,
                 cc=self.cc,
                 makeclean=self.makeclean,
-                expedite=self.expedite,
-                dryrun=self.dryrun,
                 double=self.double,
                 debug=self.debug,
                 include_subdirs=self.include_subdirs,
                 fflags=self.fflags,
                 cflags=self.cflags,
                 syslibs=self.syslibs,
-                arch=self.arch,
                 makefile=self.makefile,
+                makefile_only=self.makefile_only,
                 makefiledir=self.makefiledir,
                 srcdir2=self.srcdir2,
                 extrafiles=self.extrafiles,
@@ -805,8 +803,6 @@ class Pymake:
                 appdir=self.appdir,
                 verbose=self.verbose,
                 inplace=self.inplace,
-                networkx=self.networkx,
-                meson=self.meson,
                 mesondir=self.mesondir,
             )
 
@@ -820,12 +816,14 @@ class Pymake:
         return self.returncode
 
     def update_build_targets(self):
-        """Add target to build_targets list if it is not in the list
+        """Add target to build_targets list if it is not in the list.
 
         Returns
         -------
 
         """
+        # os.path.abspath rather than Path.absolute, because it removes the
+        # ".." segments and so two spellings of a target count as one
         if os.path.abspath(self.target) not in self.build_targets:
             if self.verbose:
                 print(f"adding {self.target} to build_targets list")
@@ -869,18 +867,19 @@ class Pymake:
                 ext = None
 
         if ext is not None:
-            filename, file_extension = os.path.splitext(target)
-            if file_extension.lower() != ext:
+            if Path(target).suffix.lower() != ext:
                 target += ext
 
         # add double and debug to target name
         if modify_target:
             if self.double:
-                filename, file_extension = os.path.splitext(target)
+                pth = Path(target)
+                filename, file_extension = str(pth.with_suffix("")), pth.suffix
                 if "dbl" not in filename.lower():
                     target = filename + "dbl" + file_extension
             if self.debug:
-                filename, file_extension = os.path.splitext(target)
+                pth = Path(target)
+                filename, file_extension = str(pth.with_suffix("")), pth.suffix
                 if filename.lower()[-1] != "d":
                     target = filename + "d" + file_extension
         return target

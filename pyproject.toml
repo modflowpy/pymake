@@ -13,37 +13,39 @@ maintainers = [
     { name = "Joseph D. Hughes", email = "jdhughes@usgs.gov" },
 ]
 keywords = ["MODFLOW", "groundwater", "hydrogeology"]
-license = { text = "CC0" }
+license = "CC0-1.0"
+license-files = ["LICENSE.md"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Hydrology",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
-    "numpy",
+    "numpy>=1.20.3,<3.0",
     "requests",
     "networkx",
-    "meson>=1.8.0",
+    "meson>=1.3.1",
     "ninja",
-    "pydotplus",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
+plot = [
+    "pydot",
+]
 lint = [
     "cffconvert",
     "ruff",
 ]
 test = [
-    "mfpymake[lint]",
-    "coverage",
+    "mfpymake[lint,plot]",
+    "coverage!=7.6.5",
     "flaky",
     "filelock",
     "pytest!=8.1.0",
@@ -53,8 +55,8 @@ test = [
     "pytest-dotenv",
     "pytest-xdist",
     "appdirs",
-    "matplotlib",
-    "modflow-devtools",
+    "matplotlib>=1.4.0",
+    "modflow-devtools>=1.7.0,!=1.9.0,<2",
     "flopy",
 ]
 
@@ -65,7 +67,7 @@ make-code-json = "pymake.cmds.createjson:main"
 
 [project.urls]
 Documentation = "https://mfpymake.readthedocs.io"
-"Release Notes" = "https://github.com/modflowpy/flopy/blob/develop/docs/version_changes.md"
+"Release Notes" = "https://github.com/modflowpy/pymake/releases"
 "Bug Tracker" = "https://github.com/modflowpy/pymake/issues"
 "Source Code" = "https://github.com/modflowpy/pymake"
 
@@ -83,7 +85,16 @@ line-length = 88
 
 [tool.ruff.lint]
 select = [
+    "D200", # pydocstyle - unnecessary-multiline-docstring
+    "D202", # pydocstyle - blank-line-after-function
+    "D209", # pydocstyle - new-line-after-last-paragraph
+    "D212", # pydocstyle - multi-line-summary-first-line
+    "D400", # pydocstyle - missing-trailing-period
+    "D403", # pydocstyle - first-word-uncapitalized
     "D409", # pydocstyle - section-underline-matches-section-length
+    "D410", # pydocstyle - no-blank-line-after-section
+    "D411", # pydocstyle - no-blank-line-before-section
+    "D413", # pydocstyle - missing-blank-line-after-last-section
     "E",    # pycodestyle error
     "F",    # Pyflakes
     "I001", # isort - unsorted-imports
@@ -93,7 +104,6 @@ select = [
 ignore = [
     "E722", # do not use bare `except`
     "E741", # ambiguous variable name
-    "F401", # unused import
     "F841", # local variable assigned but never used
     "RUF005", # collection literal concatenation
     "RUF022", # Apply an isort-style sorting to `__all__`

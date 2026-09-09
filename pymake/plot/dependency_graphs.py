@@ -1,14 +1,17 @@
-"""Dependency graphs for applications can be created using:
+"""Create dependency graphs for application source files.
+
+Dependency graphs can be created using:
 
 .. code-block:: python
 
-    import os
+    from pathlib import Path
+
     import pymake
 
-    srcpth = os.path.join("..", "src")
+    srcpth = str(Path("..") / "src")
     deppth = "dependencies"
-    if not os.path.exists(deppth):
-        os.makedirs(deppth)
+    if not Path(deppth).exists():
+        Path(deppth).mkdir(parents=True)
 
     pymake.visualize.make_plots(srcpth, deppth, include_subdir=True)
 
@@ -16,9 +19,7 @@
 
 """
 
-import os
-
-import pydotplus.graphviz as pydot
+from pathlib import Path
 
 from ..utils._compiler_language_files import (
     _get_ordered_srcfiles,
@@ -26,9 +27,23 @@ from ..utils._compiler_language_files import (
 )
 from ..utils._dag import _get_f_nodelist
 
+try:
+    import pydot
+except ImportError:
+    pydot = None
+
+
+def _check_pydot():
+    """Raise an error if pydot, which is an optional dependency, is missing."""
+    if pydot is None:
+        raise ImportError(
+            "pydot is required to plot dependency graphs, install it with "
+            "'pip install mfpymake[plot]'"
+        )
+
 
 def to_pydot(dag, filename="mygraph.png"):
-    """Create a png file of a Directed Acyclic Graph
+    """Create a png file of a Directed Acyclic Graph.
 
     Parameters
     ----------
@@ -41,6 +56,8 @@ def to_pydot(dag, filename="mygraph.png"):
     -------
 
     """
+    _check_pydot()
+
     # Create the graph
     graph = pydot.Dot(graph_type="digraph")
 
@@ -61,7 +78,7 @@ def to_pydot(dag, filename="mygraph.png"):
 
 
 def _add_pydot_nodes(graph, node_dict, n, ilev, level):
-    """
+    """Recursively add a node and its dependencies to a pydot graph.
 
     Parameters
     ----------
@@ -81,7 +98,7 @@ def _add_pydot_nodes(graph, node_dict, n, ilev, level):
     if n in node_dict:
         return
 
-    ttl = os.path.basename(n.name)
+    ttl = Path(n.name).name
     pydotnode = pydot.Node(ttl, style="filled", fillcolor="red", label=ttl)
     node_dict[n] = pydotnode
     graph.add_node(pydotnode)
@@ -92,7 +109,7 @@ def _add_pydot_nodes(graph, node_dict, n, ilev, level):
 
 
 def _add_pydot_edges(graph, node_dict, edge_set, n, ilev, level):
-    """
+    """Recursively add the edges for a node and its dependencies to a graph.
 
     Parameters
     ----------
@@ -130,7 +147,6 @@ def make_plots(
     level=3,
     extension=".png",
     verbose=False,
-    networkx=False,
 ):
     """Create plots of module dependencies.
 
@@ -149,33 +165,27 @@ def make_plots(
         output extension (default is .png)
     verbose : bool
         boolean indicating if output will be printed to the terminal
-    networkx : bool
-        boolean indicating that the NetworkX python package will be used to
-        create the Directed Acyclic Graph (DAG) used to determine the order
-        source files are compiled in. The NetworkX package tends to result in
-        a unique DAG more often than the standard algorithm used in pymake.
-        (default is False)
 
     Returns
     -------
 
     """
-    srcfiles = _get_ordered_srcfiles(
-        _get_srcfiles(srcdir, include_subdir), networkx=networkx
-    )
+    _check_pydot()
+
+    srcfiles = _get_ordered_srcfiles(_get_srcfiles(srcdir, include_subdir))
     nodelist = _get_f_nodelist(srcfiles)
     for idx, n in enumerate(nodelist):
         if verbose:
-            print(f"{idx + 1:<3d}: {os.path.basename(n.name)}")
+            print(f"{idx + 1:<3d}: {Path(n.name).name}")
             for jdx, m in enumerate(n.dependencies):
-                msg = f"     {jdx + 1:<3d}: {os.path.basename(m.name)}"
+                msg = f"     {jdx + 1:<3d}: {Path(m.name).name}"
                 print(msg)
 
-    if not os.path.isdir(outdir):
+    if not Path(outdir).is_dir():
         raise Exception("output directory does not exist")
 
     for n in nodelist:
-        filename = os.path.join(outdir, os.path.basename(n.name) + extension)
+        filename = str(Path(outdir) / (Path(n.name).name + extension))
         if verbose:
             print("Creating " + filename)
         graph = pydot.Dot(graph_type="digraph")

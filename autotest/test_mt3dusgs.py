@@ -121,42 +121,43 @@ def test_download_exes(module_tmpdir):
 @pytest.mark.parametrize(
     "ws",
     [
-        "2ED5EAs",
-        "CTS1",
-        "CTS2",
-        "CTS3",
-        "CTS4",
-        "Keating",
-        "Keating_UZF",
-        "SFT_CrnkNic",
-        # "UZT_Disp_Lamb01_TVD",
-        # "UZT_Disp_Lamb1",
-        # "UZT_Disp_Lamb10",
-        # "UZT_NonLin",
-        "gwt",
-        "lkt",
-        "p01SpatialStresses(mf6)",
+        "test-cmp/2ED5EAs",
+        "test-cmp/CTS1",
+        "test-cmp/CTS2",
+        "test-cmp/CTS3",
+        "test-cmp/CTS4",
+        "test-cmp/Keating",
+        "test-cmp/Keating_UZF",
+        "test-cmp/SFT_CrnkNic",
+        # "test-cmp/UZT_Disp_Lamb01_TVD",
+        # "test-cmp/UZT_Disp_Lamb1",
+        # "test-cmp/UZT_Disp_Lamb10",
+        # "test-cmp/UZT_NonLin",
+        "test-cmp/gwt",
+        "test-cmp/lkt",
+        # test-mf6/p01SpatialStresses splits the flow and transport models into
+        # separate directories, which run_mt3dusgs() does not support
     ],
 )
 def test_mt3dusgs(module_tmpdir, workspace, ws, target):
     mfnwt_exe = module_tmpdir / "mfnwt"
     if pymake.usgs_program_data().get_version(mfnwt_exe) == "1.2.0":
         exclude = [
-            "UZT_NonLin",
-            "UZT_Disp_Lamb01_TVD",
-            "UZT_Disp_Lamb1",
-            "UZT_Disp_Lamb10",
+            "test-cmp/UZT_NonLin",
+            "test-cmp/UZT_Disp_Lamb01_TVD",
+            "test-cmp/UZT_Disp_Lamb1",
+            "test-cmp/UZT_Disp_Lamb10",
         ]
         if ws in exclude:
             pytest.skip(reason="excluding {ws}")
 
     exclude = [
-        "Keating",
-        "Keating_UZF",
+        "test-cmp/Keating",
+        "test-cmp/Keating_UZF",
     ]
     if ws in exclude:
         pytest.skip(reason="excluding {ws}")
 
-    assert run_mt3dusgs(
-        workspace / "data" / ws, target, mfnwt_exe, module_tmpdir / "mf6"
-    ), f"could not run {ws}"
+    assert run_mt3dusgs(workspace / ws, target, mfnwt_exe, module_tmpdir / "mf6"), (
+        f"could not run {ws}"
+    )

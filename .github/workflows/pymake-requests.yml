@@ -28,12 +28,12 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.8.8
+        uses: prefix-dev/setup-pixi@v0.10.2
         with:
-          pixi-version: v0.42.1
+          pixi-version: v0.75.0
           manifest-path: "pixi.toml"
 
       - name: pixi post-install
@@ -49,7 +49,7 @@ jobs:
 
       - name: Upload failed test output
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: failed-requests
           path: ./autotest/.failed
@@ -59,7 +59,7 @@ jobs:
           pixi run coverage-report
   
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:

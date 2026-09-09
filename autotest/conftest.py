@@ -1,5 +1,3 @@
-import contextlib
-import os
 import re
 from importlib import metadata
 from pathlib import Path
@@ -47,7 +45,6 @@ def pytest_runtest_makereport(item, call):
 
 def pytest_report_header(config):
     """Header for pytest to show versions of packages."""
-
     required = []
     extra = {}
     for item in metadata.requires("flopy"):
@@ -88,3 +85,12 @@ def pytest_report_header(config):
     if not_found:
         lines.append("optional packages not found: " + ", ".join(not_found))
     return "\n".join(lines)
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--exclude",
+        action="store",
+        default="",
+        help="forwarded to --exclude when testing 'make-program :'",
+    )

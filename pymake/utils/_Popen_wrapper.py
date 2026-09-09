@@ -1,21 +1,18 @@
-"""Private functions for running pymake commands using Popen"""
+"""Private functions for running pymake commands using Popen."""
 
 import sys
-from subprocess import PIPE, STDOUT, Popen
+from subprocess import PIPE, Popen
 
 PY3 = sys.version_info[0] >= 3
 
 
-def _process_Popen_initialize(cmdlist, intelwin=False, cwd=None):
+def _process_Popen_initialize(cmdlist, cwd=None):
     """Generic function to initialize a Popen process.
 
     Parameters
     ----------
     cmdlist : list
         command list passed to Popen
-    intelwin : bool
-        boolean indicating is Intel compilers are being used on Windows and
-        if stderr should be sent to the terminal
     cwd : str
         path to execute Popen in (default is None)
 
@@ -25,12 +22,9 @@ def _process_Popen_initialize(cmdlist, intelwin=False, cwd=None):
         Popen instance
 
     """
-    if intelwin:
-        stderr = STDOUT
-    else:
-        stderr = PIPE
-
-    return Popen(cmdlist, stdout=PIPE, stderr=stderr, cwd=cwd)
+    # the command list is built by pymake from the compiler and the source
+    # files it was asked for, and is not read from an untrusted source
+    return Popen(cmdlist, stdout=PIPE, stderr=PIPE, cwd=cwd)  # nosec B603
 
 
 def _process_Popen_command(shellflg, cmdlist):

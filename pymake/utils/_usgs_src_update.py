@@ -4,13 +4,14 @@ releases.
 """
 
 import os
+import re
 import shutil
 import sys
 import types
 from pathlib import Path
-from typing import Union
 
-from ..utils.usgsprograms import usgs_program_data
+from ..utils._compiler_switches import _get_base_compiler_name
+from ..utils.usgsprograms import renamed_targets, usgs_program_data
 
 
 def _get_function_names(module, select_name=None):
@@ -71,7 +72,8 @@ def _build_replace(targets):
         tgt = Path(target).with_suffix("").name.replace("dbl", "")
         if tgt.endswith("d") and tgt[:-1] in usgs_program_data.get_keys():
             tgt = tgt[:-1]
-        targets[idx] = tgt
+        # a renamed target is resolved so that it finds its update function
+        targets[idx] = renamed_targets.get(tgt, tgt)
 
     # get a dictionary of update functions
     funcs = _get_function_names(sys.modules[__name__], select_name="_update_")
@@ -95,95 +97,88 @@ def _build_replace(targets):
 
 # routines for updating source files locations and to compile
 # with gfortran, gcc, and g++
-def _update_triangle_files(srcdir, fc, cc, arch, double):
+def _update_triangle_files(srcdir, cc, **kwargs):
     """Update triangle source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
     cc : str
         c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
 
     """
     # modify long to long long on windows
-    if "win32" in sys.platform.lower() and cc in ("icl", "cl"):
-        src = os.path.join(srcdir, "triangle.c")
+    if "win32" in sys.platform.lower() and _get_base_compiler_name(cc) in (
+        "icl",
+        "cl",
+    ):
+        src = Path(srcdir) / "triangle.c"
+        updateSource = True
         with open(src, "r") as f:
             lines = f.readlines()
-            for idx, line in enumerate(lines):
-                lines[idx] = line.replace("unsigned long", "unsigned long long")
-        with open(src, "w") as f:
             for line in lines:
-                f.write(line)
-    return
+                if "unsigned_long" in line:
+                    updateSource = False
+                    break
+            if updateSource:
+                for idx, line in enumerate(lines):
+                    lines[idx] = line.replace("unsigned long", "unsigned long long")
+        if updateSource:
+            with open(src, "w") as f:
+                for line in lines:
+                    f.write(line)
 
 
-def _update_mt3dms_files(srcdir, fc, cc, arch, double):
+def _update_mt3dms_files(srcdir, **kwargs):
     """Update MT3DMS source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
 
     """
     # Replace the getcl command with getarg
-    f1 = open(os.path.join(srcdir, "mt3dms5.for"), "r")
-    f2 = open(os.path.join(srcdir, "mt3dms5.for.tmp"), "w")
+    f1 = open(Path(srcdir) / "mt3dms5.for", "r")
+    f2 = open(Path(srcdir) / "mt3dms5.for.tmp", "w")
     for line in f1:
         f2.write(line.replace("CALL GETCL(FLNAME)", "CALL GETARG(1,FLNAME)"))
     f1.close()
     f2.close()
-    os.remove(os.path.join(srcdir, "mt3dms5.for"))
+    Path(Path(srcdir) / "mt3dms5.for").unlink()
     shutil.move(
-        os.path.join(srcdir, "mt3dms5.for.tmp"),
-        os.path.join(srcdir, "mt3dms5.for"),
+        Path(srcdir) / "mt3dms5.for.tmp",
+        Path(srcdir) / "mt3dms5.for",
     )
 
     # Need to initialize the V array in SADV5B
     # see here: https://github.com/MODFLOW-USGS/mt3d-usgs/pull/46
-    f1 = open(os.path.join(srcdir, "mt_adv5.for"), "r")
-    f2 = open(os.path.join(srcdir, "mt_adv5.for.tmp"), "w")
+    f1 = open(Path(srcdir) / "mt_adv5.for", "r")
+    f2 = open(Path(srcdir) / "mt_adv5.for.tmp", "w")
     sfind = "C--SET DT TO NEGATIVE FOR BACKWARD TRACKING"
     sreplace = "C--INITIALIZE\n      V(:)=0.\nC\n" + sfind
     for line in f1:
         f2.write(line.replace(sfind, sreplace))
     f1.close()
     f2.close()
-    os.remove(os.path.join(srcdir, "mt_adv5.for"))
+    Path(Path(srcdir) / "mt_adv5.for").unlink()
     shutil.move(
-        os.path.join(srcdir, "mt_adv5.for.tmp"),
-        os.path.join(srcdir, "mt_adv5.for"),
+        Path(srcdir) / "mt_adv5.for.tmp",
+        Path(srcdir) / "mt_adv5.for",
     )
 
     for file_list in (
         "mt_btn5.for",
         "mt_utl5.for",
     ):
-        fpth = os.path.join(srcdir, file_list)
+        fpth = Path(srcdir) / file_list
         with open(fpth) as f:
             lines = f.readlines()
         f = open(fpth, "w")
@@ -193,25 +188,45 @@ def _update_mt3dms_files(srcdir, fc, cc, arch, double):
             f.write(line)
         f.close()
 
-    return
 
-
-def _update_swtv4_files(srcdir, fc, cc, arch, double):
-    """Update SEAWAT source files
+def _gmg1_resprint_alias(srcdir, windows):
+    """Set the resprint alias in gmg1.f for the operating system.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
+    windows : bool
+        boolean indicating if the 64 bit alias windows needs is activated
+
+    Returns
+    -------
+
+    """
+    fpth = Path(srcdir) / "gmg1.f"
+    lines = [line.rstrip() for line in open(fpth)]
+    with open(fpth, "w") as f:
+        for line in lines:
+            # comment out the 32 bit one and activate the 64 bit line
+            if (
+                windows
+                and "C      !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT" in line
+            ):
+                line = "       !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
+            if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
+                line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
+            f.write(f"{line}\n")
+
+
+def _update_swtv4_files(srcdir, cc, **kwargs):
+    """Update SEAWAT source files.
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
     cc : str
         c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -220,64 +235,33 @@ def _update_swtv4_files(srcdir, fc, cc, arch, double):
     # Remove the parallel and serial folders from the source directory
     dlist = ["parallel", "serial"]
     for d in dlist:
-        dname = os.path.join(srcdir, d)
-        if os.path.isdir(dname):
+        dname = Path(srcdir) / d
+        if Path(dname).is_dir():
             print(f'Removing..."{dname}"')
-            shutil.rmtree(os.path.join(srcdir, d))
+            shutil.rmtree(Path(srcdir) / d)
 
     # rename all source files to lower case so compilation doesn't
     # bomb on case-sensitive operating systems
-    srcfiles = os.listdir(srcdir)
-    for filename in srcfiles:
-        src = os.path.join(srcdir, filename)
-        dst = os.path.join(srcdir, filename.lower())
+    for src in sorted(Path(srcdir).iterdir()):
+        dst = Path(srcdir) / src.name.lower()
         if "linux" in sys.platform.lower() or "darwin" in sys.platform.lower():
-            os.rename(src, dst)
+            src.rename(dst)
 
     if "linux" in sys.platform.lower() or "darwin" in sys.platform.lower():
-        updfile = False
-        if cc in ["icc", "clang", "gcc"]:
-            updfile = True
-        if updfile:
-            fpth = os.path.join(srcdir, "gmg1.f")
-            lines = [line.rstrip() for line in open(fpth)]
-            f = open(fpth, "w")
-            for line in lines:
-                if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
-                    line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                f.write(f"{line}\n")
-            f.close()
+        if _get_base_compiler_name(cc) in ["icc", "clang", "gcc"]:
+            _gmg1_resprint_alias(srcdir, False)
     else:
-        # must be windows
-        if arch == "intel64":
-            fpth = os.path.join(srcdir, "gmg1.f")
-            lines = [line.rstrip() for line in open(fpth)]
-            f = open(fpth, "w")
-            for line in lines:
-                # comment out the 32 bit one and activate the 64 bit line
-                if "C      !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT" in line:
-                    line = "       !DEC$ ATTRIBUTES ALIAS:'resprint' :: RESPRINT"
-                if "      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT" in line:
-                    line = "C      !DEC$ ATTRIBUTES ALIAS:'_resprint' :: RESPRINT"
-                f.write(f"{line}\n")
-            f.close()
-
-    return
+        # must be windows, where the 64 bit alias is used
+        _gmg1_resprint_alias(srcdir, True)
 
 
-def _update_mf2005_files(srcdir, fc, cc, arch, double):
-    """Update MODFLOW2005 source files
+def _update_mf2005_files(srcdir, double, **kwargs):
+    """Update MODFLOW2005 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
     double : bool
         boolean indicating if compiler switches are used to build a
         double precision target
@@ -286,14 +270,6 @@ def _update_mf2005_files(srcdir, fc, cc, arch, double):
     -------
 
     """
-    # # Remove six src folders
-    # dlist = ("hydprograms",)
-    # for d in dlist:
-    #     dname = os.path.join(srcdir, d)
-    #     if os.path.isdir(dname):
-    #         print('Removing..."{}"'.format(dname))
-    #         shutil.rmtree(os.path.join(srcdir, d))
-
     # update utl7.f
     _update_utl7(srcdir)
 
@@ -307,28 +283,93 @@ def _update_mf2005_files(srcdir, fc, cc, arch, double):
     _update_pcg(srcdir)
 
 
-def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
-    """Update GSI version of MODFLOW-USG source files
+def _replace_lines(fpth, transform):
+    """Rewrite each line of a source file, if the file exists.
 
     Parameters
     ----------
-    srcdir : str
-        path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
+    fpth : Path
+        path to the source file
+    transform : function
+        function that takes a source line and returns the line to write
 
     Returns
     -------
 
     """
-    tags = {
+    if not fpth.exists():
+        return
+
+    with open(fpth) as f:
+        lines = f.readlines()
+    with open(fpth, "w") as f:
+        for line in lines:
+            f.write(transform(line))
+
+
+def _tag_replacer(tags):
+    """Build a line transform that substitutes each tag.
+
+    Parameters
+    ----------
+    tags : dict
+        text to replace mapped to its replacement
+
+    Returns
+    -------
+    transform : function
+        function that takes a source line and returns the line to write
+
+    """
+
+    def transform(line):
+        for key, value in tags.items():
+            if key in line:
+                line = line.replace(key, value)
+        return line
+
+    return transform
+
+
+def _mfusgt_deallocate(line):
+    """Comment out the ITHFLG deallocation, restoring it before LAYTYP.
+
+    Parameters
+    ----------
+    line : str
+        source line
+
+    Returns
+    -------
+    line : str
+        the line to write
+
+    """
+    tag, tag2 = "DEALLOCATE(ITHFLG)", "DEALLOCATE(LAYTYP)"
+    if tag in line:
+        line = line.replace(tag, f"!{tag}")
+        if tag2 in line:
+            line = line.replace(tag2, f"{tag}\n        {tag2}")
+
+    return line
+
+
+def _update_mfusgt_files(srcdir, **kwargs):
+    """Update MODFLOW-USG Transport source files.
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
+
+    Returns
+    -------
+
+    """
+    if not isinstance(srcdir, Path):
+        srcdir = Path(srcdir)
+
+    basu_tags = {
         "FMTARG = 'BINARY'": "FMTARG = 'UNFORMATTED'\n        ACCARG = 'STREAM'",
         ",SHARED,ACCESS='SEQUENTIAL'": ",ACCESS='SEQUENTIAL'",
         "FORM=FMTARG,SHARED,": "FORM=FMTARG,",
@@ -338,99 +379,37 @@ def _update_mfusg_gsi_files(srcdir, fc, cc, arch, double):
         ", SHARE = 'DENYNONE',": ",",
         "FORM='FORMATTED',ACCESS='SEQUENTIAL',": "FORM='FORMATTED',ACCESS='SEQUENTIAL'",
     }
-
-    if not isinstance(srcdir, Path):
-        srcdir = Path(srcdir)
-
-    fpth = srcdir / "glo2basu1.f"
-    if fpth.exists():
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            for key, value in tags.items():
-                if key in line:
-                    line = line.replace(key, value)
-            f.write(line)
-        f.close()
-
-    tags = {",share='DENYNONE',": ","}
-
-    fpth = srcdir / "UpdtSt.for"
-    if fpth.exists():
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            for key, value in tags.items():
-                if key in line:
-                    line = line.replace(key, value)
-            f.write(line)
-        f.close()
-
-    tag = "DEALLOCATE(ITHFLG)"
-    tag2 = "DEALLOCATE(LAYTYP)"
-    fpth = srcdir / "gwf2bcf-lpf-u1.f"
-    if fpth.exists():
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            if tag in line:
-                line = line.replace(tag, f"!{tag}")
-                if tag2 in line:
-                    line = line.replace(tag2, f"{tag}\n        {tag2}")
-            f.write(line)
-        f.close()
-
-    tag = "FORM = 'BINARY',"
-    tag2 = "FORM = FORMC,"
-    fpth = srcdir / "gwt2dptu1.f"
-    if fpth.exists():
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            if tag in line:
-                line = line.replace(tag, tag2)
-            f.write(line)
-        f.close()
-
-    tag = "FORM = 'BINARY',"
-    tag2 = "FORM = FORM,"
-    fpth = srcdir / "glo2btnu1.f"
-    if fpth.exists():
-        with open(fpth) as f:
-            lines = f.readlines()
-        f = open(fpth, "w")
-        for idx, line in enumerate(lines):
-            if tag in line:
-                line = line.replace(tag, tag2)
-            f.write(line)
-        f.close()
+    _replace_lines(srcdir / "glo2basu1.f", _tag_replacer(basu_tags))
+    _replace_lines(
+        srcdir / "UpdtSt.for",
+        _tag_replacer({",share='DENYNONE',": ","}),
+    )
+    _replace_lines(srcdir / "gwf2bcf-lpf-u1.f", _mfusgt_deallocate)
+    _replace_lines(
+        srcdir / "gwt2dptu1.f",
+        _tag_replacer({"FORM = 'BINARY',": "FORM = FORMC,"}),
+    )
+    _replace_lines(
+        srcdir / "glo2btnu1.f",
+        _tag_replacer({"FORM = 'BINARY',": "FORM = FORM,"}),
+    )
 
     # rename "utl7u1 RD.f" to "utl7u1_RD.f"
     fpth = srcdir / "utl7u1 RD.f"
     if fpth.exists():
         fpth_rename = srcdir / "utl7u1_RD.f"
         if fpth_rename.exists():
-            os.remove(fpth_rename)
-        os.rename(fpth, fpth_rename)
+            Path(fpth_rename).unlink()
+        Path(fpth).rename(fpth_rename)
 
 
-def _update_mfnwt_files(srcdir, fc, cc, arch, double):
-    """Update MODFLOW-NWT source files
+def _update_mfnwt_files(srcdir, double, **kwargs):
+    """Update MODFLOW-NWT source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
     double : bool
         boolean indicating if compiler switches are used to build a
         double precision target
@@ -440,9 +419,9 @@ def _update_mfnwt_files(srcdir, fc, cc, arch, double):
 
     """
     # remove lrestart.f
-    fpth = os.path.join(srcdir, "Irestart.f")
-    if os.path.exists(fpth):
-        os.remove(fpth)
+    fpth = Path(srcdir) / "Irestart.f"
+    if Path(fpth).exists():
+        Path(fpth).unlink()
 
     # update utl7.f
     _update_utl7(srcdir)
@@ -454,22 +433,13 @@ def _update_mfnwt_files(srcdir, fc, cc, arch, double):
     _update_swi(srcdir, double)
 
 
-def _update_mf2000_files(srcdir, fc, cc, arch, double):
-    """Update MODFLOW-2000 source files
+def _update_mf2000_files(srcdir, **kwargs):
+    """Update MODFLOW-2000 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -478,27 +448,22 @@ def _update_mf2000_files(srcdir, fc, cc, arch, double):
     # Remove six src folders
     dlist = ["beale2k", "hydprgm", "mf96to2k", "mfpto2k", "resan2k", "ycint2k"]
     for d in dlist:
-        dname = os.path.join(srcdir, d)
-        if os.path.isdir(dname):
+        dname = Path(srcdir) / d
+        if Path(dname).is_dir():
             print(f'Removing..."{dname}"')
-            shutil.rmtree(os.path.join(srcdir, d))
+            shutil.rmtree(Path(srcdir) / d)
 
     # Move src files and serial src file to src directory
-    tpth = os.path.join(srcdir, "mf2k")
-    files = [f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))]
-    for f in files:
-        shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
-    tpth = os.path.join(srcdir, "mf2k", "serial")
-    files = [f for f in os.listdir(tpth) if os.path.isfile(os.path.join(tpth, f))]
-    for f in files:
-        shutil.move(os.path.join(tpth, f), os.path.join(srcdir, f))
+    for tpth in (Path(srcdir) / "mf2k", Path(srcdir) / "mf2k" / "serial"):
+        for f in sorted(pth for pth in tpth.iterdir() if pth.is_file()):
+            shutil.move(f, Path(srcdir) / f.name)
 
     # Remove mf2k directory in source directory
-    tpth = os.path.join(srcdir, "mf2k")
+    tpth = Path(srcdir) / "mf2k"
     shutil.rmtree(tpth)
 
     # modify the openspec.inc file to use binary instead of unformatted
-    fname = os.path.join(srcdir, "openspec.inc")
+    fname = Path(srcdir) / "openspec.inc"
     with open(fname) as f:
         lines = f.readlines()
     with open(fname, "w") as f:
@@ -508,25 +473,15 @@ def _update_mf2000_files(srcdir, fc, cc, arch, double):
             if "C      DATA FORM/'BINARY'/" in line:
                 line = "       DATA FORM/'BINARY'/\n"
             f.write(line)
-    return
 
 
-def _update_mflgr_files(srcdir, fc, cc, arch, double):
-    """Update MODFLOW-LGR source files
+def _update_mflgr_files(srcdir, **kwargs):
+    """Update MODFLOW-LGR source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
@@ -536,43 +491,34 @@ def _update_mflgr_files(srcdir, fc, cc, arch, double):
     _update_swt(srcdir)
 
 
-def _update_mp6_files(srcdir, fc, cc, arch, double):
-    """Update MODPATH 6 source files
+def _update_mp6_files(srcdir, **kwargs):
+    """Update MODPATH 6 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
 
     """
-    fname1 = os.path.join(srcdir, "MP6Flowdata.for")
+    fname1 = Path(srcdir) / "MP6Flowdata.for"
     f = open(fname1, "r")
 
-    fname2 = os.path.join(srcdir, "MP6Flowdata_mod.for")
+    fname2 = Path(srcdir) / "MP6Flowdata_mod.for"
     f2 = open(fname2, "w")
     for line in f:
         line = line.replace("CD.QX2", "CD%QX2")
         f2.write(line)
     f.close()
     f2.close()
-    os.remove(fname1)
+    Path(fname1).unlink()
 
-    fname1 = os.path.join(srcdir, "MP6MPBAS1.for")
+    fname1 = Path(srcdir) / "MP6MPBAS1.for"
     f = open(fname1, "r")
 
-    fname2 = os.path.join(srcdir, "MP6MPBAS1_mod.for")
+    fname2 = Path(srcdir) / "MP6MPBAS1_mod.for"
     f2 = open(fname2, "w")
     for line in f:
         line = line.replace(
@@ -581,31 +527,22 @@ def _update_mp6_files(srcdir, fc, cc, arch, double):
         f2.write(line)
     f.close()
     f2.close()
-    os.remove(fname1)
+    Path(fname1).unlink()
 
 
-def _update_mp7_files(srcdir, fc, cc, arch, double):
-    """Update MODPATH 7 source files
+def _update_mp7_files(srcdir, **kwargs):
+    """Update MODPATH 7 source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
 
     """
-    fpth = os.path.join(srcdir, "StartingLocationReader.f90")
+    fpth = Path(srcdir) / "StartingLocationReader.f90"
     with open(fpth) as f:
         lines = f.readlines()
     f = open(fpth, "w")
@@ -616,119 +553,108 @@ def _update_mp7_files(srcdir, fc, cc, arch, double):
     f.close()
 
 
-def _update_vs2dt_files(srcdir, fc, cc, arch, double):
-    """Update VS2DT source files
+def _update_sutra_files(srcdir, **kwargs):
+    """Update SUTRA source files.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
+
+    Returns
+    -------
+
+    """
+    # a fixed form source line carries an identifier after column 72, which
+    # a compiler ignores. meson does not, and fails to find the module a
+    # module statement declares, so the modules are built in the wrong order
+    if not isinstance(srcdir, Path):
+        srcdir = Path(srcdir)
+
+    module = re.compile(r"^ *module +\w+", re.IGNORECASE)
+    for fpth in sorted(srcdir.glob("*.f")):
+        lines = fpth.read_text(errors="replace").splitlines()
+        updated = False
+        for idx, line in enumerate(lines):
+            if len(line) > 72 and module.match(line):
+                lines[idx] = line[:72].rstrip()
+                updated = True
+        if updated:
+            fpth.write_text("\n".join(lines) + "\n")
+
+
+def _update_vs2dt_files(srcdir, **kwargs):
+    """Update VS2DT source files.
+
+    Parameters
+    ----------
+    srcdir : str
+        path to directory with source files
 
     Returns
     -------
 
     """
     # move the main source into the source directory
-    f1 = os.path.join(srcdir, "..", "vs2dt3_3.f")
-    f1 = os.path.abspath(f1)
-    if not os.path.isfile(f1):
+    f1 = (Path(srcdir).parent / "vs2dt3_3.f").absolute()
+    if not Path(f1).is_file():
         raise OSError(f"{f1} does not exist")
-    f2 = os.path.join(srcdir, "vs2dt3_3.f")
-    f2 = os.path.abspath(f2)
+    f2 = (Path(srcdir) / "vs2dt3_3.f").absolute()
     shutil.move(f1, f2)
-    if not os.path.isfile(f2):
+    if not Path(f2).is_file():
         raise OSError(f"{f2} does not exist")
 
-    f1 = open(os.path.join(srcdir, "vs2dt3_3.f"), "r")
-    f2 = open(os.path.join(srcdir, "vs2dt3_3.f.tmp"), "w")
+    f1 = open(Path(srcdir) / "vs2dt3_3.f", "r")
+    f2 = open(Path(srcdir) / "vs2dt3_3.f.tmp", "w")
     for line in f1:
         srctxt = "     `POSITION='REWIND')"
         rpctxt = "     `POSITION='REWIND',ACCESS='STREAM')"
         f2.write(line.replace(srctxt, rpctxt))
     f1.close()
     f2.close()
-    os.remove(os.path.join(srcdir, "vs2dt3_3.f"))
+    Path(Path(srcdir) / "vs2dt3_3.f").unlink()
     shutil.move(
-        os.path.join(srcdir, "vs2dt3_3.f.tmp"),
-        os.path.join(srcdir, "vs2dt3_3.f"),
+        Path(srcdir) / "vs2dt3_3.f.tmp",
+        Path(srcdir) / "vs2dt3_3.f",
     )
-
-    return
 
 
 def _update_mf6_files(
     srcdir: str | os.PathLike,
-    fc: str,
-    cc: str,
-    arch: str,
-    double: bool,
+    **kwargs,
 ) -> None:
-    """
-    Update MODFLOW 6 source files to remove files with external dependencies.
-    This was required for releases >= 6.4.2
+    """Update MODFLOW 6 source files to remove files with external dependencies.
+    This was required for releases >= 6.4.2.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
 
     """
     _update_mf6_external_dependencies(srcdir)
-    return
 
 
 def _update_libmf6_files(
     srcdir: str | os.PathLike,
-    fc: str,
-    cc: str,
-    arch: str,
-    double: bool,
+    **kwargs,
 ) -> None:
-    """
-    Update MODFLOW 6 shared object source files to remove files with external
-    dependencies. This was required for releases >= 6.4.2
+    """Update MODFLOW 6 shared object source files to remove files with external
+    dependencies. This was required for releases >= 6.4.2.
 
     Parameters
     ----------
     srcdir : str
         path to directory with source files
-    fc : str
-        fortran compiler
-    cc : str
-        c/c++ compiler
-    arch : str
-        architecture
-    double : bool
-        boolean indicating if compiler switches are used to build a
-        double precision target
 
     Returns
     -------
 
     """
     _update_mf6_external_dependencies(srcdir, target="libmf6")
-    return
 
 
 # common source file replacement functions
@@ -736,8 +662,7 @@ def _update_mf6_external_dependencies(
     srcdir: str | os.PathLike,
     target: str = "mf6",
 ) -> None:
-    """
-    Remove MODFLOW 6 files with external library dependencies (PETSc, MPI, NetCDF).
+    """Remove MODFLOW 6 files with external library dependencies (PETSc, MPI, NetCDF).
 
 
     Parameters
@@ -767,6 +692,7 @@ def _update_mf6_external_dependencies(
         "Distributed/MpiRunControl.F90",
         "Distributed/MpiWorld.f90",
         "Solution/ParallelSolution.f90",
+        "Timing/ParallelAts.f90",
         "Distributed/MpiUnitCache.f90",
         "Distributed/MpiMessageCache.f90",
         "Utilities/Export/DisNCMesh.f90",
@@ -782,12 +708,11 @@ def _update_mf6_external_dependencies(
         path = srcdir / file
         if path.is_file():
             print(f'Removing..."{path}"')
-            os.remove(path)
-    return
+            Path(path).unlink()
 
 
 def _update_utl7(srcdir):
-    """Update utl7.f source file
+    """Update utl7.f source file.
 
     Parameters
     ----------
@@ -799,8 +724,8 @@ def _update_utl7(srcdir):
 
     """
     tag = "IBINARY=0"
-    fpth = os.path.join(srcdir, "utl7.f")
-    if os.path.isfile(fpth):
+    fpth = Path(srcdir) / "utl7.f"
+    if Path(fpth).is_file():
         with open(fpth) as f:
             lines = f.readlines()
         f = open(fpth, "w")
@@ -815,7 +740,7 @@ def _update_utl7(srcdir):
 
 
 def _update_swt(srcdir):
-    """Update gwf2swt7.f source file
+    """Update gwf2swt7.f source file.
 
     Parameters
     ----------
@@ -828,8 +753,8 @@ def _update_swt(srcdir):
     """
     # update gwf2swt7.f
     tag = "EST(J,I,N)=0.0"
-    fpth = os.path.join(srcdir, "gwf2swt7.f")
-    if os.path.isfile(fpth):
+    fpth = Path(srcdir) / "gwf2swt7.f"
+    if Path(fpth).is_file():
         with open(fpth) as f:
             lines = f.readlines()
         f = open(fpth, "w")
@@ -844,7 +769,7 @@ def _update_swt(srcdir):
 
 
 def _update_swi(srcdir, double):
-    """Update gwf2swi27.f and gwf2swi27.fpp source files
+    """Update gwf2swi27.f and gwf2swi27.fpp source files.
 
     Parameters
     ----------
@@ -870,8 +795,8 @@ def _update_swi(srcdir, double):
         "(i,csolver(i),i=1,2)",
     )
     for file_name in ("gwf2swi27.f", "gwf2swi27.fpp"):
-        fpth = os.path.join(srcdir, file_name)
-        if os.path.isfile(fpth):
+        fpth = Path(srcdir) / file_name
+        if Path(fpth).is_file():
             with open(fpth) as f:
                 lines = f.readlines()
             f = open(fpth, "w")
@@ -889,7 +814,7 @@ def _update_swi(srcdir, double):
 
 
 def _update_pcg(srcdir):
-    """Update pcg7.f source file
+    """Update pcg7.f source file.
 
     Parameters
     ----------
@@ -940,8 +865,8 @@ C                 MODIFIED FROM HILL(1990) 9/27/90: 2 REPLACES 1
                   ENDIF
                 ENDIF
     """
-    fpth = os.path.join(srcdir, "pcg7.f")
-    if os.path.isfile(fpth):
+    fpth = Path(srcdir) / "pcg7.f"
+    if Path(fpth).is_file():
         with open(fpth) as f:
             input_str = f.read()
         input_str = input_str.replace(find_block, replace_block)

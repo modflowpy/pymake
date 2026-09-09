@@ -16,7 +16,7 @@ __license__ = "CC0"
 
 
 def main() -> None:
-    """Command line interface
+    """Command line interface.
 
     Returns
     -------

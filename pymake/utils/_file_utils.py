@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 
 def _get_extra_exclude_files(external_file):
@@ -22,14 +23,14 @@ def _get_extra_exclude_files(external_file):
     else:
         if isinstance(external_file, list | tuple):
             files = external_file
-        elif os.path.isfile(external_file):
-            efpth = os.path.dirname(external_file)
+        elif Path(external_file).is_file():
+            efpth = Path(external_file).parent
             with open(external_file, "r") as f:
                 files = []
                 for line in f:
                     fname = line.strip().replace("\\", "/")
                     if len(fname) > 0:
-                        fname = os.path.abspath(os.path.join(efpth, fname))
+                        fname = str((efpth / fname).absolute())
                         files.append(fname)
         else:
             raise Exception(
@@ -41,7 +42,7 @@ def _get_extra_exclude_files(external_file):
 
 
 def _get_extrafiles_common_path(external_files):
-    """
+    """Get the common source path for a list of external files.
 
     Parameters
     ----------

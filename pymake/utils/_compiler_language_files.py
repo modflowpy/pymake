@@ -1,6 +1,7 @@
-"""Private functions for processing c/c++ and fortran files"""
+"""Private functions for processing c/c++ and fortran files."""
 
 import os
+from pathlib import Path
 
 from ._dag import _order_c_source_files, _order_f_source_files
 
@@ -26,7 +27,7 @@ def _get_fortran_files(srcfiles, extensions=False):
         srcfiles = [srcfiles]
     files_out = []
     for srcfile in srcfiles:
-        ext = os.path.splitext(srcfile)[1]
+        ext = Path(srcfile).suffix
         if ext.lower() in (
             ".f",
             ".for",
@@ -63,7 +64,7 @@ def _get_c_files(srcfiles, extensions=False):
     """
     files_out = []
     for srcfile in srcfiles:
-        ext = os.path.splitext(srcfile)[1]
+        ext = Path(srcfile).suffix
         if ext.lower() in (
             ".c",
             ".cpp",
@@ -95,7 +96,7 @@ def _get_iso_c(srcfiles):
     """
     iso_c = False
     for srcfile in srcfiles:
-        if os.path.exists(srcfile):
+        if Path(srcfile).exists():
             # open the file
             f = open(srcfile, "rb")
 
@@ -120,7 +121,7 @@ def _get_iso_c(srcfiles):
             if iso_c:
                 break
         else:
-            msg = "get_iso_c: could not " + f"open {os.path.basename(srcfile)}"
+            msg = "get_iso_c: could not " + f"open {Path(srcfile).name}"
             raise FileNotFoundError(msg)
 
     return iso_c
@@ -149,7 +150,7 @@ def _preprocess_file(srcfiles, meson=False):
 
     preprocess = False
     for srcfile in srcfiles:
-        if os.path.exists(srcfile):
+        if Path(srcfile).exists():
             # open the file
             f = open(srcfile, "rb")
 
@@ -173,7 +174,7 @@ def _preprocess_file(srcfiles, meson=False):
                     "#error",
                 ):
                     if meson:
-                        file_extension = os.path.splitext(srcfile)[1]
+                        file_extension = Path(srcfile).suffix
                         if file_extension not in (
                             ".F",
                             ".F90",
@@ -188,7 +189,7 @@ def _preprocess_file(srcfiles, meson=False):
                 break
 
         else:
-            msg = "_preprocess_file: could not " + f"open {os.path.basename(srcfile)}"
+            msg = "_preprocess_file: could not " + f"open {Path(srcfile).name}"
             raise FileNotFoundError(msg)
 
     return preprocess
@@ -213,7 +214,7 @@ def _get_main(srcfiles):
 
     main_file = None
     for srcfile in srcfiles:
-        if os.path.exists(srcfile):
+        if Path(srcfile).exists():
             # open the file
             f = open(srcfile, "rb")
 
@@ -250,14 +251,14 @@ def _get_main(srcfiles):
                 break
 
         else:
-            msg = "_get_main: could not " + f"open {os.path.basename(srcfile)}"
+            msg = "_get_main: could not " + f"open {Path(srcfile).name}"
             raise FileNotFoundError(msg)
 
     return main_file
 
 
 def _get_srcfiles(srcdir, include_subdir):
-    """Get a list of source files in source file directory srcdir
+    """Get a list of source files in source file directory srcdir.
 
     Parameters
     ----------
@@ -273,14 +274,17 @@ def _get_srcfiles(srcdir, include_subdir):
         list of fortran and c/c++ file in srcdir
 
     """
-    # create a list of all c(pp), f and f90 source files
+    # create a list of all c(pp), f and f90 source files. the walk is sorted
+    # because the order a directory is read in depends on the file system,
+    # and the order the source files are found in decides the order they are
+    # compiled in, which is written to a makefile
     templist = []
-    for path, _, files in os.walk(srcdir):
-        for file in files:
+    for path, _, files in sorted(os.walk(srcdir)):
+        for file in sorted(files):
             if not include_subdir:
                 if path != srcdir:
                     continue
-            file = os.path.join(os.path.join(path, file))
+            file = str(Path(path) / file)
             templist.append(file)
     srcfiles = []
     for file in templist:
@@ -292,11 +296,11 @@ def _get_srcfiles(srcdir, include_subdir):
             or file.lower().endswith(".c")
             or file.lower().endswith(".cpp")
         ):
-            srcfiles.append(os.path.relpath(file, os.getcwd()))
+            srcfiles.append(os.path.relpath(file, Path.cwd()))
     return sorted(srcfiles)
 
 
-def _get_ordered_srcfiles(all_srcfiles, networkx):
+def _get_ordered_srcfiles(all_srcfiles):
     """Create a list of ordered source files (both fortran and c). Ordering is
     build using a directed acyclic graph to determine module dependencies.
 
@@ -304,9 +308,6 @@ def _get_ordered_srcfiles(all_srcfiles, networkx):
     ----------
     all_srcfiles : list
         list of all fortran and c/c++ source files
-    networkx : bool
-        boolean indicating if the NetworkX python package should be used
-        to determine the DAG.
 
     Returns
     -------
@@ -330,9 +331,9 @@ def _get_ordered_srcfiles(all_srcfiles, networkx):
     # order the source files using the directed acyclic graph in _dag.py
     ordered_srcfiles = []
     if ffiles:
-        ordered_srcfiles += _order_f_source_files(ffiles, networkx)
+        ordered_srcfiles += _order_f_source_files(ffiles)
 
     if cfiles:
-        ordered_srcfiles += _order_c_source_files(cfiles, networkx)
+        ordered_srcfiles += _order_c_source_files(cfiles)
 
     return ordered_srcfiles

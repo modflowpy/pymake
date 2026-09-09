@@ -13,16 +13,13 @@ RERUNS = 3
 
 
 def which(program):
-    """
-    Test to make sure that the program is executable
-
-    """
+    """Test to make sure that the program is executable."""
     import os
 
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
-    fpath, fname = os.path.split(program)
+    fpath, _ = os.path.split(program)
     if fpath:
         if is_exe(program):
             return program
@@ -104,6 +101,21 @@ def test_latest_assets():
         print(f"evaluating the availability of...{key}")
         msg = f"unknown key ({key}) found in github repo assets"
         assert key in test_keys, msg
+
+
+@flaky(max_runs=RERUNS)
+@pytest.mark.requests
+def test_detected_asset():
+    """The asset detected for the current platform must exist in the release."""
+    from pymake.utils.download import _get_zipname
+
+    zipname = _get_zipname(None)
+    assets = pymake.get_repo_assets("MODFLOW-USGS/executables")
+    print(f"evaluating the availability of...{zipname}")
+    assert zipname in assets, (
+        f"asset ({zipname}) detected for {sys.platform} is not in the release "
+        f"assets ({', '.join(assets.keys())})"
+    )
 
 
 @pytest.mark.dependency("previous_assets")

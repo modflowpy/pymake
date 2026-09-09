@@ -1,4 +1,6 @@
-"""Utility functions to:
+"""Utility functions to download and compress software releases.
+
+Available functionality includes:
 
 1. download and unzip software releases from the USGS and other organizations
    (triangle, MT3DMS).
@@ -12,6 +14,7 @@
 """
 
 import os
+import platform as _platform
 import shutil
 import sys
 import tarfile
@@ -24,14 +27,16 @@ import requests
 
 
 class pymakeZipFile(ZipFile):
-    """ZipFile file attributes are not being preserved. This class preserves
-    file attributes as described on StackOverflow at
+    """ZipFile subclass that preserves file attributes.
+
+    ZipFile file attributes are not being preserved. This class preserves file
+    attributes as described on StackOverflow at
     https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
 
     """
 
     def extract(self, member, path=None, pwd=None):
-        """
+        """Extract a file from the zipfile, preserving file permissions.
 
         Parameters
         ----------
@@ -54,12 +59,12 @@ class pymakeZipFile(ZipFile):
             member = self.getinfo(member)
 
         if path is None:
-            path = os.getcwd()
+            path = Path.cwd()
 
         ret_val = self._extract_member(member, path, pwd)
         attr = member.external_attr >> 16
         if attr != 0:
-            os.chmod(ret_val, attr)
+            Path(ret_val).chmod(attr)
 
         return ret_val
 
@@ -85,11 +90,9 @@ class pymakeZipFile(ZipFile):
             members = self.namelist()
 
         if path is None:
-            path = os.getcwd()
+            path = Path.cwd()
         else:
-            if hasattr(os, "fspath"):
-                # introduced in python 3.6 and above
-                path = os.fspath(path)
+            path = Path(path)
 
         for zipinfo in members:
             self.extract(zipinfo, path, pwd)
@@ -124,7 +127,6 @@ class pymakeZipFile(ZipFile):
             boolean indicating if the output zip file was created
 
         """
-
         # create an empty list
         if file_pths is None:
             file_pths = []
@@ -137,7 +139,7 @@ class pymakeZipFile(ZipFile):
 
         # remove directories from the file list
         if len(file_pths) > 0:
-            file_pths = [e for e in file_pths if os.path.isfile(e)]
+            file_pths = [e for e in file_pths if Path(e).is_file()]
 
         # convert dirs to a list if a str (a tuple is allowed)
         if dir_pths is None:
@@ -155,7 +157,7 @@ class pymakeZipFile(ZipFile):
         for dir_pth in dir_pths:
             for dirname, subdirs, files in os.walk(dir_pth):
                 for filename in files:
-                    fpth = os.path.join(dirname, filename)
+                    fpth = str(Path(dirname) / filename)
                     # add the file if it does not exist in file_pths
                     if fpth not in file_pths:
                         file_pths.append(fpth)
@@ -164,7 +166,7 @@ class pymakeZipFile(ZipFile):
         if patterns is not None:
             tlist = []
             for file_pth in file_pths:
-                if any(p in os.path.basename(file_pth) for p in patterns):
+                if any(p in Path(file_pth).name for p in patterns):
                     tlist.append(file_pth)
             file_pths = tlist
 
@@ -177,7 +179,7 @@ class pymakeZipFile(ZipFile):
         if len(file_pths) > 0:
             with ZipFile(path, mode=mode, compression=ZIP_DEFLATED) as zf:
                 for file_pth in file_pths:
-                    arcname = os.path.basename(file_pth)
+                    arcname = Path(file_pth).name
                     zf.write(file_pth, arcname=arcname)
         else:
             print("No files to add to the zip file")
@@ -186,8 +188,36 @@ class pymakeZipFile(ZipFile):
         return success
 
 
+def _github_headers(url):
+    """Get the request headers to use for a url.
+
+    A GitHub API request is authenticated with GITHUB_TOKEN, if it is set, so
+    that the request uses the much larger authenticated rate limit.
+
+    Parameters
+    ----------
+    url : str
+        url address for the request
+
+    Returns
+    -------
+    headers : dict
+        request headers, empty if the url is not a GitHub API url or no token
+        is available
+
+    """
+    if not url.startswith("https://api.github.com/"):
+        return {}
+
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        return {}
+
+    return {"Authorization": f"Bearer {token}"}
+
+
 def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
-    """Make a url request
+    """Make a url request.
 
     Parameters
     ----------
@@ -223,6 +253,7 @@ def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
                 stream=True,
                 verify=verify,
                 timeout=timeout,
+                headers=_github_headers(url),
             )
             if verbose:
                 print(f"    status: {responses[req.status_code]}")
@@ -242,7 +273,7 @@ def _request_get(url, verify=True, timeout=1, max_requests=10, verbose=False):
 
 
 def _request_header(url, max_requests=10, timeout=1, verbose=False):
-    """Get the headers from a url
+    """Get the headers from a url.
 
     Parameters
     ----------
@@ -328,18 +359,17 @@ def download_and_unzip(
     -------
 
     """
-
     # create download directory
-    if not os.path.exists(pth):
+    if not Path(pth).exists():
         if verbose:
             print(f"Creating the directory:\n    {pth}")
-        os.makedirs(pth)
+        Path(pth).mkdir(parents=True)
 
     if verbose:
         print(f"Attempting to download the file:\n    {url}")
 
     # define the filename
-    file_name = os.path.join(pth, url.split("/")[-1])
+    file_name = str(Path(pth) / url.split("/")[-1])
 
     # download the file
     success = False
@@ -354,20 +384,18 @@ def download_and_unzip(
         verbose=verbose,
     )
 
-    # get content length, if available
+    # get content length, if available. a url that is generated on request,
+    # such as a github tag archive, is sent chunked without a content length
     tag = "Content-length"
-    if tag in req.headers:
-        file_size = req.headers[tag]
-        len_file_size = len(file_size)
-        file_size = int(file_size)
+    file_size = int(req.headers.get(tag, 0))
 
-        bfmt = "{:" + f"{len_file_size}" + ",d}"
-        sbfmt = "{:>" + f"{len(bfmt.format(int(file_size)))}" + "s} bytes"
-        msg = f"   file size: {sbfmt.format(bfmt.format(int(file_size)))}"
-        if verbose:
-            print(msg)
-    else:
-        file_size = 0.0
+    # the formats are always defined because they are used to report the
+    # download progress whether or not the content length is known
+    len_file_size = len(str(file_size)) if file_size > 0 else 12
+    bfmt = "{:" + f"{len_file_size}" + ",d}"
+    sbfmt = "{:>" + f"{len(bfmt.format(file_size))}" + "s} bytes"
+    if file_size > 0 and verbose:
+        print(f"   file size: {sbfmt.format(bfmt.format(file_size))}")
 
     # download data from url
     for idx in range(max_requests):
@@ -413,7 +441,7 @@ def download_and_unzip(
                             sys.stdout.flush()
 
                 success = True
-        except:
+        except (requests.RequestException, OSError):
             # reestablish request
             req = _request_get(
                 url,
@@ -445,7 +473,7 @@ def download_and_unzip(
         raise ConnectionError(msg)
 
     # Unzip the file, and delete zip file if successful.
-    if "zip" in os.path.basename(file_name) or "exe" in os.path.basename(file_name):
+    if "zip" in Path(file_name).name or "exe" in Path(file_name).name:
         z = pymakeZipFile(file_name)
         try:
             # write a message
@@ -455,11 +483,11 @@ def download_and_unzip(
 
             # extract the files
             z.extractall(pth)
-        except:
-            p = "Could not unzip the file.  Stopping."
-            raise Exception(p)
+        except Exception as exc:
+            p = f"Could not unzip '{file_name}'.  Stopping."
+            raise Exception(p) from exc
         z.close()
-    elif "tar" in os.path.basename(file_name):
+    elif "tar" in Path(file_name).name:
         ar = tarfile.open(file_name)
         ar.extractall(path=pth)
         ar.close()
@@ -468,7 +496,7 @@ def download_and_unzip(
     if delete_zip:
         if verbose:
             print("Deleting the zipfile...")
-        os.remove(file_name)
+        Path(file_name).unlink()
 
     if verbose:
         print("Done downloading and extracting...\n")
@@ -522,8 +550,8 @@ def _get_zipname(platform):
     ----------
     platform : str
         Platform that will run the executables.  Valid values include mac,
-        linux, win32 and win64.  If platform is None, then routine will
-        download the latest asset from the github repository.
+        macarm, linux, win32 and win64.  If platform is None, then routine
+        will download the latest asset from the github repository.
 
     Returns
     -------
@@ -533,7 +561,11 @@ def _get_zipname(platform):
     """
     if platform is None:
         if sys.platform.lower() == "darwin":
-            platform = "mac"
+            # only arm64 assets are built for macOS
+            if _platform.machine().lower() in ("arm64", "aarch64"):
+                platform = "macarm"
+            else:
+                platform = "mac"
         elif sys.platform.lower().startswith("linux"):
             platform = "linux"
         elif "win" in sys.platform.lower():
@@ -547,7 +579,7 @@ def _get_zipname(platform):
             raise Exception(errmsg)
     else:
         msg = f"unknown platform detected ({platform})"
-        success = platform in ["mac", "linux", "win32", "win64"]
+        success = platform in ["mac", "macarm", "linux", "win32", "win64"]
         if not success:
             raise ValueError(msg)
     return f"{platform}.zip"
@@ -574,7 +606,6 @@ def _get_default_url():
         default url for executables repository repo name
 
     """
-
     return f"https://github.com/{_get_default_repo()}/releases/latest/download/"
 
 
@@ -603,7 +634,7 @@ def _get_default_json(tag_name=None):
         url += f"{tag_name}/"
 
     # define asset names and paths for assets
-    names = ["mac.zip", "linux.zip", "win32.zip", "win64.zip"]
+    names = ["mac.zip", "macarm.zip", "linux.zip", "win32.zip", "win64.zip"]
     paths = [url + p for p in names]
 
     assets_list = []
@@ -841,8 +872,8 @@ def getmfexes(
         None the github repo will be queried for the version number.
     platform : str
         Platform that will run the executables.  Valid values include mac,
-        linux, win32 and win64.  If platform is None, then routine will
-        download the latest asset from the github repository.
+        macarm, linux, win32 and win64.  If platform is None, then routine
+        will download the latest asset from the github repository.
     exes : str or list of strings
         executable or list of executables to retain
     verbose : bool
@@ -859,7 +890,7 @@ def getmfexes(
 
     # Evaluate exes keyword
     if exes is not None:
-        download_dir = os.path.join(".", "download_dir")
+        download_dir = str(Path(".") / "download_dir")
         if isinstance(exes, str):
             exes = tuple(exes)
         elif isinstance(exes, int | float):
@@ -883,22 +914,21 @@ def getmfexes(
 
     if exes is not None:
         # make sure pth exists
-        if not os.path.exists(pth):
+        if not Path(pth).exists():
             if verbose:
                 print(f"Creating the directory:\n    {pth}")
-            os.makedirs(pth)
+            Path(pth).mkdir(parents=True)
 
         # move select files to pth
-        for f in os.listdir(download_dir):
-            src = os.path.join(download_dir, f)
-            dst = os.path.join(pth, f)
+        for src in sorted(Path(download_dir).iterdir()):
+            dst = Path(pth) / src.name
             for exe in exes:
-                if exe in f:
+                if exe in src.name:
                     shutil.move(src, dst)
                     break
 
         # remove the download directory
-        if os.path.isdir(download_dir):
+        if Path(download_dir).is_dir():
             if verbose:
                 print("Removing folder " + download_dir)
             shutil.rmtree(download_dir)
@@ -923,8 +953,8 @@ def getmfnightly(
         Location to put the executables (default is current working directory)
     platform : str
         Platform that will run the executables.  Valid values include mac,
-        linux, win32 and win64.  If platform is None, then routine will
-        download the latest asset from the github repository.
+        macarm, linux, win32 and win64.  If platform is None, then routine
+        will download the latest asset from the github repository.
     exes : str or list of strings
         executable or list of executables to retain
     verbose : bool
@@ -941,7 +971,7 @@ def getmfnightly(
 
     # Evaluate exes keyword
     if exes is not None:
-        download_dir = os.path.join(".", "download_dir")
+        download_dir = str(Path(".") / "download_dir")
         if isinstance(exes, str):
             exes = tuple(exes)
         elif isinstance(exes, int | float):
@@ -963,22 +993,21 @@ def getmfnightly(
 
     if exes is not None:
         # make sure pth exists
-        if not os.path.exists(pth):
+        if not Path(pth).exists():
             if verbose:
                 print(f"Creating the directory:\n    {pth}")
-            os.makedirs(pth)
+            Path(pth).mkdir(parents=True)
 
         # move select files to pth
-        for f in os.listdir(download_dir):
-            src = os.path.join(download_dir, f)
-            dst = os.path.join(pth, f)
+        for src in sorted(Path(download_dir).iterdir()):
+            dst = Path(pth) / src.name
             for exe in exes:
-                if exe in f:
+                if exe in src.name:
                     shutil.move(src, dst)
                     break
 
         # remove the download directory
-        if os.path.isdir(download_dir):
+        if Path(download_dir).is_dir():
             if verbose:
                 print("Removing folder " + download_dir)
             shutil.rmtree(download_dir)

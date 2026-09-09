@@ -20,7 +20,7 @@ jobs:
       github.event_name == 'push'
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Trigger RTDs build
         if: github.ref == 'refs/heads/master'
