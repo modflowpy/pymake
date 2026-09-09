@@ -2,7 +2,7 @@
 
 Python package for building MODFLOW-based programs from source files.
 
-### Version 2.0.0.dev0
+### Version 2.1.0.dev0
 
 [![PyPI Version](https://img.shields.io/pypi/v/mfpymake.png)](https://pypi.python.org/pypi/mfpymake)
 [![Anaconda Version](https://anaconda.org/conda-forge/mfpymake/badges/version.svg)](https://anaconda.org/conda-forge/mfpymake)  
@@ -167,8 +167,8 @@ When using the pymake object (`Pymake()`) only the positional arguments
 import pymake
 
 pm = pymake.Pymake()
-pm.srcdir = '../src'
-pm.target = 'mf6'
+pm.srcdir = "../src"
+pm.target = "mf6"
 pm.include_subdirs = True
 pm.build()
 ```
