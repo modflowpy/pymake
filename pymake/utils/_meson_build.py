@@ -795,20 +795,23 @@ def _create_main_meson_build(
         # add build command
         # meson links a target that has both c and fortran sources with the
         # c compiler, and a fortran main is left in the fortran runtime by
-        # some compilers, so the language that has the main program links
+        # some compilers, so the language that has the main program links.
+        # only set link_language for a mixed-language target though: a
+        # single-language target links with its language regardless, and
+        # setting it anyway makes meson add its own hardcoded dynamic
+        # -lifcore/-limf, defeating -static-intel.
+        mixed_language_target = len(languages) > 1
         if sharedobject:
-            line = (
-                f"library('{target}', sources{include_text}"
-                ", install: true, name_prefix: '', "
-                f"link_language: '{linker_language}', "
-                f"install_dir: '{appdir}')\n\n"
-            )
+            line = f"library('{target}', sources{include_text}"
+            line += ", install: true, name_prefix: '', "
+            if mixed_language_target:
+                line += f"link_language: '{linker_language}', "
+            line += f"install_dir: '{appdir}')\n\n"
         else:
-            line = (
-                f"executable('{target}', sources{include_text}"
-                f", link_language: '{linker_language}'"
-                f", install: true, install_dir: '{appdir}')\n\n"
-            )
+            line = f"executable('{target}', sources{include_text}"
+            if mixed_language_target:
+                line += f", link_language: '{linker_language}'"
+            line += f", install: true, install_dir: '{appdir}')\n\n"
         f.write(line)
 
     return main_meson_file, fc_meson, cc_meson
