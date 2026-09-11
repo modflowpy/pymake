@@ -43,7 +43,7 @@ def test_link_language_omitted_for_single_language_target(tmp_path) -> None:
 
     meson_file, _, _ = _create_main_meson_build(
         str(tmp_path),
-        "hello",
+        str(tmp_path / "hello"),
         [str(main)],
         False,
         False,
@@ -72,7 +72,7 @@ def test_link_language_kept_for_mixed_language_target(tmp_path) -> None:
 
     meson_file, _, _ = _create_main_meson_build(
         str(tmp_path),
-        "hello",
+        str(tmp_path / "hello"),
         [str(main), str(util)],
         False,
         False,
