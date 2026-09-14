@@ -597,7 +597,6 @@ class Pymake:
                 "-shared",
                 "-dll",
                 "-dynamiclib",
-                "-static-intel",
             ):
                 if self.fflags is not None:
                     self.fflags = self.fflags.replace(flag, "")
