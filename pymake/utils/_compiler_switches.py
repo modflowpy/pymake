@@ -636,10 +636,11 @@ def _intel_static_runtime_syslibs(
     """
     if osname not in ("darwin", "linux"):
         return []
-    if compiler != fc or fc not in ("ifort", "mpiifort"):
+    # meson treats ifx like ifort here, appending the same -lifcore/-limf
+    if compiler != fc or fc not in ("ifort", "mpiifort", "ifx", "mpiifx"):
         return []
 
-    # always appended: ifort honors the last of a repeated
+    # always appended: ifort/ifx honor the last of a repeated
     # static-intel/shared-intel, and a caller's syslibs land after ours,
     # so -shared-intel overrides it.
     syslibs_out = ["static-intel"]

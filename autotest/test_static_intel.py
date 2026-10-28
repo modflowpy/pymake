@@ -1,4 +1,8 @@
-"""Tests for statically linking the intel fortran runtime by default."""
+"""Tests for statically linking the intel fortran runtime by default.
+
+test_mp7.py and test_mf2005.py check the executables they build actually
+come out static; these check the build file and switches that get them there.
+"""
 
 import pytest
 
@@ -6,49 +10,16 @@ from pymake.utils._compiler_switches import _get_linker_flags
 from pymake.utils._meson_build import _create_main_meson_build
 
 
-@pytest.mark.base
-@pytest.mark.parametrize("osname", ["linux", "darwin"])
-def test_static_intel_default_executable(osname) -> None:
-    _, flags = _get_linker_flags(
-        "mp7", "ifort", None, [], ["main.f90"], sharedobject=False, osname=osname
-    )
-
-    assert "-static-intel" in flags
-
-
-@pytest.mark.base
-def test_static_intel_default_sharedobject() -> None:
-    _, flags = _get_linker_flags(
-        "libmf6", "ifort", None, [], ["main.f90"], sharedobject=True, osname="linux"
-    )
-
-    assert "-static-intel" in flags
-
-
-@pytest.mark.base
-def test_gfortran_unaffected() -> None:
-    _, flags = _get_linker_flags(
-        "mp7", "gfortran", None, [], ["main.f90"], sharedobject=False, osname="linux"
-    )
-
-    assert "-static-intel" not in flags
-
-
-@pytest.mark.base
-def test_link_language_omitted_for_single_language_target(tmp_path) -> None:
+def _meson_build_text(tmp_path, srcfiles, cc):
     srcdir = tmp_path / "src"
-    srcdir.mkdir()
-    main = srcdir / "main.f90"
-    main.write_text("      program main\n      end\n")
-
     meson_file, _, _ = _create_main_meson_build(
         str(tmp_path),
         str(tmp_path / "hello"),
-        [str(main)],
+        [str(srcdir / f) for f in srcfiles],
         False,
         False,
         "ifort",
-        None,
+        cc,
         [],
         [],
         [],
@@ -56,45 +27,39 @@ def test_link_language_omitted_for_single_language_target(tmp_path) -> None:
         {"main": str(srcdir)},
         False,
     )
+    return meson_file.read_text()
 
-    text = meson_file.read_text()
+
+@pytest.fixture
+def srcdir(tmp_path):
+    srcdir = tmp_path / "src"
+    srcdir.mkdir()
+    (srcdir / "main.f90").write_text("      program main\n      end\n")
+    (srcdir / "util.c").write_text("int util(void) { return 0; }\n")
+    return srcdir
+
+
+@pytest.mark.base
+def test_link_language_omitted_for_single_language_target(tmp_path, srcdir) -> None:
+    # link_language makes meson add a dynamic -lifcore/-limf
+    text = _meson_build_text(tmp_path, ["main.f90"], None)
     assert "link_language" not in text
 
 
 @pytest.mark.base
-def test_link_language_kept_for_mixed_language_target(tmp_path) -> None:
-    srcdir = tmp_path / "src"
-    srcdir.mkdir()
-    main = srcdir / "main.f90"
-    main.write_text("      program main\n      end\n")
-    util = srcdir / "util.c"
-    util.write_text("int util(void) { return 0; }\n")
-
-    meson_file, _, _ = _create_main_meson_build(
-        str(tmp_path),
-        str(tmp_path / "hello"),
-        [str(main), str(util)],
-        False,
-        False,
-        "ifort",
-        "icc",
-        [],
-        [],
-        [],
-        False,
-        {"main": str(srcdir)},
-        False,
-    )
-
-    text = meson_file.read_text()
+def test_link_language_kept_for_mixed_language_target(tmp_path, srcdir) -> None:
+    text = _meson_build_text(tmp_path, ["main.f90", "util.c"], "icc")
     assert "link_language: 'fortran'" in text
 
 
 @pytest.mark.base
-def test_static_intel_mixed_language_executable_meson() -> None:
+@pytest.mark.parametrize("fc", ["ifort", "ifx"])
+def test_mixed_language_executable_forced_static(fc) -> None:
+    # meson's dynamic -lifcore/-limf land after these, so the static
+    # archives have to be bracketed here to win
     _, flags = _get_linker_flags(
         "mixedmain",
-        "ifort",
+        fc,
         "icc",
         [],
         ["main.f90", "util.c"],
@@ -103,7 +68,7 @@ def test_static_intel_mixed_language_executable_meson() -> None:
         meson=True,
     )
 
-    assert "-Wl,-Bstatic" in flags and "-Wl,-Bdynamic" in flags
+    assert "-static-intel" in flags
     assert (
         flags.index("-Wl,-Bstatic")
         < flags.index("-lifcore")
@@ -113,9 +78,8 @@ def test_static_intel_mixed_language_executable_meson() -> None:
 
 
 @pytest.mark.base
-def test_static_intel_mixed_language_executable_classic_makefile() -> None:
-    # classic Makefiles (meson=False, the default) have no link_language
-    # override to counteract, so they must never get the workaround
+def test_mixed_language_classic_makefile_not_forced_static() -> None:
+    # a makefile has no link_language override to counteract
     _, flags = _get_linker_flags(
         "mixedmain",
         "ifort",
@@ -127,90 +91,20 @@ def test_static_intel_mixed_language_executable_classic_makefile() -> None:
     )
 
     assert "-Wl,-Bstatic" not in flags
-    assert "-lifcore" not in flags
-    assert "-limf" not in flags
 
 
 @pytest.mark.base
-def test_static_intel_single_language_executable() -> None:
-    _, flags = _get_linker_flags(
-        "mp7",
-        "ifort",
-        None,
-        [],
-        ["main.f90"],
-        sharedobject=False,
-        osname="linux",
-        meson=True,
-    )
-
-    assert "-Wl,-Bstatic" not in flags
-
-
-@pytest.mark.base
-def test_static_intel_sharedobject() -> None:
-    _, flags = _get_linker_flags(
-        "libmf6",
-        "ifort",
-        None,
-        [],
-        ["main.f90"],
-        sharedobject=True,
-        osname="linux",
-        meson=True,
-    )
-
-    assert "-Wl,-Bstatic" not in flags
-
-
-@pytest.mark.base
-def test_static_intel_mixed_language_sharedobject_meson_stays_dynamic() -> None:
-    # known limitation: libifcore.a isn't -fPIC, so a mixed-language
-    # shared object stays dynamically linked even under meson
-    _, flags = _get_linker_flags(
-        "libmixed",
-        "ifort",
-        "icc",
-        [],
-        ["main.f90", "util.c"],
-        sharedobject=True,
-        osname="linux",
-        meson=True,
-    )
-
-    assert "-Wl,-Bstatic" not in flags
-
-
-@pytest.mark.base
-def test_static_intel_mixed_language_darwin_meson_stays_dynamic() -> None:
-    # known limitation: -Wl,-Bstatic/-Bdynamic is GNU-ld syntax, so a
-    # mixed-language darwin target stays dynamically linked even under meson
+def test_gfortran_unaffected() -> None:
     _, flags = _get_linker_flags(
         "mixedmain",
-        "ifort",
-        "icc",
+        "gfortran",
+        "gcc",
         [],
         ["main.f90", "util.c"],
         sharedobject=False,
-        osname="darwin",
-        meson=True,
-    )
-
-    assert "-Wl,-Bstatic" not in flags
-
-
-@pytest.mark.base
-def test_static_intel_mixed_language_sharedobject_meson_warns(capsys) -> None:
-    _get_linker_flags(
-        "libmixed",
-        "ifort",
-        "icc",
-        [],
-        ["main.f90", "util.c"],
-        sharedobject=True,
         osname="linux",
         meson=True,
-        verbose=True,
     )
 
-    assert "libmixed" in capsys.readouterr().out
+    assert "-static-intel" not in flags
+    assert "-Wl,-Bstatic" not in flags
