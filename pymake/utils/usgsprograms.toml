@@ -10,30 +10,30 @@
 # shared_object      a shared library is built rather than an executable
 
 [program."mf6"]
-version = "6.8.0"
+version = "6.8.2"
 current = true
-url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.8.0/mf6.8.0_linux.zip"
-dirname = "mf6.8.0_linux"
+url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.8.2/mf6.8.2_linux.zip"
+dirname = "mf6.8.2_linux"
 srcdir = "src"
 standard_precision = true
 double_precision = false
 shared_object = false
 
 [program."zbud6"]
-version = "6.8.0"
+version = "6.8.2"
 current = true
-url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.8.0/mf6.8.0_linux.zip"
-dirname = "mf6.8.0_linux"
+url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.8.2/mf6.8.2_linux.zip"
+dirname = "mf6.8.2_linux"
 srcdir = "utils/zonebudget/src"
 standard_precision = true
 double_precision = false
 shared_object = false
 
 [program."libmf6"]
-version = "6.8.0"
+version = "6.8.2"
 current = true
-url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.8.0/mf6.8.0_linux.zip"
-dirname = "mf6.8.0_linux"
+url = "https://github.com/MODFLOW-ORG/modflow6/releases/download/6.8.2/mf6.8.2_linux.zip"
+dirname = "mf6.8.2_linux"
 srcdir = "srcbmi"
 standard_precision = true
 double_precision = false
