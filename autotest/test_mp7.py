@@ -155,6 +155,14 @@ def test_compile(pm, target):
     assert pm.build() == 0, f"could not compile {target}"
 
 
+@pytest.mark.dependency(depends=["build"])
+@pytest.mark.xdist_group(TARGET_NAME)
+@pytest.mark.regression
+def test_static_intel(pm, target, check_static_intel):
+    # a fortran-only target
+    check_static_intel(target, pm.fc)
+
+
 @pytest.mark.dependency(name="download_exes")
 @pytest.mark.xdist_group(TARGET_NAME)
 @pytest.mark.regression

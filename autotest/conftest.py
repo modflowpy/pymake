@@ -1,8 +1,13 @@
 import re
+import shutil
+import subprocess
+import sys
 from importlib import metadata
 from pathlib import Path
 
 import pytest
+
+from pymake.utils._compiler_switches import _get_base_compiler_name
 
 # import modflow-devtools fixtures
 
@@ -24,6 +29,37 @@ def get_project_root_path() -> Path:
 
 
 # path fixtures
+
+
+# build check fixtures
+
+
+@pytest.fixture
+def check_static_intel():
+    """Return a function asserting an executable built with an intel
+    compiler on linux doesn't need the intel runtime shared libraries.
+
+    The intel runtime is installed wherever the tests run, so a
+    dynamically linked executable still runs fine there; only its
+    dynamic section shows the problem.
+
+    """
+
+    def check(exe, fc):
+        if sys.platform != "linux":
+            pytest.skip("only checked on linux")
+        if _get_base_compiler_name(fc) not in ("ifort", "mpiifort", "ifx", "mpiifx"):
+            pytest.skip("only checked for intel compilers")
+        if shutil.which("readelf") is None:
+            pytest.skip("readelf not available")
+        out = subprocess.run(
+            ["readelf", "-d", str(exe)], capture_output=True, text=True, check=True
+        ).stdout
+        needed = re.findall(r"\(NEEDED\)\s+Shared library: \[(.+?)\]", out)
+        intel = [lib for lib in needed if re.match(r"lib(ifcore|ifport|imf)", lib)]
+        assert not intel, f"{exe} links the intel runtime dynamically: {intel}"
+
+    return check
 
 
 # pytest configuration hooks

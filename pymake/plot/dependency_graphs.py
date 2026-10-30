@@ -38,7 +38,7 @@ def _check_pydot():
     if pydot is None:
         raise ImportError(
             "pydot is required to plot dependency graphs, install it with "
-            "'pip install mfpymake[plot]'"
+            "'pip install mfpymake[plot]' or 'conda install pydot graphviz'"
         )
 
 
