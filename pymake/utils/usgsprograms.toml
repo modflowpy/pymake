@@ -90,9 +90,9 @@ double_precision = false
 shared_object = false
 
 [program."gridgen"]
-version = "1.0.02"
+version = "1.0.03"
 current = true
-url = "https://github.com/MODFLOW-ORG/gridgen/releases/download/v1.0.02/gridgen_source.zip"
+url = "https://github.com/MODFLOW-ORG/gridgen/releases/download/v1.0.03/gridgen_source.zip"
 dirname = "."
 srcdir = "src"
 standard_precision = true
@@ -220,9 +220,9 @@ double_precision = false
 shared_object = false
 
 [program."mfusgt"]
-version = "2.6.2"
+version = "2.8.1"
 current = true
-url = "https://github.com/MODFLOW-ORG/mfusgt/releases/download/v2.6.2/mfusgt_source.zip"
+url = "https://github.com/MODFLOW-ORG/mfusgt/releases/download/v2.8.1/mfusgt_source.zip"
 dirname = "."
 srcdir = "src"
 standard_precision = true
