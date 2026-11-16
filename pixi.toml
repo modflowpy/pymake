@@ -2,7 +2,7 @@
 name = "pymake"
 channels = ["conda-forge"]
 platforms = ["win-64", "linux-64", "linux-aarch64", "osx-arm64"]
-version = "2.1.0"
+version = "2.1.1"
 
 [dependencies]
 appdirs = "*"
@@ -84,9 +84,9 @@ gfortran = "*"
 # rather than the ones setup-fortran installs, which are downloaded from
 # chocolatey on every run. the version is the one setup-fortran was asked for
 [feature.build.target.win-64.dependencies]
-gcc = "13.2.*"
-gxx = "13.2.*"
-gfortran = "13.2.*"
+gcc = "15.2.*"
+gxx = "15.2.*"
+gfortran = "15.2.*"
 make = "*"
 
 # gcc uses libc++ on macOS, and the libc++ 22 headers need a c++ standard

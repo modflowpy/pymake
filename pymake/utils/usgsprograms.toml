@@ -42,8 +42,8 @@ shared_object = true
 [program."mp7"]
 version = "7.2.001"
 current = true
-url = "https://water.usgs.gov/water-resources/software/MODPATH/modpath_7_2_001.zip"
-dirname = "modpath_7_2_001"
+url = "https://github.com/MODFLOW-ORG/modpath-v7/archive/refs/tags/7.2.001.zip"
+dirname = "modpath-v7-7.2.001"
 srcdir = "source"
 standard_precision = true
 double_precision = false
@@ -172,8 +172,8 @@ shared_object = false
 [program."mp6"]
 version = "6.0.1"
 current = true
-url = "https://water.usgs.gov/water-resources/software/MODPATH/modpath.6_0_01.zip"
-dirname = "modpath.6_0"
+url = "https://github.com/MODFLOW-ORG/modpath6/archive/d86c21a5091b5158c981178e8b95e33753c9f36a.zip"
+dirname = "modpath6-d86c21a5091b5158c981178e8b95e33753c9f36a"
 srcdir = "src"
 standard_precision = true
 double_precision = false
