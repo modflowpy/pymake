@@ -42,38 +42,59 @@ def replace_data(dpth):
     fpths = [
         name for name in os.listdir(dpth) if os.path.isfile(os.path.join(dpth, name))
     ]
-    repl = False
+    edits = []
     if "ex01_mf2005.dis" in fpths:
-        sfinds = ["! Example 1: MODFLOW-2005 discretization file"]
-        srepls = ["# Example 1: MODFLOW-2005 discretization file\n"]
-        fpth = "ex01_mf2005.dis"
-        repl = True
+        edits.append(
+            (
+                "ex01_mf2005.dis",
+                ["! Example 1: MODFLOW-2005 discretization file"],
+                ["# Example 1: MODFLOW-2005 discretization file\n"],
+            )
+        )
     elif "ex04_mf6.disv" in fpths:
-        sfinds = ["  OPEN/CLOSE  mptest006_idomain.csv"]
-        srepls = ["  OPEN/CLOSE  ex04_mf6_idomain.csv\n"]
-        fpth = "ex04_mf6.disv"
-        repl = True
+        edits.append(
+            (
+                "ex04_mf6.disv",
+                ["  OPEN/CLOSE  mptest006_idomain.csv"],
+                ["  OPEN/CLOSE  ex04_mf6_idomain.csv\n"],
+            )
+        )
+        # the output control file writes mptest006_mf6.* but
+        # ex04_mf6.mpnam reads ex04_mf6.bud and ex04_mf6.hed
+        edits.append(
+            (
+                "ex04_mf6.oc",
+                [
+                    "  BUDGET FILEOUT mptest006_mf6.bud",
+                    "  HEAD FILEOUT mptest006_mf6.hed",
+                ],
+                ["  BUDGET FILEOUT ex04_mf6.bud\n", "  HEAD FILEOUT ex04_mf6.hed\n"],
+            )
+        )
     elif "mfsim.nam" in fpths:
-        sfinds = [
-            "  TDIS6  ex02a_mf6.tdis",
-            "  GWF6  ex02a_mf6.nam  ex02a_mf6",
-            "  IMS6  ex02a_mf6.ims  ex02a_mf6",
-        ]
-        srepls = [
-            "  TDIS6  ex02_mf6.tdis\n",
-            "  GWF6  ex02_mf6.nam  ex02_mf6\n",
-            "  IMS6  ex02_mf6.ims  ex02_mf6\n",
-        ]
-        fpth = "mfsim.nam"
-        repl = True
-    if repl:
-        fpth = os.path.join(dpth, fpth)
+        edits.append(
+            (
+                "mfsim.nam",
+                [
+                    "  TDIS6  ex02a_mf6.tdis",
+                    "  GWF6  ex02a_mf6.nam  ex02a_mf6",
+                    "  IMS6  ex02a_mf6.ims  ex02a_mf6",
+                ],
+                [
+                    "  TDIS6  ex02_mf6.tdis\n",
+                    "  GWF6  ex02_mf6.nam  ex02_mf6\n",
+                    "  IMS6  ex02_mf6.ims  ex02_mf6\n",
+                ],
+            )
+        )
+    for fname, sfinds, srepls in edits:
+        fpth = os.path.join(dpth, fname)
         with open(fpth, "r") as f:
             content = f.readlines()
         for idx, line in enumerate(content):
             for jdx, sfind in enumerate(sfinds):
                 if sfind in line:
-                    content[idx] = line.replace(line, srepls[jdx])
+                    content[idx] = srepls[jdx]
         with open(fpth, "w") as f:
             f.writelines(content)
 
