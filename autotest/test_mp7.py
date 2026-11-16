@@ -91,8 +91,8 @@ def run_modpath7(namefile, mp7_exe, mf2005_exe, mfusg_exe, mf6_exe):
     model_ws = (namefile).resolve().parent
     # run the flow model
     run = True
-    name = str(namefile).lower()
-    if "modflow-2005" in name:
+    name = model_ws.name.lower()
+    if name.endswith("_mf2005"):
         v = shutil.which(mf2005_exe)
         if v is None:
             run = False
@@ -104,7 +104,7 @@ def run_modpath7(namefile, mp7_exe, mf2005_exe, mfusg_exe, mf6_exe):
         else:
             fpth = None
             run = False
-    elif "modflow-usg" in name:
+    elif name.endswith("_mfusg"):
         v = shutil.which(mfusg_exe)
         if v is None:
             run = False
@@ -114,7 +114,7 @@ def run_modpath7(namefile, mp7_exe, mf2005_exe, mfusg_exe, mf6_exe):
         else:
             fpth = None
             run = False
-    elif "modflow-6" in name:
+    elif name.endswith("_mf6"):
         v = shutil.which(mf6_exe)
         if v is None:
             run = False
@@ -176,16 +176,16 @@ def test_download_exes(module_tmpdir):
 @pytest.mark.parametrize(
     "namefile",
     [
-        "ex01/modflow-2005/original/ex01a_mf2005.mpsim",
-        "ex01/modflow-2005/original/ex01b_mf2005.mpsim",
-        "ex01/modflow-6/original/ex01a_mf6.mpsim",
-        "ex01/modflow-6/original/ex01b_mf6.mpsim",
-        "ex02/modflow-6/original/ex02a_mf6.mpsim",
-        "ex02/modflow-6/original/ex02b_mf6.mpsim",
-        "ex02/modflow-usg/original/ex02a_mfusg.mpsim",
-        "ex02/modflow-usg/original/ex02b_mfusg.mpsim",
-        "ex03/modflow-6/original/ex03a_mf6.mpsim",
-        "ex04/modflow-6/original/ex04a_mf6.mpsim",
+        "ex01_mf2005/ex01a_mf2005.mpsim",
+        "ex01_mf2005/ex01b_mf2005.mpsim",
+        "ex01_mf6/ex01a_mf6.mpsim",
+        "ex01_mf6/ex01b_mf6.mpsim",
+        "ex02_mf6/ex02a_mf6.mpsim",
+        "ex02_mf6/ex02b_mf6.mpsim",
+        "ex02_mfusg/ex02a_mfusg.mpsim",
+        "ex02_mfusg/ex02b_mfusg.mpsim",
+        "ex03_mf6/ex03a_mf6.mpsim",
+        "ex04_mf6/ex04a_mf6.mpsim",
     ],
 )
 def test_modpath7(module_tmpdir, namefile, workspace, target):
