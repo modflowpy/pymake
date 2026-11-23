@@ -162,7 +162,7 @@ shared_object = false
 [program."swtv4"]
 version = "4.00.05"
 current = true
-url = "https://water.usgs.gov/water-resources/software/SEAWAT/swt_v4_00_05.zip"
+url = "https://water.usgs.gov/water-resources/legacy-software/SEAWAT/swt_v4_00_05.zip"
 dirname = "swt_v4_00_05"
 srcdir = "source"
 standard_precision = false
