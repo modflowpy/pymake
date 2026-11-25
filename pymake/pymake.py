@@ -67,7 +67,7 @@ from .utils._compiler_switches import (
     _get_osname,
 )
 from .utils._usgs_src_update import _build_replace
-from .utils.download import download_and_unzip, zip_all
+from .utils.download import download_and_unzip, pymakeZipFile, zip_all
 from .utils.usgsprograms import usgs_program_data
 
 # targets whose distributed meson build files are removed after download, so
@@ -415,9 +415,38 @@ class Pymake:
                 timeout=self.timeout,
                 verbose=self.verbose,
             )
+            if self.download and not Path(self.download_dir).is_dir():
+                self._extract_nested()
             if self.download and self._get_base_target() in _IGNORE_PROVIDED_MESON:
                 self._remove_provided_meson()
         return self.download
+
+    def _extract_nested(self):
+        """Extract a distribution zip nested in the downloaded archive.
+
+        Some legacy USGS downloads wrap the distribution zip, with its
+        documentation, in an outer zip. If the expected directory is missing
+        after the download, look for a zip with the directory's name among the
+        extracted files and extract it in its place.
+
+        Returns
+        -------
+
+        """
+        download_path = Path(self.download_path)
+        name = Path(self.download_dir).name
+        for inner in download_path.rglob(f"{name}.zip"):
+            if self.verbose:
+                print(f"uncompressing nested...'{inner}'")
+            with pymakeZipFile(inner) as z:
+                z.extractall(download_path)
+            # remove what remains of the outer archive
+            wrapper = download_path / inner.relative_to(download_path).parts[0]
+            if wrapper == inner:
+                inner.unlink()
+            else:
+                shutil.rmtree(wrapper)
+            return
 
     def _remove_provided_meson(self):
         """Remove the meson build files distributed with a downloaded target.

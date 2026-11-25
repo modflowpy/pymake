@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 from pathlib import Path
 from platform import system
@@ -97,6 +98,15 @@ def replace_data(dpth):
                     content[idx] = srepls[jdx]
         with open(fpth, "w") as f:
             f.writelines(content)
+
+    # MODFLOW 6.8.0 removed the IMS keywords OUTER_HCLOSE and INNER_HCLOSE,
+    # which the examples still use, in favor of OUTER_DVCLOSE and INNER_DVCLOSE
+    for fname in fpths:
+        if not fname.lower().endswith(".ims"):
+            continue
+        fpth = Path(dpth) / fname
+        text = fpth.read_text()
+        fpth.write_text(re.sub(r"(?i)\b(outer|inner)_hclose\b", r"\1_DVCLOSE", text))
 
 
 def set_lowercase(fpth):
