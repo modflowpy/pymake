@@ -70,6 +70,11 @@ from .utils._usgs_src_update import _build_replace
 from .utils.download import download_and_unzip, pymakeZipFile, zip_all
 from .utils.usgsprograms import usgs_program_data
 
+# targets whose distributed meson build files are removed after download, so
+# that pymake writes its own. the mp6 build file lists source files by name,
+# which the mp6 source update replaces with renamed copies
+_IGNORE_PROVIDED_MESON = ("mp6",)
+
 
 class Pymake:
     """Pymake class for interacting with pymake functionality. This is essentially
@@ -412,6 +417,8 @@ class Pymake:
             )
             if self.download and not Path(self.download_dir).is_dir():
                 self._extract_nested()
+            if self.download and self._get_base_target() in _IGNORE_PROVIDED_MESON:
+                self._remove_provided_meson()
         return self.download
 
     def _extract_nested(self):
@@ -440,6 +447,20 @@ class Pymake:
             else:
                 shutil.rmtree(wrapper)
             return
+
+    def _remove_provided_meson(self):
+        """Remove the meson build files distributed with a downloaded target.
+
+        Returns
+        -------
+
+        """
+        if self.download_dir is None:
+            return
+        for fpth in Path(self.download_dir).rglob("meson.build"):
+            if self.verbose:
+                print(f"removing the meson build file provided...'{fpth}'")
+            fpth.unlink()
 
     def _download_cleanup(self):
         """Remove the temporary download directory.

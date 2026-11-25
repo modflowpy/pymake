@@ -56,12 +56,6 @@ jobs:
           max_attempts: 3
           command: make-code-json
 
-      - name: Upload code.md
-        uses: actions/upload-artifact@v7
-        with:
-          name: code.md
-          path: code.md
-
       - name: Update version
         id: version
         run: |
@@ -144,8 +138,15 @@ jobs:
           pip install .
           pip install ".[test]"
 
-      - name: Download artifacts
-        uses: dawidd6/action-download-artifact@v27
+      # generate release notes from master itself rather than downloading
+      # them from the prep job, so changes merged to master after the prep
+      # job ran are reflected in the notes
+      - name: Make metadata files
+        uses: nick-fields/retry@v4
+        with:
+          timeout_seconds: 10
+          max_attempts: 3
+          command: make-code-json
 
       - name: Draft release
         env:
@@ -153,7 +154,7 @@ jobs:
         run: |
           version=$(cat version.txt)
           title="pymake $version"
-          notes=$(cat code.md/code.md)
+          notes=$(cat code.md)
           gh release create "$version" \
             --target master \
             --title "$title" \
